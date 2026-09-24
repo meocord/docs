@@ -1,0 +1,56 @@
+{
+  "version": "4.0.0-beta.0",
+  "sections": [
+    {
+      "title": "Major Changes",
+      "entries": [
+        {
+          "markdown": "[#22](https://github.com/l7aromeo/meocord/pull/22) [`4deb96f`](https://github.com/l7aromeo/meocord/commit/4deb96fd73f86a29c46b9bb080c13e6267246cb1) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Build with [Rsbuild](https://rsbuild.rs) instead of webpack. Production builds are several times\nfaster, and webpack and its four loader and plugin packages are no longer installed with MeoCord.\nThe output is unchanged: `dist/main.js`, assets under `dist/assets/` with the same names, and the\nsame source maps.\n\n**Breaking:** the `webpack` hook in `meocord.config.ts` is replaced by `rsbuild`, which receives\nRsbuild's configuration. A config that still declares `webpack` stops the build with a message\nsaying so. `MeoCordWebpackConfig` is removed; import `RsbuildConfig` from `meocord/interface`\ninstead. The [migration guide](/docs/4.0/migrating#2-replace-the-webpack-hook-with-rsbuild) shows where each\nwebpack setting goes.",
+          "breaking": true
+        },
+        {
+          "markdown": "[#19](https://github.com/l7aromeo/meocord/pull/19) [`204c7be`](https://github.com/l7aromeo/meocord/commit/204c7bec74886c931732cb771d9178b47fbec5e8) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Require dotenv 18. The `dotenv` peer dependency moves from `^17.4.2` to `^18.0.3`, so install\n`dotenv@18` alongside MeoCord 4. No application code changes — `import 'dotenv/config'` behaves\nthe same. See the [migration guide](/docs/4.0/migrating#1-upgrade-dotenv-to-18).",
+          "breaking": true
+        }
+      ]
+    },
+    {
+      "title": "Minor Changes",
+      "entries": [
+        {
+          "markdown": "[#22](https://github.com/l7aromeo/meocord/pull/22) [`4deb96f`](https://github.com/l7aromeo/meocord/commit/4deb96fd73f86a29c46b9bb080c13e6267246cb1) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Add `bundleDependencies`, which puts everything a bot needs inside `dist`, so it deploys without\n`node_modules` or an install step. Plain JavaScript dependencies are bundled into `main.js`. Native\naddons such as `sharp` are found while building and copied, with their platform binary, into\n`dist/node_modules` — nothing has to be listed.\n\nA build carrying native addons records its platform in `dist/meocord.platform.json`, and a bot\nstarted on another platform stops before going online with a message naming both. Build on the\nplatform you deploy to. See\n[Self-contained builds](/docs/4.0/deployment#self-contained-builds).",
+          "breaking": false
+        }
+      ]
+    },
+    {
+      "title": "Patch Changes",
+      "entries": [
+        {
+          "markdown": "[#22](https://github.com/l7aromeo/meocord/pull/22) [`4deb96f`](https://github.com/l7aromeo/meocord/commit/4deb96fd73f86a29c46b9bb080c13e6267246cb1) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Read `meocord.config.ts` on every build. `meocord build` read the compiled `dist/meocord.config.mjs`\nleft by the previous build, so a config edit took effect one build late, and the watcher's reload\non a config change reloaded nothing.",
+          "breaking": false
+        },
+        {
+          "markdown": "[#22](https://github.com/l7aromeo/meocord/pull/22) [`4deb96f`](https://github.com/l7aromeo/meocord/commit/4deb96fd73f86a29c46b9bb080c13e6267246cb1) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Start the bot with `bun --no-install` from `meocord start`. Without it, bun downloads any package it\ncannot find while the bot runs, which a bot deployed without `node_modules` would do in\nproduction. If you start `dist/main.js` with bun yourself, pass the flag too.",
+          "breaking": false
+        },
+        {
+          "markdown": "[#25](https://github.com/l7aromeo/meocord/pull/25) [`2179f85`](https://github.com/l7aromeo/meocord/commit/2179f85c2912d45e3fefbf996ca267c19a1a773c) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Stop `meocord generate` overwriting files. Slash, context-menu and primary entry point controllers\nall wrote one shared `builders/sample.builder.ts`, so generating a second controller replaced a\nbuilder you had already edited. Each controller now gets its own `builders/<name>.builder.ts`\nexporting `<Name>CommandBuilder`, and registers a command named after it — `admin/ban` registers\n`admin-ban` — rather than every one registering `sample-slash`. Generating a controller, service or\nguard refuses if any file it would write already exists.",
+          "breaking": false
+        },
+        {
+          "markdown": "[#24](https://github.com/l7aromeo/meocord/pull/24) [`5e2a54b`](https://github.com/l7aromeo/meocord/commit/5e2a54b67a1f9f51c4c3a3e8cf51247de2ac2528) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Type `deleted` on `createMockMessage()`. The mock tracks and documents it, but it was missing from\nthe type, so `message.deleted` did not compile.",
+          "breaking": false
+        },
+        {
+          "markdown": "[#24](https://github.com/l7aromeo/meocord/pull/24) [`5e2a54b`](https://github.com/l7aromeo/meocord/commit/5e2a54b67a1f9f51c4c3a3e8cf51247de2ac2528) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Accept slash command builders that add options. `@CommandBuilder(CommandType.SLASH)` rejected\n`new SlashCommandBuilder().addStringOption(...)`, whose type narrows to\n`SlashCommandOptionsOnlyBuilder`, so the most common builder — one command with an option — did\nnot compile.",
+          "breaking": false
+        },
+        {
+          "markdown": "[#21](https://github.com/l7aromeo/meocord/pull/21) [`bebf116`](https://github.com/l7aromeo/meocord/commit/bebf1168466595546017a317b62acd3707ff2d1c) Thanks [@l7aromeo](https://github.com/l7aromeo)! - Generate applications with current test tooling: vitest and `@vitest/coverage-istanbul` 5,\n`unplugin-swc` 2, and current eslint, prettier and typescript-eslint. A new application's\n`test:coverage` no longer fails on its decorated entry files.",
+          "breaking": false
+        }
+      ]
+    }
+  ]
+}
