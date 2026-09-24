@@ -1,0 +1,41 @@
+/*
+ * The palettes, and the only place a colour is written down. Dark is `:root` so a reader whose
+ * pre-paint script cannot run still gets a styled page; light overrides it by attribute.
+ */
+:root {
+  color-scheme: dark;
+  --surface-default: #0d0e12;
+  --surface-content: #e7e8ee;
+  --surface-muted: rgba(231, 232, 238, 0.6);
+  --surface-line: rgba(231, 232, 238, 0.12);
+  --primary-default: #8f9bff;
+  --primary-content: #0d0e12;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --surface-default: #f7f7fa;
+  --surface-content: #16171d;
+  --surface-muted: rgba(22, 23, 29, 0.62);
+  --surface-line: rgba(22, 23, 29, 0.12);
+  --primary-default: #4150d8;
+  --primary-content: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Styled here, not by props: <body> renders outside StyleRegistry. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--surface-default);
+  color: var(--surface-content);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
