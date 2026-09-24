@@ -1,0 +1,48 @@
+{
+  "name": "meocord-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start:dev": "rm -rf .next && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
+    "build": "rm -rf .next && bun --bun next build",
+    "serve": "bun scripts/serve-standalone.ts",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "bun --bun x playwright test",
+    "icons": "bun scripts/generate-icons.ts"
+  },
+  "dependencies": {
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@meonode/ui": "^3.0.0",
+    "meo-canvas": "^10.0.4",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@meonode/compiler": "^0.9.0",
+    "@next/eslint-plugin-next": "^16.3.6",
+    "@playwright/test": "^1.63.0",
+    "@types/bun": "^1.4.2",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-istanbul": "^5.0.1",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1"
+  }
+}
