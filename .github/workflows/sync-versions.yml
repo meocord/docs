@@ -1,0 +1,83 @@
+name: Sync versions
+
+# Adds the MeoCord versions published to npm that the site lacks, each verified against its
+# registry integrity and its Sigstore provenance, and opens a pull request for review.
+#
+# The pull request is opened as the docs bot, a GitHub App installed on this repository only with
+# contents and pull-requests write: one opened with the workflow's own token would not run the
+# checks. The app's credentials live in the `docs-bot` environment, which only this workflow on
+# main may use: the variable DOCS_BOT_CLIENT_ID and the secret DOCS_BOT_PRIVATE_KEY. The token is
+# minted after the sync, so nothing the sync downloads runs while it exists.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-versions
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: docs-bot
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --linker isolated
+
+      - name: Sync with the registry
+        id: sync
+        run: |
+          bun run versions:sync --summary "$RUNNER_TEMP/summary.md"
+          if [ -n "$(git status --porcelain)" ]; then echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+
+      # The pull request's own checks run the content check and the examples; this only keeps a
+      # broken sync from opening one.
+      - name: Check the content
+        if: steps.sync.outputs.changed == 'true'
+        run: bun run content:check
+
+      - name: Mint the docs bot's token
+        if: steps.sync.outputs.changed == 'true'
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.DOCS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.DOCS_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Open the pull request
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          APP_SLUG: ${{ steps.token.outputs.app-slug }}
+        run: |
+          open=$(gh pr list --state open --search 'head:bot/versions-' --json number --jq length)
+          if [ "$open" != "0" ]; then
+            echo "::notice::A versions pull request is already open; merge or close it, and the next run adds what is left."
+            exit 0
+          fi
+          versions=$(git status --porcelain -- generated/api | sed -n 's#.*generated/api/\(.*\)\.json$#\1#p' | sort -V | paste -sd ' ' -)
+          branch="bot/versions-$(echo "$versions" | tr ' ' '_')"
+          user_id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${user_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -A
+          git commit -m "docs(versions): add ${versions// /, }"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$branch"
+          gh pr create --base main --head "$branch" --title "docs(versions): add ${versions// /, }" --body-file "$RUNNER_TEMP/summary.md"
