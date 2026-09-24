@@ -1,0 +1,14 @@
+{
+  "version": "4.0.0-beta.4",
+  "sections": [
+    {
+      "title": "Major Changes",
+      "entries": [
+        {
+          "markdown": "[#44](https://github.com/l7aromeo/meocord/pull/44) [`e48472e`](https://github.com/l7aromeo/meocord/commit/e48472e9ffee2f0371a7a2a71a4063e99ce61674) Thanks [@l7aromeo](https://github.com/l7aromeo)! - **Breaking:** `meocord/decorator` exports only the decorators. The routing helpers it also exported\n— `getCommandMap`, `getMessageHandlers`, `getReactionHandlers`, `getAutocompleteHandlers`,\n`findAmbiguousRoutes` and `PARAM_SEPARATOR` — are internal to MeoCord now. See the\n[migration guide](/docs/4.0/migrating#internal-helpers-are-no-longer-exported).",
+          "breaking": true
+        }
+      ]
+    }
+  ]
+}

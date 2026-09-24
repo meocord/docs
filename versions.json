@@ -1,0 +1,42 @@
+{
+  "package": "meocord",
+  "since": "4.0.0-beta.0",
+  "provenance": {
+    "issuer": "https://token.actions.githubusercontent.com",
+    "identities": [
+      {
+        "range": "<4.1.0-beta.0",
+        "identity": "https://github.com/l7aromeo/meocord/.github/workflows/release.yml@refs/heads/main"
+      },
+      {
+        "range": ">=4.1.0-beta.0",
+        "identity": "https://github.com/meocord/meocord/.github/workflows/release.yml@refs/heads/main"
+      }
+    ],
+    "integrityOnly": []
+  },
+  "lines": [
+    {
+      "line": "4.1",
+      "status": "prerelease",
+      "guides": "readme",
+      "versions": [
+        "4.1.0-beta.0"
+      ]
+    },
+    {
+      "line": "4.0",
+      "status": "current",
+      "guides": "readme",
+      "versions": [
+        "4.0.0-beta.0",
+        "4.0.0-beta.1",
+        "4.0.0-beta.2",
+        "4.0.0-beta.3",
+        "4.0.0-beta.4",
+        "4.0.0-beta.5",
+        "4.0.0"
+      ]
+    }
+  ]
+}
