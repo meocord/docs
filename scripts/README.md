@@ -1,0 +1,73 @@
+# Content pipeline
+
+Everything the site shows about a MeoCord version comes from the package published to npm, checked
+before anything is generated from it, or from files written for the site and checked against the
+exact version they describe.
+
+## What lives where
+
+| Path                                  | Contents                                                                              | Edited by           |
+| ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------- |
+| `versions.json`                       | The documented versions, grouped into minor lines with a status each, and provenance  | the sync, reviewers |
+| `content/<line>/`                     | A line's guides: one Markdown page each, with `id` and `title` front matter           | people, or the sync |
+| `examples/<line>/`                    | A workspace pinning that line's exact meocord; guides embed its files                 | people              |
+| `generated/api/<version>.json`        | TypeDoc's JSON for the version's declaration files, one module per entry point        | the pipeline only   |
+| `generated/changelog/<version>.json`  | The version's CHANGELOG.md section, split into entries, each marked if breaking       | the pipeline only   |
+| `generated/migrating/<line>.md`       | `docs/MIGRATING.md` at the commit the line's newest version was built from            | the pipeline only   |
+| `generated/readme-anchors/<line>.json`| For a line whose guides are imported from its README: which page holds each heading    | the pipeline only   |
+| `generated/since.json`                | The first version every symbol, member and parameter appears in, from the API diffs    | the pipeline only   |
+
+A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and
+`next` the one in prerelease. A line's `guides` is `readme` while its pages are imported from the README
+its newest version shipped, and `authored` once they are written for the site; a new line starts from the
+newest line's guides.
+
+## Verifying a version
+
+Before anything is generated from a version, the pipeline:
+
+1. downloads its tarball and compares its sha512 with the registry's `dist.integrity`;
+2. fetches the registry's SLSA provenance attestation and verifies its Sigstore signature against
+   Sigstore's trusted root, requiring the issuer `https://token.actions.githubusercontent.com` and the
+   exact identity `versions.json` names for that version's range;
+3. checks that the attested subject is `pkg:npm/meocord@<version>` with the downloaded tarball's sha512.
+
+Versions up to 4.0.x were published from `l7aromeo/meocord`, and from 4.1.0-beta.0 on from
+`meocord/meocord`; both identities are listed exactly. A version with no attestation fails, unless its
+exact version is listed under `provenance.integrityOnly`, which a reviewer adds on purpose.
+
+## Commands
+
+| Command                                  | What it does                                                                                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `bun run versions:sync`                  | Adds every version published since `versions.json`'s `since` that the site lacks, verified      |
+| `bun run api:generate <version...>`      | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
+| `bun run content:check`                  | Checks front matter, examples, links and anchors, and that every version has its generated data |
+| `bun run examples:check [line...]`       | Typechecks each line's examples against its pinned meocord                                      |
+| `bun run content:backport <sha> --to <line>` | Applies a commit's change to one line's guides to another line, on a branch of its own       |
+| `bun run test:pipeline`                  | The pipeline's own tests, offline; `test:pipeline:coverage` enforces the coverage thresholds    |
+
+Install with `bun install --linker isolated`, so each example workspace resolves its own meocord.
+
+Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard"}`, a path under
+`examples/<line>/src/` and a region between `// #region guard` and `// #endregion guard`. A written guide
+has no TypeScript code fence: its TypeScript is in an example, where it is typechecked. Pages imported
+from a README keep the README's code blocks as they were published.
+
+## The release bot
+
+`.github/workflows/sync-versions.yml` runs `versions:sync` hourly and on demand, and opens a pull request
+with what it added. It opens the pull request as a GitHub App, because one opened with the workflow's own
+token would not run the checks. The maintainer sets up:
+
+1. A GitHub App owned by the `meocord` organization, installed on `meocord/docs` only, with the
+   repository permissions **Contents: Read and write** and **Pull requests: Read and write** and nothing
+   else. No webhook.
+2. An environment named `docs-bot` in `meocord/docs`, with deployment branches limited to `main`,
+   holding the variable `DOCS_BOT_CLIENT_ID` (the app's client ID) and the secret `DOCS_BOT_PRIVATE_KEY`
+   (a private key generated for the app).
+
+The workflow mints a token that lasts an hour, and only after the sync has run, so nothing the sync
+downloads runs while the token exists. The app can push branches and open pull requests in this
+repository, and nothing more: it is in no branch-protection bypass list. Revoke its key in the app's
+settings if it leaks.
