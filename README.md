@@ -5,3 +5,44 @@ built on discord.js.
 
 Every published version is documented, prereleases included. Code examples are compiled against the exact release
 they describe, and the API reference is generated from the package published to npm.
+
+## Development
+
+Requires [Bun](https://bun.sh) 1.4.
+
+```bash
+bun install
+bun run start:dev      # next dev behind the CSP hash proxy, on PORT (3000) and UPSTREAM_PORT (3001)
+bun run build          # production build
+bun run serve          # the production build, run as the image runs it
+```
+
+| Command                 | Use it to                                                                |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `bun run lint`          | Run ESLint                                                               |
+| `bun run format:check`  | Check formatting with Prettier (`bun run format` rewrites)               |
+| `bun run typecheck`     | Typecheck with `tsc`                                                     |
+| `bun run test:coverage` | Run the unit tests with coverage; thresholds are enforced in CI          |
+| `bun run test:e2e`      | Run the Playwright smoke tests against a production build                |
+| `bun run icons`         | Redraw the icons in `public/` and `src/app/favicon.ico`, and commit them |
+
+## How it is served
+
+Every page is rendered once and served byte-identical to every reader, so it can be cached at the edge:
+
+- `src/proxy.ts` sets the cache and security headers. Its CSP leaves a marker in `script-src`, which
+  `scripts/csp-hash-proxy.mjs`, the server's entrypoint, fills with the hashes of the inline scripts it sends.
+- `/docs/latest/…` serves the current line under its own URL; `/docs/next/…` redirects to the line in prerelease.
+- Open Graph cards are drawn at `/og/<line>/<id>.<hash>.png`, with the content hash in the path, and cached as
+  immutable.
+- Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
+  disallows everything and the sitemap is empty. It is read at build time; set `SITE_INDEXABLE=true` to build the
+  indexable site.
+
+Pushes to `main` publish a container image to `ghcr.io/meocord/docs`, with an SBOM and a build provenance
+attestation.
+
+## License
+
+[MIT](LICENSE). The fonts in `assets/fonts` carry their own licences beside them: Instrument Sans and JetBrains Mono, both under
+the SIL Open Font License 1.1.
