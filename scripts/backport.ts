@@ -23,7 +23,9 @@ if (!findLine(config, to)) {
   process.exit(1)
 }
 
-const diff = git('show', '--format=', '--binary', sha, '--', 'content/')
+// One line of context: the lines' pages differ around a change, in their front matter at least.
+// Untrimmed, since a patch must end with its last line's newline.
+const diff = execFileSync('git', ['show', '--format=', '--binary', '-U1', sha, '--', 'content/'], { encoding: 'utf8' })
 const from = sourceLine(diff)
 if (from === to) {
   console.error(`${sha} already changes content/${to}.`)
@@ -37,7 +39,7 @@ if (git('status', '--porcelain')) {
 }
 
 git('switch', '-c', `backport/${short}-${to}`)
-const apply = spawnSync('git', ['apply', '--index', '-'], { input: retargetDiff(diff, from, to), encoding: 'utf8' })
+const apply = spawnSync('git', ['apply', '--index', '-C1', '-'], { input: retargetDiff(diff, from, to), encoding: 'utf8' })
 if (apply.status !== 0) {
   console.error(`The change does not apply cleanly to ${to}:\n${apply.stderr}\nResolve it on this branch, or drop the branch.`)
   process.exit(1)
