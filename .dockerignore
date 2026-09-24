@@ -1,0 +1,15 @@
+.git
+.github
+.next
+node_modules
+coverage
+playwright-report
+test-results
+e2e
+tests
+**/*.spec.ts
+*.md
+!README.md
+.env*
+Dockerfile
+.dockerignore
