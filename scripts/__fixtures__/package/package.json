@@ -1,0 +1,15 @@
+{
+  "name": "meocord",
+  "version": "9.0.0-beta.0",
+  "type": "module",
+  "exports": {
+    "./core": {
+      "import": { "types": "./dist/types/core/index.d.ts", "default": "./dist/esm/core/index.js" }
+    },
+    "./enum": {
+      "types": "./dist/types/enum/index.d.ts",
+      "import": "./dist/esm/enum/index.js"
+    },
+    "./package.json": "./package.json"
+  }
+}
