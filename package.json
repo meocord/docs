@@ -25,6 +25,8 @@
     "versions:sync": "bun scripts/sync-versions.ts",
     "api:generate": "bun scripts/api-generate.ts",
     "content:check": "bun scripts/check-content.ts",
+    "brand:sync": "bun scripts/brand-sync.ts",
+    "brand:check": "bun scripts/brand-sync.ts --check",
     "content:backport": "bun scripts/backport.ts",
     "examples:check": "bun scripts/check-examples.ts",
     "home:trace": "bun scripts/home-trace.ts"
