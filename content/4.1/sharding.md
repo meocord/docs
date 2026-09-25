@@ -35,6 +35,10 @@ Each shard process runs the whole application with its own container, and its li
 runs in one process so the watcher restarts a single one; `sharding.development: true` runs separate
 processes there too.
 
+What a service keeps in memory is per process too, cooldowns included: counted per shard, `'user'` and
+`'global'` cooldowns allow more than they say, and the bot warns at startup. Bind `ShardedCooldownStore` to
+count them in the manager instead; see [Where calls are counted](/docs/4.1/cooldowns#where-calls-are-counted).
+
 ## Reaching every shard
 
 Inject `ShardContext` from `meocord/core`, and `call` a service's method in every process:

@@ -22,7 +22,7 @@ refused by the three-second cooldown before it reaches the per-minute one.
 | `uses`    | `1`      | Calls allowed within the window.                                                                                                        |
 | `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`. Outside a server, `'guild'` and `'channel'` count per user. |
 | `bypass`  | none     | `(context) => boolean`: exempts a call without counting it, one from an owner for instance.                                             |
-| `by`      | none     | `(context, params) => string \| number \| undefined`: counts calls apart by a value of the call, within the scope `per` names.         |
+| `by`      | none     | `(context, params) => string \| number \| undefined`: counts calls apart by a value of the call, within the scope `per` names.          |
 
 A blocked call throws `CooldownError` from `meocord/common`, which the built-in fallback answers only to the
 caller: "Slow down: try again in 12s." `cooldownMessage(retryAfterMs)` builds that text, and an exception
@@ -64,10 +64,78 @@ check-in:
 
 ## Where calls are counted
 
-By default, in the bot's memory. With process sharding each shard counts on its own, so `'user'` and
-`'global'` cooldowns allow more than they say, and the bot warns at startup; `'guild'` and `'channel'` stay
-exact, since a server lives on one shard.
+By default, in this process's memory: one count per bot, which drops keys whose calls have all expired. With
+[process sharding](/docs/4.1/sharding#a-process-per-shard), each shard counts on its own, so `'user'` and
+`'global'` cooldowns allow more than they say, and the bot warns at startup unless it binds a shared store.
+`'guild'` and `'channel'` stay exact, since a server lives on one shard.
 
-To share one count, extend `CooldownStore` and pass it to `@MeoCord({ cooldownStore })`. It is resolved like a
-service, so it can inject its client, and its `consume` must check and record a call in one step, so two
-calls at the limit cannot both pass. In tests, each testing module counts in a fresh store.
+| Store                               | Counts                                            | Survives a restart               | Across hosts         |
+| ----------------------------------- | ------------------------------------------------- | -------------------------------- | -------------------- |
+| `MemoryCooldownStore` (the default) | In this process; per shard with process sharding  | No                               | No                   |
+| `ShardedCooldownStore`              | In the shard manager, for every shard on the host | A shard's restart, not the bot's | No                   |
+| `RedisCooldownStore`                | On the Redis server                               | Yes                              | Yes                  |
+| Your own `CooldownStore`            | Where it keeps them                               | As its database does             | As its database does |
+
+To keep counts across restarts, or share them between shards and processes, bind a shared store with
+`@MeoCord({ cooldownStore })`. In tests, each testing module counts in a fresh in-memory store; provide
+`{ provide: CooldownStore, useValue }` to use another.
+
+### Process sharding on one host
+
+`ShardedCooldownStore` from `meocord/common` needs no database: each shard asks the shard manager, which counts
+every shard's calls in its memory over the IPC the shards already use, so `'user'` and `'global'` cooldowns
+are exact across them.
+
+::example{file="recipes/cooldown-stores/app-sharded.ts" region="app"}
+
+- The manager's counts last while it runs: a shard that restarts keeps them, but they start again when the
+  whole bot restarts, as the default store's do.
+- If the manager does not answer within a second, the shard counts the call itself and logs a warning, once.
+- Without process sharding, it counts in the one process, which is exact there too.
+
+### Redis
+
+`RedisCooldownStore` from `meocord/common` counts each key in a sorted set. One Lua script trims, counts and
+adds to it, timed by the server's `TIME` so every process counts by one clock, and every key is set to expire.
+MeoCord depends on no Redis client: give `RedisCooldownStore.using` a function that runs a script with the one
+you have. With node-redis:
+
+::example{file="recipes/cooldown-stores/redis.ts" region="store"}
+
+`using` returns a class, which the app binds like any other store:
+
+::example{file="recipes/cooldown-stores/app-redis.ts" region="app"}
+
+- With ioredis, run the script as `(script, keys, args) => redis.eval(script, keys.length, ...keys, ...args)`.
+- `evalsha` is optional. With it, the script is sent by its SHA1, and in full only when the server answers
+  `NOSCRIPT`; without it, every call sends the whole script.
+- Keys start with `meocord:cooldown:`. Pass `{ prefix }` for your own, to keep two bots on one server apart.
+- The same script runs on Redis 5 and later, Valkey, KeyDB, Dragonfly and Upstash, which runs `EVAL`. Garnet
+  runs Lua only in part, so [check it](#checking-a-store) before relying on it.
+
+### Any other database
+
+Extend `CooldownStore`. It is resolved like a [service](/docs/4.1/services), so it can inject its client, and
+its `consume` must check and record a call in one step, so two calls at the limit cannot both pass.
+[A cooldown store](/docs/4.1/recipe-cooldown-stores) builds one for PostgreSQL, SQLite and MongoDB.
+
+## Checking a store
+
+A shared store is easy to get subtly wrong. `testCooldownStore` from `meocord/testing` runs the behaviour
+`MemoryCooldownStore` defines against yours, under Vitest, Jest or any runner with `describe`, `it` and
+`expect`:
+
+::example{file="recipes/cooldown-stores/sharded.spec.ts" region="spec"}
+
+It checks that:
+
+- a key allows `uses` calls within the window, and the window slides rather than resetting in buckets;
+- `retryAfterMs` counts from the oldest call still in the window, so "try again in 12s" means the same
+  whatever the store;
+- each key counts on its own, and calls in the same millisecond stay distinct;
+- of several concurrent calls at the limit, exactly one passes.
+
+It uses real time with short windows, so it takes a few seconds. Each case asks the factory for a store and
+counts under keys of its own, so it can run against a database that outlives the test. What it cannot see is
+whether every key expires: a store should give each one an expiry, or clear keys whose calls have all left
+their window.
