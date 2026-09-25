@@ -58,17 +58,58 @@ export const Prose = createNode('article', {
       borderRadius: 4,
       backgroundColor: 'theme.surface.fill',
     },
-    '& pre': {
+    // A code block in its frame: a header with the file or language and the copy button, then the code.
+    '& [data-code]': {
       margin: '0 0 theme.space.6',
-      padding: 'theme.space.4',
-      overflowX: 'auto',
       borderRadius: 'theme.radius.code',
       border: 'theme.line.width solid theme.line.hairline',
       backgroundColor: 'theme.surface.canvas',
+      overflow: 'hidden',
+    },
+    '& [data-code] figcaption': {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 'theme.space.2',
+      minHeight: 36,
+      padding: '0 theme.space.1 0 theme.space.4',
+      borderBottom: 'theme.line.width solid theme.line.hairline',
+      fontFamily: 'theme.font.mono',
+      fontSize: 'theme.type.caption.size',
+      color: 'theme.ink.secondary',
+    },
+    '& [data-code] figcaption [data-file]': { color: 'theme.ink.primary' },
+    '& [data-code] figcaption [role="group"]': { display: 'flex', gap: 2, marginLeft: -8 },
+    '& [data-code] pre': {
+      margin: 0,
+      padding: 'theme.space.4',
+      overflowX: 'auto',
       fontSize: 'theme.type.code.size',
       lineHeight: 'theme.type.code.line',
     },
-    '& pre code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent' },
+    '& [data-code] pre code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
+    '& [data-copy], & [data-pm-choice]': {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: 'none',
+      borderRadius: 'theme.radius.control',
+      backgroundColor: 'transparent',
+      color: 'theme.ink.secondary',
+      fontFamily: 'inherit',
+      fontSize: 'inherit',
+      cursor: 'pointer',
+    },
+    '& [data-copy]': { width: 28, height: 28, padding: 0 },
+    '& [data-pm-choice]': { height: 24, padding: '0 theme.space.2' },
+    '& [data-copy]:hover, & [data-pm-choice]:hover': { color: 'theme.ink.primary' },
+    '& [data-copy]:focus-visible, & [data-pm-choice]:focus-visible': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: -2,
+    },
+    // The copy glyph turns into a tick for a moment once the code is copied.
+    '& [data-copy] [data-icon="copied"], & [data-copy][data-copied] [data-icon="copy"]': { display: 'none' },
+    '& [data-copy][data-copied] [data-icon="copied"]': { display: 'block', color: 'theme.callout.tip.glyph' },
 
     '& blockquote': {
       margin: '0 0 theme.space.4',
@@ -77,7 +118,28 @@ export const Prose = createNode('article', {
       backgroundColor: 'theme.callout.note.fill',
       color: 'theme.ink.primary',
     },
-    '& blockquote > :last-child': { marginBottom: 0 },
+    '& blockquote > :last-child, & [data-callout] > :last-child': { marginBottom: 0 },
+
+    // Callouts: a tinted fill and a label in the kind's colour; no thick border, no emoji.
+    '& [data-callout]': {
+      display: 'block',
+      margin: '0 0 theme.space.4',
+      padding: 'theme.space.3 theme.space.4',
+      borderRadius: 'theme.radius.callout',
+      backgroundColor: 'theme.callout.note.fill',
+    },
+    '& [data-callout] > [data-callout-label]': {
+      display: 'block',
+      marginBottom: 'theme.space.1',
+      fontWeight: 'theme.font.weight.semibold',
+      color: 'theme.callout.note.glyph',
+    },
+    '& [data-callout="tip"]': { backgroundColor: 'theme.callout.tip.fill' },
+    '& [data-callout="tip"] > [data-callout-label]': { color: 'theme.callout.tip.glyph' },
+    '& [data-callout="warning"]': { backgroundColor: 'theme.callout.warning.fill' },
+    '& [data-callout="warning"] > [data-callout-label]': { color: 'theme.callout.warning.glyph' },
+    '& [data-callout="danger"]': { backgroundColor: 'theme.callout.danger.fill' },
+    '& [data-callout="danger"] > [data-callout-label]': { color: 'theme.callout.danger.glyph' },
 
     '& hr': { margin: 'theme.space.10 0', border: 'none', borderTop: 'theme.line.width solid theme.line.strong' },
 

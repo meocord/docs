@@ -9,6 +9,7 @@ import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { changelogAnchor } from '../../src/lib/urls'
+import { isKnownLanguage } from '../../src/lib/prose/languages'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
@@ -67,6 +68,21 @@ export function withoutCode(markdown: string): string {
 
 export function markdownLinks(markdown: string): string[] {
   return [...withoutCode(markdown).matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)].map(match => match[1])
+}
+
+/** The language each opening code fence names, in order; an unmarked fence names none. */
+export function fenceLanguages(markdown: string): string[] {
+  const languages: string[] = []
+  let fence: string | undefined
+  for (const line of markdown.split('\n')) {
+    const match = /^\s*(`{3,}|~{3,})\s*([^\s`{]*)/.exec(line)
+    if (!match) continue
+    if (!fence) {
+      fence = match[1]
+      if (match[2]) languages.push(match[2])
+    } else if (match[1].startsWith(fence) && !match[2]) fence = undefined
+  }
+  return languages
 }
 
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
@@ -178,6 +194,9 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
           problems.push(`${where}: id "${frontmatter.id}" is also used by ${ids.get(frontmatter.id)}`)
         ids.set(frontmatter.id, where)
       }
+      for (const language of fenceLanguages(body))
+        if (!isKnownLanguage(language))
+          problems.push(`${where}: a code fence is marked "${language}", which the site does not highlight`)
       if (set === 'authored') {
         if (frontmatter.source?.startsWith('readme@'))
           problems.push(`${where}: a page imported from a README belongs in generated/readme/${name}`)

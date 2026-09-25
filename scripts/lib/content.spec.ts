@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkSite, markdownLinks, parsePage, type SiteSnapshot } from './content.js'
+import { checkSite, fenceLanguages, markdownLinks, parsePage, type SiteSnapshot } from './content.js'
 import type { ConfigDocument } from './config-reference.js'
 import type { VersionsConfig } from './versions.js'
 
@@ -132,6 +132,13 @@ describe('checkSite', () => {
     ])
   })
 
+  it('reports a code fence in a language the site does not highlight', () => {
+    const pages = { a: page('id: a\ntitle: A', '```cobol\nDISPLAY "HI".\n```\n\n```shell\nls\n```\n\n```\nplain\n```') }
+    expect(checkSite(withAuthored(pages))).toEqual([
+      'content/4.1/a.md: a code fence is marked "cobol", which the site does not highlight',
+    ])
+  })
+
   it('reports examples that do not exist, or lack the region', () => {
     const pages = {
       a: page(
@@ -259,5 +266,15 @@ describe('parsePage and markdownLinks', () => {
 
   it('ignores links inside code', () => {
     expect(markdownLinks('[a](/x "t")\n```\n[b](/y)\n```\n`[c](/z)`')).toEqual(['/x'])
+  })
+})
+
+describe('fenceLanguages', () => {
+  it('reads each opening fence’s language, and none from a closing or nested fence', () => {
+    expect(fenceLanguages('```ts\nx\n```\n\n~~~ shell\ny\n~~~\n\n````md\n```ts\n```\n````\n\n```\nz\n```')).toEqual([
+      'ts',
+      'shell',
+      'md',
+    ])
   })
 })
