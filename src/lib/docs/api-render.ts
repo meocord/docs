@@ -223,7 +223,7 @@ function signatureDetails(
       heading('Throws', ids?.throws),
       Ul({
         key: `${key}-throws`,
-        children: signature.throws.map((text, index) => Li({ key: index, children: markdown(text, 'd') })),
+        children: signature.throws.map(text => Li({ key: text, children: markdown(text, 'd') })),
       }),
     )
   }
@@ -322,8 +322,8 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
       H2('See also', { key: 'see-also', id: ids.seeAlso }),
       Ul({
         key: 'see-also-list',
-        children: symbol.seeAlso.map((token, index) =>
-          Li({ key: index, children: token.href ? A({ href: token.href, children: token.text }) : token.text }),
+        children: symbol.seeAlso.map(({ href, text }) =>
+          Li({ key: text, children: href ? A({ href, children: text }) : text }),
         ),
       }),
     )

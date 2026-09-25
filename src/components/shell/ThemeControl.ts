@@ -27,14 +27,14 @@ export const ThemeControl = Component<{ touch?: boolean }>(function ThemeControl
     backgroundColor: 'theme.surface.fill',
     children: For(
       CHOICES,
-      choice =>
-        Button(Glyph(choice.glyph), {
+      ({ value, label, glyph }) =>
+        Button(Glyph(glyph), {
           type: 'button',
-          title: choice.label,
-          'aria-label': choice.label,
-          'aria-pressed': hydrated ? preference === choice.value : undefined,
-          'data-value': choice.value,
-          onClick: () => setPreference(choice.value),
+          title: label,
+          'aria-label': label,
+          'aria-pressed': hydrated ? preference === value : undefined,
+          'data-value': value,
+          onClick: () => setPreference(value),
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -51,7 +51,7 @@ export const ThemeControl = Component<{ touch?: boolean }>(function ThemeControl
             ...transitionCss(),
             ...focusCss,
             '&:hover': { color: 'theme.ink.primary' },
-            [`html[data-theme-preference="${choice.value}"] &`]: {
+            [`html[data-theme-preference="${value}"] &`]: {
               color: 'theme.ink.primary',
               backgroundColor: 'theme.surface.sheet',
               boxShadow: 'theme.elevation.1',

@@ -69,9 +69,9 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
         H3(section.title, { key: sectionId, id: sectionId, 'data-group': true }),
         Ul({
           key: `${sectionId}-list`,
-          children: section.entries.map((entry, index) =>
+          children: section.entries.map(entry =>
             Li({
-              key: index,
+              key: entry.markdown,
               'data-breaking': entry.breaking || undefined,
               children: [
                 ...(entry.breaking ? [Span('Breaking', { key: 'badge', 'data-badge': 'deprecated' }), ' '] : []),
@@ -138,12 +138,12 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
     H2('Where it is documented', { key: 'elsewhere', id: 'elsewhere' }),
     Ul({
       key: 'elsewhere-list',
-      children: elsewhere.map(found =>
+      children: elsewhere.map(({ line: other, page: { slug, title } }) =>
         Li({
-          key: found.line,
+          key: other,
           children: A({
-            href: docsHref({ kind: 'guide', line: found.line, slug: found.page.slug }, VERSIONS),
-            children: `${found.page.title} in ${found.line}`,
+            href: docsHref({ kind: 'guide', line: other, slug }, VERSIONS),
+            children: `${title} in ${other}`,
           }),
         }),
       ),
@@ -153,9 +153,7 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
       H3(group.title, { key: `g-${group.title}` }),
       Ul({
         key: `g-${group.title}-list`,
-        children: group.items.map(item =>
-          Li({ key: item.href, children: A({ href: item.href, children: item.title }) }),
-        ),
+        children: group.items.map(({ href, title }) => Li({ key: href, children: A({ href, children: title }) })),
       }),
     ]),
   ]

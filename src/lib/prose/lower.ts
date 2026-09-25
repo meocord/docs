@@ -104,8 +104,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
         return Code(node.value, { key })
       case 'break':
         return Br({ key })
-      case 'link':
-        return A({ key, href: href(node.url), title: node.title ?? undefined, children: children(node) })
+      case 'link': {
+        const { url, title } = node
+        const target = href(url)
+        return A({ key, href: target, title: title ?? undefined, children: children(node) })
+      }
       case 'image':
         return Img({ key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
       case 'code':
@@ -131,9 +134,9 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           start: node.ordered && node.start !== 1 ? (node.start ?? undefined) : undefined,
           // A tight list's items hold bare paragraphs; unwrapping them keeps its spacing tight. Looseness
           // is the list's (a blank line between any two items) or an item's own.
-          children: node.children.map((item, index) =>
+          children: node.children.map(item =>
             Li({
-              key: index,
+              key: offset(item),
               children:
                 node.spread || item.spread
                   ? children(item)
@@ -168,7 +171,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
     const cells = (row: MdTable['children'][number], tag: 'th' | 'td') =>
       row.children.map((cell, index) =>
         Node(tag, {
-          key: index,
+          key: offset(cell),
           'data-align': table.align?.[index] ?? undefined,
           children: children(cell),
         }),
@@ -179,13 +182,18 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       children: Table({
         children: [
           Thead({ key: 'head', children: Tr({ children: cells(head, 'th') }) }),
-          Tbody({ key: 'body', children: body.map((row, index) => Tr({ key: index, children: cells(row, 'td') })) }),
+          Tbody({ key: 'body', children: body.map(row => Tr({ key: offset(row), children: cells(row, 'td') })) }),
         ],
       }),
     })
   }
 
   return { nodes: tree.children.map((child, index) => lower(child, index)).filter(isNode), headings }
+}
+
+/** A Markdown node's key: where it starts in the source, which no other node shares. */
+function offset(node: Nodes): number | undefined {
+  return node.position?.start.offset
 }
 
 function isNode(child: Child): child is NodeInstance {
