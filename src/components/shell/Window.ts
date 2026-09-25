@@ -9,9 +9,11 @@ import { SheetScroll } from '@/components/shell/SheetScroll'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
 import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
-import type { TocEntry } from '@/components/shell/types'
+import type { NavGroup, TocEntry } from '@/components/shell/types'
 
 export interface WindowProps extends ToolbarProps {
+  /** The sidebar's links, grouped. */
+  groups: NavGroup[]
   toc?: TocEntry[]
   /** Facts for the inspector under the headings, such as the edit link. */
   inspector?: Children
@@ -121,7 +123,7 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
       }),
       SheetCard({
         children: [
-          Toolbar({ crumbs, groups, version, repository }),
+          Toolbar({ crumbs, version, repository }),
           SheetBody({
             key: 'body',
             children:

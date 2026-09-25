@@ -86,6 +86,33 @@ test.describe('on a phone', () => {
     await expect(sheet).toBeHidden()
     await expect(open).toBeFocused()
   })
+
+  // The sheet draws the sidebar's own links, read from the pane hidden at this width.
+  for (const path of ['/docs/4.1/defer', '/docs/4.1/api/core/ShardContext']) {
+    test(`the sheet shows the sidebar's groups and links, at ${path}`, async ({ page }) => {
+      await page.goto(path)
+      const outline = (nav: Element) =>
+        [...nav.querySelectorAll('[data-nav-group]')].map(group => ({
+          title: group.querySelector('summary')?.textContent,
+          icon: group.querySelector('[data-group-icon]')?.innerHTML,
+          open: (group as HTMLDetailsElement).open,
+          links: [...group.querySelectorAll('li > a')].map(link => ({
+            href: link.getAttribute('href'),
+            text: link.textContent,
+            current: link.getAttribute('aria-current'),
+            badge: link.querySelector('[data-badge]')?.textContent ?? null,
+          })),
+        }))
+      const sidebar = await page.locator('[data-sidebar-body] nav').evaluate(outline)
+
+      await page.getByRole('button', { name: 'Open navigation' }).click()
+      const sheet = await page.getByRole('dialog', { name: 'Documentation' }).locator('nav').evaluate(outline)
+
+      expect(sidebar.length).toBeGreaterThan(1)
+      expect(sidebar.flatMap(group => group.links).filter(link => link.current === 'page')).toHaveLength(1)
+      expect(sheet).toEqual(sidebar)
+    })
+  }
 })
 
 test.describe('the mark in the sidebar', () => {

@@ -6,7 +6,7 @@ import { focusCss, safe, touchCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
 import { SidebarPane } from '@/components/shell/panes'
-import { SidebarNav } from '@/components/shell/sidebar-nav'
+import { readNavGroups, SidebarNav } from '@/components/shell/sidebar-nav'
 import { ThemeControl } from '@/components/shell/ThemeControl'
 import type { NavGroup } from '@/components/shell/types'
 
@@ -85,8 +85,11 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
   }).render()
 }
 
-/** The menu button that replaces the sidebar below the compact breakpoint, opening it as a sheet. */
-export const MobileNav = Component<{ groups: NavGroup[] }>(function MobileNav({ groups }) {
+/**
+ * The menu button that replaces the sidebar below the compact breakpoint, opening it as a sheet. The
+ * sheet's links are the sidebar's, read from the pane hidden at this width when the sheet opens.
+ */
+export const MobileNav = Component(function MobileNav() {
   const portal = usePortal()
 
   return Button(Glyph('sidebar'), {
@@ -94,7 +97,10 @@ export const MobileNav = Component<{ groups: NavGroup[] }>(function MobileNav({ 
     type: 'button',
     'aria-label': 'Open navigation',
     'aria-haspopup': 'dialog',
-    onClick: () => portal.open(NavSheet, { groups }),
+    onClick: () => {
+      const nav = document.querySelector('[data-sidebar-body] nav')
+      portal.open(NavSheet, { groups: nav ? readNavGroups(nav) : [] })
+    },
     css: {
       ...transitionCss(),
       ...focusCss,
