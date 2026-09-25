@@ -137,6 +137,9 @@
   "meocord/common:ExecutionContext.getHandlerName": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:ExecutionContext.getHandlerParams": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/common:ExecutionContext.getInteraction": {
     "since": "4.1.0-beta.0"
   },
@@ -281,6 +284,51 @@
   "meocord/common:PluralMessage": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:RedisCooldownStore": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.constructor": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.constructor(evaluate)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.constructor(options)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.consume": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.consume(key)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.consume(limit)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.using": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.using(evaluate)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStore.using(options)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStoreOptions": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStoreOptions.evalsha": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisCooldownStoreOptions.prefix": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisEval": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:RedisEvalSha": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/common:respond": {
     "since": "4.1.0-beta.0"
   },
@@ -391,6 +439,21 @@
   },
   "meocord/common:SetMetadata(metadataValue)": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/common:ShardedCooldownStore": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:ShardedCooldownStore.constructor": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:ShardedCooldownStore.consume": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:ShardedCooldownStore.consume(key)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/common:ShardedCooldownStore.consume(limit)": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/common:StringMessageKey": {
     "since": "4.1.0-beta.0"
@@ -967,7 +1030,20 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/decorator:MessageHandler(keyword)": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.4"
+  },
+  "meocord/decorator:MessageHandler(options)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/decorator:MessageHandler(pattern)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/decorator:Observer": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/decorator:Observer(options)": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/decorator:On": {
     "since": "4.1.0-beta.0"
@@ -1195,6 +1271,9 @@
   "meocord/interface:CooldownOptions": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/interface:CooldownOptions.by": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/interface:CooldownOptions.bypass": {
     "since": "4.1.0-beta.0"
   },
@@ -1206,6 +1285,51 @@
   },
   "meocord/interface:CooldownOptions.uses": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/interface:DispatchObserver": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchObserver.onSettled": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchObserver.onSettled(context)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchObserver.onSettled(result)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchObserver.onStart": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchObserver.onStart(context)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchOutcome": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.deniedBy": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.durationMs": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.error": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.handled": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.outcome": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.response": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:DispatchResult.startedAt": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/interface:ExceptionFilter": {
     "since": "4.1.0-beta.0"
@@ -1296,6 +1420,30 @@
   },
   "meocord/interface:MeoCordConfig.shutdownTimeout": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/interface:MessageCommandOptions": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageCommandOptions.caseSensitive": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageCommandOptions.mention": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageCommandOptions.prefix": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageHandlerOptions": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageHandlerOptions.caseSensitive": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessageHandlerOptions.prefix": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/interface:MessagePrefix": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/interface:OnReady": {
     "since": "4.1.0-beta.0"
@@ -1500,6 +1648,18 @@
   "meocord/testing:ComponentCommandType": {
     "since": "4.0.0-beta.5"
   },
+  "meocord/testing:CooldownStoreSuiteFramework": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:CooldownStoreSuiteFramework.describe": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:CooldownStoreSuiteFramework.expect": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:CooldownStoreSuiteFramework.it": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/testing:createChatInputOptions": {
     "since": "4.0.0-beta.0"
   },
@@ -1590,6 +1750,9 @@
   "meocord/testing:ExecutionContextOptions.args": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:ExecutionContextOptions.handlerParams": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/testing:ExecutionContextOptions.params": {
     "since": "4.1.0-beta.0"
   },
@@ -1656,11 +1819,20 @@
   "meocord/testing:HandlerInspection.methodName": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:HandlerInspection.observers": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:HandlerInspection.pattern": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/testing:HandlerName": {
     "since": "4.1.0-beta.0"
   },
   "meocord/testing:InspectedCooldown": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/testing:InspectedCooldown.by": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/testing:InspectedCooldown.bypass": {
     "since": "4.1.0-beta.0"
@@ -1727,6 +1899,18 @@
   },
   "meocord/testing:MeoCordTestingModule.create(options)": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:MessageToResolve": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:MessageToResolve.botId": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:MessageToResolve.content": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:MessageToResolve.prefix": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/testing:Mock": {
     "since": "4.0.0-beta.0"
@@ -1885,7 +2069,11 @@
     "since": "4.0.0-beta.5"
   },
   "meocord/testing:resolveRoute(component)": {
-    "since": "4.0.0-beta.5"
+    "since": "4.0.0-beta.5",
+    "removed": "4.1.0-beta.4"
+  },
+  "meocord/testing:resolveRoute(input)": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/testing:ResponseReport": {
     "since": "4.1.0-beta.0"
@@ -1908,6 +2096,18 @@
   "meocord/testing:RouteConflict.type": {
     "since": "4.0.0-beta.5"
   },
+  "meocord/testing:testCooldownStore": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:testCooldownStore(factory)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:testCooldownStore(framework)": {
+    "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:testCooldownStore(name)": {
+    "since": "4.1.0-beta.4"
+  },
   "meocord/testing:TestingModule": {
     "since": "4.0.0-beta.0"
   },
@@ -1922,6 +2122,9 @@
   },
   "meocord/testing:TestingModule.constructor(eventClasses)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/testing:TestingModule.constructor(messageOptions)": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/testing:TestingModule.constructor(order)": {
     "since": "4.1.0-beta.3"
@@ -2003,6 +2206,9 @@
   },
   "meocord/testing:TestingModuleOptions.controllers": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:TestingModuleOptions.observers": {
+    "since": "4.1.0-beta.4"
   },
   "meocord/testing:TestingModuleOptions.providers": {
     "since": "4.0.0-beta.0"
