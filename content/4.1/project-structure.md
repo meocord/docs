@@ -15,6 +15,7 @@ follows.
 ├── meocord.config.ts       # the token, the build hook, command registration
 ├── eslint.config.ts        # extends meocord/eslint
 ├── vitest.config.ts
+├── vitest.setup.ts         # resets MeoCord's mocks after every test
 ├── tsconfig.json           # the app
 ├── tsconfig.test.json      # the app and its specs
 ├── tsconfig.eslint.json    # what ESLint type-checks

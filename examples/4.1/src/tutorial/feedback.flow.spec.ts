@@ -41,8 +41,7 @@ describe('the feedback bot, from form to verdict', () => {
   channel.isSendable.mockReturnValue(true)
   const client = createMockClient()
   client.channels.fetch.mockResolvedValue(channel as never)
-  client.users.send.mockResolvedValue(createMockMessage() as never)
-  const inServer = { guildId: '1', guild: createMockGuild(), guildLocale: Locale.EnglishUS, client: client as never }
+  const inServer = { guildId: '1', guild: createMockGuild(), client: client as never }
 
   it('carries feedback from the form to the staff, and the verdict back to its author', async () => {
     // Ada writes in Indonesian

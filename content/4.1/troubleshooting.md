@@ -32,6 +32,22 @@ list of every option of the wrong type. An option MeoCord does not know, often a
 made on one platform was started on another. Build where it runs; for a container, run `meocord build` inside
 the image.
 
+**"… cannot be created: parameter 1 of its constructor has no runtime type"**: a controller or service asks
+for a parameter MeoCord cannot inject. Usually two services import each other, so the one loaded second
+recorded the other's type before it existed; the error names the classes that inject it. A parameter typed
+with an interface, or a type from `import type`, reads the same way. Move what both need into a third
+service, or inject the parameter with `@Inject(token)`; see
+[Services that need each other](/docs/4.1/services#services-that-need-each-other). `meocord/eslint` warns about
+such cycles as you write them ([Import cycles](/docs/4.1/eslint#import-cycles)).
+
+**"The factory providing … failed"**: a factory in `@MeoCord({ providers })` threw or rejected, such as a
+database refusing the connection, and the bot stopped before login with the cause. Fix what the cause names;
+see [Providers](/docs/4.1/services#providers).
+
+**"… injects …, which nothing provides"**: a class injects a string or symbol token, or a `createToken` token,
+that no provider supplies. Add a provider for it to `@MeoCord({ providers })`, or to the testing module's
+`providers` in a test.
+
 ## A command does not show up in Discord
 
 - **It was registered somewhere else.** Under `meocord start --dev` with `commands.developmentGuild` set,

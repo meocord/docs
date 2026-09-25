@@ -35,6 +35,9 @@ interaction on every call, so answers made directly through discord.js, or by a 
 
 ## Flags
 
+A private message takes `flags: MessageFlags.Ephemeral`. discord.js's deprecated `ephemeral: true` option is
+read as that flag too, so older code stays private, but new code should use the flag.
+
 Each call takes only the flags Discord accepts for it, worked out afresh: a private follow-up never makes
 the next message private. `send()` and `followUp()` payloads are typed, so a flag a call cannot take does not
 compile.

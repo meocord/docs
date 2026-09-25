@@ -19,7 +19,8 @@ handler as dispatch would, and `getResponse` reports what `respond()` did:
 Each call to `compile()` returns a fresh module, with fresh services and fresh cooldown counts, so tests do
 not leak into one another. The mocks come from `meocord/testing`:
 
-- `createMockClient()` has `channels.fetch` and `users.send` ready to stub.
+- `createMockClient()` has its managers ready: `users.send()` resolves to a mock message with no setup, and
+  a test stubs `channels.fetch()` to hand back the channel it wants to inspect.
 - `createMockChannel(TextChannel)` records what is sent to it.
 - `createModalFields()` fills a form the way Discord delivers one.
 

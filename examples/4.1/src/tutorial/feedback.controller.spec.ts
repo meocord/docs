@@ -48,8 +48,6 @@ describe('FeedbackController', () => {
       customId: 'feedback/submit',
       user: ada,
       client: client as never,
-      locale: Locale.EnglishUS,
-      guildLocale: Locale.EnglishUS,
       fields: createModalFields({ about: 'Music bot', details: 'It skips songs.' }),
     })
 

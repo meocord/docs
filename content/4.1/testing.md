@@ -10,8 +10,9 @@ mocks work with Vitest or Jest.
 
 ## Running tests
 
-Generated apps come with Vitest set up, `vitest.config.ts` with SWC for the decorator metadata injection
-needs, and a spec beside every generated component:
+Generated apps come with Vitest set up: `vitest.config.ts` with SWC for the decorator metadata injection
+needs, `vitest.setup.ts`, which resets MeoCord's mocks after every test, and a spec beside every generated
+component:
 
 ```bash
 npm test                # once
@@ -26,9 +27,10 @@ but only from those:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts"}
 
-A dependency can be swapped for a stand-in, `overrideProvider(Class).useValue(stub)`, or listed as a provider,
-`{ provide: Class, useValue }` or `{ provide: Class, useClass }`. The testing module binds only what it is
-given, so a class a provider depends on is listed too:
+A dependency can be swapped for a stand-in, `overrideProvider(Class).useValue(stub)`, or listed as a provider
+in any shape the app takes: `useValue`, `useClass` or `useFactory`, under a class or a token (see
+[Providers](/docs/4.1/services#providers)). The classes the controllers and providers inject are bound as the
+app binds them:
 
 ::example{file="testing/greeting.module.spec.ts" region="override"}
 
@@ -76,8 +78,9 @@ What a member sees when something goes wrong deserves a test as much as the happ
 ## Keeping tests apart
 
 A testing module holds its own services and its own cooldown counts. Build one per test, or per `describe`
-when the tests share nothing that changes, so state from one test never decides another. Create mocks in
-the test that uses them, too: a mock keeps every call made to it, and every value a test gave it.
+when the tests share nothing that changes, so state from one test never decides another. Mocks are reset
+after every test by the generated `vitest.setup.ts`, which calls `resetAllMocks()`: set what a mock returns
+in the test, or in `beforeEach`. See [Resetting between tests](/docs/4.1/mocks#resetting-between-tests).
 
 For time, use Vitest's fake timers: `vi.useFakeTimers()`, then `vi.advanceTimersByTimeAsync(ms)`, as the
 [scheduled task recipe](/docs/4.1/recipe-scheduled) does.
