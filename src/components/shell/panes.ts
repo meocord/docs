@@ -53,7 +53,10 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
     flexShrink: 0,
     zIndex: 'theme.z.chrome',
     height: 'theme.layout.toolbar',
-    display: 'flex',
+    // A column for each control, in their order, sized before any is drawn: a page painted before the
+    // bar has all arrived draws each control where it stays. Hidden controls take no column.
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) 220px minmax(71px, auto) 86px minmax(51px, auto)',
     alignItems: 'center',
     gap: 'theme.space.2',
     padding: '0 theme.space.3 0 theme.space.4',
@@ -73,6 +76,8 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
       '@media (width < theme.breakpoint.compact)': {
         position: 'sticky',
         top: 0,
+        // The menu, the home link, where the reader is, search and the version.
+        gridTemplateColumns: '44px 44px minmax(0, 1fr) 44px minmax(71px, auto)',
         borderRadius: 0,
         '@supports (animation-timeline: scroll())': { animationTimeline: 'scroll(root)' },
         // Under a notch or status bar, the bar grows by the safe area and keeps its controls below it.

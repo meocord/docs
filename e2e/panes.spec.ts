@@ -164,3 +164,18 @@ test('printed, the page runs its full length with no panes or chrome', async ({ 
   expect(clientHeight).toBe(scrollHeight)
   expect(clientHeight).toBeGreaterThan(2000)
 })
+
+test('the toolbar draws each control where it stays, before the ones after it arrive', async ({ page }) => {
+  await page.goto('/docs/4.1/guards')
+  const search = page.locator('[data-toolbar]:visible [data-search-trigger]')
+  const before = (await search.boundingBox())!.x
+  // As a page painted mid-parse would have it: the controls after search not there yet.
+  await page.evaluate(() => {
+    const bar = [...document.querySelectorAll('[data-toolbar]')].find(element => element.checkVisibility())!
+    const trigger = bar.querySelector('[data-search-trigger]')!
+    for (const later of [...bar.children].slice([...bar.children].indexOf(trigger) + 1)) later.remove()
+  })
+  // Chrome counts a box as moved from 3px, so a control a pixel wider than its column's minimum, as a
+  // platform's fonts may draw it, settles search by less than a shift.
+  expect(Math.abs((await search.boundingBox())!.x - before)).toBeLessThan(3)
+})
