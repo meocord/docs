@@ -62,11 +62,12 @@ export function ReadingIsland() {
     document.addEventListener('click', onClick)
     if (headings.length > 0) {
       track()
-      window.addEventListener('scroll', onScroll, { passive: true })
+      // Captured on the document, so it hears the sheet scroll on a desktop and the page on a phone.
+      document.addEventListener('scroll', onScroll, { capture: true, passive: true })
     }
     return () => {
       document.removeEventListener('click', onClick)
-      window.removeEventListener('scroll', onScroll)
+      document.removeEventListener('scroll', onScroll, { capture: true })
       if (frame) window.cancelAnimationFrame(frame)
     }
   }, [])
