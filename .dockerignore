@@ -5,6 +5,7 @@ node_modules
 coverage
 playwright-report
 test-results
+# The smoke tests and every tool that imports from them live in e2e/; none of it belongs in the image.
 e2e
 playwright.config.ts
 tests

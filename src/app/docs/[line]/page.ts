@@ -7,6 +7,11 @@ import { renderGuide } from '@/lib/docs/render'
 
 type Params = { params: Promise<{ line: string }> }
 
+// Every page that exists is prerendered from generateStaticParams. What remains may block: an unknown
+// page, which must answer a real 404 rather than stream a shell, and, under `next dev`, a page reached
+// through the `latest` rewrite, whose URL is not among the static params. See the `instant` docs.
+export const instant = false
+
 export function generateStaticParams() {
   return lines().map(line => ({ line }))
 }

@@ -21,6 +21,7 @@
     "budget:js": "bun scripts/check-js-budget.ts",
     "test:e2e": "bun --bun x playwright test",
     "icons": "bun scripts/generate-icons.ts",
+    "check:dev-routes": "bun e2e/dev-routes.ts",
     "versions:sync": "bun scripts/sync-versions.ts",
     "api:generate": "bun scripts/api-generate.ts",
     "content:check": "bun scripts/check-content.ts",
