@@ -7,7 +7,7 @@ import { Link } from '@/components/shell/links'
 import { MobileNav } from '@/components/shell/MobileNav'
 import { ToolbarBar } from '@/components/shell/panes'
 import { ThemeControl } from '@/components/shell/ThemeControl'
-import type { Crumb, NavGroup, VersionOption } from '@/components/shell/types'
+import type { Crumb, VersionOption } from '@/components/shell/types'
 import { VersionSwitcher } from '@/components/shell/VersionSwitcher'
 
 function Breadcrumbs(crumbs: Crumb[]) {
@@ -139,17 +139,16 @@ function SearchField() {
 
 export interface ToolbarProps {
   crumbs: Crumb[]
-  groups: NavGroup[]
   version: { current: VersionOption; options: VersionOption[] }
   /** The source repository, linked at the end of the bar. */
   repository: string
 }
 
 /** The bar over the reading column: the phone menu, where the reader is, and the page-wide controls. */
-export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
+export function Toolbar({ crumbs, version, repository }: ToolbarProps) {
   return ToolbarBar({
     children: [
-      Node(MobileNav, { groups }),
+      Node(MobileNav),
       // The home link, while the sidebar that carries it is hidden.
       Link({
         href: '/',

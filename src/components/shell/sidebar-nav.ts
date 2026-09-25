@@ -1,6 +1,6 @@
 import { Details, For, Li, Nav, Span, Summary, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
-import { Glyph } from '@/components/shell/icons'
+import { Glyph, type GlyphName } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
 import type { NavGroup, NavItem } from '@/components/shell/types'
 
@@ -42,6 +42,7 @@ function NavRow(item: NavItem) {
         }),
         item.badge
           ? Span(item.badge, {
+              'data-badge': true,
               fontSize: 'theme.type.caption.size',
               // On the current row's tint the default accent falls short of 4.5:1.
               color: item.current ? 'theme.accent.hover' : 'theme.accent.default',
@@ -63,6 +64,7 @@ function NavSection(group: NavGroup) {
   return Details({
     open: true,
     'data-nav-group': true,
+    'data-nav-icon': group.icon,
     children: [
       Summary(
         [
@@ -83,7 +85,10 @@ function NavSection(group: NavGroup) {
   })
 }
 
-/** The sidebar's links, grouped. Used by the sidebar pane and by the sheet that replaces it on phones. */
+/**
+ * The sidebar's links, grouped. Drawn once, in the sidebar pane; the sheet that replaces the pane on
+ * phones reads them back from it with `readNavGroups`.
+ */
 export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGroup[]; label?: string }) {
   return Nav({
     'aria-label': label,
@@ -132,4 +137,21 @@ export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGro
     },
     children: For(groups, NavSection, group => group.title),
   })
+}
+
+/**
+ * The groups a `SidebarNav` was drawn from, read back from its markup, so the phone's sheet shows the
+ * sidebar's links without the page carrying a second copy of them.
+ */
+export function readNavGroups(nav: Element): NavGroup[] {
+  return [...nav.querySelectorAll<HTMLDetailsElement>(':scope > [data-nav-group]')].map(group => ({
+    title: group.querySelector('summary')?.textContent ?? '',
+    icon: (group.dataset.navIcon as GlyphName | undefined) || undefined,
+    items: [...group.querySelectorAll<HTMLAnchorElement>(':scope > ul > li > a')].map(link => ({
+      title: link.querySelector('[title]')?.getAttribute('title') ?? link.textContent ?? '',
+      href: link.getAttribute('href') ?? '',
+      current: link.getAttribute('aria-current') === 'page' || undefined,
+      badge: link.querySelector('[data-badge]')?.textContent || undefined,
+    })),
+  }))
 }
