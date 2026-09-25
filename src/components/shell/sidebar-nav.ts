@@ -16,7 +16,6 @@ function NavRow(item: NavItem) {
       borderRadius: 'theme.radius.control',
       fontSize: 'theme.type.control.size',
       letterSpacing: 'theme.type.control.track',
-      fontStretch: 'theme.font.stretch.dense',
       textDecoration: 'none',
       color: item.current ? 'theme.ink.primary' : 'theme.ink.secondary',
       fontWeight: item.current ? 'theme.font.weight.medium' : 'theme.font.weight.regular',
