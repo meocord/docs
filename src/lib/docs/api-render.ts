@@ -1,4 +1,25 @@
-import { Node, type NodeInstance } from '@meonode/ui'
+import {
+  A,
+  Blockquote,
+  Code,
+  Div,
+  H1,
+  H2,
+  H3,
+  Li,
+  Node,
+  type NodeInstance,
+  P,
+  Pre,
+  Span,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Ul,
+} from '@meonode/ui'
 import { Prose } from '@/components/prose/Prose'
 import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
@@ -18,7 +39,7 @@ type Child = NodeInstance | string
 const markdown = (text: string, key: string): Child[] =>
   text
     ? [
-        Node('div', {
+        Div({
           key,
           'data-doc': true,
           children: lowerMarkdown(text, { href: url => resolveStoredHref(url, VERSIONS) }).nodes,
@@ -100,17 +121,14 @@ function typeCode(tokens: Token[], form: LayoutForm, layouts: Layouts): string {
 function signatureBlock(lines: Token[][], form: LayoutForm, layouts: Layouts, key: string) {
   const tall = lines.some(line => layouts[layoutKey(form, tokensText(line))] !== undefined)
   const html = lines.map(line => typeCode(line, form, layouts)).join(tall ? '\n\n' : '\n')
-  return Node('pre', {
+  return Pre(Code(null, { dangerouslySetInnerHTML: { __html: html } }), {
     key,
-    'data-signature': true,
-    // It scrolls sideways, so it takes focus for keyboard readers to scroll it.
+    'data-signature': true, // It scrolls sideways, so it takes focus for keyboard readers to scroll it.
     tabIndex: 0,
-    children: Node('code', { dangerouslySetInnerHTML: { __html: html } }),
   })
 }
 
-const badge = (text: string, tone: 'since' | 'deprecated', key: string) =>
-  Node('span', { key, 'data-badge': tone, children: text })
+const badge = (text: string, tone: 'since' | 'deprecated', key: string) => Span(text, { key, 'data-badge': tone })
 
 function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSince?: string) {
   // A parameter's version is shown only when it came later than what it belongs to.
@@ -118,45 +136,34 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSin
   const since = params.some(param => later(param))
   const defaults = params.some(param => param.defaultValue !== undefined)
   const header = ['Name', 'Type', ...(defaults ? ['Default'] : []), ...(since ? ['Since'] : []), 'Description']
-  return Node('div', {
+  return Div({
     key,
     'data-table': true,
     'data-params': true,
-    children: Node('table', {
+    children: Table({
       children: [
-        Node('thead', {
-          key: 'head',
-          children: Node('tr', { children: header.map(title => Node('th', { key: title, children: title })) }),
-        }),
-        Node('tbody', {
+        Thead({ key: 'head', children: Tr({ children: header.map(title => Th({ key: title, children: title })) }) }),
+        Tbody({
           key: 'body',
           children: params.map(param =>
-            Node('tr', {
+            Tr({
               key: param.name,
               children: [
-                Node('td', {
-                  key: 'name',
-                  children: Node('code', { children: `${param.name}${param.optional ? '?' : ''}` }),
-                }),
-                Node('td', {
+                Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
+                Td({
                   key: 'type',
                   children: param.type.length
-                    ? Node('code', {
+                    ? Code(null, {
                         'data-type': true,
                         dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
                       })
                     : '',
                 }),
                 ...(defaults
-                  ? [
-                      Node('td', {
-                        key: 'default',
-                        children: param.defaultValue ? Node('code', { children: param.defaultValue }) : '',
-                      }),
-                    ]
+                  ? [Td({ key: 'default', children: param.defaultValue ? Code(param.defaultValue) : '' })]
                   : []),
-                ...(since ? [Node('td', { key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
-                Node('td', { key: 'description', children: markdown(param.description, 'd') }),
+                ...(since ? [Td({ key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
+                Td({ key: 'description', children: markdown(param.description, 'd') }),
               ],
             }),
           ),
@@ -205,7 +212,7 @@ function signatureDetails(
     out.push(
       heading('Returns', ids?.returns),
       ...(signature.returns.decorates
-        ? [Node('p', { key: `${key}-returns-kind`, children: decoratorSummary(signature.returns.decorates) })]
+        ? [P(decoratorSummary(signature.returns.decorates), { key: `${key}-returns-kind` })]
         : []),
       signatureBlock([signature.returns.type], 'returns', layouts, `${key}-returns`),
       ...markdown(signature.returns.description, `${key}-returns-d`),
@@ -214,9 +221,9 @@ function signatureDetails(
   if (signature.throws.length > 0) {
     out.push(
       heading('Throws', ids?.throws),
-      Node('ul', {
+      Ul({
         key: `${key}-throws`,
-        children: signature.throws.map((text, index) => Node('li', { key: index, children: markdown(text, 'd') })),
+        children: signature.throws.map((text, index) => Li({ key: index, children: markdown(text, 'd') })),
       }),
     )
   }
@@ -233,27 +240,21 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
   const since = member.since && member.since !== symbolSince ? member.since : undefined
   toc.push({ id: member.anchor, title: member.name, depth: 3 })
   return [
-    Node('h3', {
-      key: `m-${member.anchor}`,
-      id: member.anchor,
-      children: [
-        Node('code', { key: 'name', children: member.name }),
+    H3(
+      [
+        Code(member.name, { key: 'name' }),
         ...(since ? [' ', badge(`Since ${since}`, 'since', 'since')] : []),
         ...(member.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
       ],
-    }),
+      { key: `m-${member.anchor}`, id: member.anchor },
+    ),
     signatureBlock(member.code, 'member', layouts, `m-${member.anchor}-code`),
     ...(member.deprecated
-      ? [Node('blockquote', { key: `m-${member.anchor}-dep`, children: markdown(member.deprecated, 'd') })]
+      ? [Blockquote({ key: `m-${member.anchor}-dep`, children: markdown(member.deprecated, 'd') })]
       : []),
     ...markdown(member.description, `m-${member.anchor}-d`),
     ...(member.defaultValue
-      ? [
-          Node('p', {
-            key: `m-${member.anchor}-default`,
-            children: ['Default: ', Node('code', { key: 'v', children: member.defaultValue })],
-          }),
-        ]
+      ? [P(['Default: ', Code(member.defaultValue, { key: 'v' })], { key: `m-${member.anchor}-default` })]
       : []),
     ...member.signatures.flatMap((signature, index) =>
       signatureDetails(signature, layouts, 'h4', undefined, `m-${member.anchor}-s${index}`, toc, member.since),
@@ -270,21 +271,18 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
   const toc: TocEntry[] = []
   const ids = sectionIds(symbol.members)
   const nodes: Child[] = [
-    Node('h1', { key: 'title', children: symbol.name }),
-    Node('p', {
-      key: 'meta',
-      'data-api-meta': true,
-      children: [
-        Node('span', { key: 'kind', children: symbol.kind.replace('-', ' ') }),
+    H1(symbol.name, { key: 'title' }),
+    P(
+      [
+        Span(symbol.kind.replace('-', ' '), { key: 'kind' }),
         ' in ',
-        Node('code', { key: 'entry', children: symbol.entry }),
+        Code(symbol.entry, { key: 'entry' }),
         ...(symbol.since ? [' ', badge(`Since ${symbol.since}`, 'since', 'since')] : []),
         ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
       ],
-    }),
-    ...(symbol.deprecated
-      ? [Node('blockquote', { key: 'deprecated', children: markdown(symbol.deprecated, 'd') })]
-      : []),
+      { key: 'meta', 'data-api-meta': true },
+    ),
+    ...(symbol.deprecated ? [Blockquote({ key: 'deprecated', children: markdown(symbol.deprecated, 'd') })] : []),
     signatureBlock(symbol.code, 'declaration', layouts, 'code'),
     ...markdown(symbol.description, 'description'),
   ]
@@ -309,26 +307,23 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
   if (!first && symbol.examples.length > 0) {
     toc.push({ id: ids.examples, title: 'Examples', depth: 2 })
     nodes.push(
-      Node('h2', { key: 'examples', id: ids.examples, children: 'Examples' }),
+      H2('Examples', { key: 'examples', id: ids.examples }),
       ...symbol.examples.flatMap((text, index) => markdown(text, `ex-${index}`)),
     )
   }
   if (symbol.members.length > 0) {
     toc.push({ id: ids.members, title: 'Members', depth: 2 })
-    nodes.push(Node('h2', { key: 'members', id: ids.members, children: 'Members' }))
+    nodes.push(H2('Members', { key: 'members', id: ids.members }))
     for (const member of symbol.members) nodes.push(...memberSection(member, layouts, toc, symbol.since))
   }
   if (symbol.seeAlso.length > 0) {
     toc.push({ id: ids.seeAlso, title: 'See also', depth: 2 })
     nodes.push(
-      Node('h2', { key: 'see-also', id: ids.seeAlso, children: 'See also' }),
-      Node('ul', {
+      H2('See also', { key: 'see-also', id: ids.seeAlso }),
+      Ul({
         key: 'see-also-list',
         children: symbol.seeAlso.map((token, index) =>
-          Node('li', {
-            key: index,
-            children: token.href ? Node('a', { href: token.href, children: token.text }) : token.text,
-          }),
+          Li({ key: index, children: token.href ? A({ href: token.href, children: token.text }) : token.text }),
         ),
       }),
     )

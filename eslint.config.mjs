@@ -41,6 +41,23 @@ export default defineConfig([
     },
   },
   {
+    // An element with an @meonode/ui component is built with it (Div, Row, Span, SvgPath, …): its
+    // children-first form, its layout defaults and its name all read better than a tag string. The
+    // pattern lists every tag @meonode/ui 3.0.0 exports a component for, so a tag without one (such as
+    // `del`), or a tag chosen at run time, still goes through Node.
+    files: ['src/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.name='Node'][arguments.0.type='Literal'][arguments.0.value=/^(a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|canvas|caption|circle|cite|code|col|colgroup|data|datalist|dd|defs|details|dfn|dialog|div|dl|dt|ellipse|em|embed|fieldset|figcaption|figure|footer|form|g|head|header|hgroup|hr|html|i|iframe|img|input|kbd|label|legend|li|line|linearGradient|link|main|map|mark|menu|meta|meter|nav|noscript|object|ol|optgroup|option|output|p|param|path|picture|polygon|polyline|pre|progress|q|radialGradient|rect|rp|rt|ruby|s|samp|script|search|section|select|small|source|span|stop|strong|style|sub|summary|sup|svg|symbol|table|tbody|td|template|text|textarea|tfoot|th|thead|time|title|tr|track|tspan|u|ul|use|var|video|wbr)$/]",
+          message: 'Use the @meonode/ui component for this tag (Div, Row, Span, P, …) instead of Node(tag).',
+        },
+      ],
+    },
+  },
+  {
     // Examples are bot code, not Next code: their specs name the testing module `module`, as a
     // generated app's specs do
     files: ['examples/**'],

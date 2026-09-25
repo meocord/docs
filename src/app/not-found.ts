@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { Node } from '@meonode/ui'
+import { A, Button, Div, H1, P } from '@meonode/ui'
 import { Prose } from '@/components/prose/Prose'
 import { Window } from '@/components/shell/Window'
 import { CURRENT_LINE } from '@/config/versions'
@@ -25,30 +25,24 @@ async function notFoundPage() {
     repository: REPOSITORY,
     children: Prose({
       children: [
-        Node('h1', { key: 'title', children: 'Page not found' }),
-        Node('div', {
+        H1('Page not found', { key: 'title' }),
+        Div({
           key: 'subtitle',
           'data-subtitle': true,
           children: 'The address may be from an older version of the docs, or the page has moved.',
         }),
-        Node('p', {
-          key: 'next',
-          children: [
+        P(
+          [
             'Search for what you were after, start from the ',
-            Node('a', { key: 'docs', href: '/docs/latest', children: 'documentation' }),
+            A({ key: 'docs', href: '/docs/latest', children: 'documentation' }),
             ', or go to the ',
-            Node('a', { key: 'home', href: '/', children: 'home page' }),
+            A({ key: 'home', href: '/', children: 'home page' }),
             '.',
           ],
-        }),
-        Node('p', {
+          { key: 'next' },
+        ),
+        P(Button('Search the docs', { type: 'button', 'data-search-trigger': true, 'data-action': true }), {
           key: 'search',
-          children: Node('button', {
-            type: 'button',
-            'data-search-trigger': true,
-            'data-action': true,
-            children: 'Search the docs',
-          }),
         }),
       ],
     }),

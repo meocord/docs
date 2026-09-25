@@ -1,4 +1,4 @@
-import { Button, For, Li, Nav, Node, Ol, Span } from '@meonode/ui'
+import { Button, For, Kbd, Li, Nav, Node, Ol, Span } from '@meonode/ui'
 import { earFlickCss } from '@/lib/brand/ear-flick'
 import { focusCss, touchCss, transitionCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
@@ -87,10 +87,9 @@ function SearchField() {
         textAlign: 'left',
         css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
       }),
-      Node('kbd', {
+      Kbd('⌘K', {
         key: 'shortcut',
         'aria-hidden': true,
-        children: '⌘K',
         css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
       }),
     ],
