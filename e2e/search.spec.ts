@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+import { rankResults } from '../src/lib/search-rank'
 import type { SearchManifest } from '../src/lib/search-manifest'
 
 // Written by `bun run search:build`, which `bun run build` runs first.
@@ -15,8 +16,7 @@ interface PagefindData {
 }
 
 interface Found {
-  count: number
-  results: { url: string; title?: string; kind?: string[]; line?: string[]; sub: string[] }[]
+  results: { score: number; url: string; title: string; kind: string; line?: string; sub: string[] }[]
 }
 
 test('every line has a search bundle and a palette index, cached as immutable', async ({ request }) => {
@@ -37,6 +37,35 @@ test('every line has a search bundle and a palette index, cached as immutable', 
   }
 })
 
+/** Runs a search in the page for each query, with every result's score and data read. */
+async function search(page: Page, base: string, queries: string[]) {
+  return (await page.evaluate(
+    async ([base, queries]) => {
+      const pagefind = await import(/* @vite-ignore */ `${base}pagefind.js`)
+      await pagefind.options({ basePath: base })
+      const out: Record<string, Found['results']> = {}
+      for (const query of queries) {
+        const search = await pagefind.search(query)
+        out[query] = await Promise.all(
+          search.results.slice(0, 30).map(async (result: { score: number; data: () => Promise<PagefindData> }) => {
+            const data = await result.data()
+            return {
+              score: result.score,
+              url: data.url,
+              title: data.meta?.title ?? '',
+              kind: data.filters?.kind?.[0] ?? '',
+              line: data.filters?.line?.[0],
+              sub: (data.sub_results ?? []).map(sub => sub.url),
+            }
+          }),
+        )
+      }
+      return out
+    },
+    [base, queries] as const,
+  )) as Record<string, Found['results']>
+}
+
 test('a search runs in the page under its CSP and finds guides and API symbols', async ({ page }) => {
   const violations: string[] = []
   page.on('console', message => {
@@ -49,31 +78,21 @@ test('a search runs in the page under its CSP and finds guides and API symbols',
   })
   await page.goto('/')
 
-  const found = (await page.evaluate(async base => {
-    const pagefind = await import(/* @vite-ignore */ `${base}pagefind.js`)
-    await pagefind.options({ basePath: base })
-    const search = await pagefind.search('cooldown')
-    const results = await Promise.all(
-      search.results.slice(0, 10).map(async (result: { data: () => Promise<PagefindData> }) => {
-        const data = await result.data()
-        return {
-          url: data.url,
-          title: data.meta?.title,
-          kind: data.filters?.kind,
-          line: data.filters?.line,
-          sub: (data.sub_results ?? []).map(sub => sub.url),
-        }
-      }),
-    )
-    return { count: search.results.length, results }
-  }, prerelease.search)) as Found
-
-  expect(found.count).toBeGreaterThan(0)
-  expect(found.results.every(result => result.line?.[0] === prerelease.line)).toBe(true)
-  const api = found.results.find(result => result.kind?.[0] === 'api')
-  expect(api?.url).toMatch(new RegExp(`^/docs/(${prerelease.line}|latest)/api/[a-z]+/\\w+$`))
-  const guide = found.results.find(result => result.kind?.[0] === 'guide' && result.sub.some(url => url.includes('#')))
-  expect(guide, 'a guide result with a section sub-result').toBeDefined()
-  expect(guide!.title).toBeTruthy()
+  const found = await search(page, prerelease.search, ['cooldown', 'createMockInteraction'])
+  const cooldown = rankResults('cooldown', found.cooldown)
+  expect(cooldown.length).toBeGreaterThan(0)
+  expect(cooldown.every(result => result.line === prerelease.line)).toBe(true)
+  // A reader typing a topic finds its guide near the top, with its sections as sub-results.
+  const guide = cooldown.slice(0, 3).find(result => result.kind === 'guide' && /\/cooldowns$/.test(result.url))
+  expect(guide, 'the Cooldowns guide in the top 3 for "cooldown"').toBeDefined()
+  expect(guide!.sub.some(url => url.includes('#'))).toBe(true)
+  expect(cooldown.find(result => result.kind === 'api')?.url).toMatch(
+    new RegExp(`^/docs/(${prerelease.line}|latest)/api/[a-z]+/\\w+$`),
+  )
+  // A symbol's exact name finds its API page first.
+  expect(rankResults('createMockInteraction', found.createMockInteraction)[0]).toMatchObject({
+    kind: 'api',
+    url: expect.stringMatching(/\/api\/testing\/createMockInteraction$/),
+  })
   expect(violations).toEqual([])
 })
