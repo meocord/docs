@@ -1,9 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
+import { e2ePort } from './e2e/port'
 
-const PORT = 4320
+const PORT = e2ePort()
 
 export default defineConfig({
   testDir: 'e2e',
+  // Vitest owns the unit specs beside the smoke tests.
+  testIgnore: '**/port.spec.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
