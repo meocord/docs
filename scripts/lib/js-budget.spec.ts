@@ -1,6 +1,6 @@
 import { gzipSync } from 'zlib'
 import { describe, expect, it } from 'vitest'
-import { BUDGET_BYTES, gzipSize, measure, pageScripts, report } from './js-budget.js'
+import { BUDGET_BYTES, gzipSize, LISTED, measure, pageScripts, report } from './js-budget.js'
 
 describe('pageScripts', () => {
   it('lists each same-origin script once, in order, without the nomodule polyfill', () => {
@@ -46,7 +46,8 @@ describe('measure and report', () => {
   it('passes under the budget and lists the chunks of the heaviest page', () => {
     const { text, over } = report(measure(pages, src => files[src]))
     expect(over).toEqual([])
-    expect(text).toContain('budget 220.0 KB')
+    expect(text).toContain('budget 220.0 KB: 2 pages, 0 over.')
+    expect(text).toContain('The heaviest 2:')
     expect(text).toMatch(/ok +\/ +0\.4 KB {2}\(2 scripts\)/)
     expect(text).toContain('(1 script)')
     expect(text).toContain('Chunks of /:')
@@ -58,8 +59,16 @@ describe('measure and report', () => {
       30,
     )
     expect(over.map(result => result.page)).toEqual(['/', '/docs/latest'])
+    expect(text).toContain('Over the budget:')
     expect(text).toContain('OVER  /docs/latest')
     expect(text).toContain('Chunks of /docs/latest:')
+  })
+
+  it('lists only the heaviest pages when all are within the budget', () => {
+    const many = Object.fromEntries(Array.from({ length: LISTED + 5 }, (_, i) => [`/p${i}`, pages['/']]))
+    const { text } = report(measure(many, src => files[src]))
+    expect(text).toContain(`${LISTED + 5} pages, 0 over.`)
+    expect(text.split('\n').filter(line => line.startsWith('  ok')).length).toBe(LISTED)
   })
 
   it('holds the budget the site agreed on', () => {
