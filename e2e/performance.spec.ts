@@ -54,6 +54,24 @@ function layoutShifts(audit: { details?: unknown } | undefined): string[] {
   })
 }
 
+/** How each shifted box moved, from the trace: where it was and where it went, as [x, y, width, height]. */
+function shiftedBoxes(trace: { traceEvents?: TraceEvent[] } | undefined): string[] {
+  return (trace?.traceEvents ?? [])
+    .filter(event => event.name === 'LayoutShift' && !event.args?.data?.had_recent_input)
+    .flatMap(event =>
+      (event.args?.data?.impacted_nodes ?? []).map(
+        node => `moved ${JSON.stringify(node.old_rect)} to ${JSON.stringify(node.new_rect)}`,
+      ),
+    )
+}
+
+interface TraceEvent {
+  name?: string
+  args?: {
+    data?: { had_recent_input?: boolean; impacted_nodes?: { old_rect?: number[]; new_rect?: number[] }[] }
+  }
+}
+
 interface LayoutShift {
   score?: number
   node?: { selector?: string }
@@ -80,7 +98,10 @@ async function measure(url: string, preset: 'desktop' | 'mobile') {
       }
       lcp.push(result.lhr.audits['largest-contentful-paint'].numericValue ?? Infinity)
       cls.push(result.lhr.audits['cumulative-layout-shift'].numericValue ?? Infinity)
-      shifts.push(...layoutShifts(result.lhr.audits['layout-shifts']))
+      shifts.push(
+        ...layoutShifts(result.lhr.audits['layout-shifts']),
+        ...shiftedBoxes(result.artifacts?.Trace as { traceEvents?: TraceEvent[] } | undefined),
+      )
     }
     return { lcp: median(lcp), cls: Math.max(...cls), shifts: [...new Set(shifts)] }
   } finally {
