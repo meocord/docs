@@ -24,6 +24,21 @@ export const MARK_PATHS = {
   cord: 'M2.25 10.5H13.75Q15 10.5 15 11.75Q15 13 13.75 13H2.25Q1 13 1 11.75Q1 10.5 2.25 10.5Z',
 } as const
 
+/**
+ * The crown split at the valley between the ears, where they turn when they flick: each ear with its
+ * share of the head, overlapping the other by 0.2 below the valley so no seam opens as they move.
+ */
+export const MARK_EARS = {
+  near: {
+    crown: 'M2.4 12Q1.9 7.2 3.4 4.1Q4.1 2.8 5 3.8Q6.4 5.6 7.3 8Q8.4 7.6 9.6 8.4L9.8 8.5V12Z',
+    inner: 'M3.7 9.6Q3.6 7 4.3 5.6Q5.6 7.4 6.2 9.6Z',
+  },
+  far: {
+    crown: 'M9.6 8.4Q11 6.9 12.9 6.1Q13.9 5.3 14.1 6.4Q14.3 9.3 13.4 12H9.4V8.5Z',
+    inner: 'M10.8 9.8Q11.8 8.3 12.9 7.6Q13.1 8.8 12.8 9.8Z',
+  },
+} as const
+
 /** The ears' path for a size in device pixels: notched from NOTCH_MIN_SIZE up, the plain crown below. */
 export function earsPath(size: number): string {
   return size >= NOTCH_MIN_SIZE ? MARK_PATHS.crown + MARK_PATHS.inner : MARK_PATHS.crown

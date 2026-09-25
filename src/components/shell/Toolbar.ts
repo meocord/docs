@@ -1,4 +1,5 @@
 import { Button, For, Li, Nav, Node, Ol, Span } from '@meonode/ui'
+import { earFlickCss } from '@/lib/brand/ear-flick'
 import { focusCss, transitionCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
 import { Glyph } from '@/components/shell/icons'
@@ -137,7 +138,11 @@ export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
         display: 'inline-flex',
         padding: 'theme.space.1',
         borderRadius: 'theme.radius.control',
-        css: { ...focusCss, '@media (width >= theme.breakpoint.compact)': { display: 'none' } },
+        css: {
+          ...focusCss,
+          ...earFlickCss(['&:hover', '&:focus-visible']),
+          '@media (width >= theme.breakpoint.compact)': { display: 'none' },
+        },
         children: Mark(),
       }),
       Breadcrumbs(crumbs),
