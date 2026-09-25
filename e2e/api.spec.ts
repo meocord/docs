@@ -32,7 +32,8 @@ test('an exact version has its own page, kept out of search indexes and pointing
   const response = await request.get('/docs/4.0/api/4.0.0-beta.2/core/MeoCordFactory')
   expect(response.status()).toBe(200)
   const html = await response.text()
-  expect(html).toContain('<meta name="robots" content="noindex, follow"/>')
+  // Noindex always; its links are followed once the site is indexable, which this build is not.
+  expect(html).toContain('<meta name="robots" content="noindex, nofollow"/>')
   expect(html).toMatch(/<link rel="canonical" href="[^"]*\/docs\/latest\/api\/core\/MeoCordFactory"\/>/)
 })
 
