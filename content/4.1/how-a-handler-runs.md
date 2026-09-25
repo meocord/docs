@@ -21,6 +21,11 @@ runs through the same stages, in this order:
 **Exception filters** surround all of it: an error from any stage or the handler reaches them, and one no
 filter handles goes to the built-in fallback, which answers the user.
 
+**[Observers](/docs/4.1/observers)** frame the whole call: an observer's `onStart` is called as the call
+begins, before `@Defer` and the guards, and its `onSettled` once the call has settled and been answered,
+whatever the outcome, with how it ended and how long it took. The call waits for neither. They also hear
+about an interaction no handler matches.
+
 This handler records each stage as it runs:
 
 ::example{file="controllers/slash/stages.slash.controller.ts" region="stages"}
@@ -29,9 +34,10 @@ This handler records each stage as it runs:
 
 ## Which handlers take which stages
 
-- Validation and pipes apply to command, component and modal handlers, whose options, customId params and
-  modal fields they check.
-- Cooldowns apply to those, and to message handlers.
+- Validation and pipes apply to command, component and modal handlers, and to
+  [message handlers with a pattern](/docs/4.1/message-commands), whose options, customId params, modal fields
+  and pattern params they check.
+- Cooldowns apply to those, and to every message handler.
 - An autocomplete handler, which must answer within three seconds, runs its guards and filters but no
   interceptors.
 - `@Defer` applies to command, component and modal handlers only.

@@ -57,11 +57,17 @@ caching. See [Interceptors](/docs/4.1/interceptors).
 **Lock.** What `@Defer` does to a component's message while its handler runs: disables the controls, marks
 the one clicked, and puts them back after. See [@Defer](/docs/4.1/defer).
 
+**Message command.** A `@MessageHandler` with a pattern, such as `roll {sides}`, run for a message that
+matches it after the app's prefix. See [Message commands](/docs/4.1/message-commands).
+
 **Metadata.** A fact declared on a handler or controller with a decorator made by `createMetadata`, which
 guards, interceptors and the handler registry read. See [Custom decorators](/docs/4.1/custom-decorators).
 
-**Params.** What a handler receives after the interaction: a command's options, or the parts of a
-`customId` pattern and a modal's fields.
+**Observer.** A class told about every call MeoCord dispatches, once it has settled, with its outcome and
+duration: for metrics, audit logs and tracing. See [Observers](/docs/4.1/observers).
+
+**Params.** What a handler receives after the interaction or message: a command's options, the parts of a
+`customId` pattern and a modal's fields, or the params of a message pattern.
 
 **Pipe.** A class that turns a handler's validated input into what the handler wants, such as an id into a
 record. See [Validation and pipes](/docs/4.1/validation).
