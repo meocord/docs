@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { checkSite, markdownLinks, parsePage, type SiteSnapshot } from './content.js'
 import type { VersionsConfig } from './versions.js'
 
+// 4.0 shows pages imported from its README; 4.1 has authored guides and is what the site shows for it
 const config: VersionsConfig = {
   package: 'meocord',
   since: '4.0.0',
@@ -16,17 +17,21 @@ const page = (frontmatter: string, body: string) => `---\n${frontmatter}\n---\n\
 
 const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
   config,
-  pages: {
+  authored: {
     '4.1': {
       guards: page(
         'id: guards\ntitle: Guards',
         '## Passing options\n\n::example{file="guards/owner.guard.ts" region="guard"}\n\nSee [the 4.0 page](/docs/4.0/guards#params) and [options](#passing-options).',
       ),
     },
+    '4.0': {},
+  },
+  readme: {
+    '4.1': {},
     '4.0': {
       guards: page(
         'id: guards\ntitle: Guards\nsource: readme@4.0.0',
-        '```ts\nconst ok = true\n```\n\nSee [latest](/docs/latest/guards).',
+        '```ts\nconst ok = true\n```\n\nSee [4.1](/docs/4.1/guards).',
       ),
     },
   },
@@ -40,7 +45,8 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
           title: 'Patch Changes',
           entries: [
             {
-              markdown: 'See [start](/docs/4.1/migrating#start) and [notes](/docs/4.1/changelog#v4.1.0-beta.0).',
+              markdown:
+                'See [start](/docs/4.1/migrating#start), [notes](/docs/4.1/changelog#v4.1.0-beta.0) and [Defer](/docs/4.1/api/decorator/Defer).',
               breaking: true,
             },
           ],
@@ -57,60 +63,62 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
   ...overrides,
 })
 
+const withAuthored = (pages: Record<string, string>) =>
+  site({ authored: { ...site().authored, '4.1': { ...site().authored['4.1'], ...pages } } })
+
 describe('checkSite', () => {
   it('accepts a consistent site', () => {
     expect(checkSite(site())).toEqual([])
   })
 
-  it('follows the latest and next aliases to their lines', () => {
-    const pages = {
-      ...site().pages,
-      '4.0': {
-        guards: page(
-          'id: guards\ntitle: Guards',
-          '[n](/docs/next/guards#passing-options) [m](/docs/next/guards#params)',
-        ),
-      },
-    }
+  it('rejects stored links through latest or next, and links not in their stored form', () => {
+    const links = [
+      '[a](/docs/latest/guards)',
+      '[b](/docs/next/guards)',
+      '[c](/docs/4.1/api/meocord/decorator/Defer)',
+      '[d](/docs/4.1)',
+      '[e](/docs/4.1#top)',
+    ]
 
-    expect(checkSite(site({ pages }))).toEqual([
-      'content/4.0/guards.md: /docs/next/guards#params names no heading of that page',
+    expect(checkSite(withAuthored({ a: page('id: a\ntitle: A', links.join('\n')) }))).toEqual([
+      'content/4.1/a.md: /docs/latest/guards names latest; a stored link names its line, which keeps its meaning when statuses change',
+      'content/4.1/a.md: /docs/next/guards names next; a stored link names its line, which keeps its meaning when statuses change',
+      'content/4.1/a.md: /docs/4.1/api/meocord/decorator/Defer has more path than an API link takes',
+      'content/4.1/a.md: /docs/4.1#top names no page',
     ])
   })
 
   it('reports pages without an id or title, and ids used twice', () => {
-    const pages = {
-      ...site().pages,
-      '4.1': { a: page('title: A', 'x'), b: page('id: b', 'x'), c: page('id: b\ntitle: C', 'x') },
-    }
+    const pages = { a: page('title: A', 'x'), b: page('id: b', 'x'), c: page('id: b\ntitle: C', 'x') }
 
-    expect(checkSite(site({ pages }))).toEqual([
+    expect(checkSite(withAuthored(pages))).toEqual([
       'content/4.1/a.md: front matter has no id',
       'content/4.1/b.md: front matter has no title',
       'content/4.1/c.md: id "b" is also used by content/4.1/b.md',
     ])
   })
 
-  it('keeps TypeScript out of written guides, but not out of imported ones', () => {
-    const pages = { ...site().pages, '4.1': { a: page('id: a\ntitle: A', '```typescript\nconst x = 1\n```') } }
+  it('keeps TypeScript and imported pages out of authored guides', () => {
+    const pages = {
+      a: page('id: a\ntitle: A', '```typescript\nconst x = 1\n```'),
+      b: page('id: b\ntitle: B\nsource: readme@4.1.0-beta.0', 'Imported.'),
+    }
 
-    expect(checkSite(site({ pages }))).toEqual([
+    expect(checkSite(withAuthored(pages))).toEqual([
       'content/4.1/a.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence',
+      'content/4.1/b.md: a page imported from a README belongs in generated/readme/4.1',
     ])
   })
 
   it('reports examples that do not exist, or lack the region', () => {
     const pages = {
-      ...site().pages,
-      '4.1': {
-        a: page(
-          'id: a\ntitle: A',
-          '::example{file="missing.ts"}\n::example{file="guards/owner.guard.ts" region="nope"}\n::example{region="x"}',
-        ),
-      },
+      a: page(
+        'id: a\ntitle: A',
+        '::example{file="missing.ts"}\n::example{file="guards/owner.guard.ts" region="nope"}\n::example{region="x"}',
+      ),
     }
 
-    expect(checkSite(site({ pages }))).toEqual([
+    expect(checkSite(withAuthored(pages))).toEqual([
       'content/4.1/a.md: examples/4.1/src/missing.ts does not exist',
       'content/4.1/a.md: examples/4.1/src/guards/owner.guard.ts has no region "nope"',
       'content/4.1/a.md: an ::example names no file',
@@ -130,17 +138,38 @@ describe('checkSite', () => {
       '[h](https://example.com/page.md)',
       '`[i](/docs/9.9/in-code)`',
     ]
-    const pages = { ...site().pages, '4.1': { a: page('id: a\ntitle: A', links.join('\n')) } }
 
-    expect(checkSite(site({ pages }))).toEqual([
+    expect(checkSite(withAuthored({ a: page('id: a\ntitle: A', links.join('\n')) }))).toEqual([
       'content/4.1/a.md: /docs/3.2/guards names a version the site does not document',
-      'content/4.1/a.md: /docs/4.0/nowhere names no page of 4.0',
+      'content/4.1/a.md: /docs/4.0/nowhere names no page of generated/readme/4.0',
       'content/4.1/a.md: /docs/4.0/guards#nowhere names no heading of that page',
       'content/4.1/a.md: /docs/4.1/migrating#nowhere names no heading of the migration guide',
-      'content/4.1/a.md: /docs/4.1/changelog#v4.0.0 names no version of 4.1',
-      'content/4.1/a.md: /docs/4.1/changelog#4.1.0-beta.0 names no version of 4.1',
+      'content/4.1/a.md: /docs/4.1/changelog#v4.0.0 is not a valid link: 4.0.0 is not a version of line 4.1.',
+      'content/4.1/a.md: /docs/4.1/changelog#4.1.0-beta.0 is not in its stored form, /docs/4.1/changelog#v4.1.0-beta.0',
       'content/4.1/a.md: no heading for #nowhere',
       'content/4.1/a.md: ../README.md does not point at a page of the site',
+    ])
+  })
+
+  it('resolves links into a line from its own pages in their set, and from elsewhere in what the site shows', () => {
+    // 4.0 shows its imported pages; a 4.0 page authored ahead of the switch links the authored set
+    const authored = { ...site().authored, '4.0': { intro: page('id: intro\ntitle: Intro', '[g](/docs/4.0/guards)') } }
+
+    expect(checkSite(site({ authored }))).toEqual([
+      'content/4.0/intro.md: /docs/4.0/guards names no page of content/4.0',
+    ])
+    expect(checkSite(withAuthored({ a: page('id: a\ntitle: A', '[intro](/docs/4.0/intro)') }))).toEqual([
+      'content/4.1/a.md: /docs/4.0/intro names no page of generated/readme/4.0',
+    ])
+  })
+
+  it('keeps each line’s pages where its guide source says, and nowhere else', () => {
+    const readme = { '4.1': { stale: page('id: stale\ntitle: Stale\nsource: readme@4.1.0-beta.0', 'x') }, '4.0': {} }
+
+    expect(checkSite(site({ readme, authored: { '4.1': {}, '4.0': {} } }))).toEqual([
+      'content/4.1 has no pages',
+      "generated/readme/4.1 is still there, though 4.1's guides are authored",
+      'generated/readme/4.0 has no pages',
     ])
   })
 
@@ -164,17 +193,15 @@ describe('checkSite', () => {
     ])
   })
 
-  it('reports a line without pages, and a link to a migration guide the line lacks', () => {
-    const pages = {
+  it('reports a link to a migration guide the line lacks', () => {
+    const readme = {
       '4.1': {},
       '4.0': { guards: page('id: guards\ntitle: Guards\nsource: readme@4.0.0', '[m](/docs/4.0/migrating)') },
     }
 
-    expect(checkSite(site({ pages, migrating: { '4.1': '# x' } }))).toEqual([
-      'content/4.1 has no pages',
-      'content/4.0/guards.md: /docs/4.0/migrating links a migration guide 4.0 does not have',
+    expect(checkSite(site({ readme, migrating: { '4.1': '# Upgrading\n\n## Start\n' } }))).toEqual([
+      'generated/readme/4.0/guards.md: /docs/4.0/migrating links a migration guide 4.0 does not have',
       'line 4.0 has no generated/migrating/4.0.md',
-      'generated/changelog/4.1.0-beta.0.json: /docs/4.1/migrating#start names no heading of the migration guide',
     ])
   })
 })

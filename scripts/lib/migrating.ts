@@ -6,6 +6,7 @@
 import GithubSlugger from 'github-slugger'
 import { rewriteLibraryLinks } from './changelog.js'
 import type { Fetch } from './registry.js'
+import { storedHref } from './stored-links.js'
 
 export const LIBRARY_REPOSITORY = 'meocord/meocord'
 
@@ -47,9 +48,9 @@ export function migratingFile(
   const body = rewriteLibraryLinks(markdown, line, readmeAnchors).replace(
     /\]\(\.\.\/README\.md(?:#([\w-]+))?\)/g,
     (match, anchor?: string) => {
-      if (!anchor) return `](/docs/${line})`
+      if (!anchor) return `](${storedHref({ kind: 'line', line })})`
       const page = readmeAnchors[anchor]
-      return page ? `](/docs/${line}/${page}#${anchor})` : match
+      return page ? `](${storedHref({ kind: 'guide', line, slug: page, anchor })})` : match
     },
   )
   return `<!-- docs/MIGRATING.md from ${LIBRARY_REPOSITORY}@${commit} (${version}); generated, do not edit -->\n\n${body.trim()}\n`

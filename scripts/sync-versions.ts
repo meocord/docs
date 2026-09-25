@@ -26,7 +26,7 @@ if (result.added.length === 0) {
   console.log('Every published version is already documented.')
 } else {
   writeVersions(paths.versions, result.config)
-  await formatFiles([paths.versions, ...result.config.lines.map(line => paths.content(line.line))])
+  await formatFiles([paths.versions, ...result.config.lines.map(line => paths.readme(line.line))])
   console.log(`Added ${result.added.join(', ')}.`)
   if (summaryFile) writeFileSync(summaryFile, `${syncSummary(result)}\n`)
 }

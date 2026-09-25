@@ -70,7 +70,12 @@ const deps = (versions: string[]) => ({
 
 let first: Awaited<ReturnType<typeof sync>>
 
+// A page authored ahead of the line's switch, which no sync may change
+const DRAFT = '---\nid: overview\ntitle: Overview\n---\n\nWritten for the site.\n'
+
 beforeAll(async () => {
+  mkdirSync(path.join(root, 'content', '9.0'), { recursive: true })
+  writeFileSync(path.join(root, 'content', '9.0', 'draft.md'), DRAFT)
   mkdirSync(path.join(root, 'examples', '9.0'), { recursive: true })
   writeFileSync(
     path.join(root, 'examples', '9.0', 'package.json'),
@@ -107,13 +112,18 @@ describe('sync', () => {
     expect(doc.sections[1].entries[0].markdown).toContain('(/docs/9.0/getting-started#install)')
   })
 
+  it('leaves authored guides alone', () => {
+    expect(readdirSync(path.join(root, 'content', '9.0'))).toEqual(['draft.md'])
+    expect(read('content/9.0/draft.md')).toBe(DRAFT)
+  })
+
   it('imports the README as the line’s guides, and pins the examples', () => {
-    expect(readdirSync(path.join(root, 'content', '9.0')).sort()).toEqual([
+    expect(readdirSync(path.join(root, 'generated', 'readme', '9.0')).sort()).toEqual([
       'deployment.md',
       'getting-started.md',
       'overview.md',
     ])
-    expect(read('content/9.0/deployment.md')).toContain('(/docs/9.0/getting-started#install)')
+    expect(read('generated/readme/9.0/deployment.md')).toContain('(/docs/9.0/getting-started#install)')
     expect(JSON.parse(read('examples/9.0/package.json')).dependencies.meocord).toBe('9.0.0-beta.0')
   })
 
@@ -130,7 +140,8 @@ describe('sync', () => {
 
     expect(second.added).toEqual(['9.0.0'])
     expect(second.statusChanges).toEqual(['9.0: prerelease -> current'])
-    expect(read('content/9.0/overview.md')).toContain('source: readme@9.0.0')
+    expect(read('generated/readme/9.0/overview.md')).toContain('source: readme@9.0.0')
+    expect(read('content/9.0/draft.md')).toBe(DRAFT)
     expect(missingVersions(second.config, registry(['9.0.0-beta.0', '9.0.0']))).toEqual([])
     expect(syncSummary(second)).toContain('Adds `9.0.0`')
   }, 60_000)
@@ -172,16 +183,13 @@ describe('sync', () => {
 })
 
 describe('forking a line', () => {
-  it('copies the guides, and the examples pinned to the new version without their installs', () => {
+  it('copies the authored guides, and the examples pinned to the new version without their installs', () => {
     mkdirSync(path.join(root, 'examples', '9.0', 'node_modules', 'meocord'), { recursive: true })
     forkContent('9.0', '9.1')
     forkExamples('9.0', '9.1', '9.1.0-beta.0')
 
-    expect(readdirSync(path.join(root, 'content', '9.1')).sort()).toEqual([
-      'deployment.md',
-      'getting-started.md',
-      'overview.md',
-    ])
+    expect(readdirSync(path.join(root, 'content', '9.1'))).toEqual(['draft.md'])
+    expect(() => forkContent('9.0', '9.1')).toThrow('content/9.1 already exists')
     expect(JSON.parse(read('examples/9.1/package.json'))).toEqual({
       name: 'examples-9-1',
       dependencies: { meocord: '9.1.0-beta.0' },

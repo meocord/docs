@@ -24,7 +24,8 @@ function filesUnder(dir: string, root = dir): Record<string, string> {
 const config = readVersions(paths.versions)
 const site: SiteSnapshot = {
   config,
-  pages: {},
+  authored: {},
+  readme: {},
   readmeAnchors: {},
   migrating: {},
   changelogs: {},
@@ -32,11 +33,14 @@ const site: SiteSnapshot = {
   examples: {},
 }
 for (const { line, versions } of config.lines) {
-  site.pages[line] = Object.fromEntries(
-    Object.entries(filesUnder(paths.content(line)))
-      .filter(([file]) => file.endsWith('.md'))
-      .map(([file, text]) => [file.replace(/\.md$/, ''), text]),
-  )
+  const pagesIn = (dir: string) =>
+    Object.fromEntries(
+      Object.entries(filesUnder(dir))
+        .filter(([file]) => file.endsWith('.md'))
+        .map(([file, text]) => [file.replace(/\.md$/, ''), text]),
+    )
+  site.authored[line] = pagesIn(paths.content(line))
+  site.readme[line] = pagesIn(paths.readme(line))
   const anchors = readIf(paths.readmeAnchors(line))
   if (anchors) site.readmeAnchors[line] = JSON.parse(anchors)
   site.migrating[line] = readIf(paths.migrating(line))
@@ -53,6 +57,8 @@ if (problems.length > 0) {
   console.error(`${problems.length} content problem(s):\n  ${problems.join('\n  ')}`)
   process.exit(1)
 }
+const count = (sets: Record<string, Record<string, string>>) =>
+  Object.values(sets).reduce((sum, pages) => sum + Object.keys(pages).length, 0)
 console.log(
-  `Content is consistent: ${config.lines.length} lines, ${Object.values(site.pages).reduce((sum, pages) => sum + Object.keys(pages).length, 0)} pages.`,
+  `Content is consistent: ${config.lines.length} lines, ${count(site.readme)} imported and ${count(site.authored)} authored pages.`,
 )
