@@ -1,25 +1,19 @@
 import type { Metadata } from 'next'
 import { A, Div, H1, P } from '@meonode/ui'
 import { Window } from '@/components/shell/Window'
-import { DOC_ALIASES } from '@/config/aliases'
-import type { VersionOption } from '@/components/shell/types'
+import { CURRENT_LINE, VERSIONS } from '@/config/versions'
+import { versionOption, versionOptions } from '@/lib/version-options'
 
 export const metadata: Metadata = { alternates: { canonical: '/' } }
 
 const REPOSITORY = 'https://github.com/meocord/meocord'
-
-// The lines the aliases name, until versions.json lists them all.
-const VERSIONS: VersionOption[] = [
-  { label: DOC_ALIASES.latest, href: '/docs/latest', status: 'latest' },
-  { label: DOC_ALIASES.next, href: '/docs/next', status: 'prerelease' },
-]
 
 /** A placeholder until the landing page is designed, drawn in the docs window. */
 export default function HomePage() {
   return Window({
     crumbs: [{ title: 'Overview' }],
     groups: [{ title: 'Introduction', items: [{ title: 'Overview', href: '/', current: true }] }],
-    version: { current: VERSIONS[0], options: VERSIONS },
+    version: { current: versionOption(CURRENT_LINE, VERSIONS), options: versionOptions(VERSIONS) },
     repository: REPOSITORY,
     children: Div({
       maxWidth: 'theme.layout.prose',

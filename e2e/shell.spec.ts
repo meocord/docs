@@ -33,7 +33,10 @@ test('the version menu opens on the current line, moves by arrow keys and hands 
   await page.keyboard.press('ArrowDown')
   await expect(items.first()).toBeFocused()
   await page.keyboard.press('End')
-  await expect(items.nth(1)).toHaveAttribute('href', '/docs/next')
+  await expect(items.nth(1)).toBeFocused()
+  // Each line links to where it lands, the current one at its alias.
+  await expect(items.first()).toHaveAttribute('href', '/docs/latest')
+  await expect(items.nth(1)).toHaveAttribute('href', '/docs/4.1')
 
   await page.keyboard.press('Escape')
   await expect(menu).toBeHidden()

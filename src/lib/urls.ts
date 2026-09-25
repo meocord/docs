@@ -15,6 +15,8 @@ export interface VersionsManifest {
 
 /** A page or place on the site, by what it is rather than where it lives. */
 export type DocsTarget =
+  /** A line's first page, where the version switcher lands. */
+  | { kind: 'line'; line: string }
   | { kind: 'guide'; line: string; slug: string; anchor?: string }
   /** A symbol in a line's API; with `version`, in that exact version's API instead. */
   | { kind: 'api'; line: string; entry: string; symbol: string; member?: string; version?: string }
@@ -86,6 +88,9 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
   const segment = lineSegment(target.line, versions)
 
   switch (target.kind) {
+    case 'line':
+      return `/docs/${segment}`
+
     case 'guide':
       return withAnchor(`/docs/${segment}/${check(target.slug, SLUG, 'page slug')}`, target.anchor)
 
