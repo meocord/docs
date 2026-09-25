@@ -3,7 +3,7 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
-import { claims, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
+import { claims, features, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
 
 // The example's `home` region, read here independently of the site's own example resolver.
 function regionFromFile(): string {
@@ -72,5 +72,20 @@ describe('the sections below', () => {
   it('list what is new and the spec that runs', () => {
     expect(whatsNew().length).toBeGreaterThan(2)
     expect(specReport().lines[0]).toMatch(/^the stages of a call › /)
+  })
+
+  it('pair each feature with what its recorded call produced', () => {
+    const [routing, cooldown, validation, presenter] = features()
+    for (const feature of features()) expect(feature.code.length).toBeGreaterThan(0)
+    expect(routing.code).toContain("'card/{ownerId}/refresh'")
+    expect(routing.result).toEqual({
+      kind: 'route',
+      customId: 'card/111/refresh',
+      handler: 'CardButtonController.refresh',
+      params: { ownerId: '111' },
+    })
+    expect(cooldown.result).toMatchObject({ kind: 'private', text: expect.stringMatching(/try again in 3s/) })
+    expect(validation.result).toMatchObject({ kind: 'private', text: expect.stringMatching(/^minutes:/) })
+    expect(presenter.result).toMatchObject({ kind: 'embed', title: 'Something went wrong', private: true })
   })
 })

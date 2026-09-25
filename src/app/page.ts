@@ -1,7 +1,14 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { Node } from '@meonode/ui'
-import { HomeRows, NewSection, StartSection, TestingSection, WhySection } from '@/components/home/HomeSections'
+import {
+  FeatureSection,
+  HomeRows,
+  NewSection,
+  StartSection,
+  TestingSection,
+  WhySection,
+} from '@/components/home/HomeSections'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { Prose } from '@/components/prose/Prose'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
@@ -9,7 +16,7 @@ import { Window } from '@/components/shell/Window'
 import { VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { claims, HOME_LINE, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
+import { claims, features, HOME_LINE, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
 import { docsHref } from '@/lib/urls'
 import { resolveExample } from '../../scripts/lib/pages'
 
@@ -50,6 +57,7 @@ async function home() {
           key: 'rows',
           children: [
             WhySection(claims()),
+            FeatureSection(features()),
             StartSection(guide('quick-start')),
             TestingSection(
               {

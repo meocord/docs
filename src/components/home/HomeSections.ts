@@ -1,6 +1,7 @@
-import { createNode, Node } from '@meonode/ui'
+import { type Children, createNode, Node } from '@meonode/ui'
+import { markSvgNode } from '@/components/home/mark-node'
 import { codeFrame } from '@/lib/prose/code'
-import type { Claim } from '@/lib/home/data'
+import type { Claim, Feature, FeatureResult } from '@/lib/home/data'
 
 /**
  * The home page's sections below the pipeline panel, laid out in rows: a claim beside the code that
@@ -87,8 +88,167 @@ export const HomeRows = createNode('div', {
       fontSize: 'theme.type.small.size',
     },
     '& [data-news] a:hover': { backgroundColor: 'theme.surface.fillHover' },
+
+    // A feature's result: a small panel drawn the way the reader meets it, in Discord or in a test.
+    '& [data-result]': {
+      margin: 'theme.space.4 0 0',
+      padding: 'theme.space.4',
+      borderRadius: 'theme.radius.callout',
+      border: 'theme.line.width solid theme.line.hairline',
+      backgroundColor: 'theme.surface.canvas',
+      fontSize: 'theme.type.small.size',
+    },
+    '& [data-result-label]': {
+      margin: '0 0 theme.space.3',
+      fontSize: 'theme.type.caption.size',
+      color: 'theme.ink.secondary',
+    },
+    '& [data-result-label] code': { fontFamily: 'theme.font.mono' },
+    '& [data-route]': {
+      display: 'grid',
+      gridTemplateColumns: 'max-content minmax(0, 1fr)',
+      columnGap: 'theme.space.4',
+      rowGap: 'theme.space.2',
+      margin: 0,
+    },
+    '& [data-route] dt': { color: 'theme.ink.secondary' },
+    '& [data-route] dd': {
+      margin: 0,
+      fontFamily: 'theme.font.mono',
+      fontSize: 'theme.type.control.size',
+      color: 'theme.ink.primary',
+      overflowWrap: 'anywhere',
+    },
+    '& [data-message]': { display: 'flex', gap: 'theme.space.3', alignItems: 'flex-start' },
+    '& [data-avatar]': {
+      flexShrink: 0,
+      width: 28,
+      height: 28,
+      display: 'grid',
+      placeItems: 'center',
+      borderRadius: 'theme.radius.control',
+      backgroundColor: 'theme.surface.sheet',
+    },
+    '& [data-who]': { display: 'flex', gap: 'theme.space.2', alignItems: 'center' },
+    '& [data-who] strong': { color: 'theme.ink.primary', fontWeight: 'theme.font.weight.semibold' },
+    '& [data-app]': {
+      padding: '0 theme.space.1',
+      borderRadius: 'theme.radius.chip',
+      backgroundColor: 'theme.accent.band',
+      color: 'theme.accent.default',
+      fontSize: 10,
+      fontWeight: 'theme.font.weight.semibold',
+    },
+    '& [data-private]': { fontSize: 'theme.type.caption.size', color: 'theme.ink.secondary' },
+    '& [data-said]': { color: 'theme.ink.primary', overflowWrap: 'anywhere' },
+    '& [data-embed]': {
+      marginTop: 'theme.space.1',
+      padding: 'theme.space.2 theme.space.3',
+      borderRadius: 'theme.radius.chip',
+      borderLeft: '4px solid var(--embed-color)',
+      backgroundColor: 'theme.surface.fill',
+    },
+    '& [data-embed] strong': { display: 'block', color: 'theme.ink.primary' },
   },
 })
+
+// The bot's answer, as the channel shows it: its mark, its name, and what it said.
+function botMessage(body: Children, secret: boolean) {
+  return Node('div', {
+    'data-message': true,
+    children: [
+      Node('div', { key: 'avatar', 'data-avatar': true, 'aria-hidden': true, children: markSvgNode(18) }),
+      Node('div', {
+        key: 'body',
+        children: [
+          Node('div', {
+            key: 'who',
+            'data-who': true,
+            children: [
+              Node('strong', { key: 'n', children: 'greeter' }),
+              Node('span', { key: 'a', 'data-app': true, children: 'APP' }),
+            ],
+          }),
+          secret ? Node('div', { key: 'private', 'data-private': true, children: 'Only you can see this' }) : null,
+          body,
+        ],
+      }),
+    ],
+  })
+}
+
+function ResultPanel(result: FeatureResult) {
+  const label = (children: Children) => Node('p', { key: 'label', 'data-result-label': true, children })
+  if (result.kind === 'route') {
+    const row = (term: string, value: string) => [
+      Node('dt', { key: `${term}-t`, children: term }),
+      Node('dd', { key: `${term}-d`, children: value }),
+    ]
+    return Node('div', {
+      'data-result': 'route',
+      children: [
+        label(['A click on ', Node('code', { key: 'c', children: result.customId }), ' reaches']),
+        Node('dl', {
+          key: 'route',
+          'data-route': true,
+          children: [
+            ...row('handler', result.handler),
+            ...Object.entries(result.params).flatMap(([name, value]) => row(name, JSON.stringify(value))),
+          ],
+        }),
+      ],
+    })
+  }
+  const said =
+    result.kind === 'private'
+      ? Node('div', { key: 'said', 'data-said': true, children: result.text })
+      : Node('div', {
+          key: 'said',
+          'data-embed': true,
+          style: { '--embed-color': result.color },
+          children: [
+            Node('strong', { key: 't', children: result.title }),
+            Node('span', { key: 'd', 'data-said': true, children: result.text }),
+          ],
+        })
+  return Node('div', {
+    'data-result': result.kind,
+    children: [
+      label(['After ', Node('code', { key: 'c', children: result.command }), ', the user sees']),
+      botMessage(said, result.kind === 'private' || result.private),
+    ],
+  })
+}
+
+export function FeatureSection(items: Feature[]) {
+  return Node('section', {
+    key: 'features',
+    'aria-labelledby': 'features',
+    children: [
+      Node('h2', { key: 'h', id: 'features', children: 'What you write, what they see' }),
+      ...items.map((item, index) =>
+        Node('div', {
+          key: index,
+          'data-row': true,
+          children: [
+            Node('div', {
+              key: 'text',
+              children: [
+                Node('h3', { key: 'h', children: item.title }),
+                Node('p', { key: 'p', children: item.body }),
+                Node('a', { key: 'a', 'data-more': true, href: item.href, children: 'Read the guide' }),
+              ],
+            }),
+            Node('div', {
+              key: 'code',
+              children: [codeFrame(item.code, 'ts', { key: 0, file: item.file }), ResultPanel(item.result)],
+            }),
+          ],
+        }),
+      ),
+    ],
+  })
+}
 
 export function WhySection(claims: Claim[]) {
   return Node('section', {
