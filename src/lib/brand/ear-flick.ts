@@ -6,26 +6,41 @@ import type { ThemedCSSObject } from '@meonode/ui'
  * brand tools, so the mark twitches the same way wherever it is drawn.
  */
 
-/** The point both ears turn about, in mark units: the valley between them, on the crown. */
-export const EAR_PIVOT = [9.6, 8.4] as const
+/**
+ * The flick, as numbers: each ear is a damped spring, `amplitude · e^(−t/decay) · sin(2πt/period)`
+ * degrees clockwise from `delay` seconds in, sampled every `stepMs` and rounded to 0.1°, turning about
+ * `pivot` in mark units (the valley between the ears). They match the avatar's in the meocord
+ * repository's brand tools.
+ */
+export const EAR_FLICK = {
+  pivot: [9.6, 8.4],
+  seconds: 0.6,
+  stepMs: 30,
+  far: { amplitude: 17.5, decay: 0.1, period: 0.3, delay: 0 },
+  near: { amplitude: -7, decay: 0.1, period: 0.3, delay: 0.08 },
+} as const
+
+/** The point both ears turn about, in mark units. */
+export const EAR_PIVOT = EAR_FLICK.pivot
 
 /** How long one flick lasts, in seconds; it has settled by then. */
-export const FLICK_SECONDS = 0.75
+export const FLICK_SECONDS = EAR_FLICK.seconds
 
 /** Degrees clockwise at `t` seconds into a flick, for the far ear and the near one. */
 export function flickAngles(t: number): { far: number; near: number } {
-  const far = 20 * Math.exp(-t / 0.14) * Math.sin((2 * Math.PI * t) / 0.3)
-  const late = t - 0.08
-  const near = late > 0 ? -6 * Math.exp(-late / 0.12) * Math.sin((2 * Math.PI * late) / 0.3) : 0
-  const round = (degrees: number) => Math.round(degrees * 10) / 10 || 0
-  return { far: round(far), near: round(near) }
+  const angle = ({ amplitude, decay, period, delay }: (typeof EAR_FLICK)['far' | 'near']) => {
+    const late = t - delay
+    const degrees = late > 0 ? amplitude * Math.exp(-late / decay) * Math.sin((2 * Math.PI * late) / period) : 0
+    return Math.round(degrees * 10) / 10 || 0
+  }
+  return { far: angle(EAR_FLICK.far), near: angle(EAR_FLICK.near) }
 }
 
-/** The flick's samples, every 30 ms, as keyframe steps placed within a cycle of `period` seconds. */
+/** The flick's samples, every EAR_FLICK.stepMs, as keyframe steps placed within a cycle of `period` seconds. */
 function steps(ear: 'far' | 'near', period: number, property: 'rotate' | 'transform') {
   const frames: Record<string, Record<string, string>> = {}
   const value = (degrees: number) => (property === 'rotate' ? `${degrees}deg` : `rotate(${degrees}deg)`)
-  for (let ms = 0; ms <= FLICK_SECONDS * 1000; ms += 30) {
+  for (let ms = 0; ms <= FLICK_SECONDS * 1000; ms += EAR_FLICK.stepMs) {
     frames[`${+((ms / 1000 / period) * 100).toFixed(3)}%`] = { [property]: value(flickAngles(ms / 1000)[ear]) }
   }
   frames['100%'] = { [property]: value(0) }

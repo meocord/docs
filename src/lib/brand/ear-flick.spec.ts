@@ -7,30 +7,25 @@ describe('the ear flick', () => {
     // far / near, as the brand tools' flickAngles samples them for the animated avatar
     const avatar = [
       [0, 0],
-      [9.5, 0],
-      [12.4, 0],
-      [10, -1.1],
-      [5, -3.2],
-      [0, -3.3],
-      [-3.2, -2.3],
-      [-4.2, -0.8],
-      [-3.4, 0.3],
-      [-1.7, 0.9],
-      [0, 1],
-      [1.1, 0.6],
-      [1.5, 0.2],
-      [1.2, -0.1],
-      [0.6, -0.3],
-      [0, -0.3],
-      [-0.4, -0.2],
-      [-0.5, -0.1],
-      [-0.4, 0],
-      [-0.2, 0.1],
-      [0, 0.1],
-      [0.1, 0.1],
-      [0.2, 0],
-      [0.1, 0],
-      [0.1, 0],
+      [7.6, 0],
+      [9.1, 0],
+      [6.8, -1.3],
+      [3.1, -3.5],
+      [0, -3.5],
+      [-1.7, -2.2],
+      [-2, -0.8],
+      [-1.5, 0.3],
+      [-0.7, 0.8],
+      [0, 0.8],
+      [0.4, 0.5],
+      [0.5, 0.2],
+      [0.3, -0.1],
+      [0.2, -0.2],
+      [0, -0.2],
+      [-0.1, -0.1],
+      [-0.1, 0],
+      [-0.1, 0],
+      [0, 0],
       [0, 0],
     ]
     const ours = avatar.map((_, index) => flickAngles((index * 30) / 1000)).map(({ far, near }) => [far, near])
@@ -41,7 +36,7 @@ describe('the ear flick', () => {
   it('splits the crown at the valley both ears turn about', () => {
     const valley = `${EAR_PIVOT[0]} ${EAR_PIVOT[1]}`
     expect(MARK_PATHS.crown).toContain(valley)
-    expect(MARK_EARS.near.crown).toContain(`${valley}L`)
+    expect(MARK_EARS.near.crown).toContain(`${valley}V`)
     expect(MARK_EARS.far.crown.startsWith(`M${valley}`)).toBe(true)
     expect(MARK_EARS.near.inner + MARK_EARS.far.inner).toBe(MARK_PATHS.inner)
   })
