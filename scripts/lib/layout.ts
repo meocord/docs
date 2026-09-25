@@ -20,7 +20,10 @@ export const paths = {
   migrating: (line: string) => path.join(ROOT, 'generated', 'migrating', `${line}.md`),
   since: path.join(ROOT, 'generated', 'since.json'),
   readmeAnchors: (line: string) => path.join(ROOT, 'generated', 'readme-anchors', `${line}.json`),
+  /** A line's authored guides, written by people; the pipeline only creates a new line's folder. */
   content: (line: string) => path.join(ROOT, 'content', line),
+  /** A line's guides imported from its README, which the site shows until the line's guides are authored. */
+  readme: (line: string) => path.join(ROOT, 'generated', 'readme', line),
   examples: (line: string) => path.join(ROOT, 'examples', line),
 }
 
@@ -46,7 +49,7 @@ export function writeText(file: string, text: string): void {
   write(file, text)
 }
 
-/** Replaces a line's guides with the pages imported from a version's README; returns its anchors. */
+/** Replaces a line's imported guides with the pages of a version's README; returns its anchors. */
 export function importLineReadme(
   line: string,
   version: string,
@@ -55,7 +58,7 @@ export function importLineReadme(
 ): Record<string, string> {
   const commitUrl = `https://github.com/meocord/meocord/blob/${commit ?? `v${version}`}`
   const { pages, anchors } = importReadme(readme, { line, commitUrl })
-  const dir = paths.content(line)
+  const dir = paths.readme(line)
   rmSync(dir, { recursive: true, force: true })
   for (const page of pages) write(path.join(dir, `${page.slug}.md`), pageFile(page, `readme@${version}`))
   writeJson(paths.readmeAnchors(line), anchors)
@@ -68,8 +71,10 @@ export function lineAnchors(line: string): Record<string, string> {
   return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>) : {}
 }
 
-/** Starts a line's guides from another line's, for a line whose guides are written for the site. */
+/** Starts a new line's authored guides from another line's; an existing line's folder is never touched. */
 export function forkContent(from: string, to: string): void {
+  if (existsSync(paths.content(to)))
+    throw new Error(`content/${to} already exists; a line's guides are forked only once.`)
   cpSync(paths.content(from), paths.content(to), { recursive: true })
 }
 

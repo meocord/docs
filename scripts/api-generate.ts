@@ -38,4 +38,4 @@ for (const version of requested) {
   }
 }
 refreshSince()
-await formatFiles(config.lines.map(line => paths.content(line.line)))
+await formatFiles(config.lines.map(line => paths.readme(line.line)))

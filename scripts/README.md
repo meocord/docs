@@ -9,7 +9,8 @@ exact version they describe.
 | Path                                   | Contents                                                                             | Edited by           |
 | -------------------------------------- | ------------------------------------------------------------------------------------ | ------------------- |
 | `versions.json`                        | The documented versions, grouped into minor lines with a status each, and provenance | the sync, reviewers |
-| `content/<line>/`                      | A line's guides: one Markdown page each, with `id` and `title` front matter          | people, or the sync |
+| `content/<line>/`                      | A line's authored guides: one Markdown page each, with `id` and `title` front matter | people              |
+| `generated/readme/<line>/`             | A line's guides imported from the README its newest version shipped                  | the pipeline only   |
 | `examples/<line>/`                     | A workspace pinning that line's exact meocord; guides embed its files                | people              |
 | `generated/api/<version>.json`         | TypeDoc's JSON for the version's declaration files, one module per entry point       | the pipeline only   |
 | `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking      | the pipeline only   |
@@ -18,9 +19,16 @@ exact version they describe.
 | `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs  | the pipeline only   |
 
 A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and
-`next` the one in prerelease. A line's `guides` is `readme` while its pages are imported from the README
-its newest version shipped, and `authored` once they are written for the site; a new line starts from the
-newest line's guides.
+`next` the one in prerelease. A line's `guides` decides what the site shows for it: `readme`, the pages in
+`generated/readme/<line>/` imported from the README its newest version shipped, or `authored`, the pages in
+`content/<line>/`. Authored pages can land in `content/<line>/` while the line is still `readme`; the site
+shows them once a pull request switches the line to `authored` and deletes its `generated/readme/<line>/`.
+The pipeline never changes a file under `content/`; it only starts a new line's folder from the newest
+line's authored guides.
+
+Content stores links by line, `/docs/4.1/guards`, never through `latest` or `next`, in the form
+`src/lib/urls.ts` builds; the site maps them to the URLs it emits. `scripts/lib/pages.ts` is how the site
+reads a line's pages and the code an `::example` embeds.
 
 ## Verifying a version
 

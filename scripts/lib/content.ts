@@ -7,13 +7,17 @@
 import GithubSlugger from 'github-slugger'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog.js'
+import { changelogAnchor } from '../../src/lib/urls.js'
 import { markdownAnchors } from './migrating.js'
+import { parseStored } from './stored-links.js'
 import type { VersionsConfig } from './versions.js'
 
 export interface SiteSnapshot {
   config: VersionsConfig
-  /** Page files per line, keyed by slug, as written on disk. */
-  pages: Record<string, Record<string, string>>
+  /** Authored pages per line, from content/<line>/, keyed by slug, as written on disk. */
+  authored: Record<string, Record<string, string>>
+  /** Pages imported from a README per line, from generated/readme/<line>/, keyed by slug. */
+  readme: Record<string, Record<string, string>>
   readmeAnchors: Record<string, Record<string, string>>
   migrating: Record<string, string | undefined>
   changelogs: Record<string, ChangelogDocument | undefined>
@@ -25,8 +29,15 @@ export interface SiteSnapshot {
 export interface Frontmatter {
   id?: string
   title?: string
+  /** The sidebar group the page belongs to. */
+  section?: string
   order?: number
+  /** For a page imported from a README, `readme@<version>`. */
   source?: string
+  /** The first version the page's topic exists in. */
+  since?: string
+  /** Ids the page had in earlier lines, so the version switcher lands on it from them. */
+  formerly?: string[]
 }
 
 export function parsePage(text: string): { frontmatter: Frontmatter; body: string } {
@@ -68,73 +79,84 @@ function pageAnchors(body: string): Set<string> {
   return anchors
 }
 
+type PageSet = 'authored' | 'readme'
+
+const folder = (set: PageSet, line: string) => (set === 'authored' ? `content/${line}` : `generated/readme/${line}`)
+
 export function checkSite(site: SiteSnapshot): string[] {
   const problems: string[] = []
   const lines = new Map(site.config.lines.map(line => [line.line, line]))
-  const aliasTargets: Record<string, string | undefined> = {
-    latest: site.config.lines.find(line => line.status === 'current')?.line,
-    next: site.config.lines.find(line => line.status === 'prerelease')?.line,
-  }
+  // The set the site shows for a line: its imported pages until its guides are authored
+  const shown = (line: string): PageSet => (lines.get(line)?.guides === 'authored' ? 'authored' : 'readme')
 
-  const anchorsOf = (line: string, slug: string): Set<string> => {
-    const text = site.pages[line]?.[slug]
+  const anchorsOf = (set: PageSet, line: string, slug: string): Set<string> => {
+    const text = site[set][line]?.[slug]
     const anchors = text ? pageAnchors(parsePage(text).body) : new Set<string>()
-    for (const [anchor, page] of Object.entries(site.readmeAnchors[line] ?? {})) if (page === slug) anchors.add(anchor)
+    if (set === 'readme')
+      for (const [anchor, page] of Object.entries(site.readmeAnchors[line] ?? {}))
+        if (page === slug) anchors.add(anchor)
     return anchors
   }
 
-  const checkLinks = (where: string, markdown: string, ownAnchors: () => Set<string>) => {
+  /**
+   * Checks a text's links. A link into the text's own line resolves in the text's own set, so pages
+   * authored ahead of a line's switch link each other; any other link resolves in what the site shows.
+   */
+  const checkLinks = (
+    where: string,
+    markdown: string,
+    from: { line: string; set: PageSet } | undefined,
+    ownAnchors: () => Set<string>,
+  ) => {
     for (const target of markdownLinks(markdown)) {
       if (target.startsWith('#')) {
         if (!ownAnchors().has(target.slice(1))) problems.push(`${where}: no heading for ${target}`)
         continue
       }
-      const internal = /^\/docs\/([^/#]+)(?:\/([^#]*))?(?:#(.+))?$/.exec(target)
-      if (!internal) {
+      if (!target.startsWith('/docs/') && target !== '/docs') {
         const relative = !/^[a-z][\w+.-]*:/i.test(target)
         if (relative && (target.startsWith('/') || /^\.\.?\//.test(target) || /\.md(#|$)/.test(target))) {
           problems.push(`${where}: ${target} does not point at a page of the site`)
         }
         continue
       }
-      const [, version, page = '', anchor] = internal
-      const targetLine = aliasTargets[version] ?? version
-      if (!lines.has(targetLine)) {
-        problems.push(`${where}: ${target} names a version the site does not document`)
+      const parsed = parseStored(target, [...lines.keys()])
+      if ('problem' in parsed) {
+        problems.push(`${where}: ${target} ${parsed.problem}`)
         continue
       }
-      if (page === '' || page.startsWith('api')) continue
-      if (page === 'changelog') {
-        // A version's section is anchored `v<version>`, dots and all
-        if (anchor && !lines.get(targetLine)!.versions.some(version => anchor === `v${version}`))
-          problems.push(`${where}: ${target} names no version of ${targetLine}`)
+      const link = parsed.target
+      const line = lines.get(link.line)!
+      if (link.kind === 'line' || link.kind === 'api' || link.kind === 'missing') continue
+      if (link.kind === 'changelog') {
+        if (
+          link.version !== undefined &&
+          !line.versions.some(version => changelogAnchor(version) === `v${link.version}`)
+        )
+          problems.push(`${where}: ${target} names no version of ${link.line}`)
         continue
       }
-      if (page === 'migrating') {
-        const guide = site.migrating[targetLine]
-        if (!guide) problems.push(`${where}: ${target} links a migration guide ${targetLine} does not have`)
-        else if (anchor && !markdownAnchors(guide).includes(anchor))
+      if (link.kind === 'migrating') {
+        const guide = site.migrating[link.line]
+        if (!guide) problems.push(`${where}: ${target} links a migration guide ${link.line} does not have`)
+        else if (link.anchor && !markdownAnchors(guide).includes(link.anchor))
           problems.push(`${where}: ${target} names no heading of the migration guide`)
         continue
       }
-      if (!site.pages[targetLine]?.[page]) {
-        problems.push(`${where}: ${target} names no page of ${targetLine}`)
+      const set = from?.line === link.line ? from.set : shown(link.line)
+      if (!site[set][link.line]?.[link.slug]) {
+        problems.push(`${where}: ${target} names no page of ${folder(set, link.line)}`)
         continue
       }
-      if (anchor && !anchorsOf(targetLine, page).has(anchor))
+      if (link.anchor && !anchorsOf(set, link.line, link.slug).has(link.anchor))
         problems.push(`${where}: ${target} names no heading of that page`)
     }
   }
 
-  for (const [name, line] of lines) {
-    const pages = site.pages[name] ?? {}
-    if (Object.keys(pages).length === 0) problems.push(`content/${name} has no pages`)
-    if (line.guides === 'readme' && !site.readmeAnchors[name])
-      problems.push(`line ${name} imports its README but has no generated/readme-anchors/${name}.json`)
-
+  const checkPages = (set: PageSet, name: string) => {
     const ids = new Map<string, string>()
-    for (const [slug, text] of Object.entries(pages)) {
-      const where = `content/${name}/${slug}.md`
+    for (const [slug, text] of Object.entries(site[set][name] ?? {})) {
+      const where = `${folder(set, name)}/${slug}.md`
       const { frontmatter, body } = parsePage(text)
       if (!frontmatter.id) problems.push(`${where}: front matter has no id`)
       if (!frontmatter.title) problems.push(`${where}: front matter has no title`)
@@ -143,9 +165,12 @@ export function checkSite(site: SiteSnapshot): string[] {
           problems.push(`${where}: id "${frontmatter.id}" is also used by ${ids.get(frontmatter.id)}`)
         ids.set(frontmatter.id, where)
       }
-      const imported = frontmatter.source?.startsWith('readme@') ?? false
-      if (!imported && TYPESCRIPT_FENCE.test(body))
-        problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
+      if (set === 'authored') {
+        if (frontmatter.source?.startsWith('readme@'))
+          problems.push(`${where}: a page imported from a README belongs in generated/readme/${name}`)
+        if (TYPESCRIPT_FENCE.test(body))
+          problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
+      }
 
       for (const match of withoutCode(body).matchAll(EXAMPLE)) {
         const attributes = Object.fromEntries(
@@ -164,11 +189,26 @@ export function checkSite(site: SiteSnapshot): string[] {
           problems.push(`${where}: examples/${name}/src/${attributes.file} has no region "${attributes.region}"`)
         }
       }
-      checkLinks(where, body, () => anchorsOf(name, slug))
+      checkLinks(where, body, { line: name, set }, () => anchorsOf(set, name, slug))
     }
+  }
+
+  for (const [name, line] of lines) {
+    const readmePages = Object.keys(site.readme[name] ?? {}).length
+    if (line.guides === 'readme') {
+      if (readmePages === 0) problems.push(`generated/readme/${name} has no pages`)
+      if (!site.readmeAnchors[name])
+        problems.push(`line ${name} imports its README but has no generated/readme-anchors/${name}.json`)
+    } else {
+      if (Object.keys(site.authored[name] ?? {}).length === 0) problems.push(`content/${name} has no pages`)
+      if (readmePages > 0)
+        problems.push(`generated/readme/${name} is still there, though ${name}'s guides are authored`)
+    }
+    checkPages('readme', name)
+    checkPages('authored', name)
 
     const guide = site.migrating[name]
-    if (guide) checkLinks(`generated/migrating/${name}.md`, guide, () => new Set(markdownAnchors(guide)))
+    if (guide) checkLinks(`generated/migrating/${name}.md`, guide, undefined, () => new Set(markdownAnchors(guide)))
     else if (line.versions.some(version => !site.config.provenance.integrityOnly.includes(version)))
       problems.push(`line ${name} has no generated/migrating/${name}.md`)
   }
@@ -183,7 +223,7 @@ export function checkSite(site: SiteSnapshot): string[] {
       }
       changelog.sections.forEach(section =>
         section.entries.forEach(entry =>
-          checkLinks(`generated/changelog/${version}.json`, entry.markdown, () => new Set()),
+          checkLinks(`generated/changelog/${version}.json`, entry.markdown, undefined, () => new Set()),
         ),
       )
     }

@@ -6,6 +6,7 @@
 
 import GithubSlugger from 'github-slugger'
 import { rewriteLibraryLinks } from './changelog.js'
+import { storedHref } from './stored-links.js'
 
 export interface ImportedPage {
   slug: string
@@ -78,12 +79,12 @@ export function importReadme(
       .replace(/\]\(#([\w-]+)\)/g, (match, anchor: string) => {
         const page = anchors[anchor]
         if (!page) return match
-        return page === slug ? `](#${anchor})` : `](/docs/${line}/${page}#${anchor})`
+        return page === slug ? `](#${anchor})` : `](${storedHref({ kind: 'guide', line, slug: page, anchor })})`
       })
-      .replace(/\]\(\.\/CHANGELOG\.md\)/g, `](/docs/${line}/changelog)`)
+      .replace(/\]\(\.\/CHANGELOG\.md\)/g, `](${storedHref({ kind: 'changelog', line })})`)
       .replace(
         /\]\(\.?\/?docs\/MIGRATING\.md(#[\w-]+)?\)/g,
-        (_match, anchor = '') => `](/docs/${line}/migrating${anchor})`,
+        (_match, anchor?: string) => `](${storedHref({ kind: 'migrating', line, anchor: anchor?.slice(1) })})`,
       )
       .replace(/\]\(\.\/((?!docs\/)[^)#\s]+)\)/g, (_match, file: string) => `](${commitUrl}/${file})`)
 

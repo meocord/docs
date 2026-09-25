@@ -3,6 +3,8 @@
  * ships, split into its entries, with links into the library's docs pointed at the site.
  */
 
+import { storedHref } from './stored-links.js'
+
 export interface ChangelogEntry {
   markdown: string
   /** A change to act on: listed under Major Changes, or linking the migration guide, as 4.x patches that break do. */
@@ -43,11 +45,13 @@ export function rewriteLibraryLinks(
   readmeAnchors: Record<string, string> = {},
 ): string {
   return markdown
-    .replace(MIGRATING, (_match, anchor: string | undefined) => `/docs/${line}/migrating${anchor ?? ''}`)
+    .replace(MIGRATING, (_match, anchor: string | undefined) =>
+      storedHref({ kind: 'migrating', line, anchor: anchor?.slice(1) }),
+    )
     .replace(README, (match, anchor: string | undefined) => {
-      if (!anchor) return `/docs/${line}`
+      if (!anchor) return storedHref({ kind: 'line', line })
       const page = readmeAnchors[anchor]
-      return page ? `/docs/${line}/${page}#${anchor}` : match
+      return page ? storedHref({ kind: 'guide', line, slug: page, anchor }) : match
     })
 }
 
