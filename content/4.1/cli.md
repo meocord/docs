@@ -8,14 +8,14 @@ order: 60
 The `meocord` command builds, starts and registers the bot, and scaffolds its parts. `npx meocord --help`
 lists the commands, and `meocord -V` prints the installed version.
 
-| Command    | Alias | What it does                                                          |
-| ---------- | ----- | --------------------------------------------------------------------- |
-| `create`   | none  | Scaffolds a new MeoCord application                                   |
-| `build`    | none  | Compiles the application with Rsbuild                                 |
-| `start`    | none  | Starts the application                                                |
-| `register` | none  | Registers the commands, without starting the bot                      |
-| `generate` | `g`   | Scaffolds controllers, services, guards, interceptors, filters, pipes |
-| `show`     | none  | Displays framework information                                        |
+| Command    | Alias | What it does                                                                        |
+| ---------- | ----- | ----------------------------------------------------------------------------------- |
+| `create`   | none  | Scaffolds a new MeoCord application                                                 |
+| `build`    | none  | Compiles the application with Rsbuild                                               |
+| `start`    | none  | Starts the application                                                              |
+| `register` | none  | Registers the commands, without starting the bot                                    |
+| `generate` | `g`   | Scaffolds controllers, services, guards, interceptors, filters, pipes and observers |
+| `show`     | none  | Displays framework information                                                      |
 
 | Command    | Flags                                                           |
 | ---------- | --------------------------------------------------------------- |
@@ -51,6 +51,7 @@ npx meocord start --build --prod  # a production build, then start
 | `interceptor` | `i`   | an interceptor and its spec         |
 | `filter`      | `f`   | an exception filter and its spec    |
 | `pipe`        | `pi`  | a pipe and its spec                 |
+| `observer`    | `ob`  | a dispatch observer and its spec    |
 
 Generating never overwrites: if any file it would write exists, it refuses, names the files, and writes
 nothing. Run generators from the project's root, where its `package.json` is.

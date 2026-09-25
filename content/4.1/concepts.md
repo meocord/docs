@@ -45,15 +45,16 @@ Every interaction, message and reaction goes to the handler it belongs to:
 
 The handler then runs through the [pipeline](/docs/4.1/how-a-handler-runs): `@Defer`'s acknowledgement,
 guards, interceptors around validation, pipes, cooldowns and the handler, all inside exception filters.
+[Observers](/docs/4.1/observers) are told about the call as it starts and once it has settled.
 [`respond()`](/docs/4.1/responses) makes the right call to Discord for where the answer stands.
 
 ## What lives how long
 
-| Lives for the whole app                     | Made for each call      |
-| ------------------------------------------- | ----------------------- |
-| controllers and services                    | guards                  |
-| interceptors, exception filters and pipes   | `ExecutionContext`      |
-| the `Client`, translator and cooldown store | the handler's arguments |
+| Lives for the whole app                              | Made for each call      |
+| ---------------------------------------------------- | ----------------------- |
+| controllers and services                             | guards                  |
+| interceptors, exception filters, pipes and observers | `ExecutionContext`      |
+| the `Client`, translator and cooldown store          | the handler's arguments |
 
 So a service or a field on a controller holds state across calls, and a guard holds none. A test shows it:
 one controller and one service serve two calls, and each call gets its own guard.
