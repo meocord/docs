@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import { lines } from '@/lib/docs/site'
@@ -23,7 +24,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
+// Cached for the life of the build: the page depends only on the repository's files, and highlighting
+// reads the clock, which a prerender allows only inside a cache.
+async function changelogPage(line: string) {
+  'use cache'
+  cacheLife('max')
+  return renderChangelog(line)?.render()
+}
+
 export default async function ChangelogPage({ params }: Params) {
   const { line } = await params
-  return renderChangelog(line)?.render() ?? notFound()
+  return (await changelogPage(line)) ?? notFound()
 }

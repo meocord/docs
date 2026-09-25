@@ -93,6 +93,11 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
 }
 
 /** The migration guide's content, as the library ships it for the line. */
+/** Whether a line has a migration guide, without lowering it. */
+export function hasMigrating(line: string): boolean {
+  return existsSync(generated('migrating', `${line}.md`))
+}
+
 export function migratingArticle(line: string): { nodes: Child[]; toc: TocEntry[] } | undefined {
   const file = generated('migrating', `${line}.md`)
   if (!existsSync(file)) return undefined
