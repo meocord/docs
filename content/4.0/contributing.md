@@ -1,6 +1,6 @@
 ---
 id: contributing
-title: "Contributing"
+title: 'Contributing'
 order: 15
 source: readme@4.0.0
 ---

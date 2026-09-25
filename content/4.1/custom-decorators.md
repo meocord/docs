@@ -1,6 +1,6 @@
 ---
 id: custom-decorators
-title: "Custom Decorators"
+title: 'Custom Decorators'
 order: 18
 source: readme@4.1.0-beta.0
 ---

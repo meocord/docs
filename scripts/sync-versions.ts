@@ -5,6 +5,7 @@
  */
 
 import { writeFileSync } from 'fs'
+import { formatFiles } from './lib/format.js'
 import { paths } from './lib/layout.js'
 import { loadTrustedRoot } from './lib/provenance.js'
 import { fetchPackument } from './lib/registry.js'
@@ -25,6 +26,7 @@ if (result.added.length === 0) {
   console.log('Every published version is already documented.')
 } else {
   writeVersions(paths.versions, result.config)
+  await formatFiles([paths.versions, ...result.config.lines.map(line => paths.content(line.line))])
   console.log(`Added ${result.added.join(', ')}.`)
   if (summaryFile) writeFileSync(summaryFile, `${syncSummary(result)}\n`)
 }

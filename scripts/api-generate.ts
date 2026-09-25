@@ -4,6 +4,7 @@
  * guide. `bun run api:generate <version...>`, or `--all` after upgrading TypeDoc.
  */
 
+import { formatFiles } from './lib/format.js'
 import { paths } from './lib/layout.js'
 import { loadTrustedRoot } from './lib/provenance.js'
 import { fetchPackument } from './lib/registry.js'
@@ -16,7 +17,11 @@ const known = allVersions(config)
 const requested = process.argv.includes('--all') ? known : process.argv.slice(2).filter(arg => !arg.startsWith('--'))
 const unknown = requested.filter(version => !known.includes(version))
 if (requested.length === 0 || unknown.length > 0) {
-  console.error(unknown.length > 0 ? `Not in versions.json: ${unknown.join(', ')}. Add new versions with versions:sync.` : 'Name versions to regenerate, or pass --all.')
+  console.error(
+    unknown.length > 0
+      ? `Not in versions.json: ${unknown.join(', ')}. Add new versions with versions:sync.`
+      : 'Name versions to regenerate, or pass --all.',
+  )
   process.exit(1)
 }
 
@@ -33,3 +38,4 @@ for (const version of requested) {
   }
 }
 refreshSince()
+await formatFiles(config.lines.map(line => paths.content(line.line)))

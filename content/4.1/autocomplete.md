@@ -1,6 +1,6 @@
 ---
 id: autocomplete
-title: "Autocomplete"
+title: 'Autocomplete'
 order: 10
 source: readme@4.1.0-beta.0
 ---

@@ -1,6 +1,6 @@
 ---
 id: interaction-responses
-title: "Interaction responses"
+title: 'Interaction responses'
 order: 11
 source: readme@4.1.0-beta.0
 ---

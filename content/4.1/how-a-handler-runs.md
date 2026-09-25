@@ -1,6 +1,6 @@
 ---
 id: how-a-handler-runs
-title: "How a handler runs"
+title: 'How a handler runs'
 order: 12
 source: readme@4.1.0-beta.0
 ---

@@ -1,6 +1,6 @@
 ---
 id: command-types
-title: "Command Types"
+title: 'Command Types'
 order: 7
 source: readme@4.1.0-beta.0
 ---

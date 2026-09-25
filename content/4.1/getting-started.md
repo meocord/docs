@@ -1,6 +1,6 @@
 ---
 id: getting-started
-title: "Getting Started"
+title: 'Getting Started'
 order: 3
 source: readme@4.1.0-beta.0
 ---

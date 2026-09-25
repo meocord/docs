@@ -1,6 +1,6 @@
 ---
 id: lifecycle-hooks
-title: "Lifecycle Hooks"
+title: 'Lifecycle Hooks'
 order: 21
 source: readme@4.1.0-beta.0
 ---
