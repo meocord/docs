@@ -24,7 +24,8 @@ only. The handler's parameters are typed from discord.js's `ClientEvents`:
 - **Intents**: at startup, MeoCord warns once for each intent or partial a handler needs that `clientOptions`
   lacks, such as `GuildMembers` for `guildMemberAdd`. A privileged intent is also enabled in the Discord
   developer portal, under Bot, then Privileged Gateway Intents; if Discord refuses one at login, the bot says
-  which, and `app.start()` rejects.
+  which, and `app.start()` rejects with an error `isExplainedError(error)` from `meocord/common` recognises,
+  so the generated `main.ts` does not log it a second time.
 - `@On('interactionCreate')` and `@On('messageCreate')` run alongside MeoCord's own dispatch of those events.
 - **Names**: `@Once` tells classes apart by name, so the bot refuses to start when two classes share a name
   and either has a `@Once` handler.

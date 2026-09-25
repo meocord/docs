@@ -20,8 +20,8 @@ no hooks.
 ## onReady
 
 `onReady` runs once the client is ready. It receives the client and `{ primary }`, which says whether this
-process should do one-off work: `true` for a bot running in one process, and with process sharding only in
-the process running shard 0.
+process should do one-off work: `true` for a bot running in one process, and with [process sharding](/docs/4.1/sharding#a-process-per-shard) only
+in the process running shard 0.
 
 The hooks run one at a time, each class after the classes it injects, so a `DatabaseService` is ready before
 the scheduler that injects it. Classes with no dependency between them run in declaration order, the
