@@ -119,7 +119,7 @@ export async function renderCard(card: OgCard): Promise<RenderedCard> {
                 ? [Text(card.code, { fontFamily: 'JetBrains Mono', fontSize: 24, color: ACCENT, maxLines: 1 })]
                 : []),
               Box({ flexGrow: 1 }),
-              Text('meocord.meoverse.com', { fontFamily: 'JetBrains Mono', fontSize: 18, color: QUIET }),
+              Text('meocord.dev', { fontFamily: 'JetBrains Mono', fontSize: 18, color: QUIET }),
             ],
           }),
         ],

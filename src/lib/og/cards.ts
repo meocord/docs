@@ -28,7 +28,7 @@ const CARDS: Record<string, Record<string, OgCard>> = {
 }
 
 /** Bumped when the card's drawing changes, so every URL changes with it. */
-const DESIGN_REVISION = 3
+const DESIGN_REVISION = 4
 
 export function findCard(line: string, id: string): OgCard | undefined {
   return Object.hasOwn(CARDS, line) && Object.hasOwn(CARDS[line], id) ? CARDS[line][id] : undefined

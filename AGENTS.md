@@ -17,7 +17,7 @@ exactly as for code written by hand. Changes carry only that person's authorship
 
 | Item    | Value                                                                          |
 | ------- | ------------------------------------------------------------------------------ |
-| Site    | meocord.meoverse.com; repository `meocord/docs`, default branch `main`         |
+| Site    | meocord.dev; repository `meocord/docs`, default branch `main`                  |
 | Stack   | Next.js 16 (App Router, Cache Components), `@meonode/ui` with no JSX           |
 | Runtime | Bun everywhere: install, scripts, tests, CI and the container image            |
 | Tests   | Vitest with Istanbul coverage (thresholds enforced), Playwright smoke tests    |
