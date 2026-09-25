@@ -51,7 +51,7 @@ exact version is listed under `provenance.integrityOnly`, which a reviewer adds 
 
 | Command                                      | What it does                                                                                          |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `bun run versions:sync`                      | Adds every version published since `versions.json`'s `since` that the site lacks, verified            |
+| `bun run versions:sync`                      | Adds each published version the site lacks, verified, and updates `bun.lock` for its example pin      |
 | `bun run api:generate <version...>`          | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
 | `bun run content:check`                      | Checks front matter, examples, links and anchors, and that every version has its generated data       |
 | `bun run examples:check [line...]`           | Typechecks each line's examples against its pinned meocord                                            |
