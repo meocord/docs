@@ -3,9 +3,10 @@ import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { safe } from '@/lib/design/css'
 import { Inspector } from '@/components/shell/Inspector'
-import { SheetCard, SheetPane, SidebarPane } from '@/components/shell/panes'
+import { SheetBody, SheetCard, SheetPane, SidebarBody, SidebarPane } from '@/components/shell/panes'
 import { SheetScroll } from '@/components/shell/SheetScroll'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
+import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { TocEntry } from '@/components/shell/types'
 
@@ -93,45 +94,63 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
     overflow: 'hidden',
     css: {
       '@media (width < theme.breakpoint.compact)': { height: 'auto', padding: 0, gap: 0, overflow: 'visible' },
+      // On paper the page runs its full length: no panes, no chrome, nothing clipped to a screen.
+      '@media print': {
+        height: 'auto',
+        padding: 0,
+        overflow: 'visible',
+        '& [data-sidebar], & [data-toolbar], & [data-inspector]': { display: 'none' },
+        // The sheet and its body.
+        '& [data-sheet], & :has(> [data-sheet])': {
+          height: 'auto',
+          overflow: 'visible',
+          boxShadow: 'none',
+        },
+      },
     },
     children: [
       SkipLink(),
       SidebarPane({
-        display: 'flex',
-        flexDirection: 'column',
         flexShrink: 0,
         css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
-        children: [Div({ padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }), SidebarNav({ groups })],
+        children: [
+          Div({ key: 'header', flexShrink: 0, padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }),
+          SidebarBody({ key: 'body', children: [SidebarNav({ groups }), Node(SidebarScroll, { key: 'scroll' })] }),
+        ],
       }),
       SheetCard({
         children: [
           Toolbar({ crumbs, groups, version, repository }),
-          // Tracks sized by the viewport alone, so the page's width never waits on what fills them: the
-          // contents column keeps its track while empty.
-          Grid({
-            gridTemplateColumns: wide
-              ? 'minmax(0, min(1200px, 100%))'
-              : 'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad))',
-            justifyContent: 'center',
-            alignItems: 'start',
-            columnGap: 'theme.space.12',
-            flexGrow: 1,
-            padding: '0 theme.space.6',
-            css: {
-              '@media (width < theme.breakpoint.compact)': { padding: 0 },
-              ...(wide
-                ? {}
-                : {
-                    '@media (width >= theme.breakpoint.wide)': {
-                      gridTemplateColumns:
-                        'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad)) theme.layout.inspector',
-                    },
-                  }),
-            },
-            children: [
-              SheetPane({ tabIndex: -1, children: [children, SiteFooter({ wide })] }),
-              wide ? null : Inspector({ toc, children: inspector }),
-            ],
+          SheetBody({
+            key: 'body',
+            children:
+              // Tracks sized by the viewport alone, so the page's width never waits on what fills them: the
+              // contents column keeps its track while empty.
+              Grid({
+                gridTemplateColumns: wide
+                  ? 'minmax(0, min(1200px, 100%))'
+                  : 'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad))',
+                justifyContent: 'center',
+                alignItems: 'start',
+                columnGap: 'theme.space.12',
+                flexGrow: 1,
+                padding: '0 theme.space.6',
+                css: {
+                  '@media (width < theme.breakpoint.compact)': { padding: 0 },
+                  ...(wide
+                    ? {}
+                    : {
+                        '@media (width >= theme.breakpoint.wide)': {
+                          gridTemplateColumns:
+                            'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad)) theme.layout.inspector',
+                        },
+                      }),
+                },
+                children: [
+                  SheetPane({ tabIndex: -1, children: [children, SiteFooter({ wide })] }),
+                  wide ? null : Inspector({ toc, children: inspector }),
+                ],
+              }),
           }),
         ],
       }),
