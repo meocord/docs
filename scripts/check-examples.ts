@@ -1,5 +1,6 @@
 /**
- * Typechecks each line's examples against the exact meocord version the line pins:
+ * Typechecks each line's examples against the exact meocord version the line pins, and runs their
+ * specs where the line has a vitest config:
  * `bun run examples:check [line...]`. Run `bun install --linker isolated` first, so each workspace
  * resolves its own meocord.
  */
@@ -37,10 +38,21 @@ for (const line of lines) {
     continue
   }
   const result = spawnSync(process.execPath, [tsc, '-p', dir], { encoding: 'utf8' })
-  if (result.status === 0) console.log(`  ok    ${line}: typechecks against meocord ${installed}`)
-  else {
+  if (result.status !== 0) {
     failed++
     console.log(`  FAIL  ${line}: against meocord ${installed}\n${(result.stdout + result.stderr).trim()}`)
+    continue
   }
+  // A line with a vitest config runs its specs too, on Bun, as a generated app of that version does
+  const hasSpecs = existsSync(path.join(dir, 'vitest.config.ts'))
+  if (hasSpecs) {
+    const specs = spawnSync(process.execPath, ['--bun', 'vitest', 'run'], { cwd: dir, encoding: 'utf8' })
+    if (specs.status !== 0) {
+      failed++
+      console.log(`  FAIL  ${line}: specs against meocord ${installed}\n${(specs.stdout + specs.stderr).trim()}`)
+      continue
+    }
+  }
+  console.log(`  ok    ${line}: typechecks${hasSpecs ? ', and its specs pass,' : ''} against meocord ${installed}`)
 }
 if (failed > 0) process.exit(1)
