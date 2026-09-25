@@ -103,6 +103,7 @@ function signatureBlock(lines: Token[][], form: LayoutForm, layouts: Layouts, ke
   return Node('pre', {
     key,
     'data-signature': true,
+    // It scrolls sideways, so it takes focus for keyboard readers to scroll it.
     tabIndex: 0,
     children: Node('code', { dangerouslySetInnerHTML: { __html: html } }),
   })

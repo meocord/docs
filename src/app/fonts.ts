@@ -11,12 +11,13 @@ export const sans = localFont({
   adjustFontFallback: 'Arial',
 })
 
-// Not preloaded, since code sits below the first heading. No Arial-based fallback: its metrics are not monospace.
+// Optional: a late swap would shift code already on screen, and code sits below the first heading, so it is
+// not preloaded either. No Arial-based fallback: its metrics are not monospace.
 export const mono = localFont({
   src: '../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
   weight: '100 800',
   style: 'normal',
-  display: 'swap',
+  display: 'optional',
   variable: '--font-mono',
   preload: false,
   adjustFontFallback: false,
