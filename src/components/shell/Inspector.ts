@@ -1,7 +1,7 @@
 import { A, For, H2, Li, Nav, Ul } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { focusCss } from '@/lib/design/css'
-import { InspectorPane } from '@/components/shell/panes'
+import { InspectorPane } from '@/components/nodes'
 import type { TocEntry } from '@/components/shell/types'
 
 function TocList(entries: TocEntry[]) {

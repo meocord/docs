@@ -1,5 +1,5 @@
 import { Div, H1, Node } from '@meonode/ui'
-import { Prose } from '@/components/prose/Prose'
+import { Prose } from '@/components/nodes'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { guidePage, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'

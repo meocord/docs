@@ -20,7 +20,7 @@ import {
   Tr,
   Ul,
 } from '@meonode/ui'
-import { Prose } from '@/components/prose/Prose'
+import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'

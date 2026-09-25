@@ -4,6 +4,13 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import nextPlugin from '@next/eslint-plugin-next'
 import tseslint from 'typescript-eslint'
 
+// The compiler recognizes a factory by the module it is imported from, so a factory in
+// src/components/nodes is imported from that module, never from the file that defines it.
+const NODES_ONLY_FROM_INDEX = {
+  group: ['@/components/nodes/*', '**/components/nodes/*'],
+  message: "Import it from '@/components/nodes', where @meonode/compiler compiles its call sites.",
+}
+
 const unused = {
   args: 'all',
   argsIgnorePattern: '^_',
@@ -64,6 +71,12 @@ export default defineConfig([
     rules: { '@next/next/no-assign-module-variable': 'off' },
   },
   {
+    // Files the rule below does not cover still import the factories through their module
+    files: ['src/**'],
+    ignores: ['src/app/**', 'src/components/**'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [NODES_ONLY_FROM_INDEX] }] },
+  },
+  {
     // meo-canvas is a native addon for the icons script and the OG route; a page must not load it.
     // src/lib/brand/page-imports.spec.ts checks the transitive case.
     files: ['src/app/**', 'src/components/**'],
@@ -77,6 +90,7 @@ export default defineConfig([
             { name: '@/lib/brand/mark', message: 'It loads meo-canvas; use @/lib/brand/mark-paths.' },
             { name: '@/lib/og/render', message: 'It loads meo-canvas; only the OG route draws cards.' },
           ],
+          patterns: [NODES_ONLY_FROM_INDEX],
         },
       ],
     },
