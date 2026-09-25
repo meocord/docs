@@ -26,8 +26,5 @@
   "meocordtestingmodule": "testing",
   "deployment": "deployment",
   "self-contained-builds": "deployment",
-  "which-runtime-the-bot-runs-on": "deployment",
-  "contributing": "contributing",
-  "release-notes": "release-notes",
-  "license": "license"
+  "which-runtime-the-bot-runs-on": "deployment"
 }

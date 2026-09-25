@@ -1,7 +1,8 @@
 /**
  * A line's guides imported from the README a version shipped, for lines whose guides the site has
  * not written: one page per `## ` section, the text before the first as the overview, with links
- * between sections pointed at the pages that now hold them.
+ * between sections pointed at the pages that now hold them. Sections that are not guides are left
+ * out, and links to them point at what the site has instead.
  */
 
 import GithubSlugger from 'github-slugger'
@@ -21,7 +22,15 @@ export interface ImportedReadme {
   anchors: Record<string, string>
 }
 
-const SKIPPED = new Set(['table-of-contents'])
+// The sidebar replaces the table of contents, the changelog page the release notes, and the
+// repository's own files the contributing and license sections
+const SKIPPED: Record<string, (line: string, commitUrl: string) => string | undefined> = {
+  'table-of-contents': () => undefined,
+  'release-notes': line => storedHref({ kind: 'changelog', line }),
+  changelog: line => storedHref({ kind: 'changelog', line }),
+  contributing: (_line, commitUrl) => `${commitUrl}/CONTRIBUTING.md`,
+  license: (_line, commitUrl) => `${commitUrl}/LICENSE`,
+}
 
 interface Section {
   heading?: string
@@ -62,13 +71,18 @@ export function importReadme(
   const slugger = new GithubSlugger()
   const parts = sections(markdown)
   const anchors: Record<string, string> = {}
+  // A skipped section's anchor, and each of its headings', mapped to where its links point instead
+  const replaced: Record<string, string | undefined> = {}
   const pages: (ImportedPage & { anchor?: string })[] = []
 
   parts.forEach((part, index) => {
     const anchor = part.heading ? slugger.slug(part.heading) : undefined
     const slug = anchor ?? 'overview'
     const own = headingAnchors(slugger, part.lines)
-    if (anchor && SKIPPED.has(anchor)) return
+    if (anchor && anchor in SKIPPED) {
+      for (const key of [anchor, ...own]) replaced[key] = SKIPPED[anchor](line, commitUrl)
+      return
+    }
     for (const key of [anchor, ...own]) if (key) anchors[key] = slug
     const intro = part.lines.filter(text => !/^# /.test(text))
     pages.push({ slug, anchor, title: part.heading ?? 'Overview', order: index, body: intro.join('\n').trim() })
@@ -77,6 +91,7 @@ export function importReadme(
   const rewrite = (body: string, slug: string) =>
     rewriteLibraryLinks(body, line, anchors)
       .replace(/\]\(#([\w-]+)\)/g, (match, anchor: string) => {
+        if (replaced[anchor]) return `](${replaced[anchor]})`
         const page = anchors[anchor]
         if (!page) return match
         return page === slug ? `](#${anchor})` : `](${storedHref({ kind: 'guide', line, slug: page, anchor })})`
