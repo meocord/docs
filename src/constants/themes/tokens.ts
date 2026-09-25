@@ -42,8 +42,6 @@ export const themeTokens = {
     sans: 'var(--font-sans), system-ui, sans-serif',
     mono: 'var(--font-mono), ui-monospace, monospace',
     weight: { regular: 400, medium: 500, semibold: 600 },
-    // Instrument Sans has no optical sizes; a narrower width gives the sidebar its density.
-    stretch: { normal: '100%', dense: '92%' },
   },
 
   /** In rem, so the reader's font size scales the docs. Tracking stands in for optical sizes. */
