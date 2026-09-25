@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { listPages, loadPage, pagesDir, resolveExample } from './pages.js'
+import { configPage, listPages, loadPage, pagesDir, resolveExample } from './pages.js'
 
 const root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-pages-'))
 afterAll(() => rmSync(root, { recursive: true, force: true }))
@@ -35,6 +35,20 @@ write(
   'content/4.1/guards.md',
   '---\nid: guards\ntitle: Guards\nsection: Handling a call\norder: 10\nsince: 4.0.0\n---\n\nGuards.\n',
 )
+const reference = {
+  version: '4.1.0-beta.0',
+  groups: [
+    {
+      interface: 'MeoCordConfig',
+      summary: '',
+      options: [
+        { name: 'appName', type: 'string', required: false, since: '4.0.0', summary: 'Shown in logs.', examples: [] },
+      ],
+    },
+  ],
+}
+write('generated/config/4.1.0-beta.0.json', JSON.stringify(reference))
+write('generated/config/4.0.0.json', JSON.stringify({ ...reference, version: '4.0.0' }))
 write(
   'examples/4.1/src/guards/owner.guard.ts',
   "import { Guard } from 'meocord/decorator'\n\n// #region guard\n@Guard()\nexport class OwnerGuard {\n  // #region check\n  check() {}\n  // #endregion check\n}\n// #endregion guard\n",
@@ -65,7 +79,29 @@ describe('pagesDir, listPages and loadPage', () => {
         since: '4.0.0',
         formerly: [],
       },
+      {
+        id: 'config-reference',
+        slug: 'config-reference',
+        title: 'meocord.config.ts reference',
+        section: 'Reference',
+        order: 90,
+        source: 'config@4.1.0-beta.0',
+        since: undefined,
+        formerly: [],
+      },
     ])
+  })
+
+  it('adds the configuration reference to an authored line only, from its newest version', () => {
+    expect(listPages('4.1', { root }).at(-1)).toMatchObject({
+      id: 'config-reference',
+      slug: 'config-reference',
+      section: 'Reference',
+      source: 'config@4.1.0-beta.0',
+    })
+    expect(loadPage('4.1', 'config-reference', { root })?.body).toContain('## appName')
+    expect(configPage('4.0', { root })).toBeUndefined()
+    expect(listPages('4.0', { root }).map(page => page.slug)).not.toContain('config-reference')
   })
 
   it('loads a shown page, and nothing for a page the line does not show or a slug that is not one', () => {

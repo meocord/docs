@@ -1,12 +1,13 @@
 /**
  * The site's read side of the content: a line's pages, from whichever folder its `guides` selects,
- * and the code an ::example directive embeds. For server code only; it reads the repository's files.
+ * with an authored line's generated configuration reference, and the code an ::example directive embeds. For server code only; it reads the repository's files.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
+import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { parsePage, type Frontmatter } from './content'
-import type { VersionsConfig } from './versions'
+import { newestIn, type VersionsConfig } from './versions'
 
 export interface PageEntry {
   id: string
@@ -41,15 +42,31 @@ export function pagesDir(line: string, { root = process.cwd() }: Options = {}): 
   return entry.guides === 'authored' ? path.join(root, 'content', line) : path.join(root, 'generated', 'readme', line)
 }
 
+/**
+ * The configuration reference page of an authored line, generated from its newest version's
+ * `generated/config/<version>.json`; undefined for a line showing its README, or without the file.
+ */
+export function configPage(line: string, { root = process.cwd() }: Options = {}): string | undefined {
+  const entry = versions(root).lines.find(candidate => candidate.line === line)
+  if (entry?.guides !== 'authored' || entry.versions.length === 0) return undefined
+  const file = path.join(root, 'generated', 'config', `${newestIn(entry)}.json`)
+  if (!existsSync(file)) return undefined
+  return configReferencePage(line, JSON.parse(readFileSync(file, 'utf8')) as ConfigDocument)
+}
+
 /** A line's pages, in sidebar order: by `order`, then title. */
 export function listPages(line: string, options: Options = {}): PageEntry[] {
   const dir = pagesDir(line, options)
-  if (!existsSync(dir)) return []
-  return readdirSync(dir)
-    .filter(file => file.endsWith('.md'))
-    .map(file => {
-      const { frontmatter } = parsePage(readFileSync(path.join(dir, file), 'utf8'))
-      const slug = file.replace(/\.md$/, '')
+  const files: [string, string][] = existsSync(dir)
+    ? readdirSync(dir)
+        .filter(file => file.endsWith('.md'))
+        .map(file => [file.replace(/\.md$/, ''), readFileSync(path.join(dir, file), 'utf8')])
+    : []
+  const config = configPage(line, options)
+  if (config) files.push([CONFIG_REFERENCE_SLUG, config])
+  return files
+    .map(([slug, text]) => {
+      const { frontmatter } = parsePage(text)
       return {
         id: frontmatter.id ?? slug,
         slug,
@@ -67,6 +84,10 @@ export function listPages(line: string, options: Options = {}): PageEntry[] {
 /** One page of a line, or undefined when the line has no page with that slug. */
 export function loadPage(line: string, slug: string, options: Options = {}): Page | undefined {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) return undefined
+  if (slug === CONFIG_REFERENCE_SLUG) {
+    const config = configPage(line, options)
+    if (config) return parsePage(config)
+  }
   const file = path.join(pagesDir(line, options), `${slug}.md`)
   return existsSync(file) ? parsePage(readFileSync(file, 'utf8')) : undefined
 }

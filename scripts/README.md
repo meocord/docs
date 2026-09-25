@@ -16,6 +16,7 @@ exact version they describe.
 | `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking      | the pipeline only   |
 | `generated/migrating/<line>.md`        | `docs/MIGRATING.md` at the commit the line's newest version was built from           | the pipeline only   |
 | `generated/readme-anchors/<line>.json` | For a line whose guides are imported from its README: which page holds each heading  | the pipeline only   |
+| `generated/config/<version>.json`      | The version's `meocord.config.ts` options, read from its API document and since.json | the pipeline only   |
 | `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs  | the pipeline only   |
 
 A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and
@@ -28,7 +29,9 @@ line's authored guides.
 
 Content stores links by line, `/docs/4.1/guards`, never through `latest` or `next`, in the form
 `src/lib/urls.ts` builds; the site maps them to the URLs it emits. `scripts/lib/pages.ts` is how the site
-reads a line's pages and the code an `::example` embeds.
+reads a line's pages and the code an `::example` embeds. An authored line also shows `config-reference`, a
+page built from its newest version's `generated/config/<version>.json`; `content:check` refuses a
+hand-written page with that slug.
 
 ## Verifying a version
 

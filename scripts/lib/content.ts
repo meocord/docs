@@ -7,10 +7,11 @@
 import GithubSlugger from 'github-slugger'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
+import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { changelogAnchor } from '../../src/lib/urls'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
-import type { VersionsConfig } from './versions'
+import { newestIn, type VersionsConfig } from './versions'
 
 export interface SiteSnapshot {
   config: VersionsConfig
@@ -22,6 +23,8 @@ export interface SiteSnapshot {
   migrating: Record<string, string | undefined>
   changelogs: Record<string, ChangelogDocument | undefined>
   apis: Set<string>
+  /** Each version's configuration reference, from generated/config/<version>.json. */
+  configs: Record<string, ConfigDocument | undefined>
   /** Example files per line, keyed by their path under examples/<line>/. */
   examples: Record<string, Record<string, string>>
 }
@@ -83,9 +86,19 @@ type PageSet = 'authored' | 'readme'
 
 const folder = (set: PageSet, line: string) => (set === 'authored' ? `content/${line}` : `generated/readme/${line}`)
 
-export function checkSite(site: SiteSnapshot): string[] {
+export function checkSite(snapshot: SiteSnapshot): string[] {
   const problems: string[] = []
-  const lines = new Map(site.config.lines.map(line => [line.line, line]))
+  const lines = new Map(snapshot.config.lines.map(line => [line.line, line]))
+  // An authored line shows its newest version's configuration reference as one of its pages
+  const authored = { ...snapshot.authored }
+  for (const line of snapshot.config.lines) {
+    const doc = snapshot.configs[newestIn(line)]
+    if (line.guides !== 'authored' || !doc) continue
+    if (authored[line.line]?.[CONFIG_REFERENCE_SLUG] !== undefined)
+      problems.push(`content/${line.line}/${CONFIG_REFERENCE_SLUG}.md: the configuration reference is generated`)
+    authored[line.line] = { ...authored[line.line], [CONFIG_REFERENCE_SLUG]: configReferencePage(line.line, doc) }
+  }
+  const site = { ...snapshot, authored }
   // The set the site shows for a line: its imported pages until its guides are authored
   const shown = (line: string): PageSet => (lines.get(line)?.guides === 'authored' ? 'authored' : 'readme')
 
@@ -168,7 +181,7 @@ export function checkSite(site: SiteSnapshot): string[] {
       if (set === 'authored') {
         if (frontmatter.source?.startsWith('readme@'))
           problems.push(`${where}: a page imported from a README belongs in generated/readme/${name}`)
-        if (TYPESCRIPT_FENCE.test(body))
+        if (TYPESCRIPT_FENCE.test(body) && !frontmatter.source?.startsWith('config@'))
           problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
       }
 
@@ -200,7 +213,7 @@ export function checkSite(site: SiteSnapshot): string[] {
       if (!site.readmeAnchors[name])
         problems.push(`line ${name} imports its README but has no generated/readme-anchors/${name}.json`)
     } else {
-      if (Object.keys(site.authored[name] ?? {}).length === 0) problems.push(`content/${name} has no pages`)
+      if (Object.keys(snapshot.authored[name] ?? {}).length === 0) problems.push(`content/${name} has no pages`)
       if (readmePages > 0)
         problems.push(`generated/readme/${name} is still there, though ${name}'s guides are authored`)
     }
@@ -216,6 +229,7 @@ export function checkSite(site: SiteSnapshot): string[] {
   for (const line of site.config.lines) {
     for (const version of line.versions) {
       if (!site.apis.has(version)) problems.push(`${version} has no generated/api/${version}.json`)
+      if (!site.configs[version]) problems.push(`${version} has no generated/config/${version}.json`)
       const changelog = site.changelogs[version]
       if (!changelog) {
         problems.push(`${version} has no generated/changelog/${version}.json`)
