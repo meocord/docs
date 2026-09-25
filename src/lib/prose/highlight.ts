@@ -156,6 +156,10 @@ export function highlight(code: string, language: string | undefined): string | 
     themes: { dark: 'meocord-dark', light: 'meocord-light' },
     defaultColor: false,
     cssVariablePrefix: '--code-',
+    // No time limit: past one, the rest of the line takes one colour, and the first call in a busy
+    // build worker, while the grammar compiles, can run past the default half second. Every source
+    // highlighted is the site's own content and generated API, never a reader's input.
+    tokenizeTimeLimit: 0,
   })
   const inner = /<code>([\s\S]*)<\/code>/.exec(html)
   return inner?.[1]

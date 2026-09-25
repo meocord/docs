@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CODE_PALETTES, highlight } from '@/lib/prose/highlight'
 import { isKnownLanguage, LANGUAGES } from '@/lib/prose/languages'
 
@@ -31,6 +31,19 @@ describe('the code palettes', () => {
 
 describe('highlight', () => {
   const { dark } = CODE_PALETTES
+
+  it('colours a whole line however slowly it tokenizes, as in a busy build worker', () => {
+    // Each reading of the clock a second later: past a time limit, the rest of the line would take one colour.
+    let now = 0
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => (now += 1000))
+    try {
+      const tokens = colours(highlight("declare function Record<'<b>', string>(): void", 'ts')!, 'dark')
+      for (const kind of ['keyword', 'func', 'punct', 'string', 'type', 'operator'] as const)
+        expect(tokens, kind).toContain(dark[kind])
+    } finally {
+      clock.mockRestore()
+    }
+  })
 
   it('colours a decorator, a keyword, a string, a number, a regex and a comment each their own way', () => {
     const tokens = colours(highlight("@Command('go')\nconst n = 5 + /a+/.source.length // note", 'ts')!, 'dark')
