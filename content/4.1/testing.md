@@ -43,8 +43,8 @@ app binds them:
   reports what it sent to Discord. This is how most handler tests are written.
 - `inspectHandler` lists what a handler is set up with, without running it.
 - [Mocks](/docs/4.1/mocks) stand in for discord.js interactions, messages, users and the rest.
-- `resolveRoute` answers which handler a component's `customId` reaches, and `expectCompleteCatalog` checks
-  a translator's catalogs.
+- `resolveRoute` answers which handler a component's `customId` or a message's content reaches, and
+  `expectCompleteCatalog` checks a translator's catalogs.
 
 ## Which test for which question
 
@@ -54,6 +54,7 @@ app binds them:
 | What does the member see?                 | `invoke` the handler, then read `getResponse`                     |
 | Does a flow work across controllers?      | One module with all of them, and one `invoke` per step            |
 | Which handler does this `customId` reach? | `resolveRoute(App, { type, customId })`                           |
+| Which handler does this message reach?    | `resolveRoute(App, { content })`                                  |
 | Is the handler set up as intended?        | `inspectHandler`: its guards, interceptors, filters and cooldowns |
 | Does an event handler react?              | `module.emit(event, ...args)`                                     |
 | Is every message translated?              | `expectCompleteCatalog(t)`                                        |

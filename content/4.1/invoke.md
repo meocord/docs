@@ -13,7 +13,9 @@ method name and arguments are type-checked against the handler.
 Pass the interaction alone, and `invoke` builds the handler's params as dispatch does: a command's options,
 or a component's `customId` params and a modal's fields. The interaction must be one dispatch could route to
 the handler, a `customId` its pattern matches or the command it handles; one that could not rejects, naming
-both, so a typo in a test does not pass silently.
+both, so a typo in a test does not pass silently. A message passed alone to a patterned `@MessageHandler` is
+checked the same way, after the prefix of the module's `app`, and the handler gets the params its pattern
+captures; see [Message commands](/docs/4.1/message-commands#testing).
 
 ## What it resolves to
 
@@ -40,13 +42,15 @@ controllers and providers are still listed:
 
 ::example{file="testing/greeting.module.spec.ts" region="app"}
 
-`app` also brings the app's `i18n` translator and `presenter`.
+`app` also brings the app's `i18n` translator and `presenter`, its message prefixes, and its
+[observers](/docs/4.1/observers#testing), which `invoke` waits for before it resolves.
 
 ## inspectHandler
 
 `inspectHandler(Controller, 'method')` lists the guards, interceptors, filters and cooldowns dispatch applies
 to a handler, in order, and reads its metadata as `ExecutionContext` does, without running anything. With
-`{ app }`, the global ones come first, as above.
+`{ app }`, the global ones come first, as above, and `observers` lists the app's observers. For a message
+handler, `pattern` is its pattern.
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="inspect"}
 
