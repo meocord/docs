@@ -1,3 +1,5 @@
+import type { GlyphName } from '@/components/shell/icons'
+
 /** One link in the sidebar. Every `href` the shell receives is final: callers resolve stored links first. */
 export interface NavItem {
   title: string
@@ -12,6 +14,8 @@ export interface NavItem {
 export interface NavGroup {
   title: string
   items: NavItem[]
+  /** The glyph beside the group's title. */
+  icon?: GlyphName
 }
 
 /** One step of the breadcrumb trail; the last is the current page and carries no link. */

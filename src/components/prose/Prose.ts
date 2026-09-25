@@ -191,8 +191,8 @@ export const Prose = createNode('article', {
     '& td [data-doc] p': { margin: 0 },
     '& [data-since]': { whiteSpace: 'nowrap' },
 
-    // The note on a page imported from a README, under its title.
-    '& [data-source]': {
+    // The page's context, muted under its title.
+    '& [data-subtitle]': {
       margin: '-12px 0 theme.space.8',
       fontSize: 'theme.type.small.size',
       color: 'theme.ink.secondary',

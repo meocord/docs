@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { listPages, loadPage, resolveExample, type PageEntry } from '../../../scripts/lib/pages'
+import type { GlyphName } from '@/components/shell/icons'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
@@ -19,13 +20,25 @@ export function pageParams(): { line: string; slug: string }[] {
 
 const guideHref = (line: string, slug: string) => docsHref({ kind: 'guide', line, slug }, VERSIONS)
 
+/** The glyph for each section of the guides; any other section gets the book. */
+const SECTION_ICONS: Record<string, GlyphName> = {
+  Start: 'start',
+  Core: 'core',
+  'Handling a call': 'pipeline',
+  'Answering Discord': 'reply',
+  'Beyond commands': 'layers',
+  Shipping: 'ship',
+  Testing: 'check',
+  Reference: 'reference',
+}
+
 /** The sidebar: a line's pages in order, grouped by section in the order sections first appear. */
 export function sidebar(line: string, currentSlug?: string): NavGroup[] {
   const groups: NavGroup[] = []
   for (const page of listPages(line)) {
     const title = page.section ?? 'Guides'
     let group = groups.find(candidate => candidate.title === title)
-    if (!group) groups.push((group = { title, items: [] }))
+    if (!group) groups.push((group = { title, icon: SECTION_ICONS[title] ?? 'book', items: [] }))
     group.items.push({
       title: page.title,
       href: guideHref(line, page.slug),
@@ -45,7 +58,7 @@ export function sidebar(line: string, currentSlug?: string): NavGroup[] {
       : []),
     { title: 'Changelog', href: docsHref({ kind: 'changelog', line }, VERSIONS), current: currentSlug === 'changelog' },
   ]
-  groups.push({ title: 'Reference', items: reference })
+  groups.push({ title: 'Reference', icon: SECTION_ICONS.Reference, items: reference })
   return groups
 }
 

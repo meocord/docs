@@ -126,7 +126,7 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
       current.status === 'prerelease'
         ? Span(null, { width: 6, height: 6, borderRadius: '50%', backgroundColor: DOT.prerelease })
         : null,
-      Span(Glyph('chevronDown'), { color: 'theme.ink.secondary', display: 'inline-flex' }),
+      Span(Glyph('updown', 14), { color: 'theme.ink.secondary', display: 'inline-flex' }),
     ],
     {
       type: 'button',
@@ -142,12 +142,14 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
       },
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 'theme.space.1',
-      height: 28,
-      padding: '0 theme.space.2',
+      gap: 'theme.space.2',
+      height: 26,
+      padding: '0 theme.space.1 0 theme.space.3',
       border: 'none',
+      // A popup button: a raised face on the toolbar, rounded like a control.
       borderRadius: 'theme.radius.control',
-      backgroundColor: 'transparent',
+      backgroundColor: 'theme.surface.sheet',
+      boxShadow: 'theme.elevation.1',
       color: 'theme.ink.primary',
       fontFamily: 'inherit',
       fontSize: 'theme.type.control.size',

@@ -130,3 +130,23 @@ test.describe('the reading region', () => {
     })
   }
 })
+
+test('a sidebar group folds away and back, with no script', async ({ page }) => {
+  await page.goto('/docs/latest/guards')
+  const nav = page.getByRole('navigation', { name: 'Documentation' })
+  const group = nav.locator('details').first()
+  const link = group.getByRole('link').first()
+  await expect(link).toBeVisible()
+  await group.locator('summary').click()
+  await expect(link).toBeHidden()
+  await group.locator('summary').click()
+  await expect(link).toBeVisible()
+})
+
+test('the toolbar offers search by field and shortcut', async ({ page }) => {
+  await page.goto('/docs/latest/guards')
+  const search = page.getByRole('button', { name: 'Search the documentation' })
+  await expect(search).toBeVisible()
+  await expect(search).toHaveAttribute('data-search-trigger', 'true')
+  await expect(search).toHaveAttribute('aria-keyshortcuts', 'Meta+K Control+K')
+})

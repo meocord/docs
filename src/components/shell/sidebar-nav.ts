@@ -1,5 +1,6 @@
-import { Div, For, H2, Li, Nav, Span, Ul } from '@meonode/ui'
+import { For, Li, Nav, Node, Span, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
+import { Glyph } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
 import type { NavGroup, NavItem } from '@/components/shell/types'
 
@@ -12,10 +13,10 @@ function NavRow(item: NavItem) {
       alignItems: 'center',
       gap: 'theme.space.2',
       minHeight: 'theme.layout.row',
-      padding: '0 theme.space.2',
-      borderRadius: 'theme.radius.control',
-      fontSize: 'theme.type.control.size',
-      letterSpacing: 'theme.type.control.track',
+      // Inset from the pane's edges, with the text aligned under the group's title.
+      padding: '0 theme.space.2 0 theme.space.8',
+      borderRadius: 'theme.radius.row',
+      fontSize: 'theme.type.small.size',
       textDecoration: 'none',
       color: item.current ? 'theme.ink.primary' : 'theme.ink.secondary',
       fontWeight: item.current ? 'theme.font.weight.medium' : 'theme.font.weight.regular',
@@ -35,7 +36,7 @@ function NavRow(item: NavItem) {
               fontSize: 'theme.type.caption.size',
               color: 'theme.accent.default',
               border: '1px solid theme.accent.tint',
-              borderRadius: 'theme.radius.control',
+              borderRadius: 'theme.radius.chip',
               padding: '0 theme.space.1',
             })
           : null,
@@ -44,19 +45,30 @@ function NavRow(item: NavItem) {
   })
 }
 
+/**
+ * A group as a disclosure: the browser's own <details>, so it opens and closes with no script. Its
+ * summary is the group's title beside its glyph, and a chevron that turns as it opens.
+ */
 function NavSection(group: NavGroup) {
-  return Div({
+  return Node('details', {
+    open: true,
+    'data-nav-group': true,
     children: [
-      H2(group.title, {
-        margin: '0 0 theme.space.1',
-        padding: '0 theme.space.2',
-        fontSize: 'theme.type.caption.size',
-        fontWeight: 'theme.font.weight.semibold',
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase',
-        color: 'theme.ink.secondary',
+      Node('summary', {
+        key: 'title',
+        children: [
+          Span(Glyph('chevronRight', 12), { key: 'chevron', 'data-chevron': true }),
+          Span(Glyph(group.icon ?? 'book', 16), { key: 'icon', 'data-group-icon': true }),
+          Span(group.title, { key: 'label' }),
+        ],
       }),
-      Ul({ margin: 0, padding: 0, listStyle: 'none', children: For(group.items, NavRow, item => item.href) }),
+      Ul({
+        key: 'items',
+        margin: 0,
+        padding: 0,
+        listStyle: 'none',
+        children: For(group.items, NavRow, item => item.href),
+      }),
     ],
   })
 }
@@ -67,8 +79,47 @@ export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGro
     'aria-label': label,
     display: 'flex',
     flexDirection: 'column',
-    gap: 'theme.space.6',
-    padding: 'theme.space.4 theme.space.3 theme.space.8',
+    padding: 'theme.space.2 theme.space.2 theme.space.8',
+    css: {
+      // Groups are separated by a hairline, drawn between them rather than around them.
+      '& [data-nav-group] + [data-nav-group]': {
+        marginTop: 'theme.space.2',
+        paddingTop: 'theme.space.2',
+        borderTop: 'theme.line.width solid theme.line.hairline',
+      },
+      '& summary': {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'theme.space.2',
+        minHeight: 'theme.layout.row',
+        padding: '0 theme.space.2',
+        borderRadius: 'theme.radius.row',
+        listStyle: 'none',
+        cursor: 'pointer',
+        fontSize: 'theme.type.caption.size',
+        fontWeight: 'theme.font.weight.semibold',
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: 'theme.ink.secondary',
+        userSelect: 'none',
+      },
+      '& summary::-webkit-details-marker': { display: 'none' },
+      '& summary:hover': { color: 'theme.ink.primary' },
+      '& summary:focus-visible': {
+        outline: 'theme.focus.width solid theme.accent.default',
+        outlineOffset: -2,
+      },
+      '& [data-chevron]': {
+        display: 'inline-flex',
+        color: 'theme.ink.quiet',
+        transitionProperty: 'transform',
+        transitionDuration: 'theme.motion.duration.state',
+        transitionTimingFunction: 'theme.motion.ease.enter',
+      },
+      '& details[open] > summary [data-chevron]': { transform: 'rotate(90deg)' },
+      '& [data-group-icon]': { display: 'inline-flex', color: 'theme.accent.default' },
+      '@media (prefers-reduced-motion: reduce)': { '& [data-chevron]': { transitionDuration: '0s' } },
+    },
     children: For(groups, NavSection, group => group.title),
   })
 }
