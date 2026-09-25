@@ -22,6 +22,7 @@ refused by the three-second cooldown before it reaches the per-minute one.
 | `uses`    | `1`      | Calls allowed within the window.                                                                                                        |
 | `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`. Outside a server, `'guild'` and `'channel'` count per user. |
 | `bypass`  | none     | `(context) => boolean`: exempts a call without counting it, one from an owner for instance.                                             |
+| `by`      | none     | `(context, params) => string \| number \| undefined`: counts calls apart by a value of the call, within the scope `per` names.         |
 
 A blocked call throws `CooldownError` from `meocord/common`, which the built-in fallback answers only to the
 caller: "Slow down: try again in 12s." `cooldownMessage(retryAfterMs)` builds that text, and an exception
@@ -35,6 +36,31 @@ Cooldowns are counted under the controller's class name, so the bot refuses to s
 a name and either has a cooldown; rename one of them.
 
 ::example{file="controllers/slash/daily.slash.controller.spec.ts" region="spec"}
+
+## Counting per resource
+
+`per` decides whose calls count together; `by` splits that count by a value of the call, such as the account a
+button acts on. A user with three game accounts can then check each of them in once an hour:
+
+::example{file="controllers/button/check-in.button.controller.ts" region="by"}
+
+`by` receives the call's `ExecutionContext` and the handler's params as the handler receives them: a component's
+customId params, a command's options, a modal's fields, after validation and pipes. For a piped object, return a
+stable id from it, such as `({ account }) => account.uid`.
+
+- Declare the params `by` reads, or pass them as the type argument, `@Cooldown<{ uid: string }>({ … })`. A key
+  the handler does not receive, or receives as another type, fails to compile; undeclared, they are
+  `Record<string, unknown>`.
+- With `per: 'global'`, the limit is per resource across every user.
+- Returning `undefined` counts the call as though there were no `by`. An error `by` throws goes to the
+  [exception filters](/docs/4.1/exception-filters), and no cooldown on the handler counts the call.
+- The value becomes part of the key the store counts under, encoded so a value holding `:` cannot count under
+  another's key. `inspectHandler(...).cooldowns` reports `by: true` for a cooldown that has one.
+
+The guard runs first, so a stranger pressing someone else's button is refused without spending the owner's
+check-in:
+
+::example{file="controllers/button/check-in.button.controller.spec.ts" region="spec"}
 
 ## Where calls are counted
 
