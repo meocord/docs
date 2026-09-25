@@ -18,18 +18,42 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
   config,
   pages: {
     '4.1': {
-      guards: page('id: guards\ntitle: Guards', '## Passing options\n\n::example{file="guards/owner.guard.ts" region="guard"}\n\nSee [the 4.0 page](/docs/4.0/guards#params) and [options](#passing-options).'),
+      guards: page(
+        'id: guards\ntitle: Guards',
+        '## Passing options\n\n::example{file="guards/owner.guard.ts" region="guard"}\n\nSee [the 4.0 page](/docs/4.0/guards#params) and [options](#passing-options).',
+      ),
     },
-    '4.0': { guards: page('id: guards\ntitle: Guards\nsource: readme@4.0.0', '```ts\nconst ok = true\n```\n\nSee [latest](/docs/latest/guards).') },
+    '4.0': {
+      guards: page(
+        'id: guards\ntitle: Guards\nsource: readme@4.0.0',
+        '```ts\nconst ok = true\n```\n\nSee [latest](/docs/latest/guards).',
+      ),
+    },
   },
   readmeAnchors: { '4.0': { guards: 'guards', params: 'guards' } },
   migrating: { '4.1': '# Upgrading\n\n## Start\n', '4.0': '# Upgrading\n' },
   changelogs: {
-    '4.1.0-beta.0': { version: '4.1.0-beta.0', sections: [{ title: 'Patch Changes', entries: [{ markdown: 'See [start](/docs/4.1/migrating#start) and [notes](/docs/4.1/changelog#4.1.0-beta.0).', breaking: true }] }] },
+    '4.1.0-beta.0': {
+      version: '4.1.0-beta.0',
+      sections: [
+        {
+          title: 'Patch Changes',
+          entries: [
+            {
+              markdown: 'See [start](/docs/4.1/migrating#start) and [notes](/docs/4.1/changelog#4.1.0-beta.0).',
+              breaking: true,
+            },
+          ],
+        },
+      ],
+    },
     '4.0.0': { version: '4.0.0', sections: [] },
   },
   apis: new Set(['4.1.0-beta.0', '4.0.0']),
-  examples: { '4.1': { 'src/guards/owner.guard.ts': '// #region guard\nexport class OwnerGuard {}\n// #endregion guard\n' }, '4.0': {} },
+  examples: {
+    '4.1': { 'src/guards/owner.guard.ts': '// #region guard\nexport class OwnerGuard {}\n// #endregion guard\n' },
+    '4.0': {},
+  },
   ...overrides,
 })
 
@@ -39,13 +63,26 @@ describe('checkSite', () => {
   })
 
   it('follows the latest and next aliases to their lines', () => {
-    const pages = { ...site().pages, '4.0': { guards: page('id: guards\ntitle: Guards', '[n](/docs/next/guards#passing-options) [m](/docs/next/guards#params)') } }
+    const pages = {
+      ...site().pages,
+      '4.0': {
+        guards: page(
+          'id: guards\ntitle: Guards',
+          '[n](/docs/next/guards#passing-options) [m](/docs/next/guards#params)',
+        ),
+      },
+    }
 
-    expect(checkSite(site({ pages }))).toEqual(['content/4.0/guards.md: /docs/next/guards#params names no heading of that page'])
+    expect(checkSite(site({ pages }))).toEqual([
+      'content/4.0/guards.md: /docs/next/guards#params names no heading of that page',
+    ])
   })
 
   it('reports pages without an id or title, and ids used twice', () => {
-    const pages = { ...site().pages, '4.1': { a: page('title: A', 'x'), b: page('id: b', 'x'), c: page('id: b\ntitle: C', 'x') } }
+    const pages = {
+      ...site().pages,
+      '4.1': { a: page('title: A', 'x'), b: page('id: b', 'x'), c: page('id: b\ntitle: C', 'x') },
+    }
 
     expect(checkSite(site({ pages }))).toEqual([
       'content/4.1/a.md: front matter has no id',
@@ -57,11 +94,21 @@ describe('checkSite', () => {
   it('keeps TypeScript out of written guides, but not out of imported ones', () => {
     const pages = { ...site().pages, '4.1': { a: page('id: a\ntitle: A', '```typescript\nconst x = 1\n```') } }
 
-    expect(checkSite(site({ pages }))).toEqual(['content/4.1/a.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence'])
+    expect(checkSite(site({ pages }))).toEqual([
+      'content/4.1/a.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence',
+    ])
   })
 
   it('reports examples that do not exist, or lack the region', () => {
-    const pages = { ...site().pages, '4.1': { a: page('id: a\ntitle: A', '::example{file="missing.ts"}\n::example{file="guards/owner.guard.ts" region="nope"}\n::example{region="x"}') } }
+    const pages = {
+      ...site().pages,
+      '4.1': {
+        a: page(
+          'id: a\ntitle: A',
+          '::example{file="missing.ts"}\n::example{file="guards/owner.guard.ts" region="nope"}\n::example{region="x"}',
+        ),
+      },
+    }
 
     expect(checkSite(site({ pages }))).toEqual([
       'content/4.1/a.md: examples/4.1/src/missing.ts does not exist',
@@ -97,7 +144,14 @@ describe('checkSite', () => {
 
   it('reports missing generated data', () => {
     expect(
-      checkSite(site({ apis: new Set(['4.0.0']), changelogs: { '4.0.0': { version: '4.0.0', sections: [] } }, migrating: { '4.1': '# x' }, readmeAnchors: {} })),
+      checkSite(
+        site({
+          apis: new Set(['4.0.0']),
+          changelogs: { '4.0.0': { version: '4.0.0', sections: [] } },
+          migrating: { '4.1': '# x' },
+          readmeAnchors: {},
+        }),
+      ),
     ).toEqual([
       // Without the anchors map, the imported page's headings are unknown too
       'content/4.1/guards.md: /docs/4.0/guards#params names no heading of that page',
@@ -109,7 +163,10 @@ describe('checkSite', () => {
   })
 
   it('reports a line without pages, and a link to a migration guide the line lacks', () => {
-    const pages = { '4.1': {}, '4.0': { guards: page('id: guards\ntitle: Guards\nsource: readme@4.0.0', '[m](/docs/4.0/migrating)') } }
+    const pages = {
+      '4.1': {},
+      '4.0': { guards: page('id: guards\ntitle: Guards\nsource: readme@4.0.0', '[m](/docs/4.0/migrating)') },
+    }
 
     expect(checkSite(site({ pages, migrating: { '4.1': '# x' } }))).toEqual([
       'content/4.1 has no pages',
@@ -122,7 +179,10 @@ describe('checkSite', () => {
 
 describe('parsePage and markdownLinks', () => {
   it('reads front matter, and treats a file without it as body only', () => {
-    expect(parsePage(page('id: a\ntitle: "A: b"', 'Body'))).toEqual({ frontmatter: { id: 'a', title: 'A: b' }, body: '\nBody\n' })
+    expect(parsePage(page('id: a\ntitle: "A: b"', 'Body'))).toEqual({
+      frontmatter: { id: 'a', title: 'A: b' },
+      body: '\nBody\n',
+    })
     expect(parsePage('Body')).toEqual({ frontmatter: {}, body: 'Body' })
   })
 

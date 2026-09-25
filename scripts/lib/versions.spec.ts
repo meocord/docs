@@ -2,7 +2,19 @@ import { mkdtempSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { describe, expect, it } from 'vitest'
-import { addVersion, aliases, allVersions, findLine, identityFor, lineOf, newestIn, readVersions, validateVersions, writeVersions, type VersionsConfig } from './versions.js'
+import {
+  addVersion,
+  aliases,
+  allVersions,
+  findLine,
+  identityFor,
+  lineOf,
+  newestIn,
+  readVersions,
+  validateVersions,
+  writeVersions,
+  type VersionsConfig,
+} from './versions.js'
 
 const L7 = 'https://github.com/l7aromeo/meocord/.github/workflows/release.yml@refs/heads/main'
 const ORG = 'https://github.com/meocord/meocord/.github/workflows/release.yml@refs/heads/main'
@@ -21,7 +33,8 @@ const empty = (): VersionsConfig => ({
   lines: [],
 })
 
-const add = (config: VersionsConfig, ...versions: string[]) => versions.reduce((next, version) => addVersion(next, version).config, config)
+const add = (config: VersionsConfig, ...versions: string[]) =>
+  versions.reduce((next, version) => addVersion(next, version).config, config)
 
 describe('lineOf', () => {
   it('names the minor line, prereleases included', () => {
@@ -51,7 +64,9 @@ describe('identityFor', () => {
     config.provenance.identities.push({ range: '>=4.0.0', identity: ORG })
 
     expect(() => identityFor(config, '4.0.1')).toThrow('matches 2 provenance identities')
-    expect(() => identityFor({ ...empty(), provenance: { ...empty().provenance, identities: [] } }, '4.0.0')).toThrow('matches 0')
+    expect(() => identityFor({ ...empty(), provenance: { ...empty().provenance, identities: [] } }, '4.0.0')).toThrow(
+      'matches 0',
+    )
   })
 })
 
@@ -59,7 +74,9 @@ describe('addVersion', () => {
   it('opens a line in prerelease and makes it current at its stable release', () => {
     const betas = addVersion(empty(), '4.0.0-beta.0')
 
-    expect(betas.config.lines).toEqual([{ line: '4.0', status: 'prerelease', guides: 'readme', versions: ['4.0.0-beta.0'] }])
+    expect(betas.config.lines).toEqual([
+      { line: '4.0', status: 'prerelease', guides: 'readme', versions: ['4.0.0-beta.0'] },
+    ])
     expect(betas.forked).toEqual({ line: '4.0', from: undefined })
 
     const stable = addVersion(betas.config, '4.0.0')
@@ -87,7 +104,11 @@ describe('addVersion', () => {
   it('archives a maintained line once two newer lines are supported', () => {
     const config = add(empty(), '4.0.0', '4.1.0', '4.2.0')
 
-    expect(config.lines.map(line => `${line.line}:${line.status}`)).toEqual(['4.2:current', '4.1:maintained', '4.0:archived'])
+    expect(config.lines.map(line => `${line.line}:${line.status}`)).toEqual([
+      '4.2:current',
+      '4.1:maintained',
+      '4.0:archived',
+    ])
   })
 
   it('keeps versions in order and ignores one already listed', () => {

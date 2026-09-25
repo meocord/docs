@@ -105,27 +105,31 @@ export function checkSite(site: SiteSnapshot): string[] {
       }
       if (page === '' || page.startsWith('api')) continue
       if (page === 'changelog') {
-        if (anchor && !lines.get(targetLine)!.versions.includes(anchor)) problems.push(`${where}: ${target} names no version of ${targetLine}`)
+        if (anchor && !lines.get(targetLine)!.versions.includes(anchor))
+          problems.push(`${where}: ${target} names no version of ${targetLine}`)
         continue
       }
       if (page === 'migrating') {
         const guide = site.migrating[targetLine]
         if (!guide) problems.push(`${where}: ${target} links a migration guide ${targetLine} does not have`)
-        else if (anchor && !markdownAnchors(guide).includes(anchor)) problems.push(`${where}: ${target} names no heading of the migration guide`)
+        else if (anchor && !markdownAnchors(guide).includes(anchor))
+          problems.push(`${where}: ${target} names no heading of the migration guide`)
         continue
       }
       if (!site.pages[targetLine]?.[page]) {
         problems.push(`${where}: ${target} names no page of ${targetLine}`)
         continue
       }
-      if (anchor && !anchorsOf(targetLine, page).has(anchor)) problems.push(`${where}: ${target} names no heading of that page`)
+      if (anchor && !anchorsOf(targetLine, page).has(anchor))
+        problems.push(`${where}: ${target} names no heading of that page`)
     }
   }
 
   for (const [name, line] of lines) {
     const pages = site.pages[name] ?? {}
     if (Object.keys(pages).length === 0) problems.push(`content/${name} has no pages`)
-    if (line.guides === 'readme' && !site.readmeAnchors[name]) problems.push(`line ${name} imports its README but has no generated/readme-anchors/${name}.json`)
+    if (line.guides === 'readme' && !site.readmeAnchors[name])
+      problems.push(`line ${name} imports its README but has no generated/readme-anchors/${name}.json`)
 
     const ids = new Map<string, string>()
     for (const [slug, text] of Object.entries(pages)) {
@@ -134,18 +138,28 @@ export function checkSite(site: SiteSnapshot): string[] {
       if (!frontmatter.id) problems.push(`${where}: front matter has no id`)
       if (!frontmatter.title) problems.push(`${where}: front matter has no title`)
       if (frontmatter.id) {
-        if (ids.has(frontmatter.id)) problems.push(`${where}: id "${frontmatter.id}" is also used by ${ids.get(frontmatter.id)}`)
+        if (ids.has(frontmatter.id))
+          problems.push(`${where}: id "${frontmatter.id}" is also used by ${ids.get(frontmatter.id)}`)
         ids.set(frontmatter.id, where)
       }
       const imported = frontmatter.source?.startsWith('readme@') ?? false
-      if (!imported && TYPESCRIPT_FENCE.test(body)) problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
+      if (!imported && TYPESCRIPT_FENCE.test(body))
+        problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
 
       for (const match of withoutCode(body).matchAll(EXAMPLE)) {
-        const attributes = Object.fromEntries([...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]))
+        const attributes = Object.fromEntries(
+          [...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]),
+        )
         const source = attributes.file ? site.examples[name]?.[`src/${attributes.file}`] : undefined
         if (!attributes.file) problems.push(`${where}: an ::example names no file`)
         else if (source === undefined) problems.push(`${where}: examples/${name}/src/${attributes.file} does not exist`)
-        else if (attributes.region && !(source.includes(`// #region ${attributes.region}\n`) && source.includes(`// #endregion ${attributes.region}`))) {
+        else if (
+          attributes.region &&
+          !(
+            source.includes(`// #region ${attributes.region}\n`) &&
+            source.includes(`// #endregion ${attributes.region}`)
+          )
+        ) {
           problems.push(`${where}: examples/${name}/src/${attributes.file} has no region "${attributes.region}"`)
         }
       }
@@ -154,7 +168,8 @@ export function checkSite(site: SiteSnapshot): string[] {
 
     const guide = site.migrating[name]
     if (guide) checkLinks(`generated/migrating/${name}.md`, guide, () => new Set(markdownAnchors(guide)))
-    else if (line.versions.some(version => !site.config.provenance.integrityOnly.includes(version))) problems.push(`line ${name} has no generated/migrating/${name}.md`)
+    else if (line.versions.some(version => !site.config.provenance.integrityOnly.includes(version)))
+      problems.push(`line ${name} has no generated/migrating/${name}.md`)
   }
 
   for (const line of site.config.lines) {
@@ -166,7 +181,9 @@ export function checkSite(site: SiteSnapshot): string[] {
         continue
       }
       changelog.sections.forEach(section =>
-        section.entries.forEach(entry => checkLinks(`generated/changelog/${version}.json`, entry.markdown, () => new Set())),
+        section.entries.forEach(entry =>
+          checkLinks(`generated/changelog/${version}.json`, entry.markdown, () => new Set()),
+        ),
       )
     }
   }

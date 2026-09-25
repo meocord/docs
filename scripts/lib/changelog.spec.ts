@@ -44,9 +44,12 @@ describe('rewriteLibraryLinks', () => {
   })
 
   it('leaves a README anchor no page holds, and points the bare README at the line', () => {
-    expect(rewriteLibraryLinks('[x](https://github.com/meocord/meocord#nowhere) [y](https://github.com/meocord/meocord)', '4.1')).toBe(
-      '[x](https://github.com/meocord/meocord#nowhere) [y](/docs/4.1)',
-    )
+    expect(
+      rewriteLibraryLinks(
+        '[x](https://github.com/meocord/meocord#nowhere) [y](https://github.com/meocord/meocord)',
+        '4.1',
+      ),
+    ).toBe('[x](https://github.com/meocord/meocord#nowhere) [y](/docs/4.1)')
   })
 })
 
@@ -58,7 +61,10 @@ describe('parseChangelog', () => {
     const [registration] = doc.sections[0].entries
     expect(registration.breaking).toBe(true)
     expect(registration.markdown).toContain('- `guilds` registers to guilds.')
-    expect(doc.sections[1].entries[0]).toEqual({ markdown: 'Fix a typo. See [Guards](https://github.com/l7aromeo/meocord#guards).', breaking: false })
+    expect(doc.sections[1].entries[0]).toEqual({
+      markdown: 'Fix a typo. See [Guards](https://github.com/l7aromeo/meocord#guards).',
+      breaking: false,
+    })
   })
 
   it('marks every major change as breaking', () => {

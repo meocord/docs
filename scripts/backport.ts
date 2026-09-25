@@ -39,9 +39,14 @@ if (git('status', '--porcelain')) {
 }
 
 git('switch', '-c', `backport/${short}-${to}`)
-const apply = spawnSync('git', ['apply', '--index', '-C1', '-'], { input: retargetDiff(diff, from, to), encoding: 'utf8' })
+const apply = spawnSync('git', ['apply', '--index', '-C1', '-'], {
+  input: retargetDiff(diff, from, to),
+  encoding: 'utf8',
+})
 if (apply.status !== 0) {
-  console.error(`The change does not apply cleanly to ${to}:\n${apply.stderr}\nResolve it on this branch, or drop the branch.`)
+  console.error(
+    `The change does not apply cleanly to ${to}:\n${apply.stderr}\nResolve it on this branch, or drop the branch.`,
+  )
   process.exit(1)
 }
 git('commit', '-m', `${subject.replace(/^(\w+)(\([^)]*\))?:/, `$1(${to}):`)}\n\nBackport of ${short} from ${from}.`)

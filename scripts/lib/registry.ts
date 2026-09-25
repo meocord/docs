@@ -52,7 +52,11 @@ export interface VerifiedTarball {
 }
 
 /** Downloads a version's tarball and returns it only if it matches the registry's integrity. */
-export async function downloadTarball(packument: Packument, version: string, fetchImpl: Fetch = fetch): Promise<VerifiedTarball> {
+export async function downloadTarball(
+  packument: Packument,
+  version: string,
+  fetchImpl: Fetch = fetch,
+): Promise<VerifiedTarball> {
   const entry = packument.versions[version]
   if (!entry) throw new Error(`${packument.name}@${version} is not published.`)
   const response = await fetchImpl(entry.dist.tarball)

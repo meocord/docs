@@ -22,7 +22,15 @@ function filesUnder(dir: string, root = dir): Record<string, string> {
 }
 
 const config = readVersions(paths.versions)
-const site: SiteSnapshot = { config, pages: {}, readmeAnchors: {}, migrating: {}, changelogs: {}, apis: new Set(), examples: {} }
+const site: SiteSnapshot = {
+  config,
+  pages: {},
+  readmeAnchors: {},
+  migrating: {},
+  changelogs: {},
+  apis: new Set(),
+  examples: {},
+}
 for (const { line, versions } of config.lines) {
   site.pages[line] = Object.fromEntries(
     Object.entries(filesUnder(paths.content(line)))
@@ -45,4 +53,6 @@ if (problems.length > 0) {
   console.error(`${problems.length} content problem(s):\n  ${problems.join('\n  ')}`)
   process.exit(1)
 }
-console.log(`Content is consistent: ${config.lines.length} lines, ${Object.values(site.pages).reduce((sum, pages) => sum + Object.keys(pages).length, 0)} pages.`)
+console.log(
+  `Content is consistent: ${config.lines.length} lines, ${Object.values(site.pages).reduce((sum, pages) => sum + Object.keys(pages).length, 0)} pages.`,
+)

@@ -33,7 +33,10 @@ export function entryPoints(packageDir: string): Record<string, string> {
   const entries: Record<string, string> = {}
   for (const [subpath, target] of Object.entries(manifest.exports)) {
     // Early 4.0 betas put `types` beside `import`; later versions nest it per condition
-    const types = typeof target === 'object' ? ((typeof target.import === 'object' ? target.import.types : undefined) ?? target.types) : undefined
+    const types =
+      typeof target === 'object'
+        ? ((typeof target.import === 'object' ? target.import.types : undefined) ?? target.types)
+        : undefined
     if (types) entries[`${manifest.name}${subpath.slice(1)}`] = types.replace(/^\.\//, '')
   }
   return entries
@@ -41,7 +44,10 @@ export function entryPoints(packageDir: string): Record<string, string> {
 
 /** Drops what names the machine or the bundle: absolute paths, source files and chunk names. */
 export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.ProjectReflection {
-  const clean = structuredClone(project) as Omit<JSONOutput.ProjectReflection, 'symbolIdMap' | 'files'> & { symbolIdMap?: unknown; files?: unknown }
+  const clean = structuredClone(project) as Omit<JSONOutput.ProjectReflection, 'symbolIdMap' | 'files'> & {
+    symbolIdMap?: unknown
+    files?: unknown
+  }
   delete clean.symbolIdMap
   delete clean.files
   const walk = (node: unknown): void => {
@@ -60,13 +66,21 @@ export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.Pr
 /** Runs TypeDoc over an unpacked package and returns its API document. */
 export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typedoc'>): Promise<ApiDocument> {
   const entries = entryPoints(packageDir)
-  if (Object.keys(entries).length === 0) throw new Error(`${meta.package}@${meta.version} declares no types in its exports map.`)
+  if (Object.keys(entries).length === 0)
+    throw new Error(`${meta.package}@${meta.version} declares no types in its exports map.`)
   const files = Object.values(entries).map(file => path.join(packageDir, file))
   const tsconfig = path.join(packageDir, 'tsconfig.docs.json')
   writeFileSync(
     tsconfig,
     JSON.stringify({
-      compilerOptions: { module: 'nodenext', moduleResolution: 'nodenext', target: 'es2022', skipLibCheck: true, noEmit: true, types: [] },
+      compilerOptions: {
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+        target: 'es2022',
+        skipLibCheck: true,
+        noEmit: true,
+        types: [],
+      },
       files,
     }),
   )
@@ -96,11 +110,14 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   // readers import it by the entry point
   const modulePath = (file: string) => file.replace(/\.d\.c?ts$/, '').replace(/\/index$/, '')
   for (const child of json.children ?? []) {
-    const match = Object.entries(entries).find(([, file]) => modulePath(file) === child.name || modulePath(file).endsWith(`/${child.name}`))
+    const match = Object.entries(entries).find(
+      ([, file]) => modulePath(file) === child.name || modulePath(file).endsWith(`/${child.name}`),
+    )
     if (match) child.name = match[0]
   }
   const missing = Object.keys(entries).filter(entry => !json.children?.some(child => child.name === entry))
-  if (missing.length > 0) throw new Error(`TypeDoc produced no module for ${missing.join(', ')} in ${meta.package}@${meta.version}.`)
+  if (missing.length > 0)
+    throw new Error(`TypeDoc produced no module for ${missing.join(', ')} in ${meta.package}@${meta.version}.`)
   json.name = meta.package
   return { meta: { ...meta, typedoc: Application.VERSION }, project: json }
 }

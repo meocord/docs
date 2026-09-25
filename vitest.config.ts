@@ -16,6 +16,7 @@ export default defineConfig({
         'scripts/csp-hash.mjs',
         'scripts/ico.ts',
         'e2e/port.ts',
+        'scripts/lib/**',
       ],
       reporter: ['text', 'lcov'],
       thresholds: { lines: 90, functions: 90, branches: 85, statements: 90 },

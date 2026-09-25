@@ -57,14 +57,19 @@ export function validateVersions(config: VersionsConfig): VersionsConfig {
   if (!config.provenance?.issuer) problems.push('provenance.issuer is missing')
   for (const rule of config.provenance?.identities ?? []) {
     if (!semver.validRange(rule.range)) problems.push(`identity range "${rule.range}" is not a semver range`)
-    if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/\.github\/workflows\/[\w.-]+\.ya?ml@refs\/(heads|tags)\/[\w./-]+$/.test(rule.identity)) {
+    if (
+      !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/\.github\/workflows\/[\w.-]+\.ya?ml@refs\/(heads|tags)\/[\w./-]+$/.test(
+        rule.identity,
+      )
+    ) {
       problems.push(`identity "${rule.identity}" is not an exact GitHub workflow identity`)
     }
   }
   const seen = new Set<string>()
   for (const line of config.lines ?? []) {
     if (!STATUSES.includes(line.status)) problems.push(`line ${line.line} has an unknown status "${line.status}"`)
-    if (!['readme', 'authored'].includes(line.guides)) problems.push(`line ${line.line} has an unknown guide source "${line.guides}"`)
+    if (!['readme', 'authored'].includes(line.guides))
+      problems.push(`line ${line.line} has an unknown guide source "${line.guides}"`)
     for (const version of line.versions) {
       if (!semver.valid(version)) problems.push(`line ${line.line} lists "${version}", which is not a version`)
       else if (lineOf(version) !== line.line) problems.push(`${version} is listed under line ${line.line}`)
@@ -72,8 +77,10 @@ export function validateVersions(config: VersionsConfig): VersionsConfig {
       seen.add(version)
     }
   }
-  if ((config.lines ?? []).filter(line => line.status === 'current').length > 1) problems.push('more than one line is current')
-  if ((config.lines ?? []).filter(line => line.status === 'prerelease').length > 1) problems.push('more than one line is in prerelease')
+  if ((config.lines ?? []).filter(line => line.status === 'current').length > 1)
+    problems.push('more than one line is current')
+  if ((config.lines ?? []).filter(line => line.status === 'prerelease').length > 1)
+    problems.push('more than one line is in prerelease')
   if (problems.length > 0) throw new Error(`versions.json is invalid:\n  ${problems.join('\n  ')}`)
   return config
 }
@@ -111,9 +118,13 @@ export function aliases(config: VersionsConfig): { latest?: string; next?: strin
 /** Whose signature a version must carry, or `'integrity-only'` for a version listed as having none. */
 export function identityFor(config: VersionsConfig, version: string): string | 'integrity-only' {
   if (config.provenance.integrityOnly.includes(version)) return 'integrity-only'
-  const matches = config.provenance.identities.filter(rule => semver.satisfies(version, rule.range, { includePrerelease: true }))
+  const matches = config.provenance.identities.filter(rule =>
+    semver.satisfies(version, rule.range, { includePrerelease: true }),
+  )
   if (matches.length !== 1) {
-    throw new Error(`${version} matches ${matches.length} provenance identities; versions.json must give it exactly one.`)
+    throw new Error(
+      `${version} matches ${matches.length} provenance identities; versions.json must give it exactly one.`,
+    )
   }
   return matches[0].identity
 }
@@ -164,7 +175,9 @@ export function addVersion(config: VersionsConfig, version: string): AddResult {
 
   const ordered = [...next.lines].sort((a, b) => byLine(b.line, a.line))
   ordered.forEach((entry, index) => {
-    const newerSupported = ordered.slice(0, index).filter(newer => newer.status === 'current' || newer.status === 'maintained').length
+    const newerSupported = ordered
+      .slice(0, index)
+      .filter(newer => newer.status === 'current' || newer.status === 'maintained').length
     if (entry.status === 'maintained' && newerSupported >= 2) setStatus(entry, 'archived')
   })
   next.lines = ordered

@@ -37,7 +37,11 @@ const README = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/?(?:#([\w-
  * Points links at the library's migration guide and README to the site's pages for `line`.
  * README anchors resolve through `readmeAnchors`, which maps an anchor to the page holding it.
  */
-export function rewriteLibraryLinks(markdown: string, line: string, readmeAnchors: Record<string, string> = {}): string {
+export function rewriteLibraryLinks(
+  markdown: string,
+  line: string,
+  readmeAnchors: Record<string, string> = {},
+): string {
   return markdown
     .replace(MIGRATING, (_match, anchor: string | undefined) => `/docs/${line}/migrating${anchor ?? ''}`)
     .replace(README, (match, anchor: string | undefined) => {
@@ -55,7 +59,8 @@ export function parseChangelog(version: string, section: string): ChangelogDocum
   const flush = () => {
     if (entry && current) {
       const markdown = entry.join('\n').replace(/^- /, '').trimEnd()
-      const breaking = current.title === 'Major Changes' || /\/docs\/[^/\s)]+\/migrating|docs\/MIGRATING\.md/.test(markdown)
+      const breaking =
+        current.title === 'Major Changes' || /\/docs\/[^/\s)]+\/migrating|docs\/MIGRATING\.md/.test(markdown)
       current.entries.push({ markdown, breaking })
     }
     entry = undefined

@@ -44,24 +44,38 @@ const registry = (versions: string[]): Packument => ({
 })
 const fakeFetch = async (url: string) => {
   const version = /meocord-(.+)\.tgz$/.exec(url)?.[1]
-  return version ? new Response(new Blob([tarballs[version] as Uint8Array<ArrayBuffer>])) : new Response('not found', { status: 404 })
+  return version
+    ? new Response(new Blob([tarballs[version] as Uint8Array<ArrayBuffer>]))
+    : new Response('not found', { status: 404 })
 }
 
 const config: VersionsConfig = {
   package: 'meocord',
   since: '9.0.0-beta.0',
-  provenance: { issuer: 'https://token.actions.githubusercontent.com', identities: [], integrityOnly: ['9.0.0-beta.0', '9.0.0', '8.9.0'] },
+  provenance: {
+    issuer: 'https://token.actions.githubusercontent.com',
+    identities: [],
+    integrityOnly: ['9.0.0-beta.0', '9.0.0', '8.9.0'],
+  },
   lines: [],
 }
 const read = (file: string) => readFileSync(path.join(root, file), 'utf8')
 const logs: string[] = []
-const deps = (versions: string[]) => ({ packument: registry(versions), trustedRoot: () => Promise.reject(new Error('not needed')), fetch: fakeFetch, log: (line: string) => logs.push(line) })
+const deps = (versions: string[]) => ({
+  packument: registry(versions),
+  trustedRoot: () => Promise.reject(new Error('not needed')),
+  fetch: fakeFetch,
+  log: (line: string) => logs.push(line),
+})
 
 let first: Awaited<ReturnType<typeof sync>>
 
 beforeAll(async () => {
   mkdirSync(path.join(root, 'examples', '9.0'), { recursive: true })
-  writeFileSync(path.join(root, 'examples', '9.0', 'package.json'), '{"name":"examples","dependencies":{"meocord":"0.0.0"}}\n')
+  writeFileSync(
+    path.join(root, 'examples', '9.0', 'package.json'),
+    '{"name":"examples","dependencies":{"meocord":"0.0.0"}}\n',
+  )
   first = await sync(config, deps(['8.9.0', '9.0.0-beta.0']))
 }, 60_000)
 
@@ -70,14 +84,19 @@ afterAll(() => rmSync(root, { recursive: true, force: true }))
 describe('sync', () => {
   it('adds only the versions from `since` on, as a new line in prerelease', () => {
     expect(first.added).toEqual(['9.0.0-beta.0'])
-    expect(first.config.lines).toEqual([{ line: '9.0', status: 'prerelease', guides: 'readme', versions: ['9.0.0-beta.0'] }])
+    expect(first.config.lines).toEqual([
+      { line: '9.0', status: 'prerelease', guides: 'readme', versions: ['9.0.0-beta.0'] },
+    ])
   })
 
   it('writes the API document by entry point, with nothing naming the unpacked tarball', () => {
     const doc = JSON.parse(read('generated/api/9.0.0-beta.0.json'))
 
     expect(doc.meta).toMatchObject({ package: 'meocord', version: '9.0.0-beta.0' })
-    expect(doc.project.children.map((module: { name: string }) => module.name)).toEqual(['meocord/core', 'meocord/enum'])
+    expect(doc.project.children.map((module: { name: string }) => module.name)).toEqual([
+      'meocord/core',
+      'meocord/enum',
+    ])
     expect(JSON.stringify(doc)).not.toMatch(/meocord-docs-|"sources"|packagePath/)
   })
 
@@ -89,13 +108,19 @@ describe('sync', () => {
   })
 
   it('imports the README as the line’s guides, and pins the examples', () => {
-    expect(readdirSync(path.join(root, 'content', '9.0')).sort()).toEqual(['deployment.md', 'getting-started.md', 'overview.md'])
+    expect(readdirSync(path.join(root, 'content', '9.0')).sort()).toEqual([
+      'deployment.md',
+      'getting-started.md',
+      'overview.md',
+    ])
     expect(read('content/9.0/deployment.md')).toContain('(/docs/9.0/getting-started#install)')
     expect(JSON.parse(read('examples/9.0/package.json')).dependencies.meocord).toBe('9.0.0-beta.0')
   })
 
   it('records since data, and says why no migration guide was imported', () => {
-    expect(JSON.parse(read('generated/since.json'))['meocord/core:ShardContext.call(method)']).toEqual({ since: '9.0.0-beta.0' })
+    expect(JSON.parse(read('generated/since.json'))['meocord/core:ShardContext.call(method)']).toEqual({
+      since: '9.0.0-beta.0',
+    })
     expect(existsSync(path.join(root, 'generated', 'migrating', '9.0.md'))).toBe(false)
     expect(logs).toContain('9.0: 9.0.0-beta.0 has no provenance, so its migration guide is not imported')
   })
@@ -112,16 +137,37 @@ describe('sync', () => {
 
   it('refuses a version whose tarball does not match its integrity', async () => {
     const packument = registry(['9.0.0'])
-    packument.versions['9.0.1'] = { version: '9.0.1', dist: { ...packument.versions['9.0.0'].dist, tarball: 'https://registry.test/meocord-9.0.0.tgz', integrity: `sha512-${Buffer.alloc(64).toString('base64')}` } }
+    packument.versions['9.0.1'] = {
+      version: '9.0.1',
+      dist: {
+        ...packument.versions['9.0.0'].dist,
+        tarball: 'https://registry.test/meocord-9.0.0.tgz',
+        integrity: `sha512-${Buffer.alloc(64).toString('base64')}`,
+      },
+    }
 
-    await expect(sync(first.config, { ...deps([]), packument })).rejects.toThrow('does not match its registry integrity')
+    await expect(sync(first.config, { ...deps([]), packument })).rejects.toThrow(
+      'does not match its registry integrity',
+    )
   })
 
   it('refuses a version with no attestation that versions.json does not accept on integrity alone', async () => {
-    const strict = { ...first.config, provenance: { ...first.config.provenance, integrityOnly: [], identities: [{ range: '*', identity: 'https://github.com/meocord/meocord/.github/workflows/release.yml@refs/heads/main' }] } }
-    const noAttestation = async (url: string) => (url.includes('/attestations/') ? new Response('', { status: 404 }) : fakeFetch(url))
+    const strict = {
+      ...first.config,
+      provenance: {
+        ...first.config.provenance,
+        integrityOnly: [],
+        identities: [
+          { range: '*', identity: 'https://github.com/meocord/meocord/.github/workflows/release.yml@refs/heads/main' },
+        ],
+      },
+    }
+    const noAttestation = async (url: string) =>
+      url.includes('/attestations/') ? new Response('', { status: 404 }) : fakeFetch(url)
 
-    await expect(sync(strict, { ...deps(['9.0.0']), fetch: noAttestation })).rejects.toThrow('has no provenance attestation')
+    await expect(sync(strict, { ...deps(['9.0.0']), fetch: noAttestation })).rejects.toThrow(
+      'has no provenance attestation',
+    )
   })
 })
 
@@ -131,8 +177,15 @@ describe('forking a line', () => {
     forkContent('9.0', '9.1')
     forkExamples('9.0', '9.1', '9.1.0-beta.0')
 
-    expect(readdirSync(path.join(root, 'content', '9.1')).sort()).toEqual(['deployment.md', 'getting-started.md', 'overview.md'])
-    expect(JSON.parse(read('examples/9.1/package.json'))).toEqual({ name: 'examples-9-1', dependencies: { meocord: '9.1.0-beta.0' } })
+    expect(readdirSync(path.join(root, 'content', '9.1')).sort()).toEqual([
+      'deployment.md',
+      'getting-started.md',
+      'overview.md',
+    ])
+    expect(JSON.parse(read('examples/9.1/package.json'))).toEqual({
+      name: 'examples-9-1',
+      dependencies: { meocord: '9.1.0-beta.0' },
+    })
     expect(existsSync(path.join(root, 'examples', '9.1', 'node_modules'))).toBe(false)
   })
 

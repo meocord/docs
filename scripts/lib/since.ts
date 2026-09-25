@@ -24,7 +24,7 @@ export function apiKeys(project: JSONOutput.ProjectReflection): Set<string> {
       visit(child, key)
     }
   }
-  for (const module of project.children ?? []) visit(module, `${module.name}:`)
+  for (const entry of project.children ?? []) visit(entry, `${entry.name}:`)
   return keys
 }
 
