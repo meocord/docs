@@ -49,6 +49,37 @@ test('the home page runs under its CSP with no violation', async ({ page }) => {
   expect(violations).toEqual([])
 })
 
+test('a reload answered 304 keeps the cached page running under its policy', async ({ page }) => {
+  const problems: string[] = []
+  page.on('console', message => {
+    if (message.type() === 'error') problems.push(message.text())
+  })
+  page.on('pageerror', error => problems.push(error.message))
+  await page.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', event => {
+      console.error(`Content Security Policy violation: ${event.violatedDirective} ${event.blockedURI}`)
+    })
+  })
+
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/)
+  const reload = await page.reload()
+  // The scenario only holds if the browser revalidated; the browser reports the reused response as 200.
+  expect((await reload!.request().allHeaders())['if-none-match']).toBeTruthy()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/)
+  expect(problems).toEqual([])
+})
+
+test('a 304 carries no policy, so the cached one stays in force', async ({ request }) => {
+  const first = await request.get('/')
+  const etag = first.headers()['etag']
+  expect(etag).toBeTruthy()
+  const revalidated = await request.get('/', { headers: { 'if-none-match': etag } })
+  expect(revalidated.status()).toBe(304)
+  expect(revalidated.headers()['content-security-policy']).toBeUndefined()
+  expect(revalidated.headers()['x-robots-tag']).toBe(NOINDEX)
+})
+
 test('the same page is byte-identical for every reader', async ({ request }) => {
   const first = await (await request.get('/')).text()
   const second = await (await request.get('/', { headers: { cookie: 'theme=light' } })).text()

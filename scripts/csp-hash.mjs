@@ -29,3 +29,17 @@ export function fillPolicy(csp, html) {
   const hashes = hashesFor(html)
   return hashes ? csp.replace(MARKER, hashes) : fillPolicy(csp)
 }
+
+/**
+ * The policy to send on a response this does not hash, or undefined to send none. A 304 or a HEAD
+ * has no body to hash, and a 304's headers replace the cached response's: a policy without hashes
+ * there would block the cached page's inline scripts. Sending none keeps the cached policy, which
+ * matches the cached bytes, since the ETag is unchanged and this never alters a body.
+ * @param {string | undefined} csp
+ * @param {boolean} bodiless
+ * @returns {string | undefined}
+ */
+export function passthroughPolicy(csp, bodiless) {
+  if (!csp?.includes(MARKER)) return csp
+  return bodiless ? undefined : fillPolicy(csp)
+}
