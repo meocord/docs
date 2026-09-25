@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "discord.js": "^14.27.0",
     "dotenv": "^18.0.3",
     "meocord": "4.1.0-beta.4",
