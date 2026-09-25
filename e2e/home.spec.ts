@@ -38,6 +38,29 @@ test('a blocked user’s call stops at the guard, with its reason', async ({ pag
   await expect(panel.locator('[data-pane="code"] .line[data-lit="stopped"]')).toContainText('@UseGuard(MemberGuard)')
 })
 
+test('a control pressed while the player loads still acts', async ({ page }) => {
+  // Hold the player's chunk until the press has happened.
+  let release = () => {}
+  const held = new Promise<void>(resolve => (release = resolve))
+  let holding = () => {}
+  const reached = new Promise<void>(resolve => (holding = resolve))
+  await page.route('**/_next/static/chunks/*.js', async route => {
+    const response = await route.fetch()
+    const body = await response.text()
+    if (body.includes('narrationText')) {
+      holding()
+      await held
+    }
+    await route.fulfill({ response, body })
+  })
+  await page.goto('/')
+  await reached
+  const panel = page.locator('[data-pipeline]')
+  await panel.locator('[data-choose="blocked"]').click()
+  release()
+  await expect(panel.locator('[data-stage="guard"]')).toHaveAttribute('data-state', 'stopped', { timeout: 6000 })
+})
+
 test('Step moves one stage at a time', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
