@@ -44,8 +44,8 @@ export function passthroughPolicy(csp, bodiless) {
   return bodiless ? undefined : fillPolicy(csp)
 }
 
-/** The `script-src` directive carrying the marker, as the policy writes it. */
-const SCRIPT_DIRECTIVE = /(^|;\s*)(script-src[^;]*)/
+/** The `script-src` directive carrying the marker, as the policy writes it; not `script-src-elem` or `-attr`. */
+const SCRIPT_DIRECTIVE = /(^|;\s*)(script-src(?![-\w])[^;]*)/
 
 /** Where the policy's meta tag goes: after the charset declaration, so that stays in the first 1024 bytes. */
 const HEAD_START = /<head(?:\s[^>]*)?>(?:\s*<meta\s+charset=["']?[\w-]+["']?\s*\/?>)?/i
@@ -59,15 +59,19 @@ const attribute = value => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
  * `<meta http-equiv>` at the top of `<head>` carries `script-src` with the inline scripts' hashes.
  * A browser enforces both, so an inline script runs only when its hash is listed.
  *
- * Undefined when the document has no `<head>` to carry the meta, or the policy no marked
- * `script-src`: the caller then sends the whole policy in the header, as fillPolicy fills it.
+ * Undefined when the document has no `<head>` to carry the meta, a script comes before the place
+ * it would go, or the policy has no marked `script-src`: the caller then sends the whole policy in
+ * the header, as fillPolicy fills it.
  * @param {string} csp
  * @param {string} html
  * @returns {{ header: string, html: string } | undefined}
  */
 export function splitPolicy(csp, html) {
   const directive = SCRIPT_DIRECTIVE.exec(csp)?.[2]
-  if (!directive?.includes(MARKER) || !HEAD_START.test(html)) return undefined
+  const start = HEAD_START.exec(html)
+  if (!directive?.includes(MARKER) || !start) return undefined
+  // A meta policy governs only what follows it: a script before it would run under the header alone.
+  if (/<script\b|<link\b[^>]*\bmodulepreload\b/i.test(html.slice(0, start.index + start[0].length))) return undefined
   const sources = directive.replace(/\s*'__CSP_HASHES__'/, '').trim()
   const hashes = hashesFor(html)
   const header = csp.replace(directive, `${sources} 'unsafe-inline'`)

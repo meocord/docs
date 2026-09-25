@@ -79,6 +79,17 @@ describe('splitPolicy', () => {
     )
   })
 
+  it('declines a page with a script before the meta’s place, which the meta could not govern', () => {
+    expect(splitPolicy(policy, '<script>early()</script><head></head>')).toBeUndefined()
+    expect(splitPolicy(policy, '<link rel="modulepreload" href="/x.js"><head></head>')).toBeUndefined()
+    expect(splitPolicy(policy, '<head></head><script>later()</script>')).toBeDefined()
+  })
+
+  it('reads the marked script-src, not a script-src-elem listed before it', () => {
+    const elem = `script-src-elem 'self'; script-src ${MARKER} 'self'`
+    expect(splitPolicy(elem, '<head></head>')!.header).toBe("script-src-elem 'self'; script-src 'self' 'unsafe-inline'")
+  })
+
   it('declines a page without a head, or a policy without the marker, so the caller keeps it whole', () => {
     expect(splitPolicy(policy, '<script>a()</script>')).toBeUndefined()
     expect(splitPolicy("script-src 'self'", '<head></head>')).toBeUndefined()
