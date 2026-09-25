@@ -30,6 +30,15 @@ interface Recording {
   option: { name: string }
   member: Run
   blocked: Run
+  features: {
+    routing: { customId: string; handler: string | null; params: Record<string, string> | null }
+    cooldown: { command: string; refused: { name: string; message: string } | null }
+    validation: { command: string; refused: { name: string; message: string } | null }
+    presenter: {
+      command: string
+      answer: { embeds?: { title?: string; description?: string; color?: number }[]; flags?: number } | null
+    }
+  }
 }
 
 interface Run {
@@ -189,4 +198,88 @@ export function specReport(): { file: string; lines: string[] } {
   const suite = /describe\('([^']+)'/.exec(source)?.[1] ?? ''
   const tests = [...source.matchAll(/\bit\('([^']+)'/g)].map(match => match[1])
   return { file, lines: tests.map(test => `${suite} › ${test}`) }
+}
+
+/** What a feature row shows the reader get, as the example's recorded call produced it. */
+export type FeatureResult =
+  | { kind: 'route'; customId: string; handler: string; params: Record<string, string> }
+  | { kind: 'private'; command: string; text: string }
+  | { kind: 'embed'; command: string; title: string; text: string; color: string; private: boolean }
+
+/** A feature row: the declaration, and what it does, recorded from the examples. */
+export interface Feature {
+  title: string
+  body: string
+  file: string
+  code: string
+  href: string
+  result: FeatureResult
+}
+
+/** The feature rows, each pairing a typechecked example with the result its recorded call produced. */
+export function features(): Feature[] {
+  const { routing, cooldown, validation, presenter } = recording().features
+  const missing = (what: string): never => {
+    throw new Error(`generated/home/trace.json has no ${what}; run bun run home:trace`)
+  }
+  const embed = presenter.answer?.embeds?.[0] ?? missing('presenter answer')
+  const feature = (title: string, body: string, file: string, region: string, href: string, result: FeatureResult) => ({
+    title,
+    body,
+    file,
+    code: resolveExample(HOME_LINE, file, region),
+    href,
+    result,
+  })
+  return [
+    feature(
+      'Routes with parameters',
+      'A button’s customId is a pattern. The values it captures reach the guard and the handler.',
+      'controllers/button/card.button.controller.ts',
+      'defer',
+      guide('component-routing'),
+      {
+        kind: 'route',
+        customId: routing.customId,
+        handler: routing.handler ?? missing('route'),
+        params: routing.params ?? missing('route params'),
+      },
+    ),
+    feature(
+      'Cooldowns that answer',
+      'Limits are declared on the handler. A call over the limit is refused privately, with how long to wait.',
+      'controllers/slash/daily.slash.controller.ts',
+      'cooldown',
+      guide('cooldowns'),
+      { kind: 'private', command: cooldown.command, text: cooldown.refused?.message ?? missing('cooldown refusal') },
+    ),
+    feature(
+      'Input checked by a schema',
+      'A schema checks the options before the handler runs, and the handler’s parameter is typed by it.',
+      'controllers/slash/remind.slash.controller.ts',
+      'validate',
+      guide('validation'),
+      {
+        kind: 'private',
+        command: validation.command,
+        text: validation.refused?.message ?? missing('validation refusal'),
+      },
+    ),
+    feature(
+      'Answers in your style',
+      'A presenter draws MeoCord’s own answers, errors and loading, so they look like the rest of your bot.',
+      'presenters/brand.presenter.ts',
+      'presenter',
+      guide('presenters'),
+      {
+        kind: 'embed',
+        command: presenter.command,
+        title: embed.title ?? '',
+        text: embed.description ?? '',
+        color: `#${(embed.color ?? 0).toString(16).padStart(6, '0')}`,
+        // Discord's ephemeral flag.
+        private: ((presenter.answer?.flags ?? 0) & 64) !== 0,
+      },
+    ),
+  ]
 }

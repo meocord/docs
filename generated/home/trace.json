@@ -47,5 +47,41 @@
       "name": "GuardDeniedError",
       "message": "This command is for members."
     }
+  },
+  "features": {
+    "routing": {
+      "customId": "card/111/refresh",
+      "handler": "CardButtonController.refresh",
+      "params": {
+        "ownerId": "111"
+      }
+    },
+    "cooldown": {
+      "command": "/daily",
+      "refused": {
+        "name": "CooldownError",
+        "message": "Slow down: try again in 3s."
+      }
+    },
+    "validation": {
+      "command": "/remind minutes: 0",
+      "refused": {
+        "name": "ValidationError",
+        "message": "minutes: Too small: expected number to be >=1"
+      }
+    },
+    "presenter": {
+      "command": "/quote",
+      "answer": {
+        "embeds": [
+          {
+            "description": "Slow down: try again in 30s.",
+            "title": "Something went wrong",
+            "color": 14431557
+          }
+        ],
+        "flags": 64
+      }
+    }
   }
 }
