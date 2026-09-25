@@ -43,7 +43,8 @@ function NavRow(item: NavItem) {
         item.badge
           ? Span(item.badge, {
               fontSize: 'theme.type.caption.size',
-              color: 'theme.accent.default',
+              // On the current row's tint the default accent falls short of 4.5:1.
+              color: item.current ? 'theme.accent.hover' : 'theme.accent.default',
               border: '1px solid theme.accent.tint',
               borderRadius: 'theme.radius.chip',
               padding: '0 theme.space.1',

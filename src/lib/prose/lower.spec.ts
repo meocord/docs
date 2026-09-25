@@ -34,7 +34,7 @@ describe('lowerMarkdown', () => {
   it('frames code with its language, as written', () => {
     const out = html('```text\nbun run test   # once\n```')
     expect(out).toContain('<figure data-code="true">')
-    expect(out).toContain('<pre data-language="text"><code>bun run test   # once</code></pre>')
+    expect(out).toContain('<pre tabindex="0" data-language="text"><code>bun run test   # once</code></pre>')
   })
 
   it('embeds an ::example through the resolver, named by its file', () => {
@@ -42,7 +42,7 @@ describe('lowerMarkdown', () => {
       example: (file, region) => `// ${file} ${region}`,
     })
     expect(out).toContain('<span data-file="true">guards/rate-limit.ts</span>')
-    expect(out).toContain('<pre data-language="ts">')
+    expect(out).toContain('<pre tabindex="0" data-language="ts">')
     expect(out).toContain('// guards/rate-limit.ts guard')
   })
 

@@ -148,6 +148,11 @@ export const Prose = createNode('article', {
     // The copy glyph turns into a tick for a moment once the code is copied.
     '& [data-copy] [data-icon="copied"], & [data-copy][data-copied] [data-icon="copy"]': { display: 'none' },
     '& [data-copy][data-copied] [data-icon="copied"]': { display: 'block', color: 'theme.callout.tip.glyph' },
+    // A code block scrolls sideways, so it takes focus; the frame clips, so the ring sits inside it.
+    '& [data-code] pre:focus-visible': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: -2,
+    },
 
     '& blockquote': {
       margin: '0 0 theme.space.4',
