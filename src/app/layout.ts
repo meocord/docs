@@ -12,6 +12,8 @@ import { ogImage } from '@/lib/og/cards'
 import { mono, sans } from '@/app/fonts'
 
 export const viewport: Viewport = {
+  // Drawn to the screen's edges; the window keeps its content clear of the safe area itself.
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: dark)', color: '#161618' },
     { media: '(prefers-color-scheme: light)', color: '#f2f2f4' },

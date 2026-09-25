@@ -45,3 +45,23 @@ export function transitionCss(
     },
   }
 }
+
+/** A touch target: on a phone, at least 44px each way, the size a fingertip needs. */
+export const touchCss: ThemedCSSObject = {
+  '@media (width < theme.breakpoint.compact)': { minWidth: 44, minHeight: 44 },
+}
+
+/**
+ * A touch target that keeps its drawn size: on a phone, an invisible area at least 44px each way,
+ * centred on the control, takes the tap. For controls in dense rows, where growing them would crowd.
+ */
+export const hitAreaCss: ThemedCSSObject = {
+  '@media (width < theme.breakpoint.compact)': {
+    position: 'relative',
+    '&::after': { content: '""', position: 'absolute', inset: 'min(0px, calc((100% - 44px) / 2))' },
+  },
+}
+
+/** A length that also clears the device's safe area on one side, such as a notch or home indicator. */
+export const safe = (length: string, side: 'top' | 'right' | 'bottom' | 'left') =>
+  `max(${length}, env(safe-area-inset-${side}))`
