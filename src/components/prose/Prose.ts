@@ -95,6 +95,27 @@ export const Prose = createNode('article', {
 
     '& img': { maxWidth: '100%', height: 'auto' },
 
+    // API reference pages: the kind and entry line under the title, badges, linked signatures and
+    // doc comments, whose last paragraph sits flush with what follows.
+    '& [data-api-meta]': { margin: '-12px 0 theme.space.6', color: 'theme.ink.secondary' },
+    '& [data-badge]': {
+      display: 'inline-block',
+      fontSize: 'theme.type.caption.size',
+      lineHeight: 1.6,
+      fontWeight: 'theme.font.weight.regular',
+      letterSpacing: 0,
+      padding: '0 theme.space.1',
+      borderRadius: 'theme.radius.control',
+      border: '1px solid theme.accent.tint',
+      color: 'theme.accent.default',
+      verticalAlign: 'middle',
+    },
+    '& [data-badge="deprecated"]': { borderColor: 'theme.callout.warning.glyph', color: 'theme.callout.warning.glyph' },
+    '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
+    '& [data-doc] > :last-child': { marginBottom: 0 },
+    '& td [data-doc] p': { margin: 0 },
+    '& [data-since]': { whiteSpace: 'nowrap' },
+
     // The note on a page imported from a README, under its title.
     '& [data-source]': {
       margin: '-12px 0 theme.space.8',
