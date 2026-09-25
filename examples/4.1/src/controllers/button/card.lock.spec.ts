@@ -1,5 +1,4 @@
 import {
-  ActionRowBuilder,
   type APIActionRowComponent,
   type APIComponentInMessageActionRow,
   ButtonInteraction,
@@ -28,12 +27,12 @@ const card: APIActionRowComponent<APIComponentInMessageActionRow>[] = [
   },
 ]
 
-// A mock message showing the card; createMockMessage takes no components, so they are assigned
+// A click on a message showing the card: createMockMessage takes its components as API JSON
 const clickOnCard = (customId: string) =>
   createMockInteraction(ButtonInteraction, {
     customId,
     user: createMockInteraction(User, { id: '111' }),
-    message: Object.assign(createMockMessage(), { components: card.map(row => new ActionRowBuilder(row)) }),
+    message: createMockMessage({ components: card }),
   })
 // #endregion message
 
