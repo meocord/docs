@@ -67,8 +67,10 @@ community package may add one.
 - It is young, with a small community and no plugin ecosystem; what a plugin would add, you write as a
   service.
 - It is TypeScript only.
-- Message handlers match a whole message, not a prefix command with arguments.
-- One process runs one bot.
+- Message commands take params by pattern, as strings to validate, but have no typed options, generated
+  help or subcommand groups of their own.
+- A process runs one bot: two bots, each with its own token, take a process each. One bot can span processes,
+  a shard in each; see [Sharding](/docs/4.1/sharding).
 
 ## Try it
 
