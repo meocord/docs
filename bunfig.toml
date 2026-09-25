@@ -1,0 +1,3 @@
+[install]
+# Each examples/<line> workspace resolves its own meocord only with the isolated linker
+linker = "isolated"
