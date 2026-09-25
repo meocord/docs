@@ -4,7 +4,7 @@
  * emits with resolveStoredHref.
  */
 
-import { docsHref, type DocsTarget } from '../../src/lib/urls.js'
+import { docsHref, type DocsTarget } from '../../src/lib/urls'
 
 /** The stored form of a link: docsHref for a line that is not current, so it names the line. */
 export function storedHref(target: DocsTarget): string {

@@ -4,9 +4,9 @@
  */
 
 import GithubSlugger from 'github-slugger'
-import { rewriteLibraryLinks } from './changelog.js'
-import type { Fetch } from './registry.js'
-import { storedHref } from './stored-links.js'
+import { rewriteLibraryLinks } from './changelog'
+import type { Fetch } from './registry'
+import { storedHref } from './stored-links'
 
 export const LIBRARY_REPOSITORY = 'meocord/meocord'
 

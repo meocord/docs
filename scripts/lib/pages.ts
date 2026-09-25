@@ -5,8 +5,8 @@
 
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
-import { parsePage, type Frontmatter } from './content.js'
-import type { VersionsConfig } from './versions.js'
+import { parsePage, type Frontmatter } from './content'
+import type { VersionsConfig } from './versions'
 
 export interface PageEntry {
   id: string

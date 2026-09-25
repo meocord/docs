@@ -30,7 +30,10 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@meonode/ui": "^3.0.0",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm": "^3.1.0",
     "meo-canvas": "^10.0.4",
+    "micromark-extension-gfm": "^3.0.0",
     "next": "^16.3.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
@@ -46,6 +49,7 @@
     "@sigstore/tuf": "^5.0.0",
     "@sigstore/verify": "^4.1.2",
     "@types/bun": "^1.4.2",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

@@ -6,11 +6,11 @@
 
 import GithubSlugger from 'github-slugger'
 import { parse as parseYaml } from 'yaml'
-import type { ChangelogDocument } from './changelog.js'
-import { changelogAnchor } from '../../src/lib/urls.js'
-import { markdownAnchors } from './migrating.js'
-import { parseStored } from './stored-links.js'
-import type { VersionsConfig } from './versions.js'
+import type { ChangelogDocument } from './changelog'
+import { changelogAnchor } from '../../src/lib/urls'
+import { markdownAnchors } from './migrating'
+import { parseStored } from './stored-links'
+import type { VersionsConfig } from './versions'
 
 export interface SiteSnapshot {
   config: VersionsConfig

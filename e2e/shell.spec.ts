@@ -11,7 +11,7 @@ test('the first Tab reaches the skip link, which leads to the content', async ({
 })
 
 test('the sidebar marks the page being read', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/docs/latest/overview')
   const current = page.getByRole('navigation', { name: 'Documentation' }).locator('[aria-current="page"]')
   await expect(current).toHaveText('Overview')
 })
@@ -68,7 +68,7 @@ test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   test('the page fits the width, and the sidebar is a sheet opened from the toolbar', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/docs/latest/overview')
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
     await expect(page.getByRole('navigation', { name: 'Documentation' })).toBeHidden()
 
