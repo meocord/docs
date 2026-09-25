@@ -23,8 +23,9 @@ English; an exception filter that maps the issues to your own words is where to 
 ::example{file="controllers/slash/remind.slash.controller.spec.ts" region="spec"}
 
 Validation runs after guards and inside interceptors, so a logging interceptor sees a failure as the
-handler's error. It applies to command, component and modal handlers only: the bot refuses to start with
-`@Validate` or `@UsePipe` on a message, reaction, autocomplete or event handler. A handler takes one
+handler's error. It applies to command, component and modal handlers, and to message handlers with a pattern: the bot
+refuses to start with `@Validate` or `@UsePipe` on a handler for every message, or on a reaction,
+autocomplete or event handler. A handler takes one
 `@Validate`; combine the schemas into one.
 
 ## Pipes

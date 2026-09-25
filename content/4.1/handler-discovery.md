@@ -23,7 +23,7 @@ the entries' type to that kind. Each entry has `controller`, `method`, `kind` an
 | `component`    | The customId pattern, such as `profile/{uid}`  | `commandType`                                                 |
 | `modal`        | The customId pattern                           | `commandType`                                                 |
 | `autocomplete` | The command path, then the option it completes |                                                               |
-| `message`      | The keyword, or none for every message         |                                                               |
+| `message`      | The pattern, or none for every message         |                                                               |
 | `reaction`     | The emoji, or none for every reaction          |                                                               |
 | `event`        | The client event                               | `once`                                                        |
 

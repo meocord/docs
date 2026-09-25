@@ -2,12 +2,13 @@
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
 import { WelcomeController } from '@src/controllers/event/welcome.controller'
+import { DiceMessageController } from '@src/controllers/message/dice.message.controller'
 import { KeywordMessageController } from '@src/controllers/message/keyword.message.controller'
 import { StarReactionController } from '@src/controllers/reaction/star.reaction.controller'
 import { ReminderScheduler } from '@src/services/reminder.scheduler'
 
 @MeoCord({
-  controllers: [KeywordMessageController, StarReactionController, WelcomeController],
+  controllers: [DiceMessageController, KeywordMessageController, StarReactionController, WelcomeController],
   services: [ReminderScheduler],
   clientOptions: {
     intents: [
@@ -22,6 +23,8 @@ import { ReminderScheduler } from '@src/services/reminder.scheduler'
     ],
     partials: [Partials.Message, Partials.Reaction],
   },
+  // Patterned message handlers match after a !, or a mention of the bot
+  messages: { prefix: '!', mention: true },
 })
 export default class App {}
 // #endregion app

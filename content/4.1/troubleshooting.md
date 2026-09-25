@@ -101,8 +101,9 @@ A test can make a mock reject with any of them through `createDiscordError(code)
 ## Messages and reactions
 
 - **`@MessageHandler` never runs.** The bot needs the `GuildMessages` intent, and `MessageContent`, which is
-  privileged, to read what a message says. Messages from bots and messages with no text are skipped, and a
-  keyword matches the whole message, trimmed and case-sensitive. See
+  privileged, to read what a message says. Messages from bots and messages with no text are skipped. A
+  pattern matches after the app's prefix, or the handler's own, and only the most specific matching pattern
+  runs; `resolveRoute(App, { content })` shows which handler a message reaches. See
   [Messages and reactions](/docs/4.1/messages-and-reactions#intents).
 - **Reactions on older messages are missed.** Add the `Message` and `Reaction` partials to `clientOptions`.
 - **`@On(event)` never runs.** Most events need an intent; the bot warns at startup, "The … intent is not in
