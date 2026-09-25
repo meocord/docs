@@ -89,10 +89,10 @@ test.describe('on a phone', () => {
 })
 
 test.describe('the mark in the sidebar', () => {
-  // The visible ears path: the plain crown, or the crown with the inner ears cut out.
+  // The visible ear paths: each ear plain, or with its inner ear cut out.
   const visibleEars = (page: Page) =>
     page
-      .locator('aside a[href="/"] svg path[fill-rule="evenodd"]')
+      .locator('aside a[href="/"] svg [data-ear] path')
       .evaluateAll(paths =>
         paths.filter(path => getComputedStyle(path).display !== 'none').map(path => path.getAttribute('d') ?? ''),
       )
@@ -106,9 +106,9 @@ test.describe('the mark in the sidebar', () => {
       const page = await context.newPage()
       await page.goto('/')
       const ears = await visibleEars(page)
-      expect(ears).toHaveLength(1)
-      // The inner ears are the second and third subpaths of the notched drawing.
-      expect(ears[0].split('M').length - 1).toBe(notched ? 3 : 1)
+      // One path per ear; an ear's inner cut-out is the second subpath of its notched drawing.
+      expect(ears).toHaveLength(2)
+      for (const ear of ears) expect(ear.split('M').length - 1).toBe(notched ? 2 : 1)
       await context.close()
     })
   }
@@ -196,4 +196,29 @@ test('a sidebar label too long for its row ends in an ellipsis and keeps its ful
     return { clipped: el.scrollWidth > el.clientWidth, spill: row.scrollWidth - row.clientWidth }
   })
   expect(fits).toEqual({ clipped: true, spill: 0 })
+})
+
+test('the mark’s ears flick, on their own and when the brand is hovered', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/docs/4.1/guards')
+  const brand = page.locator('aside a[href="/"]')
+  const names = (side: string) =>
+    brand
+      .locator(`[data-ear="${side}"]`)
+      .evaluate(ear => ear.getAnimations().map(a => (a as CSSAnimation).animationName))
+  expect(await names('far')).toEqual(['ear-far'])
+  expect(await names('near')).toEqual(['ear-near'])
+  await brand.hover()
+  expect(await names('far')).toEqual(['ear-far', 'ear-far-once'])
+})
+
+test('the mark holds still for readers who ask for less motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/docs/4.1/guards')
+  const brand = page.locator('aside a[href="/"]')
+  await brand.hover()
+  for (const side of ['far', 'near']) {
+    await expect(brand.locator(`[data-ear="${side}"]`)).toHaveCSS('animation-name', 'none')
+  }
 })
