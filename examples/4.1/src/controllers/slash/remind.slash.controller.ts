@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from 'discord.js'
+import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, Controller, Validate } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
@@ -16,7 +16,10 @@ export class RemindSlashController {
   @Validate(Reminder)
   // The second parameter is checked against the schema's output: `{ minutes: string }` would not compile
   async remind(interaction: ChatInputCommandInteraction, { minutes, note }: z.output<typeof Reminder>) {
-    await respond(interaction).send({ content: `In ${minutes} minutes: ${note || 'a reminder'}`, ephemeral: true })
+    await respond(interaction).send({
+      content: `In ${minutes} minutes: ${note || 'a reminder'}`,
+      flags: MessageFlags.Ephemeral,
+    })
   }
 }
 // #endregion validate

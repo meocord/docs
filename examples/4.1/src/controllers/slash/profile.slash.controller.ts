@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, EmbedBuilder } from 'discord.js'
+import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, Controller } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
@@ -14,7 +14,7 @@ export class ProfileSlashController {
     // Deferred, so this edits the reply
     await respond(interaction).send({ embeds: [card] })
     // Private, and only this message: flags never carry over to the next call
-    await respond(interaction).followUp({ content: 'Tip: /profile works in DMs too.', ephemeral: true })
+    await respond(interaction).followUp({ content: 'Tip: /profile works in DMs too.', flags: MessageFlags.Ephemeral })
   }
   // #endregion respond
 }
