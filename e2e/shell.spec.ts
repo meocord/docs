@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 test('the first Tab reaches the skip link, which leads to the content', async ({ page }) => {
   await page.goto('/')
@@ -86,4 +86,30 @@ test.describe('on a phone', () => {
     await expect(sheet).toBeHidden()
     await expect(open).toBeFocused()
   })
+})
+
+test.describe('the mark in the sidebar', () => {
+  // The visible ears path: the plain crown, or the crown with the inner ears cut out.
+  const visibleEars = (page: Page) =>
+    page
+      .locator('aside a[href="/"] svg path[fill-rule="evenodd"]')
+      .evaluateAll(paths =>
+        paths.filter(path => getComputedStyle(path).display !== 'none').map(path => path.getAttribute('d') ?? ''),
+      )
+
+  for (const [scale, notched] of [
+    [1, false],
+    [3, true],
+  ] as const) {
+    test(`draws the ${notched ? 'notched' : 'plain'} ears at ${scale}x`, async ({ browser }) => {
+      const context = await browser.newContext({ deviceScaleFactor: scale })
+      const page = await context.newPage()
+      await page.goto('/')
+      const ears = await visibleEars(page)
+      expect(ears).toHaveLength(1)
+      // The inner ears are the second and third subpaths of the notched drawing.
+      expect(ears[0].split('M').length - 1).toBe(notched ? 3 : 1)
+      await context.close()
+    })
+  }
 })
