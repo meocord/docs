@@ -17,13 +17,22 @@ describe('the docs site data', () => {
     expect(items.filter(item => item.current).map(item => item.title)).toEqual(['Guards'])
     expect(items.find(item => item.title === 'Guards')?.href).toBe('/docs/latest/guards')
     expect(sidebar('4.1').flatMap(group => group.items)[0].href).toMatch(/^\/docs\/4\.1\//)
+    expect(groups.at(-1)).toEqual({
+      title: 'Reference',
+      items: [
+        { title: 'Migrating', href: '/docs/latest/migrating', current: false },
+        { title: 'Changelog', href: '/docs/latest/changelog', current: false },
+      ],
+    })
   })
 
-  it('keeps the page when switching lines, and lands on the line otherwise', () => {
+  it('keeps the page when switching lines, and says so on a line without it', () => {
     const { current, options } = versionChoices('4.0', 'guards')
     expect(current).toMatchObject({ label: '4.0', href: '/docs/latest/guards' })
     expect(options.find(option => option.label === '4.1')?.href).toBe('/docs/4.1/guards')
-    expect(versionChoices('4.0', 'no-such-page').options.find(option => option.label === '4.1')?.href).toBe('/docs/4.1')
+    expect(versionChoices('4.0', 'no-such-page').options.find(option => option.label === '4.1')?.href).toBe(
+      '/docs/4.1/missing/no-such-page',
+    )
     expect(versionChoices('4.0').current.href).toBe('/docs/latest')
   })
 
