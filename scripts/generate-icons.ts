@@ -6,7 +6,8 @@
 import path from 'node:path'
 import { writeFileSync } from 'node:fs'
 import { Root } from 'meo-canvas'
-import { MARK_DARK, markNode, markSvg } from '../src/lib/brand/mark'
+import { markNode } from '../src/lib/brand/mark'
+import { MARK_DARK, markSvg } from '../src/lib/brand/mark-paths'
 import { packIco } from './ico'
 
 const PUBLIC = path.join(process.cwd(), 'public')

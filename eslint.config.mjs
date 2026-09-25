@@ -35,4 +35,22 @@ export default defineConfig([
       'unusedImports/no-unused-vars': ['error', unused],
     },
   },
+  {
+    // meo-canvas is a native addon for the icons script and the OG route; a page must not load it.
+    // src/lib/brand/page-imports.spec.ts checks the transitive case.
+    files: ['src/app/**', 'src/components/**'],
+    ignores: ['src/app/og/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'meo-canvas', message: 'Pages do not load meo-canvas; draw with @/lib/brand/mark-paths.' },
+            { name: '@/lib/brand/mark', message: 'It loads meo-canvas; use @/lib/brand/mark-paths.' },
+            { name: '@/lib/og/render', message: 'It loads meo-canvas; only the OG route draws cards.' },
+          ],
+        },
+      ],
+    },
+  },
 ])

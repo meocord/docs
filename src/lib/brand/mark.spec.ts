@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Root } from 'meo-canvas'
-import { MARK_DARK, MARK_PATHS, markNode, markSvg } from '@/lib/brand/mark'
+import { markNode } from '@/lib/brand/mark'
+import { MARK_DARK, MARK_PATHS, markSvg } from '@/lib/brand/mark-paths'
 
 async function pixels16() {
   const canvas = await Root({ width: 16, height: 16, children: markNode(16) })

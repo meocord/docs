@@ -1,7 +1,8 @@
 import path from 'node:path'
 import { cacheLife } from 'next/cache'
 import { Box, Column, type FontRegistration, Root, Row, Text } from 'meo-canvas'
-import { MARK_DARK, markNode } from '@/lib/brand/mark'
+import { markNode } from '@/lib/brand/mark'
+import { MARK_DARK } from '@/lib/brand/mark-paths'
 import type { OgCard } from '@/lib/og/cards'
 
 const FONT_DIR = path.join(process.cwd(), 'assets', 'fonts')
