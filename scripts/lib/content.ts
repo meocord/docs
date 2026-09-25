@@ -26,7 +26,7 @@ export interface SiteSnapshot {
   apis: Set<string>
   /** Each version's configuration reference, from generated/config/<version>.json. */
   configs: Record<string, ConfigDocument | undefined>
-  /** Example files per line, keyed by their path under examples/<line>/. */
+  /** Example files per line, and for `compare`, keyed by their path under examples/<name>/. */
   examples: Record<string, Record<string, string>>
 }
 
@@ -87,6 +87,8 @@ export function fenceLanguages(markdown: string): string[] {
 
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
+/** The one examples folder an ::example may name with `from`, beside its own line's. */
+export const EXAMPLE_SOURCE = 'compare'
 
 /** The anchors of a page's headings, as GitHub and the site give them. */
 export function pageAnchors(body: string): Set<string> {
@@ -209,9 +211,17 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
         const attributes = Object.fromEntries(
           [...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]),
         )
-        const source = attributes.file ? site.examples[name]?.[`src/${attributes.file}`] : undefined
+        // `from="compare"` reads the other frameworks' code in examples/compare, shared by every line
+        const from = attributes.from ?? name
+        if (attributes.from !== undefined && attributes.from !== EXAMPLE_SOURCE) {
+          problems.push(
+            `${where}: an ::example reads from "${attributes.from}", but only "${EXAMPLE_SOURCE}" can be named`,
+          )
+          continue
+        }
+        const source = attributes.file ? site.examples[from]?.[`src/${attributes.file}`] : undefined
         if (!attributes.file) problems.push(`${where}: an ::example names no file`)
-        else if (source === undefined) problems.push(`${where}: examples/${name}/src/${attributes.file} does not exist`)
+        else if (source === undefined) problems.push(`${where}: examples/${from}/src/${attributes.file} does not exist`)
         else if (
           attributes.region &&
           !(
@@ -219,7 +229,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
             source.includes(`// #endregion ${attributes.region}`)
           )
         ) {
-          problems.push(`${where}: examples/${name}/src/${attributes.file} has no region "${attributes.region}"`)
+          problems.push(`${where}: examples/${from}/src/${attributes.file} has no region "${attributes.region}"`)
         }
       }
       checkLinks(where, body, { line: name, set }, () => anchorsOf(set, name, slug))

@@ -108,7 +108,7 @@ export function guidePage(line: string, slug: string): GuidePage | undefined {
 
   const lowered = lowerMarkdown(page.body, {
     href: url => resolveStoredHref(url, VERSIONS),
-    example: (file, region) => resolveExample(line, file, region),
+    example: (file, region, from) => resolveExample(from ?? line, file, region),
   })
   const toc = lowered.headings
     .filter(heading => heading.depth === 2 || heading.depth === 3)

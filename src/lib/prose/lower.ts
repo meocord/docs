@@ -16,8 +16,8 @@ export interface Heading {
 export interface LowerOptions {
   /** Maps a link as written to the href to render; stored `/docs/<line>/…` links go through urls.ts. */
   href?: (url: string) => string
-  /** The code an `::example{file="…" region="…"}` directive embeds. */
-  example?: (file: string, region?: string) => string
+  /** The code an `::example{file="…" region="…" from="…"}` directive embeds. */
+  example?: (file: string, region?: string, from?: string) => string
 }
 
 const EXAMPLE = /^::example\{([^}]*)\}$/
@@ -144,7 +144,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       [...attributes.matchAll(/(\w+)="([^"]*)"/g)].map(([, name, value]) => [name, value]),
     )
     if (!values.file || !options.example) return ''
-    return codeFrame(options.example(values.file, values.region), 'ts', { key, file: values.file })
+    return codeFrame(options.example(values.file, values.region, values.from), 'ts', { key, file: values.file })
   }
 
   function lowerTable(table: Table, key: number) {
