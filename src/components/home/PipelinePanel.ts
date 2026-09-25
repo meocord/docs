@@ -1,4 +1,4 @@
-import { createNode, Node } from '@meonode/ui'
+import { Button, Code, createNode, Div, H2, H3, Li, Node, Ol, P, Small, Span, Strong } from '@meonode/ui'
 import { markSvgNode } from '@/components/home/mark-node'
 import { PipelineIsland } from '@/components/home/PipelineIsland'
 import { hitAreaCss } from '@/lib/design/css'
@@ -256,24 +256,23 @@ const Panel = createNode('section', {
   },
 })
 
-function stageRow(stage: PipelineDemo['stages'][number]) {
-  return Node('li', {
-    key: stage.id,
-    'data-stage': stage.id,
+function stageRow({ id, line, narration, name, member, blocked }: PipelineDemo['stages'][number]) {
+  return Li({
+    key: id,
+    'data-stage': id,
     'data-state': 'done',
-    'data-line': stage.line,
-    'data-narration-text': stage.narration,
+    'data-line': line,
+    'data-narration-text': narration,
     children: [
-      Node('span', { key: 'dot', 'data-dot': true, 'aria-hidden': true }),
-      Node('span', { key: 'name', 'data-stage-name': true, children: stage.name }),
-      Node('span', {
-        key: 'note',
-        'data-note': true,
-        children: [
-          Node('span', { key: 'member', 'data-for': 'member', children: stage.member }),
-          Node('span', { key: 'blocked', 'data-for': 'blocked', children: stage.blocked }),
+      Span(null, { key: 'dot', 'data-dot': true, 'aria-hidden': true }),
+      Span(name, { key: 'name', 'data-stage-name': true }),
+      Span(
+        [
+          Span(member, { key: 'member', 'data-for': 'member' }),
+          Span(blocked, { key: 'blocked', 'data-for': 'blocked' }),
         ],
-      }),
+        { key: 'note', 'data-note': true },
+      ),
     ],
   })
 }
@@ -281,32 +280,29 @@ function stageRow(stage: PipelineDemo['stages'][number]) {
 function reply(kind: 'thinking' | 'member' | 'blocked', demo: PipelineDemo) {
   const said =
     kind === 'thinking'
-      ? Node('div', { 'data-said': true, 'data-thinking': true, children: 'greeter is thinking…' })
+      ? Div({ 'data-said': true, 'data-thinking': true, children: 'greeter is thinking…' })
       : kind === 'member'
-        ? Node('div', { 'data-said': true, children: demo.memberReply })
-        : Node('div', {
+        ? Div({ 'data-said': true, children: demo.memberReply })
+        : Div({
             'data-said': true,
             children: [
-              Node('div', { key: 'private', 'data-private': true, children: 'Only you can see this' }),
-              Node('div', { key: 'reason', children: demo.blockedReply }),
+              Div({ key: 'private', 'data-private': true, children: 'Only you can see this' }),
+              Div({ key: 'reason', children: demo.blockedReply }),
             ],
           })
-  return Node('div', {
+  return Div({
     key: kind,
     'data-message': true,
     'data-reply': kind,
     children: [
-      Node('div', { key: 'avatar', 'data-avatar': 'bot', 'aria-hidden': true, children: markSvgNode(18) }),
-      Node('div', {
+      Div({ key: 'avatar', 'data-avatar': 'bot', 'aria-hidden': true, children: markSvgNode(18) }),
+      Div({
         key: 'body',
         children: [
-          Node('div', {
+          Div({
             key: 'who',
             'data-who': true,
-            children: [
-              Node('strong', { key: 'n', children: 'greeter' }),
-              Node('span', { key: 'a', 'data-app': true, children: 'APP' }),
-            ],
+            children: [Strong('greeter', { key: 'n' }), Span('APP', { key: 'a', 'data-app': true })],
           }),
           said,
         ],
@@ -322,62 +318,50 @@ export function PipelinePanel(demo: PipelineDemo) {
     'data-answered': true,
     'aria-labelledby': 'pipeline-title',
     children: [
-      Node('div', {
+      Div({
         key: 'bar',
         'data-bar': true,
         children: [
-          Node('h2', { key: 'title', id: 'pipeline-title', children: 'One call, through the pipeline' }),
-          Node('div', {
+          H2('One call, through the pipeline', { key: 'title', id: 'pipeline-title' }),
+          Div({
             key: 'who',
             role: 'group',
             'aria-label': 'Who uses the command',
             'data-segments': true,
             children: [
-              Node('button', { key: 'm', type: 'button', 'data-choose': 'member', children: 'Member' }),
-              Node('button', { key: 'b', type: 'button', 'data-choose': 'blocked', children: 'Blocked user' }),
+              Button('Member', { key: 'm', type: 'button', 'data-choose': 'member' }),
+              Button('Blocked user', { key: 'b', type: 'button', 'data-choose': 'blocked' }),
             ],
           }),
-          Node('button', { key: 'step', type: 'button', 'data-step': true, children: 'Step' }),
-          Node('button', { key: 'run', type: 'button', 'data-run': true, children: `Run ${demo.command}` }),
+          Button('Step', { key: 'step', type: 'button', 'data-step': true }),
+          Button(`Run ${demo.command}`, { key: 'run', type: 'button', 'data-run': true }),
         ],
       }),
-      Node('div', {
+      Div({
         key: 'panes',
-        'data-panes': true,
-        // In the order they are drawn, so a page painted before it has all arrived draws each pane
+        'data-panes': true, // In the order they are drawn, so a page painted before it has all arrived draws each pane
         // where it stays.
         children: [
-          Node('div', {
-            key: 'code',
-            'data-pane': 'code',
-            children: codeFrame(demo.source, 'ts', { file: demo.file }),
-          }),
-          Node('div', {
+          Div({ key: 'code', 'data-pane': 'code', children: codeFrame(demo.source, 'ts', { file: demo.file }) }),
+          Div({
             key: 'channel',
             'data-pane': 'channel',
             children: [
-              Node('div', { key: 'name', 'data-channel-name': true, children: '# general' }),
-              Node('div', {
+              Div({ key: 'name', 'data-channel-name': true, children: '# general' }),
+              Div({
                 key: 'used',
                 'data-message': true,
                 children: [
-                  Node('div', { key: 'avatar', 'data-avatar': 'user', 'aria-hidden': true }),
-                  Node('div', {
+                  Div({ key: 'avatar', 'data-avatar': 'user', 'aria-hidden': true }),
+                  Div({
                     key: 'body',
                     children: [
-                      Node('div', {
+                      Div({
                         key: 'who',
                         'data-who': true,
-                        children: [
-                          Node('strong', { key: 'n', children: 'ada' }),
-                          Node('small', { key: 's', children: `used ${demo.command}` }),
-                        ],
+                        children: [Strong('ada', { key: 'n' }), Small(`used ${demo.command}`, { key: 's' })],
                       }),
-                      Node('div', {
-                        key: 'said',
-                        'data-said': true,
-                        children: Node('code', { children: `${demo.command} name:${demo.option}` }),
-                      }),
+                      Div({ key: 'said', 'data-said': true, children: Code(`${demo.command} name:${demo.option}`) }),
                     ],
                   }),
                 ],
@@ -387,31 +371,21 @@ export function PipelinePanel(demo: PipelineDemo) {
               reply('blocked', demo),
             ],
           }),
-          Node('div', {
+          Div({
             key: 'trace',
             'data-pane': 'trace',
             children: [
-              Node('h3', { key: 'h', children: 'Trace' }),
-              Node('ol', { key: 'stages', children: demo.stages.map(stageRow) }),
+              H3('Trace', { key: 'h' }),
+              Ol({ key: 'stages', children: demo.stages.map(stageRow) }),
               // Each stage's sentence laid under the one shown, unseen, so the trace stands as tall as
               // its longest and nothing moves as the call steps through.
-              Node('div', {
+              Div({
                 key: 'narration',
                 'data-narration-box': true,
                 children: [
-                  Node('p', {
-                    key: 'live',
-                    'data-narration': true,
-                    'aria-live': 'polite',
-                    children: demo.stages.at(-1)?.narration,
-                  }),
-                  ...demo.stages.map((stage, index) =>
-                    Node('p', {
-                      key: index,
-                      'data-narration-sizer': true,
-                      'aria-hidden': true,
-                      children: stage.narration,
-                    }),
+                  P(demo.stages.at(-1)?.narration, { key: 'live', 'data-narration': true, 'aria-live': 'polite' }),
+                  ...demo.stages.map(({ id, narration }) =>
+                    P(narration, { key: id, 'data-narration-sizer': true, 'aria-hidden': true }),
                   ),
                 ],
               }),
