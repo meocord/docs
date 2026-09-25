@@ -23,14 +23,34 @@ Read the [migration guide](docs/MIGRATING.md#upgrading), the [license](./LICENSE
 
 ### Passing options
 
-Back to [installing](#install).
+Back to [installing](#install). See [Contributing](#contributing), [License](#license), [notes](#release-notes) and [changes](#changelog).
+
+## Contributing
+
+Issues welcome.
+
+### Setup
+
+Clone it.
+
+## Release Notes
+
+See the changelog.
+
+## Changelog
+
+Every release.
+
+## License
+
+MIT.
 `
 
 const imported = importReadme(README, { line: '4.0', commitUrl: 'https://github.com/meocord/meocord/blob/abc' })
 const page = (slug: string) => imported.pages.find(entry => entry.slug === slug)!
 
 describe('importReadme', () => {
-  it('makes a page per section, the intro as the overview, and skips the table of contents', () => {
+  it('makes a page per section, the intro as the overview, and skips the sections that are not guides', () => {
     expect(imported.pages.map(entry => [entry.slug, entry.title])).toEqual([
       ['overview', 'Overview'],
       ['getting-started', 'Getting Started'],
@@ -55,6 +75,15 @@ describe('importReadme', () => {
     expect(page('getting-started').body).toContain('(https://github.com/meocord/meocord/blob/abc/LICENSE)')
     expect(page('getting-started').body).toContain('(/docs/4.0/guards#passing-options)')
     expect(page('guards').body).toContain('[installing](/docs/4.0/getting-started#install)')
+  })
+
+  it('points links to a skipped section at what replaces it', () => {
+    expect(page('guards').body).toContain(
+      'See [Contributing](https://github.com/meocord/meocord/blob/abc/CONTRIBUTING.md), ' +
+        '[License](https://github.com/meocord/meocord/blob/abc/LICENSE), ' +
+        '[notes](/docs/4.0/changelog) and [changes](/docs/4.0/changelog).',
+    )
+    expect(page('guards').body).not.toContain('Issues welcome')
   })
 })
 
