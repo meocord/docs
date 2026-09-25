@@ -1507,6 +1507,9 @@
   "meocord/testing:createMockMessage": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:createMockMessage(overrides)": {
+    "since": "4.1.0-beta.1"
+  },
   "meocord/testing:createMockUser": {
     "since": "4.0.0-beta.0"
   },
@@ -1746,6 +1749,24 @@
   },
   "meocord/testing:MockInstance.mockReturnValueOnce(value)": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:MockMessageOverrides": {
+    "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.components": {
+    "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.content": {
+    "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.embeds": {
+    "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.flags": {
+    "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.id": {
+    "since": "4.1.0-beta.1"
   },
   "meocord/testing:MockProps": {
     "since": "4.0.0-beta.0"
