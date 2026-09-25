@@ -7,38 +7,26 @@
  * read as ears; below that the cut-outs would blur, so the crown's silhouette is drawn plain.
  *
  * Data only, so pages can draw it as inline SVG without loading meo-canvas; the meo-canvas node that
- * the icons and OG cards draw is in mark.ts.
+ * the icons and OG cards draw is in mark.ts. It is all read from mark.json, a verbatim copy of the
+ * meocord repository's tools/brand/mark.json that `bun run brand:check` holds to meocord main; update it
+ * with `bun run brand:sync`, never by hand.
  */
-export const MARK_VIEWBOX = [0, 0, 16, 16] as const
+
+import mark from './mark.json'
+
+export const MARK_VIEWBOX = mark.viewBox as [number, number, number, number]
 
 /** The smallest size, in device pixels, that draws the inner ears. */
-export const NOTCH_MIN_SIZE = 48
+export const NOTCH_MIN_SIZE = mark.notchMinSize
 
-export const MARK_PATHS = {
-  /** Both ears, joined by the curve of the head's crown between them. */
-  crown:
-    'M2.4 12Q1.9 7.2 3.4 4.1Q4.1 2.8 5 3.8Q6.4 5.6 7.3 8Q8.4 7.6 9.6 8.4Q11 6.9 12.9 6.1Q13.9 5.3 14.1 6.4Q14.3 9.3 13.4 12Z',
-  /** The inner ears, cut out of the crown (even-odd) at the larger size. */
-  inner: 'M3.7 9.6Q3.6 7 4.3 5.6Q5.6 7.4 6.2 9.6ZM10.8 9.8Q11.8 8.3 12.9 7.6Q13.1 8.8 12.8 9.8Z',
-  /** The cord they peek over, drawn in front of them. */
-  cord: 'M2.25 10.5H13.75Q15 10.5 15 11.75Q15 13 13.75 13H2.25Q1 13 1 11.75Q1 10.5 2.25 10.5Z',
-} as const
+/** The crown (both ears, joined by the head between them), the inner ears cut out of it, and the cord. */
+export const MARK_PATHS = { crown: mark.paths.crown, inner: mark.paths.inner, cord: mark.paths.cord }
 
 /**
  * The crown split at the valley between the ears, where they turn when they flick: each ear with its
- * share of the head, overlapping the other by 0.3 from y 8.9 down, so no seam opens as they move and
- * nothing overlaps above the valley.
+ * share of the head, the two overlapping only in the solid crown below the valley.
  */
-export const MARK_EARS = {
-  near: {
-    crown: 'M2.4 12Q1.9 7.2 3.4 4.1Q4.1 2.8 5 3.8Q6.4 5.6 7.3 8Q8.4 7.6 9.6 8.4V8.9H9.9V12Z',
-    inner: 'M3.7 9.6Q3.6 7 4.3 5.6Q5.6 7.4 6.2 9.6Z',
-  },
-  far: {
-    crown: 'M9.6 8.4Q11 6.9 12.9 6.1Q13.9 5.3 14.1 6.4Q14.3 9.3 13.4 12H9.3V8.9H9.6Z',
-    inner: 'M10.8 9.8Q11.8 8.3 12.9 7.6Q13.1 8.8 12.8 9.8Z',
-  },
-} as const
+export const MARK_EARS = mark.paths.ears
 
 /** The ears' path for a size in device pixels: notched from NOTCH_MIN_SIZE up, the plain crown below. */
 export function earsPath(size: number): string {
@@ -46,7 +34,7 @@ export function earsPath(size: number): string {
 }
 
 /** Tile corner radius, in grid units. */
-export const MARK_TILE_RADIUS = 3.5
+export const MARK_TILE_RADIUS = mark.tileRadius
 
 export interface MarkColours {
   tile: string
@@ -55,17 +43,18 @@ export interface MarkColours {
 }
 
 /** The graphite tile the favicon and app icons use: it holds on light and dark tab strips alike. */
-export const MARK_DARK: MarkColours = { tile: '#1E1E21', ink: 'rgba(255,255,255,0.88)', accent: '#8C98FF' }
+export const MARK_DARK: MarkColours = mark.colours.dark
 
 /**
  * The mark as SVG, following the reader's colour scheme, for the favicon: browsers draw it at tab
  * size, so it is the plain crown. The tile is left out so the tab's own colour shows around it.
  */
 export function markSvg(): string {
+  const { light, dark } = mark.colours.scheme
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MARK_VIEWBOX.join(' ')}">`,
-    '<style>.e{fill:#161618;fill-opacity:.88}.c{fill:#4B5BD7}',
-    '@media (prefers-color-scheme:dark){.e{fill:#fff}.c{fill:#8C98FF}}</style>',
+    `<style>.e{fill:${light.ink};fill-opacity:${light.inkOpacity}}.c{fill:${light.accent}}`,
+    `@media (prefers-color-scheme:dark){.e{fill:${dark.ink};fill-opacity:${dark.inkOpacity}}.c{fill:${dark.accent}}}</style>`,
     `<path class="e" d="${MARK_PATHS.crown}"/>`,
     `<path class="c" d="${MARK_PATHS.cord}"/>`,
     '</svg>',

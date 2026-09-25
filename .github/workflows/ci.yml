@@ -62,6 +62,8 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
       - run: bun run content:check
+      # The mark, a verbatim copy of meocord main's tools/brand/mark.json
+      - run: bun run brand:check
       - run: bun run examples:check
       # The home page's pipeline demo, recorded from the example it shows
       - run: bun run home:trace --check
