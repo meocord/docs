@@ -1,4 +1,4 @@
-import { type ButtonInteraction, EmbedBuilder } from 'discord.js'
+import { type ButtonInteraction, EmbedBuilder, MessageFlags } from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, Controller, Defer, UseGuard } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
@@ -31,7 +31,7 @@ export class CardButtonController {
   @Command('card/{ownerId}/export', CommandType.BUTTON)
   @Defer({ disable: 'clicked' })
   async export(interaction: ButtonInteraction) {
-    await respond(interaction).followUp({ content: 'Your export is ready.', ephemeral: true })
+    await respond(interaction).followUp({ content: 'Your export is ready.', flags: MessageFlags.Ephemeral })
   }
   // #endregion clicked
 }
