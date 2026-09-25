@@ -83,6 +83,12 @@
   "meocord/common:createMetadata(description)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:createToken": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/common:createToken(description)": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/common:createTranslator": {
     "since": "4.1.0-beta.0"
   },
@@ -939,6 +945,12 @@
   "meocord/decorator:Guard(options)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/decorator:Inject": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/decorator:Inject(token)": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/decorator:Interceptor": {
     "since": "4.1.0-beta.0"
   },
@@ -1111,6 +1123,15 @@
   "meocord/interface:CallHandler.handle": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/interface:ClassProvider": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ClassProvider.provide": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ClassProvider.useClass": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/interface:CommandBuilderBase": {
     "since": "4.0.0-beta.0"
   },
@@ -1197,6 +1218,18 @@
   },
   "meocord/interface:ExceptionFilter.catch(error)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/interface:FactoryProvider": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:FactoryProvider.inject": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:FactoryProvider.provide": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:FactoryProvider.useFactory": {
+    "since": "4.1.0-beta.3"
   },
   "meocord/interface:GuardInterface": {
     "since": "4.0.0-beta.0"
@@ -1309,6 +1342,12 @@
   "meocord/interface:PresentedError.message": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/interface:Provider": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ProviderToken": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/interface:ReactionHandlerOptions": {
     "since": "4.0.0-beta.0"
   },
@@ -1420,6 +1459,18 @@
   "meocord/interface:StandardSchemaV1Result": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/interface:Token": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ValueProvider": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ValueProvider.provide": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/interface:ValueProvider.useValue": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/testing:ChatInputOptions": {
     "since": "4.0.0-beta.0"
   },
@@ -1436,10 +1487,15 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/testing:ClassProvider.provide": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.3"
   },
   "meocord/testing:ClassProvider.useClass": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.3"
+  },
+  "meocord/testing:clearAllMocks": {
+    "since": "4.1.0-beta.3"
   },
   "meocord/testing:ComponentCommandType": {
     "since": "4.0.0-beta.5"
@@ -1545,6 +1601,9 @@
   },
   "meocord/testing:expectCompleteCatalog(translator)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/testing:FactoryProvider": {
+    "since": "4.1.0-beta.3"
   },
   "meocord/testing:findRouteConflicts": {
     "since": "4.0.0-beta.5"
@@ -1798,6 +1857,12 @@
   "meocord/testing:Provider": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:ProviderToken": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/testing:resetAllMocks": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/testing:ResolvedRoute": {
     "since": "4.0.0-beta.5"
   },
@@ -1858,6 +1923,12 @@
   "meocord/testing:TestingModule.constructor(eventClasses)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:TestingModule.constructor(order)": {
+    "since": "4.1.0-beta.3"
+  },
+  "meocord/testing:TestingModule.constructor(providers)": {
+    "since": "4.1.0-beta.3"
+  },
   "meocord/testing:TestingModule.emit": {
     "since": "4.1.0-beta.0"
   },
@@ -1872,6 +1943,9 @@
   },
   "meocord/testing:TestingModule.get(token)": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:TestingModule.init": {
+    "since": "4.1.0-beta.3"
   },
   "meocord/testing:TestingModule.invoke": {
     "since": "4.1.0-beta.0"
@@ -1937,9 +2011,11 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/testing:ValueProvider.provide": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.3"
   },
   "meocord/testing:ValueProvider.useValue": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.3"
   }
 }
