@@ -20,3 +20,5 @@ CLAUDE.md
 /public/_pagefind/
 /public/palette/
 /.search/
+# The reference's formatted code, by `bun run api:layout`
+/.api-layout/

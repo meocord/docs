@@ -23,6 +23,7 @@ export default defineConfig([
     'public/_pagefind/**',
     'public/palette/**',
     '.search/**',
+    '.api-layout/**',
     'coverage/**',
     'playwright-report/**',
     'test-results/**',

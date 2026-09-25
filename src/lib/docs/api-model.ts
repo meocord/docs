@@ -1,4 +1,5 @@
 import type { JSONOutput } from 'typedoc'
+import type { DecoratorTarget } from '@/lib/docs/api-layout'
 import type { VersionsManifest } from '@/lib/urls'
 import { docsHref, entrySegment, memberAnchor } from '@/lib/urls'
 
@@ -31,7 +32,8 @@ export interface ApiSignature {
   /** Markdown. */
   description: string
   params: ApiParam[]
-  returns?: { type: Token[]; description: string }
+  /** Its type, and what it decorates when the function is a decorator factory. */
+  returns?: { type: Token[]; description: string; decorates?: DecoratorTarget }
   throws: string[]
   examples: string[]
 }
@@ -106,6 +108,7 @@ const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 export class ApiModel {
   readonly #byId = new Map<number, Location>()
   readonly #declarations = new Map<string, { entry: string; declaration: Declaration }>()
+  readonly #aliases = new Map<number, SomeType>()
 
   constructor(
     readonly line: string,
@@ -122,6 +125,7 @@ export class ApiModel {
           declaration,
         })
         this.#byId.set(declaration.id, { entry: entryModule.name, symbol: declaration.name })
+        if (declaration.kind === 2097152 && declaration.type) this.#aliases.set(declaration.id, declaration.type)
         for (const member of declaration.children ?? []) {
           if (SAFE_NAME.test(member.name)) {
             this.#byId.set(member.id, { entry: entryModule.name, symbol: declaration.name, member: member.name })
@@ -235,7 +239,11 @@ export class ApiModel {
       params,
       returns:
         returnsType && !isVoid(signature.type)
-          ? { type: returnsType, description: this.#parts(returns?.content ?? []) }
+          ? {
+              type: returnsType,
+              description: this.#parts(returns?.content ?? []),
+              decorates: signature.type && this.#decorates(signature.type),
+            }
           : undefined,
       throws: (signature.comment?.blockTags ?? [])
         .filter(tag => tag.tag === '@throws')
@@ -253,6 +261,31 @@ export class ApiModel {
       since: this.since[key]?.since,
       description: this.#text(parameter.comment),
     }
+  }
+
+  /** What a type decorates, when it is a decorator: TypeScript's decorator types, or a function of `target`. */
+  #decorates(type: SomeType, depth = 0): DecoratorTarget | undefined {
+    if (depth > 4) return undefined
+    if (type.type === 'reference') {
+      const alias = typeof type.target === 'number' ? this.#aliases.get(type.target) : undefined
+      if (alias) return this.#decorates(alias, depth + 1)
+      return BUILT_IN_DECORATORS[type.name]
+    }
+    if (type.type === 'intersection') {
+      const targets = new Set(type.types.map(each => this.#decorates(each, depth + 1)))
+      if (targets.size === 1) return [...targets][0]
+      return targets.size === 2 && targets.has('class') && targets.has('method') ? 'class or method' : undefined
+    }
+    const params = type.type === 'reflection' ? type.declaration.signatures?.[0]?.parameters : undefined
+    if (params?.[0]?.name !== 'target') return undefined
+    if (params.length === 1) return 'class'
+    if (params.length === 2) return 'property'
+    const index = params[2].type
+    return params.length === 3
+      ? index?.type === 'intrinsic' && index.name === 'number'
+        ? 'parameter'
+        : 'method'
+      : undefined
   }
 
   // Code for declarations, members and signatures
@@ -496,6 +529,13 @@ export class ApiModel {
           }),
       )
   }
+}
+
+const BUILT_IN_DECORATORS: Record<string, DecoratorTarget> = {
+  ClassDecorator: 'class',
+  MethodDecorator: 'method',
+  PropertyDecorator: 'property',
+  ParameterDecorator: 'parameter',
 }
 
 const literal = (value: unknown) =>

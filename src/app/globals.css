@@ -116,12 +116,16 @@ body {
  * Highlighted code: each token carries both themes' colours (src/lib/prose/highlight.ts), and the
  * mode in force picks one. Dark is the default, as for the palettes.
  */
-[data-code] code span {
+[data-code] code span,
+[data-signature] code span,
+code[data-type] span {
   color: var(--code-dark);
   font-style: var(--code-dark-font-style, normal);
 }
 
-:root[data-theme='light'] [data-code] code span {
+:root[data-theme='light'] [data-code] code span,
+:root[data-theme='light'] [data-signature] code span,
+:root[data-theme='light'] code[data-type] span {
   color: var(--code-light);
   font-style: var(--code-light-font-style, normal);
 }

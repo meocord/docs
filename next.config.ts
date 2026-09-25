@@ -25,8 +25,9 @@ const nextConfig: NextConfig = {
       './node_modules/@meo-canvas/win32-*/**/*',
       './assets/fonts/**/*',
     ],
-    // Where each line's search indexes are, for pages rendered at request time.
-    '/**': ['./.search/manifest.json'],
+    // Where each line's search indexes are, and the reference's formatted code, for pages rendered at
+    // request time.
+    '/**': ['./.search/manifest.json', './.api-layout/*.json'],
   },
   async rewrites() {
     return [

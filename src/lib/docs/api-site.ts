@@ -3,6 +3,7 @@ import path from 'node:path'
 import type { JSONOutput } from 'typedoc'
 import manifest from '../../../versions.json'
 import { VERSIONS } from '@/config/versions'
+import type { Layouts } from '@/lib/docs/api-layout'
 import { ApiModel, type SinceData } from '@/lib/docs/api-model'
 import { lineOf } from '@/lib/urls'
 
@@ -57,6 +58,29 @@ export function apiModel(line: string, version?: string): ApiModel | undefined {
     models.set(key, project && new ApiModel(line, project, VERSIONS, sinceData(), version))
   }
   return models.get(key)
+}
+
+const layouts = new Map<string, Layouts>()
+
+/**
+ * The formatted code for the API `apiModel(line, version)` shows, as `bun run api:layout` wrote it.
+ * A production build or server without it fails, so no page ships its code unformatted; a dev server
+ * started without it shows each display on one line.
+ */
+export function apiLayouts(
+  line: string,
+  version?: string,
+  production = process.env.NODE_ENV === 'production',
+): Layouts {
+  const source = version ?? lineVersions(line)[0]
+  if (!source) return {}
+  if (!layouts.has(source)) {
+    const file = path.join(process.cwd(), '.api-layout', `${source}.json`)
+    if (existsSync(file)) layouts.set(source, JSON.parse(readFileSync(file, 'utf8')) as Layouts)
+    else if (production) throw new Error(`No formatted code for ${source} at ${file}: run \`bun run api:layout\`.`)
+    else layouts.set(source, {})
+  }
+  return layouts.get(source)!
 }
 
 /** Every `{ line, entry, symbol }` a line's API page is prerendered for. */

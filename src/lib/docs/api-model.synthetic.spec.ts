@@ -221,3 +221,70 @@ describe('ApiModel, on every declaration shape', () => {
     expect(apiArticle(model.symbol('core', 'Mode')!).toc.map(entry => entry.id)).toEqual(['members', 'on'])
   })
 })
+
+describe('ApiModel, on what a function returns', () => {
+  const param = (name: string, type: unknown) => ({ id: id++, name, variant: 'param', kind: 32768, flags: {}, type })
+  const returning = (name: string, type: unknown) => decl({ name, kind: 64, signatures: [sig({ name, type })] })
+  const decorator = (...params: unknown[]) => ({
+    type: 'reflection',
+    declaration: decl({
+      name: '__type',
+      kind: 65536,
+      signatures: [sig({ name: '__type', parameters: params, type: str('void') })],
+    }),
+  })
+  const ref = (name: string, target?: number) => ({ type: 'reference', name, ...(target ? { target } : {}) })
+  const alias = decl({
+    name: 'Both',
+    kind: 2097152,
+    type: { type: 'intersection', types: [ref('ClassDecorator'), ref('MethodDecorator')] },
+  })
+  const factories = {
+    id: 0,
+    name: 'meocord',
+    variant: 'project',
+    kind: 1,
+    flags: {},
+    children: [
+      decl({
+        name: 'meocord/decorator',
+        kind: 2,
+        children: [
+          alias,
+          returning('OnClass', decorator(param('target', str('any')))),
+          returning('OnProperty', decorator(param('target', str('object')), param('propertyKey', str('string')))),
+          returning(
+            'OnMethod',
+            decorator(param('target', str('object')), param('key', str('string')), param('d', str('any'))),
+          ),
+          returning(
+            'OnParameter',
+            decorator(param('target', str('object')), param('key', str('string')), param('index', str('number'))),
+          ),
+          returning('Named', ref('PropertyDecorator')),
+          returning('Aliased', ref('Both', alias.id)),
+          returning('Mixed', { type: 'intersection', types: [ref('ClassDecorator'), ref('PropertyDecorator')] }),
+          returning('Callback', decorator(param('value', str('string')))),
+          returning('Plain', str('string')),
+        ],
+      }),
+    ],
+  } as unknown as JSONOutput.ProjectReflection
+  const decorators = new ApiModel('4.1', factories, versions)
+  const decorates = (name: string) => decorators.symbol('decorator', name)!.signatures[0].returns?.decorates
+
+  it('names the target of a decorator it returns, by its type or its parameters', () => {
+    expect(decorates('OnClass')).toBe('class')
+    expect(decorates('OnProperty')).toBe('property')
+    expect(decorates('OnMethod')).toBe('method')
+    expect(decorates('OnParameter')).toBe('parameter')
+    expect(decorates('Named')).toBe('property')
+    expect(decorates('Aliased')).toBe('class or method')
+  })
+
+  it('names nothing for a function that returns something else', () => {
+    expect(decorates('Mixed')).toBeUndefined()
+    expect(decorates('Callback')).toBeUndefined()
+    expect(decorates('Plain')).toBeUndefined()
+  })
+})
