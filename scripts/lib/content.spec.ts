@@ -40,7 +40,7 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
           title: 'Patch Changes',
           entries: [
             {
-              markdown: 'See [start](/docs/4.1/migrating#start) and [notes](/docs/4.1/changelog#4.1.0-beta.0).',
+              markdown: 'See [start](/docs/4.1/migrating#start) and [notes](/docs/4.1/changelog#v4.1.0-beta.0).',
               breaking: true,
             },
           ],
@@ -123,7 +123,8 @@ describe('checkSite', () => {
       '[b](/docs/4.0/nowhere)',
       '[c](/docs/4.0/guards#nowhere)',
       '[d](/docs/4.1/migrating#nowhere)',
-      '[e](/docs/4.1/changelog#4.0.0)',
+      '[e](/docs/4.1/changelog#v4.0.0)',
+      '[e2](/docs/4.1/changelog#4.1.0-beta.0)',
       '[f](#nowhere)',
       '[g](../README.md)',
       '[h](https://example.com/page.md)',
@@ -136,7 +137,8 @@ describe('checkSite', () => {
       'content/4.1/a.md: /docs/4.0/nowhere names no page of 4.0',
       'content/4.1/a.md: /docs/4.0/guards#nowhere names no heading of that page',
       'content/4.1/a.md: /docs/4.1/migrating#nowhere names no heading of the migration guide',
-      'content/4.1/a.md: /docs/4.1/changelog#4.0.0 names no version of 4.1',
+      'content/4.1/a.md: /docs/4.1/changelog#v4.0.0 names no version of 4.1',
+      'content/4.1/a.md: /docs/4.1/changelog#4.1.0-beta.0 names no version of 4.1',
       'content/4.1/a.md: no heading for #nowhere',
       'content/4.1/a.md: ../README.md does not point at a page of the site',
     ])
