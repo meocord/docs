@@ -38,6 +38,14 @@ is shared across calls, cannot inject it. It also gives the handler's arguments 
 `getInteraction()`, `getMessage()`, `getReaction()`), what is being handled (`getType()`), the controller and
 method (`getController()`, `getHandlerName()`), and the guard's own params (`getParams()`).
 
+`getHandlerParams<P>()` is the handler's params, its second argument: a command's options, a component's
+customId params or a modal's fields. It is not `getParams()`, which is the running stage's own
+`{ provide, params }` configuration. A guard sees the params raw, before validation and pipes; an
+[interceptor](/docs/4.1/interceptors#the-calls-params) and a [filter](/docs/4.1/exception-filters#the-calls-params)
+see them as they stand when they ask. `getArgs()` follows the same stages, so its second argument is always
+what `getHandlerParams()` returns. A patterned message handler has params too, those its pattern captures;
+both are `undefined` for a handler for every message, and for reaction and event handlers, which take none. In a unit test, `createExecutionContext(Controller, 'method', { handlerParams })` sets them.
+
 ## Where guards apply
 
 `@UseGuard` goes on a method, or on a controller for every handler it declares or inherits. For a subclass,
