@@ -15,7 +15,7 @@ const heading = (level: 'h1' | 'h2' | 'h3' | 'h4') => ({
  * node rather than one per paragraph.
  */
 export const Prose = createNode('article', {
-  maxWidth: 'theme.layout.prose',
+  maxWidth: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
   padding: 'theme.layout.sheetPad',
   fontSize: 'theme.type.body.size',
   lineHeight: 'theme.type.body.line',
@@ -38,7 +38,7 @@ export const Prose = createNode('article', {
       textDecorationThickness: '1px',
       textUnderlineOffset: '0.18em',
       textDecorationColor: 'theme.accent.tint',
-      borderRadius: 2,
+      borderRadius: 'theme.radius.chip',
     },
     '& a:hover': { textDecorationColor: 'currentColor' },
     '& a:focus-visible': {
@@ -55,8 +55,17 @@ export const Prose = createNode('article', {
       fontFamily: 'theme.font.mono',
       fontSize: '0.875em',
       padding: '0.1em 0.3em',
-      borderRadius: 4,
+      borderRadius: 'theme.radius.control',
       backgroundColor: 'theme.surface.fill',
+    },
+    // In a heading, code keeps the heading's size and weight and reads as code by its face and a tint
+    // of the accent, not by a block behind it.
+    '& :is(h1, h2, h3, h4) code': {
+      fontSize: '0.9em',
+      fontWeight: 'inherit',
+      padding: 0,
+      backgroundColor: 'transparent',
+      color: 'theme.accent.default',
     },
     // A code block in its frame: a header with the file or language and the copy button, then the code.
     '& [data-code]': {
@@ -65,6 +74,10 @@ export const Prose = createNode('article', {
       border: 'theme.line.width solid theme.line.hairline',
       backgroundColor: 'theme.surface.canvas',
       overflow: 'hidden',
+    },
+    '@media (width >= theme.breakpoint.wide)': {
+      // Code and tables may run a little past the prose measure, into the sheet's margin.
+      '& [data-code], & [data-table]': { marginInline: 'calc(-1 * theme.space.4)' },
     },
     '& [data-code] figcaption': {
       display: 'flex',

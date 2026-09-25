@@ -42,7 +42,7 @@ export const ThemeControl = Component(function ThemeControl() {
           height: 24,
           padding: 0,
           border: 'none',
-          borderRadius: 4,
+          borderRadius: 'theme.radius.chip',
           backgroundColor: 'transparent',
           color: 'theme.ink.secondary',
           cursor: 'pointer',

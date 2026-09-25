@@ -52,7 +52,7 @@ function VersionRow(option: VersionOption, current: VersionOption, close: () => 
     color: 'theme.ink.primary',
     css: { ...focusCss, '&:hover, &:focus-visible': { backgroundColor: 'theme.surface.fillHover' } },
     children: [
-      Span(null, { width: 6, height: 6, borderRadius: 'theme.radius.round', backgroundColor: DOT[option.status] }),
+      Span(null, { width: 6, height: 6, borderRadius: '50%', backgroundColor: DOT[option.status] }),
       Span(option.label, { flexGrow: 1, fontVariantNumeric: 'tabular-nums' }),
       option.date ? Span(option.date, { color: 'theme.ink.secondary', fontVariantNumeric: 'tabular-nums' }) : null,
       Span(Glyph('check'), { width: 16, color: 'theme.accent.default', visibility: selected ? 'visible' : 'hidden' }),
@@ -124,7 +124,7 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
     [
       Span(current.label),
       current.status === 'prerelease'
-        ? Span(null, { width: 6, height: 6, borderRadius: 'theme.radius.round', backgroundColor: DOT.prerelease })
+        ? Span(null, { width: 6, height: 6, borderRadius: '50%', backgroundColor: DOT.prerelease })
         : null,
       Span(Glyph('chevronDown'), { color: 'theme.ink.secondary', display: 'inline-flex' }),
     ],

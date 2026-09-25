@@ -2,7 +2,7 @@ import { A, Div, Footer } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { Inspector } from '@/components/shell/Inspector'
-import { SheetPane, SidebarPane } from '@/components/shell/panes'
+import { SheetCard, SheetPane, SidebarPane } from '@/components/shell/panes'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { TocEntry } from '@/components/shell/types'
@@ -18,7 +18,7 @@ export interface WindowProps extends ToolbarProps {
 function SiteFooter() {
   return Footer({
     key: 'footer',
-    maxWidth: 'theme.layout.prose',
+    maxWidth: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
     margin: 'theme.space.16 0 0',
     padding: 'theme.space.6 theme.layout.sheetPad theme.space.10',
     borderTop: 'theme.line.width solid theme.line.hairline',
@@ -64,14 +64,20 @@ function SkipLink() {
 }
 
 /**
- * The docs window: the sidebar, then the toolbar over the reading sheet, then the inspector. Below the
- * compact breakpoint the sidebar becomes a sheet opened from the toolbar, and below the wide one the
- * inspector is not shown. Everything it draws comes from its props.
+ * The docs window, as a desktop app's: on the canvas, an inset material sidebar, and beside it the
+ * reading sheet, an elevated card whose header is the toolbar. Inside the sheet, the prose and the
+ * table of contents form one region, centred, so the page is balanced at any width. Below the compact
+ * breakpoint the sidebar becomes a sheet opened from the toolbar and the card fills the screen; below
+ * the wide one the table of contents is not shown. Everything it draws comes from its props.
  */
 export function Window({ crumbs, groups, version, repository, toc = [], inspector, children }: WindowProps) {
   return Div({
     display: 'flex',
+    alignItems: 'flex-start',
+    gap: 'theme.layout.gutter',
     minHeight: '100dvh',
+    padding: 'theme.layout.gutter',
+    css: { '@media (width < theme.breakpoint.compact)': { padding: 0, gap: 0 } },
     children: [
       SkipLink(),
       SidebarPane({
@@ -81,20 +87,17 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
         css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
         children: [Div({ padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }), SidebarNav({ groups })],
       }),
-      Div({
-        display: 'flex',
-        flexDirection: 'column',
-        flexGrow: 1,
-        // meonode sets flex-shrink: 0 on every node; the reading column has to give way to the viewport.
-        flexShrink: 1,
-        minWidth: 0,
+      SheetCard({
         children: [
           Toolbar({ crumbs, groups, version, repository }),
           Div({
             display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            gap: 'theme.space.12',
             flexGrow: 1,
-            minWidth: 0,
-            backgroundColor: 'theme.surface.sheet',
+            padding: '0 theme.space.6',
+            css: { '@media (width < theme.breakpoint.compact)': { padding: 0 } },
             children: [
               SheetPane({ tabIndex: -1, children: [children, SiteFooter()] }),
               Inspector({ toc, children: inspector }),

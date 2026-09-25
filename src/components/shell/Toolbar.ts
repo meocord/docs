@@ -40,7 +40,7 @@ function Breadcrumbs(crumbs: Crumb[]) {
                     href: crumb.href,
                     color: 'theme.ink.secondary',
                     textDecoration: 'none',
-                    borderRadius: 4,
+                    borderRadius: 'theme.radius.chip',
                     css: { ...focusCss, '&:hover': { color: 'theme.ink.primary' } },
                     children: crumb.title,
                   })
@@ -90,7 +90,7 @@ export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
         color: 'theme.ink.secondary',
         textDecoration: 'none',
         padding: '0 theme.space.1',
-        borderRadius: 4,
+        borderRadius: 'theme.radius.chip',
         css: {
           ...focusCss,
           '&:hover': { color: 'theme.ink.primary' },
