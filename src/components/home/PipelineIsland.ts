@@ -12,13 +12,23 @@ export function PipelineIsland() {
     const panel = document.querySelector<HTMLElement>('[data-pipeline]')
     if (!panel) return
     let started = false
+    // Controls pressed while the player loads, replayed once it attaches so no press is lost.
+    const pressed: HTMLElement[] = []
+    const onPress = (event: Event) => {
+      const control = (event.target as Element | null)?.closest<HTMLElement>('[data-choose], [data-run], [data-step]')
+      if (control) pressed.push(control)
+    }
     const start = (autoplay: boolean) => {
       if (started) return
       started = true
       observer.disconnect()
       panel.removeEventListener('pointerdown', onReach, true)
       panel.removeEventListener('focusin', onReach, true)
-      void import('@/components/home/pipeline-player').then(({ attach }) => attach(panel, { autoplay }))
+      void import('@/components/home/pipeline-player').then(({ attach }) => {
+        panel.removeEventListener('click', onPress, true)
+        attach(panel, { autoplay: autoplay && pressed.length === 0 })
+        for (const control of pressed.splice(0)) control.click()
+      })
     }
     const onReach = () => start(false)
     const observer = new IntersectionObserver(entries => entries.some(entry => entry.isIntersecting) && start(true), {
@@ -27,8 +37,10 @@ export function PipelineIsland() {
     observer.observe(panel)
     panel.addEventListener('pointerdown', onReach, true)
     panel.addEventListener('focusin', onReach, true)
+    panel.addEventListener('click', onPress, true)
     return () => {
       observer.disconnect()
+      panel.removeEventListener('click', onPress, true)
       panel.removeEventListener('pointerdown', onReach, true)
       panel.removeEventListener('focusin', onReach, true)
     }
