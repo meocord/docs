@@ -14,3 +14,7 @@ export declare class ShardContext {
     /** Calls a method in every shard. */
     call(method: string): Promise<unknown[]>;
 }
+/** Thrown when the application cannot start. */
+export declare class StartError extends Error {
+    constructor(message: string);
+}
