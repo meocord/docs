@@ -1,3 +1,6 @@
 [install]
 # Each examples/<line> workspace resolves its own meocord only with the isolated linker
 linker = "isolated"
+# meo-canvas finds its platform addon from wherever it is loaded, which under `next dev` is the
+# alias Next links into .next/dev/node_modules; hoisted, the addon resolves from there too
+publicHoistPattern = ["@meo-canvas/*"]
