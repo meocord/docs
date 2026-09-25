@@ -15,3 +15,8 @@ docs/superpowers/
 docs/plans/
 CLAUDE.md
 .claude/
+
+# Search indexes, built from the content by `bun run search:build`
+/public/_pagefind/
+/public/palette/
+/.search/

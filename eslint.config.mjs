@@ -19,6 +19,10 @@ export default defineConfig([
   ...tseslint.configs.recommended,
   globalIgnores([
     '.next/**',
+    // Search indexes built by `bun run search:build`
+    'public/_pagefind/**',
+    'public/palette/**',
+    '.search/**',
     'coverage/**',
     'playwright-report/**',
     'test-results/**',
