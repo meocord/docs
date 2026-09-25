@@ -46,6 +46,13 @@ describe('lowerMarkdown', () => {
     expect(out).toContain('// guards/rate-limit.ts guard')
   })
 
+  it('passes an ::example’s from to the resolver', () => {
+    const out = html('::example{from="compare" file="discordjs/bot.ts" region="client"}', {
+      example: (file, region, from) => `// ${from} ${file} ${region}`,
+    })
+    expect(out).toContain('// compare discordjs/bot.ts client')
+  })
+
   it('turns a GitHub alert into a callout, and leaves other quotes alone', () => {
     const out = html('> [!WARNING]\n> Mind the gap.\n\n> Just a quote.')
     expect(out).toContain(

@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
-import { checkSite, type SiteSnapshot } from './lib/content.js'
+import { checkSite, EXAMPLE_SOURCE, type SiteSnapshot } from './lib/content.js'
 import { paths } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
 
@@ -55,6 +55,8 @@ for (const { line, versions } of config.lines) {
     site.changelogs[version] = changelog ? (JSON.parse(changelog) as ChangelogDocument) : undefined
   }
 }
+
+site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
 const problems = checkSite(site)
 if (problems.length > 0) {

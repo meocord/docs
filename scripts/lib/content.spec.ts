@@ -81,6 +81,7 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
   examples: {
     '4.1': { 'src/guards/owner.guard.ts': '// #region guard\nexport class OwnerGuard {}\n// #endregion guard\n' },
     '4.0': {},
+    compare: { 'src/discordjs/bot.ts': '// #region client\nconst client = 1\n// #endregion client\n' },
   },
   ...overrides,
 })
@@ -151,6 +152,24 @@ describe('checkSite', () => {
       'content/4.1/a.md: examples/4.1/src/missing.ts does not exist',
       'content/4.1/a.md: examples/4.1/src/guards/owner.guard.ts has no region "nope"',
       'content/4.1/a.md: an ::example names no file',
+    ])
+  })
+
+  it('reads an ::example from examples/compare with from="compare", and refuses other sources', () => {
+    const pages = {
+      a: page(
+        'id: a\ntitle: A',
+        [
+          '::example{from="compare" file="discordjs/bot.ts" region="client"}',
+          '::example{from="compare" file="sapphire/main.ts"}',
+          '::example{from="4.0" file="discordjs/bot.ts"}',
+        ].join('\n'),
+      ),
+    }
+
+    expect(checkSite(withAuthored(pages))).toEqual([
+      'content/4.1/a.md: examples/compare/src/sapphire/main.ts does not exist',
+      'content/4.1/a.md: an ::example reads from "4.0", but only "compare" can be named',
     ])
   })
 

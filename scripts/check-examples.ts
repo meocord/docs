@@ -1,7 +1,7 @@
 /**
  * Typechecks each line's examples against the exact meocord version the line pins, and runs their
  * specs where the line has a vitest config:
- * `bun run examples:check [line...]`. Run `bun install --linker isolated` first, so each workspace
+ * `bun run examples:check [line... | compare]`. Run `bun install --linker isolated` first, so each workspace
  * resolves its own meocord.
  */
 
@@ -55,4 +55,25 @@ for (const line of lines) {
   }
   console.log(`  ok    ${line}: typechecks${hasSpecs ? ', and its specs pass,' : ''} against meocord ${installed}`)
 }
+
+// examples/compare holds the other frameworks' code the Coming-from pages show. It belongs to no line and
+// pins no meocord, so it is typechecked against the framework versions its own package.json pins.
+const compare = paths.examples('compare')
+if (existsSync(compare) && (requested.length === 0 || requested.includes('compare'))) {
+  const pins = JSON.parse(readFileSync(path.join(compare, 'package.json'), 'utf8')).dependencies as Record<
+    string,
+    string
+  >
+  const frameworks = ['discord.js', '@sapphire/framework', 'discordx', 'necord']
+    .map(name => `${name} ${pins[name]}`)
+    .join(', ')
+  const result = spawnSync(process.execPath, [tsc, '-p', compare], { encoding: 'utf8' })
+  if (result.status !== 0) {
+    failed++
+    console.log(`  FAIL  compare: against ${frameworks}\n${(result.stdout + result.stderr).trim()}`)
+  } else {
+    console.log(`  ok    compare: typechecks against ${frameworks}`)
+  }
+}
+
 if (failed > 0) process.exit(1)
