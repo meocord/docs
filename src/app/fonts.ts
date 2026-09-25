@@ -11,8 +11,8 @@ export const sans = localFont({
   adjustFontFallback: 'Arial',
 })
 
-// Optional: a late swap would shift code already on screen, and code sits below the first heading, so it is
-// not preloaded either. No Arial-based fallback: its metrics are not monospace.
+// Optional, and not preloaded: code sits below the first heading. Its stand-ins while it loads are the
+// system monospace faces matched to its metrics in globals.css, not Next's Arial-based fallback.
 export const mono = localFont({
   src: '../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
   weight: '100 800',

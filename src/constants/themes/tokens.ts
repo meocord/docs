@@ -40,7 +40,8 @@ export const themeTokens = {
 
   font: {
     sans: 'var(--font-sans), system-ui, sans-serif',
-    mono: 'var(--font-mono), ui-monospace, monospace',
+    // The metric-matched stand-ins in globals.css, then whatever monospace the system has.
+    mono: "var(--font-mono), 'Mono Fallback Menlo', 'Mono Fallback DejaVu', 'Mono Fallback Liberation', 'Mono Fallback Consolas', ui-monospace, monospace",
     weight: { regular: 400, medium: 500, semibold: 600 },
   },
 
