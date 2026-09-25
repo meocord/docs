@@ -1,6 +1,6 @@
 ---
 id: configuration
-title: "Configuration"
+title: 'Configuration'
 order: 5
 source: readme@4.0.0
 ---

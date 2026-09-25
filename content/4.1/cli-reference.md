@@ -1,6 +1,6 @@
 ---
 id: cli-reference
-title: "CLI Reference"
+title: 'CLI Reference'
 order: 6
 source: readme@4.1.0-beta.0
 ---

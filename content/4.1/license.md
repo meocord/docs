@@ -1,6 +1,6 @@
 ---
 id: license
-title: "License"
+title: 'License'
 order: 27
 source: readme@4.1.0-beta.0
 ---

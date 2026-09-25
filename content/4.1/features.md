@@ -1,6 +1,6 @@
 ---
 id: features
-title: "Features"
+title: 'Features'
 order: 2
 source: readme@4.1.0-beta.0
 ---

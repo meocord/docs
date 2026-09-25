@@ -1,6 +1,6 @@
 ---
 id: gateway-events
-title: "Gateway Events"
+title: 'Gateway Events'
 order: 19
 source: readme@4.1.0-beta.0
 ---

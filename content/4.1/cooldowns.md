@@ -1,6 +1,6 @@
 ---
 id: cooldowns
-title: "Cooldowns"
+title: 'Cooldowns'
 order: 17
 source: readme@4.1.0-beta.0
 ---

@@ -1,6 +1,6 @@
 ---
 id: configuration
-title: "Configuration"
+title: 'Configuration'
 order: 5
 source: readme@4.1.0-beta.0
 ---
@@ -50,17 +50,17 @@ MeoCord builds with [Rsbuild](https://rsbuild.rs). The hook receives its configu
 
 - **Raw bundler rules** go through `tools.rspack`, which takes a webpack-shaped configuration.
 
-| Option               | Default | Description                                                                                                |
-| -------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `discordToken`       | —       | The bot token. Read it from the environment rather than writing it here.                                   |
-| `appName`            | —       | Shown in log lines.                                                                                        |
-| `rsbuild`            | —       | `(config) => config` — adjust the Rsbuild configuration.                                                   |
-| `bundleDependencies` | `false` | Put everything the bot needs inside `dist`, native addons included, so it runs without `node_modules`.     |
-| `externals`          | `[]`    | Modules to keep out of the bundle. Native addons are found without being listed.                           |
-| `optionalExternals`  | `[]`    | Packages a dependency tries to load and runs without, such as `supports-color`; see below.                 |
-| `shutdownTimeout`    | `10000` | Milliseconds shutdown waits for the [`onShutdown` hooks](/docs/4.1/lifecycle-hooks#lifecycle-hooks), all of them together.          |
-| `commands`           | global  | Where commands are registered, and whether at startup — see [Command registration](#command-registration). |
-| `sharding`           | —       | Split the gateway connection into shards — see [Sharding](/docs/4.1/deployment#sharding).                                      |
+| Option               | Default | Description                                                                                                                |
+| -------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `discordToken`       | —       | The bot token. Read it from the environment rather than writing it here.                                                   |
+| `appName`            | —       | Shown in log lines.                                                                                                        |
+| `rsbuild`            | —       | `(config) => config` — adjust the Rsbuild configuration.                                                                   |
+| `bundleDependencies` | `false` | Put everything the bot needs inside `dist`, native addons included, so it runs without `node_modules`.                     |
+| `externals`          | `[]`    | Modules to keep out of the bundle. Native addons are found without being listed.                                           |
+| `optionalExternals`  | `[]`    | Packages a dependency tries to load and runs without, such as `supports-color`; see below.                                 |
+| `shutdownTimeout`    | `10000` | Milliseconds shutdown waits for the [`onShutdown` hooks](/docs/4.1/lifecycle-hooks#lifecycle-hooks), all of them together. |
+| `commands`           | global  | Where commands are registered, and whether at startup — see [Command registration](#command-registration).                 |
+| `sharding`           | —       | Split the gateway connection into shards — see [Sharding](/docs/4.1/deployment#sharding).                                  |
 
 See [Self-contained builds](/docs/4.1/deployment#self-contained-builds) for when to turn on `bundleDependencies`.
 

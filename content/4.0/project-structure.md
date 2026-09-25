@@ -1,6 +1,6 @@
 ---
 id: project-structure
-title: "Project Structure"
+title: 'Project Structure'
 order: 4
 source: readme@4.0.0
 ---

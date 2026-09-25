@@ -1,6 +1,6 @@
 ---
 id: validation-and-pipes
-title: "Validation and Pipes"
+title: 'Validation and Pipes'
 order: 16
 source: readme@4.1.0-beta.0
 ---

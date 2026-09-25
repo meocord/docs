@@ -1,6 +1,6 @@
 ---
 id: handler-discovery
-title: "Handler Discovery"
+title: 'Handler Discovery'
 order: 20
 source: readme@4.1.0-beta.0
 ---

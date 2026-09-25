@@ -20,9 +20,7 @@
       "line": "4.1",
       "status": "prerelease",
       "guides": "readme",
-      "versions": [
-        "4.1.0-beta.0"
-      ]
+      "versions": ["4.1.0-beta.0"]
     },
     {
       "line": "4.0",

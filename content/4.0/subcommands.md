@@ -1,6 +1,6 @@
 ---
 id: subcommands
-title: "Subcommands"
+title: 'Subcommands'
 order: 9
 source: readme@4.0.0
 ---

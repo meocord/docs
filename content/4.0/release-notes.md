@@ -1,6 +1,6 @@
 ---
 id: release-notes
-title: "Release Notes"
+title: 'Release Notes'
 order: 16
 source: readme@4.0.0
 ---
