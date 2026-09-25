@@ -228,12 +228,18 @@ export const Prose = createNode('article', {
       backgroundColor: 'theme.surface.canvas',
       fontSize: 'theme.type.code.size',
       lineHeight: 'theme.type.code.line',
-      whiteSpace: 'pre-wrap',
-      overflowWrap: 'anywhere',
+      // Long code arrives formatted over lines, so a narrow screen scrolls it rather than rewrapping.
+      whiteSpace: 'pre',
+      overflowX: 'auto',
+    },
+    '& [data-signature]:focus-visible': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: -2,
     },
     // A parameter's name reads whole; its type wraps between words, never inside one.
     '& [data-params] td:first-child code': { whiteSpace: 'nowrap' },
     '& [data-params] td code': { overflowWrap: 'normal' },
+    '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
     '& [data-doc] > :last-child': { marginBottom: 0 },

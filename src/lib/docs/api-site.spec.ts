@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { apiModel, apiParams, exactApiParams, lineVersions, newestFirst } from '@/lib/docs/api-site'
+import { apiLayouts, apiModel, apiParams, exactApiParams, lineVersions, newestFirst } from '@/lib/docs/api-site'
 
 describe('newestFirst', () => {
   it('orders releases ahead of their prereleases, and prereleases numerically', () => {
@@ -37,5 +37,12 @@ describe('the site API', () => {
     expect(new Set(exact.map(param => param.version))).toEqual(
       new Set([...lineVersions('4.0'), ...lineVersions('4.1')]),
     )
+  })
+})
+
+describe('apiLayouts', () => {
+  it('fails a production build for a version whose code was not formatted, and lets dev show it on one line', () => {
+    expect(() => apiLayouts('4.1', '4.1.9-missing', true)).toThrow('run `bun run api:layout`')
+    expect(apiLayouts('4.1', '4.1.9-absent', false)).toEqual({})
   })
 })

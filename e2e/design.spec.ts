@@ -30,9 +30,10 @@ test('an API parameter’s name and type never break inside a word', async ({ pa
   }
 })
 
-test('an API return type is framed as its signature is', async ({ page }) => {
+test('an API return type is framed as its signature is, after what it returns', async ({ page }) => {
   await page.goto('/docs/4.1/api/decorator/Command')
-  await expect(page.locator('h2#returns + pre[data-signature]')).toBeVisible()
+  await expect(page.locator('h2#returns + p')).toHaveText('Returns a method decorator.')
+  await expect(page.locator('h2#returns + p + pre[data-signature]')).toBeVisible()
 })
 
 test('a changelog groups its entries under labels, below the version headings', async ({ page }) => {

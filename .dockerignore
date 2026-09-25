@@ -18,5 +18,6 @@ tests
 Dockerfile
 .dockerignore
 .search
+.api-layout
 public/_pagefind
 public/palette

@@ -3,10 +3,12 @@ import { Prose } from '@/components/prose/Prose'
 import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
+import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
 import type { ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
-import { apiModel } from '@/lib/docs/api-site'
+import { apiLayouts, apiModel } from '@/lib/docs/api-site'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
+import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref, entrySegment, resolveStoredHref } from '@/lib/urls'
 
@@ -24,25 +26,92 @@ const markdown = (text: string, key: string): Child[] =>
       ]
     : []
 
-const code = (tokens: Token[]): Child[] =>
-  tokens.map((token, index) =>
-    token.href ? Node('a', { key: index, href: token.href, children: token.text }) : token.text,
-  )
+const tokensText = (tokens: Token[]) => tokens.map(token => token.text).join('')
 
-/** One or more declarations as a code block, one line each, their type names linked. */
-const signatureBlock = (lines: Token[][], key: string) =>
-  Node('pre', {
+/** Where each linked token lands in the display, found by name in order: formatting moves only spaces. */
+function linkRanges(tokens: Token[], display: string): { start: number; end: number; href: string }[] {
+  const ranges: { start: number; end: number; href: string }[] = []
+  let cursor = 0
+  for (const token of tokens) {
+    if (!token.href) continue
+    const escaped = token.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const found = new RegExp(`(?<![\\w$])${escaped}(?![\\w$])`, 'g')
+    found.lastIndex = cursor
+    const match = found.exec(display)
+    if (!match) continue
+    ranges.push({ start: match.index, end: match.index + token.text.length, href: token.href })
+    cursor = match.index + token.text.length
+  }
+  return ranges
+}
+
+// Every page shows the same types again, across versions too: each source is highlighted once.
+const highlighted = new Map<string, (string | undefined)[]>()
+
+/** The colours of each character of a source, as the highlighter draws it. */
+function sourceStyles(source: string) {
+  let styles = highlighted.get(source)
+  if (!styles) {
+    styles = []
+    for (const token of highlightTokens(source, 'ts') ?? []) {
+      const style = Object.entries(token.style)
+        .map(([name, value]) => `${name}:${value}`)
+        .join(';')
+      for (let index = 0; index < token.length; index += 1) styles[token.offset + index] = style
+    }
+    highlighted.set(source, styles)
+  }
+  return styles
+}
+
+const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const escapeAttribute = (text: string) => escapeHtml(text).replace(/"/g, '&quot;')
+
+/**
+ * Code as TypeScript, as HTML for the inside of a `<code>`: formatted over lines when `bun run
+ * api:layout` laid it out, highlighted as a guide's code is, each documented symbol it names linked.
+ * Markup rather than nodes, as for a guide's code: a long signature draws hundreds of runs.
+ */
+function typeCode(tokens: Token[], form: LayoutForm, layouts: Layouts): string {
+  const display = layouts[layoutKey(form, tokensText(tokens))] ?? tokensText(tokens)
+  const { source, start } = highlightSource(form, display)
+  const styles = sourceStyles(source)
+  const links = linkRanges(tokens, display)
+  // Runs of one colour within one link; a space joins the run before it, whatever its colour.
+  const runs: { text: string; style?: string; href?: string }[] = []
+  for (let index = 0; index < display.length; index += 1) {
+    const char = display[index]
+    const href = links.find(link => index >= link.start && index < link.end)?.href
+    const style = styles[start[index]]
+    const last = runs.at(-1)
+    if (last && last.href === href && (last.style === style || /\s/.test(char))) last.text += char
+    else runs.push({ text: char, style, href })
+  }
+  let html = ''
+  runs.forEach((run, index) => {
+    if (run.href && runs[index - 1]?.href !== run.href) html += `<a href="${escapeAttribute(run.href)}">`
+    html += run.style ? `<span style="${run.style}">${escapeHtml(run.text)}</span>` : escapeHtml(run.text)
+    if (run.href && runs[index + 1]?.href !== run.href) html += '</a>'
+  })
+  return html
+}
+
+/** Declarations as a code block, one per overload, a blank line between them once any runs over lines. */
+function signatureBlock(lines: Token[][], form: LayoutForm, layouts: Layouts, key: string) {
+  const tall = lines.some(line => layouts[layoutKey(form, tokensText(line))] !== undefined)
+  const html = lines.map(line => typeCode(line, form, layouts)).join(tall ? '\n\n' : '\n')
+  return Node('pre', {
     key,
     'data-signature': true,
-    children: Node('code', {
-      children: lines.flatMap((line, index) => [...(index > 0 ? ['\n'] : []), ...code(line)]),
-    }),
+    tabIndex: 0,
+    children: Node('code', { dangerouslySetInnerHTML: { __html: html } }),
   })
+}
 
 const badge = (text: string, tone: 'since' | 'deprecated', key: string) =>
   Node('span', { key, 'data-badge': tone, children: text })
 
-function paramsTable(params: ApiParam[], key: string, ownerSince?: string) {
+function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSince?: string) {
   // A parameter's version is shown only when it came later than what it belongs to.
   const later = (param: ApiParam) => (param.since && param.since !== ownerSince ? param.since : undefined)
   const since = params.some(param => later(param))
@@ -70,7 +139,12 @@ function paramsTable(params: ApiParam[], key: string, ownerSince?: string) {
                 }),
                 Node('td', {
                   key: 'type',
-                  children: param.type.length ? Node('code', { children: code(param.type) }) : '',
+                  children: param.type.length
+                    ? Node('code', {
+                        'data-type': true,
+                        dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
+                      })
+                    : '',
                 }),
                 ...(defaults
                   ? [
@@ -108,6 +182,7 @@ function sectionIds(members: ApiMember[]) {
 /** A signature's parameters, returns, throws and examples, under headings of `level`. */
 function signatureDetails(
   signature: ApiSignature,
+  layouts: Layouts,
   level: 'h2' | 'h4',
   ids: ReturnType<typeof sectionIds> | undefined,
   key: string,
@@ -120,12 +195,18 @@ function signatureDetails(
   }
   const out: Child[] = []
   if (signature.params.length > 0) {
-    out.push(heading('Parameters', ids?.parameters), paramsTable(signature.params, `${key}-params`, ownerSince))
+    out.push(
+      heading('Parameters', ids?.parameters),
+      paramsTable(signature.params, layouts, `${key}-params`, ownerSince),
+    )
   }
   if (signature.returns) {
     out.push(
       heading('Returns', ids?.returns),
-      signatureBlock([signature.returns.type], `${key}-returns`),
+      ...(signature.returns.decorates
+        ? [Node('p', { key: `${key}-returns-kind`, children: decoratorSummary(signature.returns.decorates) })]
+        : []),
+      signatureBlock([signature.returns.type], 'returns', layouts, `${key}-returns`),
       ...markdown(signature.returns.description, `${key}-returns-d`),
     )
   }
@@ -147,7 +228,7 @@ function signatureDetails(
   return out
 }
 
-function memberSection(member: ApiMember, toc: TocEntry[], symbolSince?: string): Child[] {
+function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], symbolSince?: string): Child[] {
   const since = member.since && member.since !== symbolSince ? member.since : undefined
   toc.push({ id: member.anchor, title: member.name, depth: 3 })
   return [
@@ -160,7 +241,7 @@ function memberSection(member: ApiMember, toc: TocEntry[], symbolSince?: string)
         ...(member.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
       ],
     }),
-    signatureBlock(member.code, `m-${member.anchor}-code`),
+    signatureBlock(member.code, 'member', layouts, `m-${member.anchor}-code`),
     ...(member.deprecated
       ? [Node('blockquote', { key: `m-${member.anchor}-dep`, children: markdown(member.deprecated, 'd') })]
       : []),
@@ -174,14 +255,17 @@ function memberSection(member: ApiMember, toc: TocEntry[], symbolSince?: string)
         ]
       : []),
     ...member.signatures.flatMap((signature, index) =>
-      signatureDetails(signature, 'h4', undefined, `m-${member.anchor}-s${index}`, toc, member.since),
+      signatureDetails(signature, layouts, 'h4', undefined, `m-${member.anchor}-s${index}`, toc, member.since),
     ),
     ...member.examples.flatMap((text, index) => markdown(text, `m-${member.anchor}-ex-${index}`)),
   ]
 }
 
-/** The page's content: the symbol's declaration, documentation and members. */
-export function apiArticle(symbol: ApiSymbol): { nodes: Child[]; toc: TocEntry[] } {
+/**
+ * The page's content: the symbol's declaration, documentation and members, their long code laid
+ * out as `layouts` formats it.
+ */
+export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
   const ids = sectionIds(symbol.members)
   const nodes: Child[] = [
@@ -200,7 +284,7 @@ export function apiArticle(symbol: ApiSymbol): { nodes: Child[]; toc: TocEntry[]
     ...(symbol.deprecated
       ? [Node('blockquote', { key: 'deprecated', children: markdown(symbol.deprecated, 'd') })]
       : []),
-    signatureBlock(symbol.code, 'code'),
+    signatureBlock(symbol.code, 'declaration', layouts, 'code'),
     ...markdown(symbol.description, 'description'),
   ]
 
@@ -209,6 +293,7 @@ export function apiArticle(symbol: ApiSymbol): { nodes: Child[]; toc: TocEntry[]
     nodes.push(
       ...signatureDetails(
         { ...first, examples: [...first.examples, ...symbol.examples] },
+        layouts,
         'h2',
         ids,
         's0',
@@ -218,7 +303,7 @@ export function apiArticle(symbol: ApiSymbol): { nodes: Child[]; toc: TocEntry[]
     )
   }
   overloads.forEach((signature, index) =>
-    nodes.push(...signatureDetails(signature, 'h4', undefined, `s${index + 1}`, toc, symbol.since)),
+    nodes.push(...signatureDetails(signature, layouts, 'h4', undefined, `s${index + 1}`, toc, symbol.since)),
   )
   if (!first && symbol.examples.length > 0) {
     toc.push({ id: ids.examples, title: 'Examples', depth: 2 })
@@ -230,7 +315,7 @@ export function apiArticle(symbol: ApiSymbol): { nodes: Child[]; toc: TocEntry[]
   if (symbol.members.length > 0) {
     toc.push({ id: ids.members, title: 'Members', depth: 2 })
     nodes.push(Node('h2', { key: 'members', id: ids.members, children: 'Members' }))
-    for (const member of symbol.members) nodes.push(...memberSection(member, toc, symbol.since))
+    for (const member of symbol.members) nodes.push(...memberSection(member, layouts, toc, symbol.since))
   }
   if (symbol.seeAlso.length > 0) {
     toc.push({ id: ids.seeAlso, title: 'See also', depth: 2 })
@@ -284,7 +369,7 @@ export function renderApiPage(line: string, entry: string, name: string, version
   const symbol = model?.symbol(entry, name)
   if (!model || !symbol) return undefined
   const href = model.href({ entry: symbol.entry, symbol: symbol.name })
-  const { nodes, toc } = apiArticle(symbol)
+  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version))
   const crumbs: Crumb[] = [
     { title: line, href: docsHref({ kind: 'line', line }, VERSIONS) },
     ...(version ? [{ title: version }] : []),

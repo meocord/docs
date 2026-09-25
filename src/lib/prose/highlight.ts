@@ -165,3 +165,31 @@ export function highlight(code: string, language: string | undefined): string | 
   const inner = /<code>([\s\S]*)<\/code>/.exec(html)
   return inner?.[1]
 }
+
+/** One highlighted token: where it starts in the code, how long it is, and both themes' colours. */
+export interface HighlightedToken {
+  offset: number
+  length: number
+  style: Record<string, string>
+}
+
+/**
+ * The code's tokens as `highlight` draws them, for a caller that builds its own markup, such as the
+ * reference's code with its links. Undefined for a language it does not draw.
+ */
+export function highlightTokens(code: string, language: string): HighlightedToken[] | undefined {
+  const lang = LANGUAGES[language.toLowerCase()]
+  if (!lang) return undefined
+  const lines = instance().codeToTokens(code, {
+    lang,
+    themes: { dark: 'meocord-dark', light: 'meocord-light' },
+    defaultColor: false,
+    cssVariablePrefix: '--code-',
+    tokenizeTimeLimit: 0,
+  }).tokens
+  return lines.flat().map(token => ({
+    offset: token.offset,
+    length: token.content.length,
+    style: (token.htmlStyle ?? {}) as Record<string, string>,
+  }))
+}
