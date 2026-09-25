@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import { apiModel, apiParams, exactApiParams } from '@/lib/docs/api-site'
@@ -42,8 +43,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
+// Cached for the life of the build: the page depends only on the repository's files, and highlighting
+// reads the clock, which a prerender allows only inside a cache.
+async function apiPage(line: string, path: string[]) {
+  'use cache'
+  cacheLife('max')
+  const target = parse(path)
+  return target ? renderApiPage(line, target.entry, target.symbol, target.version)?.render() : undefined
+}
+
 export default async function ApiPage({ params }: Params) {
   const { line, path } = await params
-  const target = parse(path)
-  return (target && renderApiPage(line, target.entry, target.symbol, target.version)?.render()) || notFound()
+  return (await apiPage(line, path)) ?? notFound()
 }
