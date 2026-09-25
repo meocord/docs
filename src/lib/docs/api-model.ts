@@ -301,12 +301,26 @@ export class ApiModel {
         const keyword = declaration.kind === 128 ? 'class' : 'interface'
         const extended = this.#list(declaration.extendedTypes)
         const implemented = this.#list(declaration.implementedTypes)
+        // An interface that can be called shows how, in its body; its members follow on the page.
+        const calls = declaration.kind === 256 ? (declaration.signatures ?? []) : []
         return [
           [
             { text: `${declaration.flags?.isAbstract ? 'abstract ' : ''}${keyword} ${name}` },
             ...typeParams,
             ...(extended.length ? [{ text: ' extends ' }, ...extended] : []),
             ...(implemented.length ? [{ text: ' implements ' }, ...implemented] : []),
+            ...(calls.length
+              ? [
+                  ...calls.flatMap((signature, index) => [
+                    { text: index === 0 ? ' {\n  ' : '\n  ' },
+                    ...this.#typeParams(signature.typeParameters),
+                    ...this.#paramsCode(signature),
+                    { text: ': ' },
+                    ...this.#maybe(signature.type),
+                  ]),
+                  { text: '\n}' },
+                ]
+              : []),
           ],
         ]
       }

@@ -184,4 +184,13 @@ describe('ApiModel', () => {
       'declaration',
     ])
   })
+
+  it('shows how an interface that can be called is called, in its body', () => {
+    const metadata = model.symbol('common', 'MetadataDecorator')!
+    expect(metadata.code.map(text)).toEqual([
+      'interface MetadataDecorator<T> {\n  (value: T): ClassDecorator & MethodDecorator\n}',
+    ])
+    expect(metadata.signatures[0].params.map(param => param.name)).toEqual(['value'])
+    expect(text(model.symbol('interface', 'GuardInterface')!.code[0])).toBe('interface GuardInterface')
+  })
 })

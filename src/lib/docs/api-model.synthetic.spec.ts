@@ -288,3 +288,37 @@ describe('ApiModel, on what a function returns', () => {
     expect(decorates('Plain')).toBeUndefined()
   })
 })
+
+describe('ApiModel, on an interface that can be called', () => {
+  const param = (name: string, type: unknown) => ({ id: id++, name, variant: 'param', kind: 32768, flags: {}, type })
+  const callable = decl({
+    name: 'Handler',
+    kind: 256,
+    extendedTypes: [{ type: 'reference', name: 'Base' }],
+    signatures: [
+      sig({ name: 'Handler', parameters: [param('value', str('string'))], type: str('void') }),
+      sig({
+        name: 'Handler',
+        typeParameters: [{ id: id++, name: 'T', variant: 'typeParam', kind: 131072, flags: {} }],
+        parameters: [param('value', { type: 'reference', name: 'T' }), param('count', str('number'))],
+        type: { type: 'reference', name: 'T' },
+      }),
+    ],
+  })
+  const project = {
+    id: 0,
+    name: 'meocord',
+    variant: 'project',
+    kind: 1,
+    flags: {},
+    children: [decl({ name: 'meocord/core', kind: 2, children: [callable] })],
+  } as unknown as JSONOutput.ProjectReflection
+
+  it('writes each call signature in its body, after its heritage', () => {
+    const handler = new ApiModel('4.1', project, versions).symbol('core', 'Handler')!
+    expect(handler.code.map(text)).toEqual([
+      'interface Handler extends Base {\n  (value: string): void\n  <T>(value: T, count: number): T\n}',
+    ])
+    expect(handler.signatures).toHaveLength(2)
+  })
+})
