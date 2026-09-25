@@ -36,6 +36,12 @@ export default defineConfig([
     },
   },
   {
+    // Examples are bot code, not Next code: their specs name the testing module `module`, as a
+    // generated app's specs do
+    files: ['examples/**'],
+    rules: { '@next/next/no-assign-module-variable': 'off' },
+  },
+  {
     // meo-canvas is a native addon for the icons script and the OG route; a page must not load it.
     // src/lib/brand/page-imports.spec.ts checks the transitive case.
     files: ['src/app/**', 'src/components/**'],
