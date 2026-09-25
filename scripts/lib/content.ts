@@ -105,7 +105,8 @@ export function checkSite(site: SiteSnapshot): string[] {
       }
       if (page === '' || page.startsWith('api')) continue
       if (page === 'changelog') {
-        if (anchor && !lines.get(targetLine)!.versions.includes(anchor))
+        // A version's section is anchored `v<version>`, dots and all
+        if (anchor && !lines.get(targetLine)!.versions.some(version => anchor === `v${version}`))
           problems.push(`${where}: ${target} names no version of ${targetLine}`)
         continue
       }
