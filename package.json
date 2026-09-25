@@ -7,7 +7,7 @@
     "examples/*"
   ],
   "scripts": {
-    "start:dev": "rm -rf .next && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
+    "start:dev": "rm -rf .next && mkdir -p .next/dev/node_modules && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
     "build": "rm -rf .next && bun --bun next build",
     "serve": "bun scripts/serve-standalone.ts",
     "lint": "eslint",
