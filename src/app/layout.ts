@@ -4,6 +4,8 @@ import '@/app/globals.css'
 import { Body, Head, Html, Node, themeScript } from '@meonode/ui'
 import { StyleRegistry } from '@meonode/ui/nextjs-registry'
 import { Wrapper } from '@/components/Wrapper'
+import { SearchIsland } from '@/components/search/SearchIsland'
+import { readSearchManifest } from '@/lib/search-manifest'
 import { themeModes } from '@/constants/themes/modes'
 import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
@@ -48,6 +50,7 @@ const PM_SCRIPT =
   "try{var p=localStorage.getItem('pm');if(/^(npm|bun|pnpm|yarn)$/.test(p))document.documentElement.setAttribute('data-pm',p)}catch(e){}"
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const searchLines = readSearchManifest().lines
   return Html({
     lang: 'en',
     className: `${sans.variable} ${mono.variable}`,
@@ -64,7 +67,10 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       }),
       Body({
         key: 'body',
-        children: StyleRegistry({ children: Node(Wrapper, { children }) }),
+        children: StyleRegistry({
+          // The palette's island rides along on every page; the palette itself loads at the first search.
+          children: Node(Wrapper, { children: [children, Node(SearchIsland, { key: 'search', lines: searchLines })] }),
+        }),
       }),
     ],
   }).render()
