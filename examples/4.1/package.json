@@ -5,7 +5,7 @@
   "dependencies": {
     "discord.js": "^14.27.0",
     "dotenv": "^18.0.3",
-    "meocord": "4.1.0-beta.3",
+    "meocord": "4.1.0-beta.4",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "zod": "^4.6.5"
