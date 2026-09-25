@@ -1,6 +1,6 @@
-import { Service } from 'meocord/decorator'
-import { type OnReady, type OnShutdown } from 'meocord/interface'
-import pg from 'pg'
+import { Inject, Service } from 'meocord/decorator'
+import type pg from 'pg'
+import { DATABASE } from '@src/recipes/database/database'
 
 // #region store
 export interface Note {
@@ -8,21 +8,10 @@ export interface Note {
   text: string
 }
 
-// The one place that talks to the database: handlers inject it, and tests replace it
+// The queries for notes: the pool comes from the provider, so this class never connects or closes
 @Service()
-export class NotesStore implements OnReady, OnShutdown {
-  // A pool opens connections as queries need them, so constructing it connects to nothing
-  private readonly pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
-
-  async onReady() {
-    await this.pool.query(
-      'CREATE TABLE IF NOT EXISTS notes (id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, text TEXT NOT NULL)',
-    )
-  }
-
-  async onShutdown() {
-    await this.pool.end()
-  }
+export class NotesStore {
+  constructor(@Inject(DATABASE) private readonly pool: pg.Pool) {}
 
   async add(userId: string, text: string): Promise<void> {
     await this.pool.query('INSERT INTO notes (user_id, text) VALUES ($1, $2)', [userId, text])

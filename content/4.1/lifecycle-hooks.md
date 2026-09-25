@@ -14,8 +14,9 @@ A controller or service does work once the bot is online, and cleans up before i
 ## Which classes
 
 Every controller and service the app binds: the ones listed in `@MeoCord({ controllers, services })`, and
-everything they depend on, including a service no handler has used yet. Guards are created per call and get
-no hooks.
+everything they depend on, including a service no handler has used yet. What `@MeoCord({ providers })`
+supplies gets them too, a value or a factory's result included, in the same dependency order; see
+[Providers](/docs/4.1/services#providers). Guards are created per call and get no hooks.
 
 ## onReady
 

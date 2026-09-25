@@ -16,6 +16,11 @@ code that expects the real class.
 - **Replies** follow Discord's rules: replying or deferring twice throws, and `followUp()`, `editReply()` and
   `deleteReply()` throw before any reply. An autocomplete interaction's `respond()` works once.
 - **Every method** is a mock function, with `.mock.calls`, which both Vitest's and Jest's matchers read.
+- **Locales** are set as Discord sends them: `locale` is `'en-US'`, and `guildLocale` is `'en-US'` with a
+  `guildId` and `null` without, so a [translator](/docs/4.1/localisation) works on a default mock. Pass
+  either to change it.
+
+::example{file="testing/mock-defaults.spec.ts" region="locales"}
 
 ## Overrides
 
@@ -52,6 +57,42 @@ reading only one of the two is caught. For autocomplete, `focused` names the opt
 - `createMockUser()`, `createMockClient()`, `createMockGuild()` and `createMockChannel(Class)` mock the
   classes a handler reads most, with their managers stubbed.
 - `createMock<Interface>()` mocks a type with no class at runtime, such as a service's interface.
+
+## What methods return
+
+A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup:
+
+| Method                                                          | Resolves to                                                 |
+| --------------------------------------------------------------- | ----------------------------------------------------------- |
+| `send()`, `reply()`, `crosspost()`, `forward()`, `fetchReply()` | a mock message                                              |
+| a manager's `fetch(id)`, or `fetch({ user })` and the like      | a mock of its item: a user, member, guild, role, message, … |
+| a manager's `fetch()` for a list                                | an empty `Collection`                                       |
+| a manager's `create()` and `edit()`                             | a mock of its item                                          |
+| `createDM()`                                                    | a mock DM channel                                           |
+| a structure's own `edit()`, `fetch()`, `delete()` and setters   | the structure itself                                        |
+| any other method that returns a promise                         | `undefined`                                                 |
+
+::example{file="testing/mock-defaults.spec.ts" region="promises"}
+
+Methods that return a value at once, such as `avatarURL()`, return `undefined`. A test still decides with
+`mockResolvedValue`, `mockRejectedValue` and the rest.
+
+## Resetting between tests
+
+Vitest's `clearMocks` and `restoreMocks` reach only `vi.fn()`, so `meocord/testing` has its own:
+`clearAllMocks()` forgets what every mock it made has recorded, and `resetAllMocks()` also undoes what a
+test told them, back to how each was created. Mocks inside `createMockInteraction`, `createMockClient` and
+the rest are covered, and keep their own rules, such as refusing a second reply.
+
+::example{file="testing/reset.spec.ts" region="reset"}
+
+New projects reset after every test from `vitest.setup.ts`:
+
+::example{file="config/vitest.setup.ts" region="setup"}
+
+So set what a mock returns in the test that relies on it, or in `beforeEach`, rather than once for a whole
+`describe`. An older project gets the same by adding that file and `setupFiles: ['./vitest.setup.ts']` to its
+`vitest.config.ts`.
 
 ## Discord's errors
 

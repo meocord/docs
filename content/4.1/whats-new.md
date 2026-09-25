@@ -46,6 +46,9 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
   [Lifecycle hooks](/docs/4.1/lifecycle-hooks).
 - **Handler discovery**: `HandlerRegistry` lists every handler, for a `/help` command. See
   [Handler discovery](/docs/4.1/handler-discovery).
+- **Providers**, new in 4.1.0-beta.3: `@MeoCord({ providers })` supplies values, classes and sync or async
+  factories under a class, a string, a symbol or a `createToken` token, injected with `@Inject(token)`. See
+  [Providers](/docs/4.1/services#providers).
 
 ## Shipping
 
@@ -58,6 +61,9 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
   [Self-contained builds](/docs/4.1/self-contained-builds).
 - **Explained startup errors**: `isExplainedError(error)` tells whether MeoCord already said what went wrong,
   such as a privileged intent Discord refused. See [Gateway events](/docs/4.1/gateway-events).
+- **Import cycles**, from 4.1.0-beta.3, are a lint warning in `meocord/eslint`, and a constructor parameter
+  with no runtime type stops startup with an error that names the classes involved. See
+  [ESLint](/docs/4.1/eslint#import-cycles).
 
 ## Testing
 
@@ -66,7 +72,11 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
 - **`inspectHandler`** lists what a handler is set up with, and `module.emit` sends a gateway event. See
   [Testing](/docs/4.1/testing).
 - **Mocks** take `authorizingIntegrationOwners` as the plain map Discord sends, for testing each install
-  context. See [Mocks](/docs/4.1/mocks).
+  context. From 4.1.0-beta.3 they also carry a `locale` and `guildLocale`, and resolve the methods that
+  return a promise in discord.js. See [Mocks](/docs/4.1/mocks).
+- **`clearAllMocks()` and `resetAllMocks()`**, new in 4.1.0-beta.3, reach every mock `meocord/testing` makes,
+  and new projects reset them after every test. See
+  [Resetting between tests](/docs/4.1/mocks#resetting-between-tests).
 
 Every option `meocord.config.ts` takes, with its default and the version it arrived in, is in the
 [meocord.config.ts reference](/docs/4.1/config-reference).

@@ -22,6 +22,8 @@ per-call state in the handler, not on the instance.
 - **`HandlerRegistry`** from `meocord/core`, which lists every handler, and **`ShardContext`**, which reaches
   every shard.
 - **`Translator`**, when the app configures `i18n`.
+- **Anything a [provider](#providers) supplies**: a value, an instance of another class, or what a factory
+  returns, under a class, a string, a symbol or a token from `createToken`.
 
 ## Services nothing injects
 
@@ -33,6 +35,57 @@ a queue consumer, is listed in the app's `services`:
 This one sets the bot's status once it is ready, through the `onReady` lifecycle hook:
 
 ::example{file="services/status.service.ts" region="service"}
+
+## Providers
+
+Not everything a bot shares is a class it can construct itself. A connection pool is built by a library, a
+settings object is a plain value, and an abstract class needs something else to stand in for it. The app's
+`providers` supply these, and classes inject them like any service:
+
+::example{file="app-with-providers.ts" region="app"}
+
+A value has no class to be injected by, so it gets a token. `createToken` makes one, typed with what it
+provides, and `@Inject(token)` asks for it:
+
+::example{file="services/weather/weather.source.ts" region="token"}
+
+An abstract class is a token and a type at once, so a class that injects it needs no decorator. What
+arrives is whatever provides it:
+
+::example{file="services/weather/weather.source.ts" region="source"}
+
+::example{file="services/weather/weather.service.ts" region="service"}
+
+Each provider names its token in `provide`, and exactly one way to provide it:
+
+::example{file="services/weather/weather.providers.ts" region="providers"}
+
+| Shape                     | What is injected                                                                |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `{ provide, useValue }`   | The value, as it is.                                                            |
+| `{ provide, useClass }`   | One instance of that class, with its own dependencies injected.                 |
+| `{ provide, useFactory }` | What the factory returns, made once. It receives what `inject` lists, in order. |
+
+A factory can be async. MeoCord awaits it, in dependency order, before the bot logs in, so a class that
+injects its value never sees a promise. The [database recipe](/docs/4.1/recipe-database) provides a
+connection pool this way.
+
+- **Startup stops on a mistake.** A factory that throws stops the bot before login, with the token and the
+  error. So does a class that injects a string or symbol token nothing provides, or a token provided
+  twice.
+- **Tokens MeoCord binds are its own.** `Client`, `HandlerRegistry`, `ShardContext`, `CooldownStore`, and
+  `Translator` when the app configures `i18n`, cannot be provided.
+- **Lifecycle hooks apply.** A provided value or instance with `onReady` or `onShutdown` gets them, in the
+  same dependency order as services; see [Lifecycle hooks](/docs/4.1/lifecycle-hooks).
+
+The testing module takes providers in the same shapes, so a test supplies the settings and the source it
+wants:
+
+::example{file="services/weather/weather.controller.spec.ts" region="spec"}
+
+A class that injects a token nothing provides fails when the module compiles, naming both:
+
+::example{file="services/weather/weather.controller.spec.ts" region="missing"}
 
 ## Designing a service
 
@@ -73,9 +126,19 @@ Guards, interceptors and exception filters inject services the same way controll
 
 ## Services that need each other
 
-Two services that inject each other fail when their files load, before the bot starts: one class is not
-defined yet when the other's constructor types are recorded. Move what both need into a third service that
-each of them injects. A cycle usually means one of the two does two jobs.
+Two services that inject each other lose a constructor type: the one whose file loads second records the
+other's type before that class exists. MeoCord stops the bot before it binds anything, and names the
+class, the parameter and the classes that inject it:
+
+```text
+Notes cannot be created: parameter 1 of its constructor has no runtime type. Usually Notes and a class it
+injects import each other (NotesController injects Notes), or the parameter is typed with an interface or
+an `import type`. Move what they both need into a third service, or inject the parameter with @Inject(token).
+```
+
+Move what both need into a third service that each of them injects. A cycle usually means one of the two
+does two jobs. `meocord/eslint` warns about import cycles as you write them; see
+[ESLint](/docs/4.1/eslint).
 
 ## Startup and shutdown
 

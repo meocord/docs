@@ -35,17 +35,13 @@ describe('ReviewController', () => {
     const member = createMockInteraction(GuildMember, {
       roles: { cache: new Collection(roles.map(id => [id, { id }])) } as never,
     })
-    const client = createMockClient()
-    client.users.send.mockResolvedValue(createMockMessage() as never)
     return createMockInteraction(ButtonInteraction, {
       customId,
       guildId: '1',
       guild: createMockGuild(),
       member,
       user: createMockInteraction(User, { id: '222', username: 'grace' }),
-      client: client as never,
-      locale: Locale.EnglishUS,
-      guildLocale: Locale.EnglishUS,
+      client: createMockClient() as never,
       message: createMockMessage({ embeds: [new EmbedBuilder().setTitle('Feedback #1 from ada')] }),
     })
   }
