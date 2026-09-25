@@ -102,6 +102,40 @@ test('keys typed while the palette first loads reach its field', async ({ page }
   await expect(dialog(page).getByRole('option').first()).toContainText('Cooldown')
 })
 
+test('a key that reaches the field as it takes the loading keys adds to them', async ({ page }) => {
+  await page.goto('/docs/4.1/defer')
+  // The palette's chunk waits until the keys typed while it loads are in the buffer.
+  let release: () => void = () => {}
+  const held = new Promise<void>(resolve => (release = resolve))
+  let requested = false
+  await page.route('**/_next/static/chunks/**', async route => {
+    requested = true
+    await held
+    await route.continue()
+  })
+  // A keystroke in the field right after the palette takes the buffer, before React draws it: where a
+  // key that reads the field's old, empty value would drop the loading keys.
+  await page.evaluate(() => {
+    document.addEventListener(
+      'focusin',
+      event => {
+        const field = event.target
+        if (!(field instanceof HTMLInputElement) || field.getAttribute('role') !== 'combobox') return
+        queueMicrotask(() => {
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, `${field.value}o`)
+          field.dispatchEvent(new Event('input', { bubbles: true }))
+        })
+      },
+      { once: true, capture: true },
+    )
+  })
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect.poll(() => requested).toBe(true)
+  await page.keyboard.type('co')
+  release()
+  await expect(field(page)).toHaveValue('coo')
+})
+
 for (const scheme of ['light', 'dark'] as const) {
   test(`the open palette has no serious or critical accessibility violation, ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme })
