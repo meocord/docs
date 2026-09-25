@@ -188,7 +188,7 @@ const Panel = createNode('section', {
       alignItems: 'baseline',
       padding: '5px theme.space.2',
       borderRadius: 'theme.radius.row',
-      transitionProperty: 'background-color, opacity',
+      transitionProperty: 'background-color',
       transitionDuration: 'theme.motion.duration.state',
     },
     '& [data-dot]': {
@@ -197,7 +197,7 @@ const Panel = createNode('section', {
       borderRadius: '50%',
       alignSelf: 'center',
       backgroundColor: 'theme.ink.quiet',
-      transitionProperty: 'background-color, transform',
+      transitionProperty: 'background-color, box-shadow, transform',
       transitionDuration: 'theme.motion.duration.open',
       transitionTimingFunction: 'theme.motion.ease.enter',
     },
@@ -226,7 +226,14 @@ const Panel = createNode('section', {
     },
     '& [data-stage][data-state="stopped"]': { backgroundColor: 'theme.callout.danger.fill' },
     '& [data-stage][data-state="stopped"] [data-dot]': { backgroundColor: 'theme.callout.danger.glyph' },
-    '& [data-stage][data-state="pending"], & [data-stage][data-state="skipped"]': { opacity: 0.45 },
+    // Not run yet, or not reached: a hollow dot and the secondary ink, which stays readable.
+    '& [data-stage][data-state="pending"] [data-stage-name], & [data-stage][data-state="skipped"] [data-stage-name]': {
+      color: 'theme.ink.secondary',
+    },
+    '& [data-stage][data-state="pending"] [data-dot], & [data-stage][data-state="skipped"] [data-dot]': {
+      backgroundColor: 'transparent',
+      boxShadow: 'inset 0 0 0 1.5px theme.ink.quiet',
+    },
     '& [data-narration]': {
       marginTop: 'auto',
       padding: 'theme.space.3 theme.space.2 theme.space.1',

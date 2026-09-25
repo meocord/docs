@@ -57,3 +57,45 @@ test('with reduced motion, Run reaches the reply at once', async ({ page }) => {
   await panel.locator('[data-run]').click()
   await expect(panel).toHaveAttribute('data-answered', '', { timeout: 500 })
 })
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`stages not yet run stay readable in ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.goto('/')
+    const panel = page.locator('[data-pipeline]')
+    await panel.locator('[data-step]').click()
+    await expect(panel.locator('[data-stage][data-state="pending"]')).toHaveCount(6)
+    // The lowest contrast among the pending stages' visible text, against what is painted behind it.
+    const lowest = await panel.evaluate(root => {
+      const rgba = (value: string) => (value.match(/[\d.]+/g) ?? []).map(Number)
+      const luminance = ([r, g, b]: number[]) => {
+        const channel = (c: number) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+      }
+      const backdrop = (el: Element) => {
+        for (let node: Element | null = el; node; node = node.parentElement) {
+          const [r, g, b, a = 1] = rgba(getComputedStyle(node).backgroundColor)
+          if (a === 1) return [r, g, b]
+        }
+        return [255, 255, 255]
+      }
+      let min = Infinity
+      for (const el of root.querySelectorAll(
+        '[data-state="pending"] [data-stage-name], [data-state="pending"] [data-for]',
+      )) {
+        if (!(el as HTMLElement).offsetParent) continue
+        let opacity = 1
+        for (let node: Element | null = el; node; node = node.parentElement)
+          opacity *= Number(getComputedStyle(node).opacity)
+        const back = backdrop(el)
+        const [r, g, b, a = 1] = rgba(getComputedStyle(el).color)
+        const alpha = a * opacity
+        const fore = [r, g, b].map((c, i) => c * alpha + back[i] * (1 - alpha))
+        const [hi, lo] = [luminance(fore), luminance(back)].sort((x, y) => y - x)
+        min = Math.min(min, (hi + 0.05) / (lo + 0.05))
+      }
+      return min
+    })
+    expect(lowest).toBeGreaterThanOrEqual(4.5)
+  })
+}
