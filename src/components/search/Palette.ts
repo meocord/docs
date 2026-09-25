@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Component, Div, For, Input, Span, type PortalLayerProps } from '@meonode/ui'
+import { Button, Column, Component, Div, Fixed, For, Input, type PortalLayerProps, Row, Span } from '@meonode/ui'
 import { focusCss, hitAreaCss, safe } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
@@ -111,15 +111,13 @@ function optionsOf(groups: HitGroup[]): { group: HitGroup; options: Option[] }[]
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
-function Row(option: Option, active: boolean, choose: (option: Option) => void, hover: () => void) {
-  return Div({
+function ResultRow(option: Option, active: boolean, choose: (option: Option) => void, hover: () => void) {
+  return Column({
     id: option.id,
     role: 'option',
     'aria-selected': active,
     onClick: () => choose(option),
     onMouseMove: hover,
-    display: 'flex',
-    flexDirection: 'column',
     justifyContent: 'center',
     minHeight: option.section ? 30 : 40,
     padding: option.section ? '0 theme.space.3 0 theme.space.8' : '0 theme.space.3',
@@ -235,8 +233,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
 
   const empty = status === 'ready' && options.length === 0
 
-  return Div({
-    position: 'fixed',
+  return Fixed({
     inset: 0,
     zIndex: 'theme.z.palette',
     backgroundColor: 'theme.surface.scrim',
@@ -261,9 +258,8 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
         '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
       },
       children: [
-        Div({
+        Row({
           key: 'field',
-          display: 'flex',
           alignItems: 'center',
           gap: 'theme.space.2',
           padding: 'theme.space.3',
@@ -339,7 +335,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                   For(
                     rows,
                     option =>
-                      Row(option, options[active]?.id === option.id, choose, () =>
+                      ResultRow(option, options[active]?.id === option.id, choose, () =>
                         setActive(options.findIndex(candidate => candidate.id === option.id)),
                       ),
                     option => option.id,
@@ -386,10 +382,9 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                     ],
             })
           : null,
-        Div({
+        Row({
           key: 'keys',
           'aria-hidden': true,
-          display: 'flex',
           gap: 'theme.space.4',
           padding: 'theme.space.2 theme.space.3',
           borderTop: 'theme.line.width solid theme.line.hairline',
