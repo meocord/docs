@@ -150,3 +150,30 @@ test('the toolbar offers search by field and shortcut', async ({ page }) => {
   await expect(search).toHaveAttribute('data-search-trigger', 'true')
   await expect(search).toHaveAttribute('aria-keyshortcuts', 'Meta+K Control+K')
 })
+
+test.describe('nothing spills past the reading column', () => {
+  const pages = ['/docs/latest/guards', '/docs/latest/api/decorator/Command', '/docs/latest/changelog']
+  for (const width of [390, 1280, 2560]) {
+    for (const url of pages) {
+      test(`${url} at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(url)
+        const spilled = await page.evaluate(() => {
+          const main = document.querySelector('main')!.getBoundingClientRect()
+          // Content inside a scrolling box may be wider than the column; the box itself may not.
+          const scrolls = (element: Element) => /auto|scroll/.test(getComputedStyle(element).overflowX)
+          return [...document.querySelectorAll('main *')]
+            .filter(element => !scrolledWithin(element))
+            .filter(element => element.getBoundingClientRect().right > main.right + 1)
+            .map(element => `${element.tagName.toLowerCase()} ${element.textContent?.slice(0, 40)}`)
+          function scrolledWithin(element: Element): boolean {
+            for (let at = element.parentElement; at && at.tagName !== 'MAIN'; at = at.parentElement)
+              if (scrolls(at)) return true
+            return false
+          }
+        })
+        expect(spilled).toEqual([])
+      })
+    }
+  }
+})
