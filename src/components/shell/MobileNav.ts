@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { Button, Component, Div, Node, usePortal, type PortalLayerProps } from '@meonode/ui'
+import { Button, Component, Div, Fixed, Node, type PortalLayerProps, Row, usePortal } from '@meonode/ui'
 import { focusCss, safe, touchCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
@@ -28,8 +28,7 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
   const ref = useRef<HTMLDivElement>(null)
   useLayerFocus(ref, close)
 
-  return Div({
-    position: 'fixed',
+  return Fixed({
     inset: 0,
     zIndex: 'theme.z.sheet',
     backgroundColor: 'theme.surface.scrim',
@@ -59,8 +58,7 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
         paddingBottom: 'env(safe-area-inset-bottom)',
         paddingLeft: 'env(safe-area-inset-left)',
         children: [
-          Div({
-            display: 'flex',
+          Row({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: `theme.space.3 theme.space.3 0 ${safe('theme.space.3', 'left')}`,
