@@ -54,7 +54,10 @@ function headingAnchors(slugger: GithubSlugger, lines: string[]): string[] {
   return anchors
 }
 
-export function importReadme(markdown: string, { line, commitUrl }: { line: string; commitUrl: string }): ImportedReadme {
+export function importReadme(
+  markdown: string,
+  { line, commitUrl }: { line: string; commitUrl: string },
+): ImportedReadme {
   const slugger = new GithubSlugger()
   const parts = sections(markdown)
   const anchors: Record<string, string> = {}
@@ -78,7 +81,10 @@ export function importReadme(markdown: string, { line, commitUrl }: { line: stri
         return page === slug ? `](#${anchor})` : `](/docs/${line}/${page}#${anchor})`
       })
       .replace(/\]\(\.\/CHANGELOG\.md\)/g, `](/docs/${line}/changelog)`)
-      .replace(/\]\(\.?\/?docs\/MIGRATING\.md(#[\w-]+)?\)/g, (_match, anchor = '') => `](/docs/${line}/migrating${anchor})`)
+      .replace(
+        /\]\(\.?\/?docs\/MIGRATING\.md(#[\w-]+)?\)/g,
+        (_match, anchor = '') => `](/docs/${line}/migrating${anchor})`,
+      )
       .replace(/\]\(\.\/((?!docs\/)[^)#\s]+)\)/g, (_match, file: string) => `](${commitUrl}/${file})`)
 
   return {

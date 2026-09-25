@@ -35,7 +35,9 @@ describe('verifyProvenance', () => {
   })
 
   it('refuses another issuer', () => {
-    expect(() => check({ issuer: 'https://gitlab.com' })).toThrow(expect.objectContaining({ code: 'UNTRUSTED_SIGNER_ERROR' }))
+    expect(() => check({ issuer: 'https://gitlab.com' })).toThrow(
+      expect.objectContaining({ code: 'UNTRUSTED_SIGNER_ERROR' }),
+    )
   })
 
   it('refuses a tarball whose digest differs from the one attested', () => {
@@ -59,7 +61,10 @@ describe('verifyProvenance', () => {
 })
 
 describe('fetchProvenanceBundle', () => {
-  const answering = (status: number, body: unknown = {}) => async () => new Response(JSON.stringify(body), { status })
+  const answering =
+    (status: number, body: unknown = {}) =>
+    async () =>
+      new Response(JSON.stringify(body), { status })
 
   it('returns the SLSA provenance bundle among the attestations', async () => {
     const attestations = [
@@ -67,7 +72,9 @@ describe('fetchProvenanceBundle', () => {
       { predicateType: 'https://slsa.dev/provenance/v1', bundle: { slsa: true } },
     ]
 
-    await expect(fetchProvenanceBundle('meocord', '4.1.0-beta.0', answering(200, { attestations }))).resolves.toEqual({ slsa: true })
+    await expect(fetchProvenanceBundle('meocord', '4.1.0-beta.0', answering(200, { attestations }))).resolves.toEqual({
+      slsa: true,
+    })
   })
 
   it('returns nothing for a version without attestations, and reports a failure', async () => {

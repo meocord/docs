@@ -8,11 +8,17 @@ const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}
 const packument: Packument = {
   name: 'meocord',
   'dist-tags': { latest: '1.0.0' },
-  versions: { '1.0.0': { version: '1.0.0', dist: { tarball: 'https://registry.example/meocord-1.0.0.tgz', integrity } } },
+  versions: {
+    '1.0.0': { version: '1.0.0', dist: { tarball: 'https://registry.example/meocord-1.0.0.tgz', integrity } },
+  },
 }
 
-const serving = (body: Uint8Array | object, status = 200) => async () =>
-  new Response(body instanceof Uint8Array ? new Blob([body as Uint8Array<ArrayBuffer>]) : JSON.stringify(body), { status })
+const serving =
+  (body: Uint8Array | object, status = 200) =>
+  async () =>
+    new Response(body instanceof Uint8Array ? new Blob([body as Uint8Array<ArrayBuffer>]) : JSON.stringify(body), {
+      status,
+    })
 
 describe('checkIntegrity', () => {
   it('returns the hex sha512 of bytes matching their integrity', () => {
@@ -27,7 +33,9 @@ describe('checkIntegrity', () => {
   })
 
   it('refuses any integrity that is not a single sha512', () => {
-    expect(() => checkIntegrity(bytes, `sha1-${createHash('sha1').update(bytes).digest('base64')}`)).toThrow('only a single sha512')
+    expect(() => checkIntegrity(bytes, `sha1-${createHash('sha1').update(bytes).digest('base64')}`)).toThrow(
+      'only a single sha512',
+    )
     expect(() => checkIntegrity(bytes, `${integrity} ${integrity}`)).toThrow('only a single sha512')
   })
 })

@@ -34,12 +34,23 @@ export function markdownAnchors(markdown: string): string[] {
 }
 
 /** The guide as the site stores it: its source recorded, and links into the library pointed at the line's pages. */
-export function migratingFile(markdown: string, { line, version, commit, readmeAnchors }: { line: string; version: string; commit: string; readmeAnchors: Record<string, string> }): string {
+export function migratingFile(
+  markdown: string,
+  {
+    line,
+    version,
+    commit,
+    readmeAnchors,
+  }: { line: string; version: string; commit: string; readmeAnchors: Record<string, string> },
+): string {
   // The guide sits in docs/, so it reaches the README as ../README.md
-  const body = rewriteLibraryLinks(markdown, line, readmeAnchors).replace(/\]\(\.\.\/README\.md(?:#([\w-]+))?\)/g, (match, anchor?: string) => {
-    if (!anchor) return `](/docs/${line})`
-    const page = readmeAnchors[anchor]
-    return page ? `](/docs/${line}/${page}#${anchor})` : match
-  })
+  const body = rewriteLibraryLinks(markdown, line, readmeAnchors).replace(
+    /\]\(\.\.\/README\.md(?:#([\w-]+))?\)/g,
+    (match, anchor?: string) => {
+      if (!anchor) return `](/docs/${line})`
+      const page = readmeAnchors[anchor]
+      return page ? `](/docs/${line}/${page}#${anchor})` : match
+    },
+  )
   return `<!-- docs/MIGRATING.md from ${LIBRARY_REPOSITORY}@${commit} (${version}); generated, do not edit -->\n\n${body.trim()}\n`
 }

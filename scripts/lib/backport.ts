@@ -12,7 +12,9 @@ export function retargetDiff(diff: string, from: string, to: string): string {
         .split('\n')
         // Blob hashes name the source line's files, so a three-way merge against them would be wrong
         .filter(line => !line.startsWith('index '))
-        .map(line => (/^(diff --git|--- |\+\+\+ |rename (from|to) )/.test(line) ? line.split(source).join(target) : line))
+        .map(line =>
+          /^(diff --git|--- |\+\+\+ |rename (from|to) )/.test(line) ? line.split(source).join(target) : line,
+        )
         .join('\n'),
     )
     .join('')
@@ -21,6 +23,11 @@ export function retargetDiff(diff: string, from: string, to: string): string {
 /** The single line whose content a diff touches, or an error naming what it touches. */
 export function sourceLine(diff: string): string {
   const lines = new Set([...diff.matchAll(/^diff --git a\/content\/([^/]+)\//gm)].map(match => match[1]))
-  if (lines.size !== 1) throw new Error(lines.size === 0 ? 'The commit changes no content.' : `The commit changes the content of ${[...lines].join(', ')}; backport one line's changes.`)
+  if (lines.size !== 1)
+    throw new Error(
+      lines.size === 0
+        ? 'The commit changes no content.'
+        : `The commit changes the content of ${[...lines].join(', ')}; backport one line's changes.`,
+    )
   return [...lines][0]
 }

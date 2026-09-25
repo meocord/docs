@@ -9,7 +9,18 @@ import semver from 'semver'
 import type { TrustedRoot } from '@sigstore/protobuf-specs'
 import { generateApi } from './api.js'
 import { parseChangelog, rewriteLibraryLinks, sliceChangelog } from './changelog.js'
-import { forkContent, forkExamples, importLineReadme, lineAnchors, paths, pinExamples, writeApi, writeChangelog, writeJson, writeText } from './layout.js'
+import {
+  forkContent,
+  forkExamples,
+  importLineReadme,
+  lineAnchors,
+  paths,
+  pinExamples,
+  writeApi,
+  writeChangelog,
+  writeJson,
+  writeText,
+} from './layout.js'
 import { fetchMigrating, migratingFile } from './migrating.js'
 import type { Fetch, Packument } from './registry.js'
 import { apiKeys, computeSince } from './since.js'
@@ -41,7 +52,14 @@ export function missingVersions(config: VersionsConfig, packument: Packument): s
 /** Generates a version's API document and changelog from its verified package. */
 export async function generateVersion(pkg: VerifiedPackage, config: VersionsConfig): Promise<void> {
   const line = lineOf(pkg.version)
-  writeApi(await generateApi(pkg.dir, { package: config.package, version: pkg.version, integrity: pkg.integrity, commit: pkg.provenance?.commit }))
+  writeApi(
+    await generateApi(pkg.dir, {
+      package: config.package,
+      version: pkg.version,
+      integrity: pkg.integrity,
+      commit: pkg.provenance?.commit,
+    }),
+  )
   const section = rewriteLibraryLinks(sliceChangelog(pkg.changelog(), pkg.version), line, lineAnchors(line))
   writeChangelog(parseChangelog(pkg.version, section))
 }
@@ -50,7 +68,10 @@ export async function generateVersion(pkg: VerifiedPackage, config: VersionsConf
 export function refreshSince(): void {
   const keysByVersion: Record<string, Set<string>> = {}
   for (const file of readdirSync(paths.apiDir).filter(name => name.endsWith('.json'))) {
-    const doc = JSON.parse(readFileSync(`${paths.apiDir}/${file}`, 'utf8')) as { meta: { version: string }; project: JSONOutput.ProjectReflection }
+    const doc = JSON.parse(readFileSync(`${paths.apiDir}/${file}`, 'utf8')) as {
+      meta: { version: string }
+      project: JSONOutput.ProjectReflection
+    }
     keysByVersion[doc.meta.version] = apiKeys(doc.project)
   }
   writeJson(paths.since, computeSince(keysByVersion))
@@ -60,7 +81,11 @@ export function refreshSince(): void {
  * Refreshes what a line takes from its newest version: its imported guides, example pin and
  * migration guide. Does nothing when `pkg` is not the line's newest version.
  */
-export async function refreshLine(config: VersionsConfig, pkg: VerifiedPackage, deps: Pick<SyncDeps, 'fetch' | 'log'> = {}): Promise<void> {
+export async function refreshLine(
+  config: VersionsConfig,
+  pkg: VerifiedPackage,
+  deps: Pick<SyncDeps, 'fetch' | 'log'> = {},
+): Promise<void> {
   const line = findLine(config, lineOf(pkg.version))!
   if (newestIn(line) !== pkg.version) return
   if (line.guides === 'readme') importLineReadme(line.line, pkg.version, pkg.readme(), pkg.provenance?.commit)
@@ -72,7 +97,12 @@ export async function refreshLine(config: VersionsConfig, pkg: VerifiedPackage, 
   const migrating = await fetchMigrating(pkg.provenance.commit, deps.fetch)
   writeText(
     paths.migrating(line.line),
-    migratingFile(migrating, { line: line.line, version: pkg.version, commit: pkg.provenance.commit, readmeAnchors: lineAnchors(line.line) }),
+    migratingFile(migrating, {
+      line: line.line,
+      version: pkg.version,
+      commit: pkg.provenance.commit,
+      readmeAnchors: lineAnchors(line.line),
+    }),
   )
 }
 
@@ -95,7 +125,8 @@ export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<Sync
         forkExamples(result.forked.from, line.line, version)
       }
       // The line's README is imported before its changelog, whose links resolve against it
-      if (line.guides === 'readme' && newestIn(line) === version) importLineReadme(line.line, version, pkg.readme(), pkg.provenance?.commit)
+      if (line.guides === 'readme' && newestIn(line) === version)
+        importLineReadme(line.line, version, pkg.readme(), pkg.provenance?.commit)
       await generateVersion(pkg, config)
       added.push(version)
       log(`${version}: generated`)

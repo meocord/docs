@@ -47,7 +47,12 @@ export function writeText(file: string, text: string): void {
 }
 
 /** Replaces a line's guides with the pages imported from a version's README; returns its anchors. */
-export function importLineReadme(line: string, version: string, readme: string, commit: string | undefined): Record<string, string> {
+export function importLineReadme(
+  line: string,
+  version: string,
+  readme: string,
+  commit: string | undefined,
+): Record<string, string> {
   const commitUrl = `https://github.com/meocord/meocord/blob/${commit ?? `v${version}`}`
   const { pages, anchors } = importReadme(readme, { line, commitUrl })
   const dir = paths.content(line)
@@ -71,7 +76,10 @@ export function forkContent(from: string, to: string): void {
 /** Starts a line's example workspace from another's, pinned to `version`. */
 export function forkExamples(from: string, to: string, version: string): void {
   if (!existsSync(paths.examples(from))) return
-  cpSync(paths.examples(from), paths.examples(to), { recursive: true, filter: source => !source.includes('node_modules') })
+  cpSync(paths.examples(from), paths.examples(to), {
+    recursive: true,
+    filter: source => !source.includes('node_modules'),
+  })
   pinExamples(to, version)
 }
 

@@ -40,7 +40,12 @@ describe('importReadme', () => {
   })
 
   it('maps every heading to its page', () => {
-    expect(imported.anchors).toEqual({ 'getting-started': 'getting-started', install: 'getting-started', guards: 'guards', 'passing-options': 'guards' })
+    expect(imported.anchors).toEqual({
+      'getting-started': 'getting-started',
+      install: 'getting-started',
+      guards: 'guards',
+      'passing-options': 'guards',
+    })
   })
 
   it('points links at the pages and files that hold them', () => {
@@ -55,6 +60,8 @@ describe('importReadme', () => {
 
 describe('pageFile', () => {
   it('writes front matter a page is read back by', () => {
-    expect(pageFile(page('guards'), 'readme@4.0.0')).toMatch(/^---\nid: guards\ntitle: "Guards"\norder: 3\nsource: readme@4\.0\.0\n---\n\n### Passing options/)
+    expect(pageFile(page('guards'), 'readme@4.0.0')).toMatch(
+      /^---\nid: guards\ntitle: "Guards"\norder: 3\nsource: readme@4\.0\.0\n---\n\n### Passing options/,
+    )
   })
 })

@@ -32,7 +32,10 @@ export async function fetchVerified(
   let provenance: Provenance | undefined
   if (identity !== 'integrity-only') {
     const bundle = await fetchProvenanceBundle(config.package, version, fetchImpl)
-    if (!bundle) throw new Error(`${config.package}@${version} has no provenance attestation. List it under provenance.integrityOnly only after review.`)
+    if (!bundle)
+      throw new Error(
+        `${config.package}@${version} has no provenance attestation. List it under provenance.integrityOnly only after review.`,
+      )
     provenance = verifyProvenance({
       bundle,
       trustedRoot: await trustedRoot(),

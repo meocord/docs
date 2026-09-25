@@ -17,7 +17,14 @@ const unused = {
 export default defineConfig([
   nextPlugin.configs['core-web-vitals'],
   ...tseslint.configs.recommended,
-  globalIgnores(['.next/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'coverage/**',
+    'playwright-report/**',
+    'test-results/**',
+    'next-env.d.ts',
+    'scripts/__fixtures__/**',
+  ]),
   {
     plugins: { prettier, unusedImports },
     rules: {

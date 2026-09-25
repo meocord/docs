@@ -18,7 +18,11 @@ interface Attestation {
 }
 
 /** The registry's SLSA provenance bundle for a version, or undefined when it has none. */
-export async function fetchProvenanceBundle(name: string, version: string, fetchImpl: Fetch = fetch): Promise<Attestation['bundle'] | undefined> {
+export async function fetchProvenanceBundle(
+  name: string,
+  version: string,
+  fetchImpl: Fetch = fetch,
+): Promise<Attestation['bundle'] | undefined> {
   const response = await fetchImpl(`${REGISTRY}/-/npm/v1/attestations/${name}@${version}`)
   if (response.status === 404) return undefined
   if (!response.ok) throw new Error(`The attestations for ${name}@${version} answered ${response.status}.`)
@@ -70,7 +74,10 @@ interface Statement {
 export function verifyProvenance(check: ProvenanceCheck): Provenance {
   const bundle = bundleFromJSON(check.bundle)
   const verifier = new Verifier(toTrustMaterial(check.trustedRoot), { tlogThreshold: 1, ctlogThreshold: 1 })
-  verifier.verify(toSignedEntity(bundle), { subjectAlternativeName: check.identity, extensions: { issuer: check.issuer } })
+  verifier.verify(toSignedEntity(bundle), {
+    subjectAlternativeName: check.identity,
+    extensions: { issuer: check.issuer },
+  })
 
   const envelope = bundle.content.$case === 'dsseEnvelope' ? bundle.content.dsseEnvelope : undefined
   if (!envelope) throw new Error(`The provenance for ${check.name}@${check.version} carries no in-toto statement.`)
@@ -80,12 +87,15 @@ export function verifyProvenance(check: ProvenanceCheck): Provenance {
   }
   const purl = `pkg:npm/${check.name.replace('@', '%40')}@${check.version}`
   const subject = statement.subject.find(entry => entry.name === purl)
-  if (!subject) throw new Error(`The provenance names ${statement.subject.map(entry => entry.name).join(', ')}, not ${purl}.`)
+  if (!subject)
+    throw new Error(`The provenance names ${statement.subject.map(entry => entry.name).join(', ')}, not ${purl}.`)
   if (subject.digest.sha512 !== check.sha512) {
     throw new Error(`The provenance for ${purl} attests a different tarball than the one downloaded.`)
   }
 
-  const commit = statement.predicate.buildDefinition.resolvedDependencies.find(dependency => dependency.digest.gitCommit)?.digest.gitCommit
+  const commit = statement.predicate.buildDefinition.resolvedDependencies.find(
+    dependency => dependency.digest.gitCommit,
+  )?.digest.gitCommit
   if (!commit) throw new Error(`The provenance for ${purl} names no commit.`)
   return { repository: statement.predicate.buildDefinition.externalParameters.workflow.repository, commit }
 }
