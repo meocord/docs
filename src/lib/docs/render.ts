@@ -1,5 +1,6 @@
 import { Div, Node } from '@meonode/ui'
 import { Prose } from '@/components/prose/Prose'
+import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { guidePage, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
 
@@ -30,6 +31,7 @@ export function renderGuide(line: string, slug: string) {
             ]
           : []),
         ...page.lowered.nodes,
+        Node(ReadingIsland, { key: 'island' }),
       ],
     }),
   })

@@ -1,4 +1,4 @@
-import { A, Div } from '@meonode/ui'
+import { A, Div, Footer } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { Inspector } from '@/components/shell/Inspector'
@@ -12,6 +12,33 @@ export interface WindowProps extends ToolbarProps {
   /** Facts for the inspector under the headings, such as the edit link. */
   inspector?: Children
   children: Children
+}
+
+/** The foot of every page: the credit for the site's images. */
+function SiteFooter() {
+  return Footer({
+    key: 'footer',
+    maxWidth: 'theme.layout.prose',
+    margin: 'theme.space.16 0 0',
+    padding: 'theme.space.6 theme.layout.sheetPad theme.space.10',
+    borderTop: 'theme.line.width solid theme.line.hairline',
+    fontSize: 'theme.type.caption.size',
+    color: 'theme.ink.secondary',
+    css: { '@media (width < theme.breakpoint.compact)': { paddingInline: 'theme.layout.sheetPadCompact' } },
+    children: [
+      'Images drawn with ',
+      A({
+        key: 'meo-canvas',
+        href: 'https://github.com/l7aromeo/meo-canvas',
+        color: 'inherit',
+        textDecoration: 'underline',
+        textUnderlineOffset: '0.18em',
+        css: { '&:hover': { color: 'theme.ink.primary' } },
+        children: 'meo-canvas',
+      }),
+      '.',
+    ],
+  })
 }
 
 /** Hidden until focused, then the first thing on the page. */
@@ -68,7 +95,10 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
             flexGrow: 1,
             minWidth: 0,
             backgroundColor: 'theme.surface.sheet',
-            children: [SheetPane({ tabIndex: -1, children }), Inspector({ toc, children: inspector })],
+            children: [
+              SheetPane({ tabIndex: -1, children: [children, SiteFooter()] }),
+              Inspector({ toc, children: inspector }),
+            ],
           }),
         ],
       }),

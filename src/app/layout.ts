@@ -43,6 +43,10 @@ export const metadata: Metadata = {
   robots: SITE_INDEXABLE ? { index: true, follow: true } : { index: false, follow: false },
 }
 
+// Stamps the reader's package manager before paint, so install blocks show it from the first frame.
+const PM_SCRIPT =
+  "try{var p=localStorage.getItem('pm');if(/^(npm|bun|pnpm|yarn)$/.test(p))document.documentElement.setAttribute('data-pm',p)}catch(e){}"
+
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return Html({
     lang: 'en',
@@ -51,7 +55,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     suppressHydrationWarning: true,
     children: [
       // First in <head>: an inline script after a stylesheet waits for that sheet to load.
-      Head({ key: 'head', children: themeScript(themeModes) }),
+      Head({
+        key: 'head',
+        children: [
+          themeScript(themeModes),
+          Node('script', { key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } }),
+        ],
+      }),
       Body({
         key: 'body',
         children: StyleRegistry({ children: Node(Wrapper, { children }) }),

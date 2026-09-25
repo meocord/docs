@@ -74,6 +74,12 @@ export interface GuidePage {
   canonical: string
 }
 
+/** A page's title and canonical URL, without lowering it; undefined when the line has no such page. */
+export function guideMeta(line: string, slug: string): { title: string; canonical: string } | undefined {
+  const entry = listPages(line).find(page => page.slug === slug)
+  return entry && { title: entry.title, canonical: guideHref(line, slug) }
+}
+
 /** One page of a line, lowered for Prose; undefined when the line has no such page. */
 export function guidePage(line: string, slug: string): GuidePage | undefined {
   const entry = listPages(line).find(page => page.slug === slug)

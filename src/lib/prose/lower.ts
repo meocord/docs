@@ -4,6 +4,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import { Node, type NodeInstance } from '@meonode/ui'
+import { codeFrame } from '@/lib/prose/code'
 
 /** A heading on the page, with the anchor its element carries. */
 export interface Heading {
@@ -20,6 +21,15 @@ export interface LowerOptions {
 }
 
 const EXAMPLE = /^::example\{([^}]*)\}$/
+
+const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
+const ALERTS = {
+  NOTE: { callout: 'note', label: 'Note' },
+  TIP: { callout: 'tip', label: 'Tip' },
+  IMPORTANT: { callout: 'note', label: 'Important' },
+  WARNING: { callout: 'warning', label: 'Warning' },
+  CAUTION: { callout: 'danger', label: 'Caution' },
+} as const
 
 export interface Lowered {
   nodes: NodeInstance[]
@@ -80,13 +90,25 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       case 'image':
         return Node('img', { key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
       case 'code':
-        return Node('pre', {
+        return codeFrame(node.value, node.lang ?? undefined, { key })
+      case 'blockquote': {
+        // GitHub's alert syntax, `> [!NOTE]` and its kin, becomes a callout; any other quote stays one.
+        const first = node.children[0]
+        const text = first?.type === 'paragraph' && first.children[0]?.type === 'text' ? first.children[0] : undefined
+        const alert = text && ALERT.exec(text.value)
+        if (!text || !alert) return Node('blockquote', { key, children: children(node) })
+        const kind = ALERTS[alert[1] as keyof typeof ALERTS]
+        text.value = text.value.slice(alert[0].length)
+        return Node('aside', {
           key,
-          'data-language': node.lang ?? undefined,
-          children: Node('code', { children: node.value }),
+          role: 'note',
+          'data-callout': kind.callout,
+          children: [
+            Node('strong', { key: 'label', 'data-callout-label': true, children: kind.label }),
+            ...children(node),
+          ],
         })
-      case 'blockquote':
-        return Node('blockquote', { key, children: children(node) })
+      }
       case 'list':
         return Node(node.ordered ? 'ol' : 'ul', {
           key,
@@ -122,12 +144,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       [...attributes.matchAll(/(\w+)="([^"]*)"/g)].map(([, name, value]) => [name, value]),
     )
     if (!values.file || !options.example) return ''
-    return Node('pre', {
-      key,
-      'data-language': 'ts',
-      'data-file': values.file,
-      children: Node('code', { children: options.example(values.file, values.region) }),
-    })
+    return codeFrame(options.example(values.file, values.region), 'ts', { key, file: values.file })
   }
 
   function lowerTable(table: Table, key: number) {

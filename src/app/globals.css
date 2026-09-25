@@ -103,3 +103,43 @@ body {
 ::selection {
   background: var(--mc-accent-tint);
 }
+
+/*
+ * Highlighted code: each token carries both themes' colours (src/lib/prose/highlight.ts), and the
+ * mode in force picks one. Dark is the default, as for the palettes.
+ */
+[data-code] code span {
+  color: var(--code-dark);
+  font-style: var(--code-dark-font-style, normal);
+}
+
+:root[data-theme='light'] [data-code] code span {
+  color: var(--code-light);
+  font-style: var(--code-light-font-style, normal);
+}
+
+/*
+ * Install commands: one pane per package manager, shown by `data-pm` on <html>, which the pre-paint
+ * script stamps from the reader's choice. npm when nothing is chosen, so the page renders the same
+ * for everyone and nothing shifts once it loads.
+ */
+[data-pm-pane] {
+  display: none;
+}
+
+:root:not([data-pm]) [data-pm-pane='npm'],
+:root[data-pm='npm'] [data-pm-pane='npm'],
+:root[data-pm='bun'] [data-pm-pane='bun'],
+:root[data-pm='pnpm'] [data-pm-pane='pnpm'],
+:root[data-pm='yarn'] [data-pm-pane='yarn'] {
+  display: block;
+}
+
+:root:not([data-pm]) [data-pm-choice='npm'],
+:root[data-pm='npm'] [data-pm-choice='npm'],
+:root[data-pm='bun'] [data-pm-choice='bun'],
+:root[data-pm='pnpm'] [data-pm-choice='pnpm'],
+:root[data-pm='yarn'] [data-pm-choice='yarn'] {
+  color: var(--mc-ink-primary);
+  background: var(--mc-fill-hover);
+}

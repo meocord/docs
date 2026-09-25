@@ -31,19 +31,27 @@ describe('lowerMarkdown', () => {
     )
   })
 
-  it('keeps code as written, with its language', () => {
-    expect(html('```shell\nbun run test   # once\n```')).toContain(
-      '<pre data-language="shell"><code>bun run test   # once</code></pre>',
-    )
+  it('frames code with its language, as written', () => {
+    const out = html('```text\nbun run test   # once\n```')
+    expect(out).toContain('<figure data-code="true">')
+    expect(out).toContain('<pre data-language="text"><code>bun run test   # once</code></pre>')
   })
 
-  it('embeds an ::example through the resolver', () => {
+  it('embeds an ::example through the resolver, named by its file', () => {
     const out = html('::example{file="guards/rate-limit.ts" region="guard"}', {
       example: (file, region) => `// ${file} ${region}`,
     })
+    expect(out).toContain('<span data-file="true">guards/rate-limit.ts</span>')
+    expect(out).toContain('<pre data-language="ts">')
+    expect(out).toContain('// guards/rate-limit.ts guard')
+  })
+
+  it('turns a GitHub alert into a callout, and leaves other quotes alone', () => {
+    const out = html('> [!WARNING]\n> Mind the gap.\n\n> Just a quote.')
     expect(out).toContain(
-      '<pre data-language="ts" data-file="guards/rate-limit.ts"><code>// guards/rate-limit.ts guard</code></pre>',
+      '<aside role="note" data-callout="warning"><strong data-callout-label="true">Warning</strong><p>Mind the gap.</p></aside>',
     )
+    expect(out).toContain('<blockquote><p>Just a quote.</p></blockquote>')
   })
 
   it('unwraps the paragraphs of a tight list, and keeps a loose one', () => {
