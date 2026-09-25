@@ -1,4 +1,4 @@
-import { Node, Span, Svg, SvgPath } from '@meonode/ui'
+import { Span, Svg, SvgG, SvgPath } from '@meonode/ui'
 import { focusCss } from '@/lib/design/css'
 import { earFlickCss } from '@/lib/brand/ear-flick'
 import { MARK_EARS, MARK_PATHS, MARK_VIEWBOX, NOTCH_MIN_SIZE } from '@/lib/brand/mark-paths'
@@ -15,7 +15,7 @@ export function Mark(size = 20) {
     return notched ? crown + inner : crown
   }
   const ear = (side: 'near' | 'far') =>
-    Node('g', {
+    SvgG({
       key: side,
       'data-ear': side,
       children:
@@ -53,7 +53,7 @@ export function Mark(size = 20) {
       },
     },
     children: [
-      Node('g', { key: 'ears', 'data-ears': true, children: [ear('near'), ear('far')] }),
+      SvgG({ key: 'ears', 'data-ears': true, children: [ear('near'), ear('far')] }),
       SvgPath({ key: 'cord', d: MARK_PATHS.cord, fill: 'theme.accent.default' }),
     ],
   })

@@ -1,4 +1,4 @@
-import { Div, Node } from '@meonode/ui'
+import { Div, H1, Node } from '@meonode/ui'
 import { Prose } from '@/components/prose/Prose'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
@@ -20,7 +20,7 @@ export function renderGuide(line: string, slug: string) {
     toc: page.toc,
     children: Prose({
       children: [
-        Node('h1', { key: 'title', children: page.entry.title }),
+        H1(page.entry.title, { key: 'title' }),
         // The page's context, muted under its title: the line, the section, and where it came from.
         Div({
           key: 'subtitle',

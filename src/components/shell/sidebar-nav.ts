@@ -1,4 +1,4 @@
-import { For, Li, Nav, Node, Span, Ul } from '@meonode/ui'
+import { Details, For, Li, Nav, Span, Summary, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
@@ -60,18 +60,18 @@ function NavRow(item: NavItem) {
  * summary is the group's title beside its glyph, and a chevron that turns as it opens.
  */
 function NavSection(group: NavGroup) {
-  return Node('details', {
+  return Details({
     open: true,
     'data-nav-group': true,
     children: [
-      Node('summary', {
-        key: 'title',
-        children: [
+      Summary(
+        [
           Span(Glyph('chevronRight', 12), { key: 'chevron', 'data-chevron': true }),
           Span(Glyph(group.icon ?? 'book', 16), { key: 'icon', 'data-group-icon': true }),
           Span(group.title, { key: 'label' }),
         ],
-      }),
+        { key: 'title' },
+      ),
       Ul({
         key: 'items',
         margin: 0,

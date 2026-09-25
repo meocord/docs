@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { Node, type NodeInstance } from '@meonode/ui'
+import { A, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Ul } from '@meonode/ui'
 import { listPages, type PageEntry } from '../../../scripts/lib/pages'
 import { Prose } from '@/components/prose/Prose'
 import { Window } from '@/components/shell/Window'
@@ -46,41 +46,35 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
   if (changelogs.length === 0) return undefined
   const toc: TocEntry[] = []
   const nodes: Child[] = [
-    Node('h1', { key: 'title', children: `Changelog for ${line}` }),
-    Node('p', {
-      key: 'lead',
-      children: [
+    H1(`Changelog for ${line}`, { key: 'title' }),
+    P(
+      [
         'Every release of the line, newest first. Entries marked Breaking change a working bot; the ',
-        Node('a', {
-          key: 'migrating',
-          href: docsHref({ kind: 'migrating', line }, VERSIONS),
-          children: 'migration guide',
-        }),
+        A({ key: 'migrating', href: docsHref({ kind: 'migrating', line }, VERSIONS), children: 'migration guide' }),
         ' says what to do about them.',
       ],
-    }),
+      { key: 'lead' },
+    ),
   ]
   for (const changelog of changelogs) {
     const id = changelogAnchor(changelog.version)
     toc.push({ id, title: changelog.version, depth: 2 })
-    nodes.push(Node('h2', { key: id, id, children: changelog.version }))
+    nodes.push(H2(changelog.version, { key: id, id }))
     if (changelog.sections.length === 0) {
-      nodes.push(Node('p', { key: `${id}-none`, 'data-api-meta': true, children: 'No changes recorded.' }))
+      nodes.push(P('No changes recorded.', { key: `${id}-none`, 'data-api-meta': true }))
     }
     for (const section of changelog.sections) {
       const sectionId = `${id}-${slug(section.title)}`
       nodes.push(
-        Node('h3', { key: sectionId, id: sectionId, 'data-group': true, children: section.title }),
-        Node('ul', {
+        H3(section.title, { key: sectionId, id: sectionId, 'data-group': true }),
+        Ul({
           key: `${sectionId}-list`,
           children: section.entries.map((entry, index) =>
-            Node('li', {
+            Li({
               key: index,
               'data-breaking': entry.breaking || undefined,
               children: [
-                ...(entry.breaking
-                  ? [Node('span', { key: 'badge', 'data-badge': 'deprecated', children: 'Breaking' }), ' ']
-                  : []),
+                ...(entry.breaking ? [Span('Breaking', { key: 'badge', 'data-badge': 'deprecated' }), ' '] : []),
                 ...lower(entry.markdown).nodes,
               ],
             }),
@@ -132,35 +126,35 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
   const title = elsewhere[0].page.title
   const since = elsewhere.map(found => found.page.since).find(Boolean)
   const nodes: Child[] = [
-    Node('h1', { key: 'title', children: `Not in ${line}` }),
-    Node('p', {
-      key: 'lead',
-      children: [
-        Node('strong', { key: 'page', children: title }),
+    H1(`Not in ${line}`, { key: 'title' }),
+    P(
+      [
+        Strong(title, { key: 'page' }),
         ` is not documented for MeoCord ${line}`,
         since ? `: it first appears in ${since}.` : '.',
       ],
-    }),
-    Node('h2', { key: 'elsewhere', id: 'elsewhere', children: 'Where it is documented' }),
-    Node('ul', {
+      { key: 'lead' },
+    ),
+    H2('Where it is documented', { key: 'elsewhere', id: 'elsewhere' }),
+    Ul({
       key: 'elsewhere-list',
       children: elsewhere.map(found =>
-        Node('li', {
+        Li({
           key: found.line,
-          children: Node('a', {
+          children: A({
             href: docsHref({ kind: 'guide', line: found.line, slug: found.page.slug }, VERSIONS),
             children: `${found.page.title} in ${found.line}`,
           }),
         }),
       ),
     }),
-    Node('h2', { key: 'index', id: 'in-this-line', children: `What ${line} documents` }),
+    H2(`What ${line} documents`, { key: 'index', id: 'in-this-line' }),
     ...sidebar(line).flatMap(group => [
-      Node('h3', { key: `g-${group.title}`, children: group.title }),
-      Node('ul', {
+      H3(group.title, { key: `g-${group.title}` }),
+      Ul({
         key: `g-${group.title}-list`,
         children: group.items.map(item =>
-          Node('li', { key: item.href, children: Node('a', { href: item.href, children: item.title }) }),
+          Li({ key: item.href, children: A({ href: item.href, children: item.title }) }),
         ),
       }),
     ]),

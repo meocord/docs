@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import '@/app/globals.css'
-import { Body, Head, Html, Node, themeScript } from '@meonode/ui'
+import { Body, Head, Html, Node, Script, themeScript } from '@meonode/ui'
 import { StyleRegistry } from '@meonode/ui/nextjs-registry'
 import { Wrapper } from '@/components/Wrapper'
 import { SearchIsland } from '@/components/search/SearchIsland'
@@ -62,10 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       // First in <head>: an inline script after a stylesheet waits for that sheet to load.
       Head({
         key: 'head',
-        children: [
-          themeScript(themeModes),
-          Node('script', { key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } }),
-        ],
+        children: [themeScript(themeModes), Script({ key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } })],
       }),
       Body({
         key: 'body',

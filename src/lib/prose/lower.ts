@@ -1,9 +1,28 @@
 import GithubSlugger from 'github-slugger'
-import type { Nodes, Parents, PhrasingContent, RootContent, Table } from 'mdast'
+import type { Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
-import { Node, type NodeInstance } from '@meonode/ui'
+import {
+  A,
+  Aside,
+  Blockquote,
+  Br,
+  Code,
+  Div,
+  Em,
+  Hr,
+  Img,
+  Li,
+  Node,
+  type NodeInstance,
+  P,
+  Strong,
+  Table,
+  Tbody,
+  Thead,
+  Tr,
+} from '@meonode/ui'
 import { codeFrame } from '@/lib/prose/code'
 
 /** A heading on the page, with the anchor its element carries. */
@@ -64,7 +83,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
             ? EXAMPLE.exec(node.children[0].value.trim())
             : null
         if (directive) return lowerExample(directive[1], key)
-        return Node('p', { key, children: children(node) })
+        return P(children(node), { key })
       }
       case 'heading': {
         // Slugged from the heading as written, as GitHub and the pipeline do.
@@ -76,19 +95,19 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
         return Node(`h${node.depth}`, { key, id, children: children(node) })
       }
       case 'emphasis':
-        return Node('em', { key, children: children(node) })
+        return Em(children(node), { key })
       case 'strong':
-        return Node('strong', { key, children: children(node) })
+        return Strong(children(node), { key })
       case 'delete':
         return Node('del', { key, children: children(node) })
       case 'inlineCode':
-        return Node('code', { key, children: node.value })
+        return Code(node.value, { key })
       case 'break':
-        return Node('br', { key })
+        return Br({ key })
       case 'link':
-        return Node('a', { key, href: href(node.url), title: node.title ?? undefined, children: children(node) })
+        return A({ key, href: href(node.url), title: node.title ?? undefined, children: children(node) })
       case 'image':
-        return Node('img', { key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
+        return Img({ key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
       case 'code':
         return codeFrame(node.value, node.lang ?? undefined, { key })
       case 'blockquote': {
@@ -96,17 +115,14 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
         const first = node.children[0]
         const text = first?.type === 'paragraph' && first.children[0]?.type === 'text' ? first.children[0] : undefined
         const alert = text && ALERT.exec(text.value)
-        if (!text || !alert) return Node('blockquote', { key, children: children(node) })
+        if (!text || !alert) return Blockquote({ key, children: children(node) })
         const kind = ALERTS[alert[1] as keyof typeof ALERTS]
         text.value = text.value.slice(alert[0].length)
-        return Node('aside', {
+        return Aside({
           key,
           role: 'note',
           'data-callout': kind.callout,
-          children: [
-            Node('strong', { key: 'label', 'data-callout-label': true, children: kind.label }),
-            ...children(node),
-          ],
+          children: [Strong(kind.label, { key: 'label', 'data-callout-label': true }), ...children(node)],
         })
       }
       case 'list':
@@ -116,7 +132,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           // A tight list's items hold bare paragraphs; unwrapping them keeps its spacing tight. Looseness
           // is the list's (a blank line between any two items) or an item's own.
           children: node.children.map((item, index) =>
-            Node('li', {
+            Li({
               key: index,
               children:
                 node.spread || item.spread
@@ -128,7 +144,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           ),
         })
       case 'thematicBreak':
-        return Node('hr', { key })
+        return Hr({ key })
       case 'table':
         return lowerTable(node, key)
       case 'html':
@@ -147,9 +163,9 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
     return codeFrame(options.example(values.file, values.region), 'ts', { key, file: values.file })
   }
 
-  function lowerTable(table: Table, key: number) {
+  function lowerTable(table: MdTable, key: number) {
     const [head, ...body] = table.children
-    const cells = (row: Table['children'][number], tag: 'th' | 'td') =>
+    const cells = (row: MdTable['children'][number], tag: 'th' | 'td') =>
       row.children.map((cell, index) =>
         Node(tag, {
           key: index,
@@ -157,16 +173,13 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           children: children(cell),
         }),
       )
-    return Node('div', {
+    return Div({
       key,
       'data-table': true,
-      children: Node('table', {
+      children: Table({
         children: [
-          Node('thead', { key: 'head', children: Node('tr', { children: cells(head, 'th') }) }),
-          Node('tbody', {
-            key: 'body',
-            children: body.map((row, index) => Node('tr', { key: index, children: cells(row, 'td') })),
-          }),
+          Thead({ key: 'head', children: Tr({ children: cells(head, 'th') }) }),
+          Tbody({ key: 'body', children: body.map((row, index) => Tr({ key: index, children: cells(row, 'td') })) }),
         ],
       }),
     })

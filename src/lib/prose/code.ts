@@ -1,4 +1,4 @@
-import { Node, type NodeInstance } from '@meonode/ui'
+import { Button, Code, Div, Figcaption, Figure, type NodeInstance, Pre, Span, Svg, SvgPath } from '@meonode/ui'
 import { highlight } from '@/lib/prose/highlight'
 import { LANGUAGES } from '@/lib/prose/languages'
 
@@ -51,7 +51,7 @@ export function packageManagerVariants(code: string): Record<PackageManager, str
 
 // Plain SVG, so the icons add no styled node: the copy sheet, and the tick shown once copied.
 const icon = (paths: string[], role: string) =>
-  Node('svg', {
+  Svg({
     'data-icon': role,
     width: 16,
     height: 16,
@@ -62,16 +62,12 @@ const icon = (paths: string[], role: string) =>
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     'aria-hidden': true,
-    children: paths.map((d, key) => Node('path', { key, d })),
+    children: paths.map((d, key) => SvgPath({ key, d })),
   })
 
 function copyButton() {
-  return Node('button', {
-    key: 'copy',
-    type: 'button',
-    'data-copy': true,
-    'aria-label': 'Copy code',
-    children: [
+  return Button(
+    [
       icon(
         [
           'M5.5 5.5V3.75A1.25 1.25 0 0 1 6.75 2.5h5.5a1.25 1.25 0 0 1 1.25 1.25v5.5a1.25 1.25 0 0 1-1.25 1.25H10.5',
@@ -81,17 +77,17 @@ function copyButton() {
       ),
       icon(['M3.75 8.5 6.5 11.25l5.75-6.5'], 'copied'),
     ],
-  })
+    { key: 'copy', type: 'button', 'data-copy': true, 'aria-label': 'Copy code' },
+  )
 }
 
 function pre(code: string, language: string | undefined, extra: Record<string, unknown> = {}) {
   const html = highlight(code, language)
-  return Node('pre', {
+  return Pre(html ? Code(null, { dangerouslySetInnerHTML: { __html: html } }) : Code(code), {
     // It scrolls sideways, so it takes focus for keyboard readers to scroll it.
     tabIndex: 0,
     'data-language': language,
     ...extra,
-    children: html ? Node('code', { dangerouslySetInnerHTML: { __html: html } }) : Node('code', { children: code }),
   })
 }
 
@@ -107,41 +103,35 @@ export function codeFrame(
 ): NodeInstance {
   const variants = language && /^(sh|shell|bash|zsh)$/i.test(language) ? packageManagerVariants(code) : undefined
   if (variants) {
-    return Node('figure', {
+    return Figure({
       key,
       'data-code': true,
       'data-install': true,
       children: [
-        Node('figcaption', {
-          key: 'head',
-          children: [
-            Node('div', {
+        Figcaption(
+          [
+            Div({
               key: 'tabs',
               role: 'group',
               'aria-label': 'Package manager',
-              children: PACKAGE_MANAGERS.map(pm =>
-                Node('button', { key: pm, type: 'button', 'data-pm-choice': pm, children: pm }),
-              ),
+              children: PACKAGE_MANAGERS.map(pm => Button(pm, { key: pm, type: 'button', 'data-pm-choice': pm })),
             }),
             copyButton(),
           ],
-        }),
+          { key: 'head' },
+        ),
         ...PACKAGE_MANAGERS.map(pm => pre(variants[pm], language, { key: pm, 'data-pm-pane': pm })),
       ],
     })
   }
   const grammar = language && LANGUAGES[language.toLowerCase()]
   const label = file ?? (grammar ? LANGUAGE_NAMES[grammar] : language)
-  return Node('figure', {
+  return Figure({
     key,
     'data-code': true,
     children: [
-      Node('figcaption', {
+      Figcaption([Span(label ?? '', { key: 'label', 'data-file': file ? true : undefined }), copyButton()], {
         key: 'head',
-        children: [
-          Node('span', { key: 'label', 'data-file': file ? true : undefined, children: label ?? '' }),
-          copyButton(),
-        ],
       }),
       pre(code, language, { key: 'code' }),
     ],
