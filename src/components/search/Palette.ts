@@ -159,6 +159,7 @@ function Row(option: Option, active: boolean, choose: (option: Option) => void, 
 export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function PaletteLayer({ data, close }) {
   const router = useRouter()
   const layer = useRef<HTMLDivElement>(null)
+  const field = useRef<HTMLInputElement>(null)
   useLayerFocus(layer, close)
   const [scope, setScope] = useState<SearchLine | undefined>(() => lineOf(window.location.pathname, data.lines))
   const [query, setQuery] = useState('')
@@ -168,9 +169,13 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
 
   useEffect(() => data.closed, [data])
   // After the field has focus, which useLayerFocus gives it first: keys typed until then were buffered.
+  // They go into the field at once, so a key that reaches it before React draws them adds to them.
   useEffect(() => {
     const typed = data.typed()
-    if (typed) setQuery(current => typed + current)
+    const input = field.current
+    if (!typed || !input) return
+    input.value = typed + input.value
+    setQuery(input.value)
   }, [data])
   // Loaded as the palette opens, so the first query does not wait for the index.
   useEffect(() => {
@@ -265,6 +270,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
             Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
             Input({
               key: 'input',
+              ref: field,
               type: 'search',
               role: 'combobox',
               'aria-expanded': options.length > 0,
