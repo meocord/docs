@@ -109,9 +109,6 @@ export const SheetCard = createNode('div', {
 export const SheetPane = createNode('main', {
   id: 'content',
   minWidth: 0,
-  flexGrow: 0,
-  flexShrink: 1,
-  flexBasis: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
   outline: 'none',
 })
 

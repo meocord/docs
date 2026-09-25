@@ -81,7 +81,8 @@ export const themeTokens = {
   layout: {
     sidebar: '260px',
     inspector: '224px',
-    prose: '72ch',
+    // About 72 characters of the body face, in rem so it holds whichever face has loaded.
+    prose: '48rem',
     gutter: '8px',
     toolbar: '52px',
     row: '32px',
