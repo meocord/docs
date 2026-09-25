@@ -1,8 +1,9 @@
-import { A, Div, Footer } from '@meonode/ui'
+import { A, Div, Footer, Node } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { Inspector } from '@/components/shell/Inspector'
 import { SheetCard, SheetPane, SidebarPane } from '@/components/shell/panes'
+import { SheetScroll } from '@/components/shell/SheetScroll'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { TocEntry } from '@/components/shell/types'
@@ -70,16 +71,20 @@ function SkipLink() {
  * reading sheet, an elevated card whose header is the toolbar. Inside the sheet, the prose and the
  * table of contents form one region, centred, so the page is balanced at any width. Below the compact
  * breakpoint the sidebar becomes a sheet opened from the toolbar and the card fills the screen; below
- * the wide one the table of contents is not shown. Everything it draws comes from its props.
+ * the wide one the table of contents is not shown. On a desktop the window is fixed to the viewport
+ * and its panes scroll, each on its own; on a phone the document scrolls. Everything it draws comes
+ * from its props.
  */
 export function Window({ crumbs, groups, version, repository, toc = [], inspector, wide, children }: WindowProps) {
   return Div({
     display: 'flex',
-    alignItems: 'flex-start',
     gap: 'theme.layout.gutter',
-    minHeight: '100dvh',
+    height: '100dvh',
     padding: 'theme.layout.gutter',
-    css: { '@media (width < theme.breakpoint.compact)': { padding: 0, gap: 0 } },
+    overflow: 'hidden',
+    css: {
+      '@media (width < theme.breakpoint.compact)': { height: 'auto', padding: 0, gap: 0, overflow: 'visible' },
+    },
     children: [
       SkipLink(),
       SidebarPane({
@@ -111,6 +116,7 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
           }),
         ],
       }),
+      Node(SheetScroll, { key: 'scroll' }),
     ],
   })
 }

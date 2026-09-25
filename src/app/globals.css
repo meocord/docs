@@ -15,6 +15,7 @@
   --mc-fill: rgb(255 255 255 / 0.05);
   --mc-fill-hover: rgb(255 255 255 / 0.08);
   --mc-scrim: rgb(0 0 0 / 0.4);
+  --mc-scrollbar: rgb(255 255 255 / 0.18);
 
   --mc-accent: #8c98ff;
   --mc-accent-hover: #a4aeff;
@@ -55,6 +56,7 @@
   --mc-fill: rgb(22 22 24 / 0.05);
   --mc-fill-hover: rgb(22 22 24 / 0.08);
   --mc-scrim: rgb(22 22 24 / 0.24);
+  --mc-scrollbar: rgb(22 22 24 / 0.2);
 
   --mc-accent: #4b5bd7;
   --mc-accent-hover: #3e4dc4;
@@ -98,6 +100,12 @@ body {
   font-size: 1rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbars are thin and quiet, drawn inside the panes that scroll. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mc-scrollbar) transparent;
 }
 
 ::selection {

@@ -13,11 +13,10 @@ type WithCss<P> = Omit<NonNullable<P>, 'css'> & { css?: ThemedCSSObject }
 export const SidebarPane = ({ css, ...props }: WithCss<Parameters<typeof Aside>[0]> = {}) =>
   Aside({
     width: 'theme.layout.sidebar',
-    height: 'calc(100dvh - 2 * theme.layout.gutter)',
-    position: 'sticky',
-    top: 'theme.layout.gutter',
+    height: '100%',
     overflowY: 'auto',
     overscrollBehavior: 'contain',
+    scrollbarGutter: 'stable',
     borderRadius: 'theme.radius.pane',
     boxShadow: 'theme.elevation.1',
     ...props,
@@ -55,22 +54,38 @@ export const PopoverSurface = ({ css, ...props }: WithCss<Parameters<typeof Div>
     css: { ...materialCss('popover'), ...css },
   })
 
-/** The reading sheet: an opaque, elevated card on the canvas, rounded where it meets it. */
+/**
+ * The reading sheet: an opaque, elevated card on the canvas, rounded where it meets it. On a desktop it
+ * is the window's scroll container, so the toolbar stays inside its rounded top as the page scrolls
+ * beneath; on a phone it fills the screen and the document scrolls.
+ */
 export const SheetCard = createNode('div', {
+  'data-sheet': true,
+  tabIndex: -1,
   display: 'flex',
   flexDirection: 'column',
   flexGrow: 1,
   // meonode sets flex-shrink: 0 on every node; the sheet has to give way to the viewport.
   flexShrink: 1,
   minWidth: 0,
-  minHeight: 'calc(100dvh - 2 * theme.layout.gutter)',
+  height: '100%',
   borderRadius: 'theme.radius.pane',
   backgroundColor: 'theme.surface.sheet',
   boxShadow: 'theme.elevation.2',
-  // Clips the corners without making a scroll container, so the toolbar can stay sticky.
-  overflow: 'clip',
+  overflowY: 'auto',
+  overscrollBehavior: 'contain',
+  // Room for a classic scrollbar from the first frame, so its arrival never moves the page.
+  scrollbarGutter: 'stable',
+  outline: 'none',
   css: {
-    '@media (width < theme.breakpoint.compact)': { borderRadius: 0, boxShadow: 'none', minHeight: '100dvh' },
+    '@media (width < theme.breakpoint.compact)': {
+      height: 'auto',
+      minHeight: '100dvh',
+      borderRadius: 0,
+      boxShadow: 'none',
+      // Clips without making a scroll container, so the toolbar stays sticky to the document.
+      overflow: 'clip',
+    },
   },
 })
 
@@ -90,7 +105,7 @@ export const InspectorPane = createNode('aside', {
   flexShrink: 0,
   position: 'sticky',
   top: 'calc(theme.layout.toolbar + theme.space.2)',
-  maxHeight: 'calc(100dvh - theme.layout.toolbar - theme.space.4)',
+  maxHeight: 'calc(100dvh - 2 * theme.layout.gutter - theme.layout.toolbar - theme.space.4)',
   overflowY: 'auto',
   padding: 'theme.space.10 0 theme.space.8',
   // Shown only from the wide breakpoint up.
