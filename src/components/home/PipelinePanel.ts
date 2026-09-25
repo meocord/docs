@@ -236,8 +236,10 @@ const Panel = createNode('section', {
       backgroundColor: 'transparent',
       boxShadow: 'inset 0 0 0 1.5px theme.ink.quiet',
     },
-    '& [data-narration]': {
-      marginTop: 'auto',
+    '& [data-narration-box]': { display: 'grid', margin: 'auto 0 theme.space.4' },
+    '& [data-narration-box] > p': { gridArea: '1 / 1', margin: 0 },
+    '& [data-narration-sizer]': { visibility: 'hidden' },
+    '& [data-narration], & [data-narration-sizer]': {
       padding: 'theme.space.3 theme.space.2 theme.space.1',
       fontSize: 'theme.type.small.size',
       lineHeight: 'theme.type.small.line',
@@ -342,7 +344,14 @@ export function PipelinePanel(demo: PipelineDemo) {
       Node('div', {
         key: 'panes',
         'data-panes': true,
+        // In the order they are drawn, so a page painted before it has all arrived draws each pane
+        // where it stays.
         children: [
+          Node('div', {
+            key: 'code',
+            'data-pane': 'code',
+            children: codeFrame(demo.source, 'ts', { file: demo.file }),
+          }),
           Node('div', {
             key: 'channel',
             'data-pane': 'channel',
@@ -379,21 +388,32 @@ export function PipelinePanel(demo: PipelineDemo) {
             ],
           }),
           Node('div', {
-            key: 'code',
-            'data-pane': 'code',
-            children: codeFrame(demo.source, 'ts', { file: demo.file }),
-          }),
-          Node('div', {
             key: 'trace',
             'data-pane': 'trace',
             children: [
               Node('h3', { key: 'h', children: 'Trace' }),
               Node('ol', { key: 'stages', children: demo.stages.map(stageRow) }),
-              Node('p', {
+              // Each stage's sentence laid under the one shown, unseen, so the trace stands as tall as
+              // its longest and nothing moves as the call steps through.
+              Node('div', {
                 key: 'narration',
-                'data-narration': true,
-                'aria-live': 'polite',
-                children: demo.stages.at(-1)?.narration,
+                'data-narration-box': true,
+                children: [
+                  Node('p', {
+                    key: 'live',
+                    'data-narration': true,
+                    'aria-live': 'polite',
+                    children: demo.stages.at(-1)?.narration,
+                  }),
+                  ...demo.stages.map((stage, index) =>
+                    Node('p', {
+                      key: index,
+                      'data-narration-sizer': true,
+                      'aria-hidden': true,
+                      children: stage.narration,
+                    }),
+                  ),
+                ],
               }),
             ],
           }),
