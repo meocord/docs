@@ -23,7 +23,11 @@ export const SidebarPane = ({ css, ...props }: WithCss<Parameters<typeof Aside>[
     css: { ...materialCss('sidebar'), ...css },
   })
 
-/** The toolbar: the reading sheet's header, in the chrome material, sticky as the sheet scrolls. */
+/**
+ * The toolbar: the reading sheet's header, in the chrome material, sticky as the sheet scrolls. Its
+ * hairline appears once the page has scrolled beneath it, driven by the scroll itself where the browser
+ * supports scroll timelines, and always drawn where it does not.
+ */
 export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[0]> = {}) =>
   Header({
     position: 'sticky',
@@ -39,6 +43,13 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
     ...props,
     css: {
       ...materialCss('chrome'),
+      '@supports (animation-timeline: scroll())': {
+        borderBottomColor: 'transparent',
+        animation: 'toolbar-hairline linear both',
+        animationTimeline: 'scroll()',
+        animationRange: '0 8px',
+      },
+      '@keyframes toolbar-hairline': { to: { borderBottomColor: 'theme.line.hairline' } },
       '@media (width < theme.breakpoint.compact)': { borderRadius: 0, padding: '0 theme.space.2' },
       ...css,
     },
