@@ -76,6 +76,8 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
       - run: bun run build
+      # First-load JS of every prerendered page, gzipped, against the 220 KB budget
+      - run: bun run budget:js
       - run: bun --bun x playwright install --with-deps chromium
       - run: bun run test:e2e
       - if: failure()

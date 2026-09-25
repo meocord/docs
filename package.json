@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "budget:js": "bun scripts/check-js-budget.ts",
     "test:e2e": "bun --bun x playwright test",
     "icons": "bun scripts/generate-icons.ts",
     "versions:sync": "bun scripts/sync-versions.ts",
