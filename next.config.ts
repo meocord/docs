@@ -42,7 +42,17 @@ const nextConfig: NextConfig = {
       : [{ source: '/_next/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
   },
   experimental: {
-    swcPlugins: [['@meonode/compiler', { callSiteLocations: process.env.NODE_ENV !== 'production' }]],
+    swcPlugins: [
+      [
+        '@meonode/compiler',
+        {
+          callSiteLocations: process.env.NODE_ENV !== 'production',
+          // Our prestyled factories, whose call sites it compiles as it does @meonode/ui's own. The
+          // module exports createNode factories only; src/components/nodes/index.spec.ts checks it.
+          factoryModules: ['@/components/nodes'],
+        },
+      ],
+    ],
   },
   devIndicators: false,
 }

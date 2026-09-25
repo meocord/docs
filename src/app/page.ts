@@ -1,16 +1,10 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { Div, H1, Node } from '@meonode/ui'
-import {
-  FeatureSection,
-  HomeRows,
-  NewSection,
-  StartSection,
-  TestingSection,
-  WhySection,
-} from '@/components/home/HomeSections'
+import { FeatureSection, NewSection, StartSection, TestingSection, WhySection } from '@/components/home/HomeSections'
+import { HomeRows, Prose } from '@/components/nodes'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
-import { Prose } from '@/components/prose/Prose'
+
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { VERSIONS } from '@/config/versions'

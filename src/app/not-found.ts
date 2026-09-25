@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { A, Button, Div, H1, P } from '@meonode/ui'
-import { Prose } from '@/components/prose/Prose'
+import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import { CURRENT_LINE } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
