@@ -65,11 +65,11 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
             children: [
               Node(ThemeControl, { key: 'theme', touch: true }),
               Button(Glyph('close'), {
+                ...iconButton,
                 key: 'close',
                 type: 'button',
                 'aria-label': 'Close navigation',
                 onClick: close,
-                ...iconButton,
                 css: { ...focusCss, ...touchCss },
               }),
             ],
@@ -90,11 +90,11 @@ export const MobileNav = Component<{ groups: NavGroup[] }>(function MobileNav({ 
   const portal = usePortal()
 
   return Button(Glyph('sidebar'), {
+    ...iconButton,
     type: 'button',
     'aria-label': 'Open navigation',
     'aria-haspopup': 'dialog',
     onClick: () => portal.open(NavSheet, { groups }),
-    ...iconButton,
     css: {
       ...transitionCss(),
       ...focusCss,

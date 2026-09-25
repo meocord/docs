@@ -84,10 +84,11 @@ function copyButton() {
 function pre(code: string, language: string | undefined, extra: Record<string, unknown> = {}) {
   const html = highlight(code, language)
   return Pre(html ? Code(null, { dangerouslySetInnerHTML: { __html: html } }) : Code(code), {
+    // A key and data attributes; never a focus or a language of its own.
+    ...extra,
     // It scrolls sideways, so it takes focus for keyboard readers to scroll it.
     tabIndex: 0,
     'data-language': language,
-    ...extra,
   })
 }
 
