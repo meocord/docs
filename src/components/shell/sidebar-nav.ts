@@ -30,7 +30,16 @@ function NavRow(item: NavItem) {
         },
       },
       children: [
-        Span(item.title, { flexGrow: 1, minWidth: 0 }),
+        Span(item.title, {
+          flexGrow: 1,
+          // Set explicitly: a flex shorthand loses to the default flex-shrink 0 (l7aromeo/meonode#33).
+          flexShrink: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          title: item.title,
+        }),
         item.badge
           ? Span(item.badge, {
               fontSize: 'theme.type.caption.size',

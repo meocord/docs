@@ -27,7 +27,8 @@ async function home() {
 
   return Window({
     crumbs: [{ title: 'Overview' }],
-    groups: sidebar(HOME_LINE),
+    // The home page is the line's overview, so the sidebar marks it.
+    groups: sidebar(HOME_LINE, 'overview'),
     version: versionChoices(HOME_LINE),
     repository: REPOSITORY,
     wide: true,
