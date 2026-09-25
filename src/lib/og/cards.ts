@@ -5,8 +5,12 @@ export interface OgCard {
   /** The small label above the title, such as the section. */
   eyebrow: string
   title: string
-  /** The version or line shown on the card. */
+  /** The version or line shown on the card, as a "since" chip. */
   version?: string
+  /** One or two lines under the title. */
+  summary?: string
+  /** One line of code set in the accent: the page's key symbol, or its signature. */
+  code?: string
 }
 
 /**
@@ -15,12 +19,16 @@ export interface OgCard {
  */
 const CARDS: Record<string, Record<string, OgCard>> = {
   site: {
-    home: { eyebrow: 'MeoCord', title: 'Decorator-based Discord bots\non discord.js' },
+    home: {
+      eyebrow: 'Documentation',
+      title: 'Decorator-based Discord bots, with the pipeline you’d build yourself.',
+      code: 'npx meocord create my-bot',
+    },
   },
 }
 
 /** Bumped when the card's drawing changes, so every URL changes with it. */
-const DESIGN_REVISION = 1
+const DESIGN_REVISION = 2
 
 export function findCard(line: string, id: string): OgCard | undefined {
   return Object.hasOwn(CARDS, line) && Object.hasOwn(CARDS[line], id) ? CARDS[line][id] : undefined
@@ -29,7 +37,16 @@ export function findCard(line: string, id: string): OgCard | undefined {
 /** The content hash in a card's URL: 12 hex characters of its content and the design revision. */
 export function cardHash(card: OgCard): string {
   return createHash('sha256')
-    .update(JSON.stringify([DESIGN_REVISION, card.eyebrow, card.title, card.version ?? null]))
+    .update(
+      JSON.stringify([
+        DESIGN_REVISION,
+        card.eyebrow,
+        card.title,
+        card.version ?? null,
+        card.summary ?? null,
+        card.code ?? null,
+      ]),
+    )
     .digest('hex')
     .slice(0, 12)
 }

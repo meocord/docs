@@ -9,10 +9,17 @@ vi.mock('next/cache', () => ({ cacheLife: () => undefined }))
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
 describe('renderCard', () => {
-  it('draws a 1200×630 PNG, with and without a version', async () => {
+  it('draws a 1200×630 PNG, with and without the optional parts', async () => {
     for (const card of [
       { eyebrow: 'Guide', title: 'Deferring replies' },
       { eyebrow: 'API', title: 'MeoCordApp', version: '4.1' },
+      {
+        eyebrow: 'Guides / Pipeline',
+        title: 'Deferring a reply with @Defer',
+        summary: 'Acknowledge the interaction before a guard or a slow handler runs.',
+        code: '@Defer({ ephemeral: true })',
+        version: '4.1',
+      },
     ]) {
       const { png: base64, engine } = await renderCard(card)
       expect(['gpu', 'cpu']).toContain(engine)

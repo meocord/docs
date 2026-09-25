@@ -11,6 +11,8 @@ describe('og cards', () => {
   it('changes the hash with the content', () => {
     expect(cardHash({ eyebrow: 'a', title: 'b' })).not.toBe(cardHash({ eyebrow: 'a', title: 'c' }))
     expect(cardHash({ eyebrow: 'a', title: 'b' })).not.toBe(cardHash({ eyebrow: 'a', title: 'b', version: '4.0' }))
+    expect(cardHash({ eyebrow: 'a', title: 'b' })).not.toBe(cardHash({ eyebrow: 'a', title: 'b', summary: 's' }))
+    expect(cardHash({ eyebrow: 'a', title: 'b' })).not.toBe(cardHash({ eyebrow: 'a', title: 'b', code: 'c' }))
   })
 
   it('finds only registered cards, never inherited keys', () => {
