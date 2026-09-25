@@ -9,6 +9,8 @@ e2e
 playwright.config.ts
 tests
 **/*.spec.ts
+# The guides embed example specs through ::example, and the build prerenders them
+!examples/**/*.spec.ts
 *.md
 !README.md
 .env*
