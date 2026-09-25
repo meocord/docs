@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { listPages, loadPage, resolveExample, type PageEntry } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
@@ -31,6 +33,19 @@ export function sidebar(line: string, currentSlug?: string): NavGroup[] {
       badge: page.since && page.since.startsWith(`${line}.0`) ? 'New' : undefined,
     })
   }
+  const reference = [
+    ...(existsSync(path.join(process.cwd(), 'generated', 'migrating', `${line}.md`))
+      ? [
+          {
+            title: 'Migrating',
+            href: docsHref({ kind: 'migrating', line }, VERSIONS),
+            current: currentSlug === 'migrating',
+          },
+        ]
+      : []),
+    { title: 'Changelog', href: docsHref({ kind: 'changelog', line }, VERSIONS), current: currentSlug === 'changelog' },
+  ]
+  groups.push({ title: 'Reference', items: reference })
   return groups
 }
 
@@ -42,7 +57,11 @@ export function versionChoices(line: string, id?: string): { current: VersionOpt
   const options = versionOptions(VERSIONS).map(option => {
     if (!id) return option
     const match = listPages(option.label).find(page => page.id === id || page.formerly.includes(id))
-    return match ? { ...option, href: guideHref(option.label, match.slug) } : option
+    if (match) return { ...option, href: guideHref(option.label, match.slug) }
+    // A line without the page says so, and where it is, rather than landing somewhere else.
+    return option.label === line
+      ? option
+      : { ...option, href: docsHref({ kind: 'missing', line: option.label, id }, VERSIONS) }
   })
   return { current: options.find(option => option.label === line) ?? versionOption(line, VERSIONS), options }
 }
