@@ -1,32 +1,25 @@
 /**
  * Draws the site's icons with meo-canvas into public/, and app/favicon.ico, which Next serves by
- * convention ahead of `metadata.icons`. The mark is a placeholder until the logo is designed.
+ * convention ahead of `metadata.icons`. The mark itself lives in src/lib/brand/mark.ts.
  * Run `bun run icons` after changing it, and commit the output.
  */
 import path from 'node:path'
 import { writeFileSync } from 'node:fs'
-import { Box, Root } from 'meo-canvas'
+import { Root } from 'meo-canvas'
+import { MARK_DARK, markNode, markSvg } from '../src/lib/brand/mark'
 import { packIco } from './ico'
 
 const PUBLIC = path.join(process.cwd(), 'public')
 const APP = path.join(process.cwd(), 'src', 'app')
 
-const INK = '#0D0E12'
-const ACCENT = '#8F9BFF'
-
-async function tile(size: number, radius: number): Promise<Buffer> {
-  const unit = size / 32
-  // Whole pixels with a floor, so the mark survives a 16px tab strip.
-  const dot = Math.max(6, Math.round(14 * unit))
+async function draw(size: number, node: ReturnType<typeof markNode>, backgroundColor?: string): Promise<Buffer> {
   const canvas = await Root({
     width: size,
     height: size,
-    backgroundColor: INK,
-    borderRadius: radius * unit,
-    overflow: 'hidden',
+    backgroundColor,
     justifyContent: 'center',
     alignItems: 'center',
-    children: Box({ width: dot, height: dot, borderRadius: dot / 2, backgroundColor: ACCENT }),
+    children: node,
   })
   try {
     return await canvas.toBuffer('png')
@@ -35,22 +28,31 @@ async function tile(size: number, radius: number): Promise<Buffer> {
   }
 }
 
-const targets: [name: string, size: number, radius: number][] = [
-  ['icon-512.png', 512, 7],
-  ['icon-192.png', 192, 7],
-  ['icon-32.png', 32, 5],
+const tile = (size: number, radius?: number) => draw(size, markNode(size, MARK_DARK, radius))
+
+// A full-bleed tile with the mark at 3/4, inside the 80% circle a launcher may crop a maskable icon to.
+const maskable = (size: number) => draw(size, markNode((size * 3) / 4, MARK_DARK, 0), MARK_DARK.tile)
+
+const targets: [name: string, render: () => Promise<Buffer>][] = [
+  ['icon-512.png', () => tile(512)],
+  ['icon-192.png', () => tile(192)],
+  ['icon-32.png', () => tile(32)],
+  ['icon-maskable-512.png', () => maskable(512)],
   // Apple masks its own corners, so its source is square.
-  ['apple-icon.png', 180, 0],
+  ['apple-icon.png', () => tile(180, 0)],
 ]
 
-for (const [name, size, radius] of targets) {
-  writeFileSync(path.join(PUBLIC, name), await tile(size, radius))
-  console.log(`[icons] ${name} ${size}x${size}`)
+for (const [name, render] of targets) {
+  writeFileSync(path.join(PUBLIC, name), await render())
+  console.log(`[icons] ${name}`)
 }
+
+writeFileSync(path.join(PUBLIC, 'icon.svg'), `${markSvg()}\n`)
+console.log('[icons] icon.svg')
 
 // Each size drawn, not downscaled: a resampled 16px mark smears.
 const icoSizes = [16, 32, 48]
-const ico = packIco(await Promise.all(icoSizes.map(async size => ({ size, data: await tile(size, 4) }))))
+const ico = packIco(await Promise.all(icoSizes.map(async size => ({ size, data: await tile(size) }))))
 writeFileSync(path.join(APP, 'favicon.ico'), ico)
 console.log(`[icons] favicon.ico ${icoSizes.join('/')} (${ico.length}B)`)
 
@@ -59,11 +61,12 @@ const manifest = {
   short_name: 'MeoCord',
   start_url: '/',
   display: 'standalone',
-  background_color: INK,
-  theme_color: INK,
+  background_color: '#161618',
+  theme_color: '#161618',
   icons: [
     { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
   ],
 }
 writeFileSync(path.join(PUBLIC, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`)
