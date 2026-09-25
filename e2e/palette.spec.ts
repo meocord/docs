@@ -4,6 +4,14 @@ import { expect, test, type Page } from '@playwright/test'
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Search the documentation' })
 const field = (page: Page) => dialog(page).getByRole('combobox')
 
+/** Waits for the dialog's opening animation to end, so checks see the colours readers see. */
+async function settled(page: Page) {
+  await page.waitForFunction(() => {
+    const layer = document.querySelector('[role="dialog"]')
+    return layer?.getAnimations({ subtree: true }).every(animation => animation.playState !== 'running') ?? false
+  })
+}
+
 /** Console errors and CSP violations while the palette is in use. */
 function watch(page: Page): string[] {
   const problems: string[] = []
@@ -101,6 +109,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.keyboard.press('ControlOrMeta+k')
     await page.keyboard.type('cooldown')
     await expect(dialog(page).getByRole('option').first()).toBeVisible()
+    await settled(page)
     const { violations } = await new AxeBuilder({ page })
       .include('[role="dialog"]')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
