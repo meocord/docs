@@ -75,7 +75,7 @@ export const themeTokens = {
    * By role, proportional to size, and nested: an inner radius is the outer one less the padding
    * between them. Nothing is pill-shaped and nothing is sharp.
    */
-  radius: { chip: '4px', control: '6px', code: '10px', callout: '10px', popover: '12px', pane: '12px' },
+  radius: { chip: '4px', control: '6px', row: '8px', code: '10px', callout: '10px', popover: '12px', pane: '12px' },
 
   layout: {
     sidebar: '260px',
@@ -83,7 +83,7 @@ export const themeTokens = {
     prose: '72ch',
     gutter: '8px',
     toolbar: '52px',
-    row: '28px',
+    row: '32px',
     sheetPad: '40px',
     sheetPadCompact: '24px',
   },

@@ -1,6 +1,7 @@
-import { For, Li, Nav, Node, Ol, Span } from '@meonode/ui'
-import { focusCss } from '@/lib/design/css'
+import { Button, For, Li, Nav, Node, Ol, Span } from '@meonode/ui'
+import { focusCss, transitionCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
+import { Glyph } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
 import { MobileNav } from '@/components/shell/MobileNav'
 import { ToolbarBar } from '@/components/shell/panes'
@@ -58,6 +59,64 @@ function Breadcrumbs(crumbs: Crumb[]) {
   })
 }
 
+/**
+ * The search field: a button drawn as a field, which opens the command palette. It carries
+ * `data-search-trigger` for the palette's island to find, and shows the shortcut it answers to.
+ */
+function SearchField() {
+  return Button(
+    [
+      Span(Glyph('search', 14), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
+      Span('Search', {
+        key: 'label',
+        flexGrow: 1,
+        textAlign: 'left',
+        css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
+      }),
+      Node('kbd', {
+        key: 'shortcut',
+        'aria-hidden': true,
+        children: '⌘K',
+        css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
+      }),
+    ],
+    {
+      type: 'button',
+      'data-search-trigger': true,
+      'aria-label': 'Search the documentation',
+      'aria-keyshortcuts': 'Meta+K Control+K',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 'theme.space.2',
+      width: 220,
+      height: 28,
+      padding: '0 theme.space.1 0 theme.space.2',
+      border: 'none',
+      borderRadius: 'theme.radius.row',
+      backgroundColor: 'theme.surface.fill',
+      color: 'theme.ink.secondary',
+      fontFamily: 'inherit',
+      fontSize: 'theme.type.control.size',
+      cursor: 'pointer',
+      css: {
+        ...transitionCss(),
+        ...focusCss,
+        '&:hover': { backgroundColor: 'theme.surface.fillHover' },
+        '& kbd': {
+          padding: '1px theme.space.1',
+          borderRadius: 'theme.radius.chip',
+          backgroundColor: 'theme.surface.sheet',
+          boxShadow: 'theme.elevation.1',
+          fontFamily: 'inherit',
+          fontSize: 'theme.type.caption.size',
+          color: 'theme.ink.secondary',
+        },
+        '@media (width < theme.breakpoint.compact)': { width: 28, padding: 0, justifyContent: 'center' },
+      },
+    },
+  )
+}
+
 export interface ToolbarProps {
   crumbs: Crumb[]
   groups: NavGroup[]
@@ -82,6 +141,7 @@ export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
         children: Mark(),
       }),
       Breadcrumbs(crumbs),
+      SearchField(),
       Node(VersionSwitcher, version),
       Node(ThemeControl),
       Link({

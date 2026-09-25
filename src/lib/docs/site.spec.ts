@@ -17,8 +17,11 @@ describe('the docs site data', () => {
     expect(items.filter(item => item.current).map(item => item.title)).toEqual(['Guards'])
     expect(items.find(item => item.title === 'Guards')?.href).toBe('/docs/latest/guards')
     expect(sidebar('4.1').flatMap(group => group.items)[0].href).toMatch(/^\/docs\/4\.1\//)
+    // Every group carries a glyph; a section without its own gets the book.
+    expect(groups.every(group => group.icon)).toBe(true)
     expect(groups.at(-1)).toEqual({
       title: 'Reference',
+      icon: 'reference',
       items: [
         { title: 'Migrating', href: '/docs/latest/migrating', current: false },
         { title: 'Changelog', href: '/docs/latest/changelog', current: false },

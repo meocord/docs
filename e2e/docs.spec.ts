@@ -5,7 +5,7 @@ test('a guide renders in the window, at its canonical latest URL', async ({ page
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1, name: 'Testing' })).toBeVisible()
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/docs\/latest\/testing$/)
-  await expect(page.getByText(/^From the README of meocord \d/)).toBeVisible()
+  await expect(page.locator('[data-subtitle]')).toHaveText(/^MeoCord 4\.0 · .*from the README of meocord 4\.0\./)
 })
 
 test('the sidebar lists the line’s pages and marks the one being read', async ({ page }) => {

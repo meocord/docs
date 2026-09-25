@@ -21,15 +21,19 @@ export function renderGuide(line: string, slug: string) {
     children: Prose({
       children: [
         Node('h1', { key: 'title', children: page.entry.title }),
-        ...(readme
-          ? [
-              Div({
-                key: 'source',
-                'data-source': true,
-                children: `From the README of meocord ${readme}.`,
-              }),
-            ]
-          : []),
+        // The page's context, muted under its title: the line, the section, and where it came from.
+        Div({
+          key: 'subtitle',
+          'data-subtitle': true,
+          children: [
+            `MeoCord ${line}`,
+            page.entry.section,
+            page.entry.since ? `since ${page.entry.since}` : undefined,
+            readme ? `from the README of meocord ${readme}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · '),
+        }),
         ...page.lowered.nodes,
         Node(ReadingIsland, { key: 'island' }),
       ],
