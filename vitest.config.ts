@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
-    include: ['src/**/*.spec.ts', 'scripts/**/*.spec.ts', 'tests/**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'scripts/**/*.spec.ts', 'tests/**/*.spec.ts', 'e2e/port.spec.ts'],
     environment: 'node',
     coverage: {
       provider: 'istanbul',
@@ -15,6 +15,7 @@ export default defineConfig({
         'src/proxy.ts',
         'scripts/csp-hash.mjs',
         'scripts/ico.ts',
+        'e2e/port.ts',
       ],
       reporter: ['text', 'lcov'],
       thresholds: { lines: 90, functions: 90, branches: 85, statements: 90 },

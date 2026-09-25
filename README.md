@@ -17,14 +17,14 @@ bun run build          # production build
 bun run serve          # the production build, run as the image runs it
 ```
 
-| Command                 | Use it to                                                                |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `bun run lint`          | Run ESLint                                                               |
-| `bun run format:check`  | Check formatting with Prettier (`bun run format` rewrites)               |
-| `bun run typecheck`     | Typecheck with `tsc`                                                     |
-| `bun run test:coverage` | Run the unit tests with coverage; thresholds are enforced in CI          |
-| `bun run test:e2e`      | Run the Playwright smoke tests against a production build                |
-| `bun run icons`         | Redraw the icons in `public/` and `src/app/favicon.ico`, and commit them |
+| Command                 | Use it to                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run lint`          | Run ESLint                                                                                                                      |
+| `bun run format:check`  | Check formatting with Prettier (`bun run format` rewrites)                                                                      |
+| `bun run typecheck`     | Typecheck with `tsc`                                                                                                            |
+| `bun run test:coverage` | Run the unit tests with coverage; thresholds are enforced in CI                                                                 |
+| `bun run test:e2e`      | Run the Playwright smoke tests against a production build, on a port derived from the checkout's path (`E2E_PORT` overrides it) |
+| `bun run icons`         | Redraw the icons in `public/` and `src/app/favicon.ico`, and commit them                                                        |
 
 ## How it is served
 
