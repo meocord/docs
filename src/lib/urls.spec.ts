@@ -82,6 +82,12 @@ describe('docsHref', () => {
     )
   })
 
+  it('builds the URL a line lands on', () => {
+    expect(docsHref({ kind: 'line', line: '4.0' }, BETA)).toBe('/docs/latest')
+    expect(docsHref({ kind: 'line', line: '4.1' }, BETA)).toBe('/docs/4.1')
+    expect(docsHref({ kind: 'line', line: '4.0' }, STABLE)).toBe('/docs/4.0')
+  })
+
   it('builds migrating and missing-page URLs', () => {
     expect(docsHref({ kind: 'migrating', line: '4.0', anchor: 'from-3x' }, BETA)).toBe('/docs/latest/migrating#from-3x')
     expect(docsHref({ kind: 'migrating', line: '4.1' }, BETA)).toBe('/docs/4.1/migrating')
