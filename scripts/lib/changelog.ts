@@ -3,7 +3,7 @@
  * ships, split into its entries, with links into the library's docs pointed at the site.
  */
 
-import { storedHref } from './stored-links.js'
+import { storedHref } from './stored-links'
 
 export interface ChangelogEntry {
   markdown: string
