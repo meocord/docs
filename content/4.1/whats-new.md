@@ -37,11 +37,28 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
   [Validation and pipes](/docs/4.1/validation).
 - **`@Cooldown`** limits how often a handler runs, per user, channel, guild or globally. See
   [Cooldowns](/docs/4.1/cooldowns).
+- **`@Cooldown({ by })`**, new in 4.1.0-beta.4, counts calls apart by a value of the call, such as the
+  account a button acts on. See [Counting per resource](/docs/4.1/cooldowns#counting-per-resource).
+- **Shared cooldown stores**, new in 4.1.0-beta.4: `ShardedCooldownStore` counts every shard's calls in the
+  shard manager, and `RedisCooldownStore` on Redis, so counts are exact across processes. See
+  [Where calls are counted](/docs/4.1/cooldowns#where-calls-are-counted), and
+  [A cooldown store](/docs/4.1/recipe-cooldown-stores) for PostgreSQL, SQLite and MongoDB.
+- **Observers**, new in 4.1.0-beta.4: an `@Observer()` listed in `@MeoCord({ observers })` is told as each
+  dispatched call starts and once it settles, with its outcome, its duration and the guard that denied it,
+  for metrics, audit logs and traces. See [Observers](/docs/4.1/observers).
+- **`ExecutionContext.getHandlerParams()`**, new in 4.1.0-beta.4, gives any stage the handler's params: raw
+  to a guard, validated and piped once an interceptor's `next.handle()` has run, and as they were to a
+  filter. From the same beta, `getArgs()` returns the arguments as they stand too, where beta.1 to beta.3
+  kept the raw ones. See [The call's params](/docs/4.1/interceptors#the-calls-params).
 
 ## Beyond commands
 
 - **Gateway events** with `@On` and `@Once`, through the same pipeline. See
   [Gateway events](/docs/4.1/gateway-events).
+- **Message commands**, new in 4.1.0-beta.4: `@MessageHandler('roll {sides} {note...?}')` matches a message
+  word by word and passes its params, validated and piped as a component's, after a prefix set in
+  `@MeoCord({ messages })` or a mention of the bot. Only the most specific matching pattern runs. See
+  [Message commands](/docs/4.1/message-commands).
 - **Lifecycle hooks**: `onReady` and `onShutdown`, in dependency order. See
   [Lifecycle hooks](/docs/4.1/lifecycle-hooks).
 - **Handler discovery**: `HandlerRegistry` lists every handler, for a `/help` command. See
@@ -59,6 +76,9 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
   [Sharding](/docs/4.1/sharding).
 - **`optionalExternals`** for packages a dependency tries to load and runs without. See
   [Self-contained builds](/docs/4.1/self-contained-builds).
+- **Self-contained builds on bun**, from 4.1.0-beta.4: a `bundleDependencies` build starts under bun as
+  under node. An `eval` devtool is built as the same source map without the eval, with a warning, and
+  development builds use `cheap-module-source-map`. See [The build hook](/docs/4.1/configuration#the-build-hook).
 - **Explained startup errors**: `isExplainedError(error)` tells whether MeoCord already said what went wrong,
   such as a privileged intent Discord refused. See [Gateway events](/docs/4.1/gateway-events).
 - **Import cycles**, from 4.1.0-beta.3, are a lint warning in `meocord/eslint`, and a constructor parameter
@@ -74,6 +94,8 @@ Every handler runs through one pipeline, described in [How a call runs](/docs/4.
 - **Mocks** take `authorizingIntegrationOwners` as the plain map Discord sends, for testing each install
   context. From 4.1.0-beta.3 they also carry a `locale` and `guildLocale`, and resolve the methods that
   return a promise in discord.js. See [Mocks](/docs/4.1/mocks).
+- **`testCooldownStore`**, new in 4.1.0-beta.4, checks a cooldown store you write against the behaviour of
+  the built-in one. See [Checking a store](/docs/4.1/cooldowns#checking-a-store).
 - **`clearAllMocks()` and `resetAllMocks()`**, new in 4.1.0-beta.3, reach every mock `meocord/testing` makes,
   and new projects reset them after every test. See
   [Resetting between tests](/docs/4.1/mocks#resetting-between-tests).
