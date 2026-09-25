@@ -55,7 +55,7 @@ community package may add one.
 | Before a handler     | guards, interceptors, validation, pipes | preconditions                | NestJS's guards, interceptors and pipes | guard functions                            |
 | Around errors        | exception filters                       | error events, with listeners | NestJS's exception filters              | none in its docs                           |
 | Cooldowns            | `@Cooldown`                             | `cooldownDelay`, built in    | none in its docs                        | a `RateLimit` guard, `@discordx/utilities` |
-| Prefix commands      | exact-keyword message handlers only     | yes, with argument parsing   | `@TextCommand`, with arguments          | `@SimpleCommand`, with options             |
+| Prefix commands      | patterns with params and prefixes       | yes, with argument parsing   | `@TextCommand`, with arguments          | `@SimpleCommand`, with options             |
 | Testing toolkit      | `meocord/testing`: `invoke`, mocks      | none in its docs             | NestJS's testing module                 | none in its docs                           |
 | Translations         | typed catalogs, built in                | `@sapphire/plugin-i18next`   | `@necord/localization`                  | none in its docs                           |
 | Language             | TypeScript                              | TypeScript or JavaScript     | TypeScript                              | TypeScript                                 |
