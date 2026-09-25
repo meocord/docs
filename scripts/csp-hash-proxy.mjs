@@ -4,89 +4,23 @@
  * per-request nonce and one render can be cached and shared. Pages have no Suspense holes, so Next
  * emits them in one piece and buffering costs about a millisecond.
  */
-import http from 'node:http'
 import { spawn } from 'node:child_process'
 import { connect } from 'node:net'
-import { MARKER, fillPolicy, passthroughPolicy } from './csp-hash.mjs'
+import { createProxyServer } from './csp-proxy-server.mjs'
+import { killTree } from './process-tree.mjs'
 
 const LISTEN = Number(process.env.PORT ?? 3000)
 const UPSTREAM = Number(process.env.UPSTREAM_PORT ?? LISTEN + 1)
 // Development runs `next dev` behind the same hop, so a page is never tried under a looser policy.
 const CHILD = (process.env.CSP_PROXY_CHILD ?? `${process.execPath} server.js`).split(' ')
 
-const server = http.createServer((req, res) => {
-  // A compressed body cannot be hashed; nginx compresses downstream of this hop.
-  const headers = { ...req.headers, 'accept-encoding': 'identity' }
-
-  const upstream = http.request(
-    { hostname: '127.0.0.1', port: UPSTREAM, path: req.url, method: req.method, headers },
-    up => {
-      const type = up.headers['content-type'] ?? ''
-      const header = up.headers['content-security-policy']
-      const csp = Array.isArray(header) ? header.join(', ') : header
-      const bodiless = req.method === 'HEAD' || up.statusCode === 304
-
-      if (bodiless || up.headers['content-encoding'] || !type.includes('text/html') || !csp?.includes(MARKER)) {
-        // The marker never reaches a browser; a 304 keeps the policy its cached page came with.
-        const passthrough = { ...up.headers }
-        const policy = passthroughPolicy(csp, bodiless)
-        if (policy === undefined) delete passthrough['content-security-policy']
-        else passthrough['content-security-policy'] = policy
-        res.writeHead(up.statusCode ?? 200, passthrough)
-        up.pipe(res)
-        return
-      }
-
-      /** @type {Buffer[]} */
-      const chunks = []
-      up.on('data', chunk => chunks.push(chunk))
-      up.on('end', () => {
-        const html = Buffer.concat(chunks).toString('utf8')
-        const out = { ...up.headers, 'content-security-policy': fillPolicy(csp, html) }
-        out['content-length'] = String(Buffer.byteLength(html))
-        delete out['transfer-encoding']
-        res.writeHead(up.statusCode ?? 200, out)
-        res.end(html)
-      })
-    },
-  )
-
-  upstream.on('error', err => {
-    res.writeHead(502, { 'content-type': 'text/plain' })
-    res.end(`upstream unreachable: ${err.message}`)
-  })
-
-  req.pipe(upstream)
-})
-
-// `next dev` pushes updates over a WebSocket; join the two sockets untouched once upstream upgrades.
-server.on('upgrade', (req, socket, head) => {
-  const upstream = http.request({
-    hostname: '127.0.0.1',
-    port: UPSTREAM,
-    path: req.url,
-    method: req.method,
-    headers: req.headers,
-  })
-
-  upstream.on('upgrade', (up, upSocket, upHead) => {
-    const lines = [`HTTP/1.1 ${up.statusCode} ${up.statusMessage}`]
-    for (const [key, value] of Object.entries(up.headers)) lines.push(`${key}: ${value}`)
-    socket.write([...lines, '', ''].join('\r\n'))
-    if (upHead?.length) socket.write(upHead)
-    if (head?.length) upSocket.write(head)
-    upSocket.pipe(socket)
-    socket.pipe(upSocket)
-  })
-
-  upstream.on('error', () => socket.destroy())
-  socket.on('error', () => upstream.destroy())
-  upstream.end()
-})
+const server = createProxyServer(UPSTREAM)
 
 /**
  * Next runs as this process's child, so its death is this process's death and a SIGTERM reaches it.
- * Two backgrounded processes would leave a proxy answering 502s while looking healthy.
+ * Two backgrounded processes would leave a proxy answering 502s while looking healthy. When this
+ * process goes down on its own, it takes Next's whole process tree with it: `next dev` forks workers
+ * that hold the upstream port, and killing only its first process would leave them running.
  */
 function startNext() {
   const [command, ...args] = CHILD
@@ -96,16 +30,16 @@ function startNext() {
   })
 
   const takeDown = () => {
-    if (!child.killed) child.kill('SIGKILL')
+    if (child.pid !== undefined && child.exitCode === null && child.signalCode === null) killTree(child.pid, 'SIGKILL')
   }
   process.on('exit', takeDown)
-  process.on('uncaughtException', err => {
-    console.error('[csp-hash]', err)
+  process.on('uncaughtException', error => {
+    console.error('[csp-hash]', error)
     takeDown()
     process.exit(1)
   })
-  server.on('error', err => {
-    console.error('[csp-hash] listen failed:', err.message)
+  server.on('error', error => {
+    console.error('[csp-hash] listen failed:', error.message)
     takeDown()
     process.exit(1)
   })
@@ -117,9 +51,12 @@ function startNext() {
 
   for (const signal of /** @type {const} */ (['SIGTERM', 'SIGINT'])) {
     process.on(signal, () => {
+      // Next stops its own workers on these; the tree is killed only if it does not stop in time.
       child.kill(signal)
-      // The ceiling on a child that refuses to stop.
-      setTimeout(() => process.exit(0), 10_000).unref()
+      setTimeout(() => {
+        takeDown()
+        process.exit(0)
+      }, 10_000).unref()
     })
   }
 }

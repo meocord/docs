@@ -41,7 +41,7 @@ ENV NODE_ENV=production \
 COPY --from=builder --chown=bun:bun /app/.next/standalone ./
 COPY --from=builder --chown=bun:bun /app/.next/static ./.next/static
 COPY --from=builder --chown=bun:bun /app/public ./public
-COPY --from=builder --chown=bun:bun /app/scripts/csp-hash-proxy.mjs /app/scripts/csp-hash.mjs ./
+COPY --from=builder --chown=bun:bun /app/scripts/csp-hash-proxy.mjs /app/scripts/csp-proxy-server.mjs /app/scripts/csp-hash.mjs /app/scripts/process-tree.mjs ./
 
 USER bun
 EXPOSE 3000
