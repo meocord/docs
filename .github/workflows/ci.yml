@@ -82,6 +82,12 @@ jobs:
       - run: bun run build 2>&1 | tee build.log
       # Prerendering every page within 180 s, so the growth of exact-version pages shows early
       - run: bun scripts/check-static-generation.ts build.log
+      # @meonode/compiler leaves __meo$ markers in what it compiles; none means the SWC plugin did not load
+      - name: Check the meonode compiler ran
+        run: |
+          markers=$(grep -ro '__meo\$:' .next/server | wc -l)
+          echo "meonode compiler markers in .next/server: $markers"
+          test "$markers" -gt 0
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
       - run: bun run budget:js
       - run: bun --bun x playwright install --with-deps chromium
