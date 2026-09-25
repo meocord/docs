@@ -1,5 +1,6 @@
 import { type Children, createNode, Node } from '@meonode/ui'
 import { markSvgNode } from '@/components/home/mark-node'
+import { hitAreaCss } from '@/lib/design/css'
 import { codeFrame } from '@/lib/prose/code'
 import type { Claim, Feature, FeatureResult } from '@/lib/home/data'
 
@@ -37,7 +38,7 @@ export const HomeRows = createNode('div', {
       textIndent: '-4ch',
       overflowWrap: 'anywhere',
     },
-    '& [data-more]': { fontSize: 'theme.type.small.size' },
+    '& [data-more]': { fontSize: 'theme.type.small.size', ...hitAreaCss },
 
     '& [data-steps]': { margin: 0, padding: 0, listStyle: 'none', counterReset: 'step' },
     '& [data-steps] > li': {

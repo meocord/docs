@@ -1,6 +1,7 @@
 import { A, Div, Footer, Node } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
+import { safe } from '@/lib/design/css'
 import { Inspector } from '@/components/shell/Inspector'
 import { SheetCard, SheetPane, SidebarPane } from '@/components/shell/panes'
 import { SheetScroll } from '@/components/shell/SheetScroll'
@@ -27,7 +28,13 @@ function SiteFooter({ wide }: { wide?: boolean } = {}) {
     borderTop: 'theme.line.width solid theme.line.hairline',
     fontSize: 'theme.type.caption.size',
     color: 'theme.ink.secondary',
-    css: { '@media (width < theme.breakpoint.compact)': { paddingInline: 'theme.layout.sheetPadCompact' } },
+    css: {
+      '@media (width < theme.breakpoint.compact)': {
+        paddingLeft: safe('theme.layout.sheetPadCompact', 'left'),
+        paddingRight: safe('theme.layout.sheetPadCompact', 'right'),
+        paddingBottom: 'calc(theme.space.10 + env(safe-area-inset-bottom))',
+      },
+    },
     children: [
       'Images drawn with ',
       A({
@@ -52,7 +59,10 @@ function SkipLink() {
     left: 'theme.space.2',
     top: 'theme.space.2',
     zIndex: 'theme.z.palette',
-    padding: 'theme.space.2 theme.space.3',
+    display: 'inline-flex',
+    alignItems: 'center',
+    minHeight: 44,
+    padding: '0 theme.space.4',
     borderRadius: 'theme.radius.control',
     backgroundColor: 'theme.accent.default',
     color: 'theme.accent.content',

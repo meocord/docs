@@ -14,7 +14,7 @@ const CHOICES: { value: 'system' | 'light' | 'dark'; label: string; glyph: Glyph
  * System, light or dark. The chosen segment is drawn from `data-theme-preference` on <html>, which the
  * pre-paint script stamps, so it is right in the first frame; `aria-pressed` follows once hydrated.
  */
-export const ThemeControl = Component(function ThemeControl() {
+export const ThemeControl = Component<{ touch?: boolean }>(function ThemeControl({ touch }) {
   const { preference, setPreference, hydrated } = useTheme()
 
   return Div({
@@ -38,8 +38,9 @@ export const ThemeControl = Component(function ThemeControl() {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 26,
-          height: 24,
+          // In the navigation sheet on a phone, each segment is a full touch target.
+          width: touch ? 44 : 26,
+          height: touch ? 44 : 24,
           padding: 0,
           border: 'none',
           borderRadius: 'theme.radius.chip',

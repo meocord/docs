@@ -1,6 +1,7 @@
 import { createNode, Node } from '@meonode/ui'
 import { markSvgNode } from '@/components/home/mark-node'
 import { PipelineIsland } from '@/components/home/PipelineIsland'
+import { hitAreaCss } from '@/lib/design/css'
 import { codeFrame } from '@/lib/prose/code'
 import type { PipelineDemo } from '@/lib/home/data'
 
@@ -47,6 +48,7 @@ const Panel = createNode('section', {
       backgroundColor: 'theme.surface.fill',
     },
     '& button': {
+      ...hitAreaCss,
       height: 26,
       padding: '0 theme.space.3',
       border: 'none',

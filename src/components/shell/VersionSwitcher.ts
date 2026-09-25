@@ -2,7 +2,7 @@
 
 import { type KeyboardEvent, type MouseEvent, useRef } from 'react'
 import { Button, Component, Div, For, Span, usePortal, type PortalLayerProps } from '@meonode/ui'
-import { focusCss, transitionCss } from '@/lib/design/css'
+import { focusCss, hitAreaCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { moveMenuFocus, useLayerFocus } from '@/components/shell/layer-focus'
 import { Link } from '@/components/shell/links'
@@ -155,7 +155,12 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
       fontSize: 'theme.type.control.size',
       fontVariantNumeric: 'tabular-nums',
       cursor: 'pointer',
-      css: { ...transitionCss(), ...focusCss, '&:hover': { backgroundColor: 'theme.surface.fillHover' } },
+      css: {
+        ...transitionCss(),
+        ...focusCss,
+        ...hitAreaCss,
+        '&:hover': { backgroundColor: 'theme.surface.fillHover' },
+      },
     },
   )
 })

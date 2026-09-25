@@ -1,4 +1,5 @@
 import { createNode } from '@meonode/ui'
+import { hitAreaCss, safe } from '@/lib/design/css'
 
 const heading = (level: 'h1' | 'h2' | 'h3' | 'h4') => ({
   fontSize: `theme.type.${level}.size`,
@@ -22,7 +23,11 @@ export const Prose = createNode('article', {
   letterSpacing: 'theme.type.body.track',
   color: 'theme.ink.primary',
   css: {
-    '@media (width < theme.breakpoint.compact)': { padding: 'theme.layout.sheetPadCompact' },
+    '@media (width < theme.breakpoint.compact)': {
+      padding: 'theme.layout.sheetPadCompact',
+      paddingLeft: safe('theme.layout.sheetPadCompact', 'left'),
+      paddingRight: safe('theme.layout.sheetPadCompact', 'right'),
+    },
 
     '& > :first-child': { marginTop: 0 },
     '& h1': { ...heading('h1'), margin: '0 0 theme.space.6' },
@@ -133,8 +138,8 @@ export const Prose = createNode('article', {
       fontSize: 'inherit',
       cursor: 'pointer',
     },
-    '& [data-copy]': { flexShrink: 0, width: 28, height: 28, padding: 0 },
-    '& [data-pm-choice]': { height: 24, padding: '0 theme.space.2' },
+    '& [data-copy]': { flexShrink: 0, width: 28, height: 28, padding: 0, ...hitAreaCss },
+    '& [data-pm-choice]': { height: 24, padding: '0 theme.space.2', ...hitAreaCss },
     '& [data-copy]:hover, & [data-pm-choice]:hover': { color: 'theme.ink.primary' },
     '& [data-copy]:focus-visible, & [data-pm-choice]:focus-visible': {
       outline: 'theme.focus.width solid theme.accent.default',

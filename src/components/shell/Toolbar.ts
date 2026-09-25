@@ -1,6 +1,6 @@
 import { Button, For, Li, Nav, Node, Ol, Span } from '@meonode/ui'
 import { earFlickCss } from '@/lib/brand/ear-flick'
-import { focusCss, transitionCss } from '@/lib/design/css'
+import { focusCss, touchCss, transitionCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
 import { Glyph } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
@@ -125,7 +125,14 @@ function SearchField() {
           fontSize: 'theme.type.caption.size',
           color: 'theme.ink.secondary',
         },
-        '@media (width < theme.breakpoint.compact)': { width: 28, padding: 0, justifyContent: 'center' },
+        // A plain icon button on a phone, as the menu button beside it.
+        '@media (width < theme.breakpoint.compact)': {
+          width: 44,
+          height: 44,
+          padding: 0,
+          justifyContent: 'center',
+          backgroundColor: 'transparent',
+        },
       },
     },
   )
@@ -149,10 +156,13 @@ export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
         href: '/',
         'aria-label': 'MeoCord home',
         display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: 'theme.space.1',
         borderRadius: 'theme.radius.control',
         css: {
           ...focusCss,
+          ...touchCss,
           ...earFlickCss(['&:hover', '&:focus-visible']),
           '@media (width >= theme.breakpoint.compact)': { display: 'none' },
         },
@@ -161,7 +171,12 @@ export function Toolbar({ crumbs, groups, version, repository }: ToolbarProps) {
       Breadcrumbs(crumbs),
       SearchField(),
       Node(VersionSwitcher, version),
-      Node(ThemeControl),
+      // On a phone the theme control is in the navigation sheet, leaving the bar room for touch targets.
+      Span(Node(ThemeControl), {
+        key: 'theme',
+        display: 'inline-flex',
+        css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
+      }),
       Link({
         href: repository,
         fontSize: 'theme.type.control.size',

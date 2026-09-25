@@ -1,5 +1,5 @@
 import { Aside, createNode, Div, Header, type ThemedCSSObject } from '@meonode/ui'
-import { materialCss } from '@/lib/design/css'
+import { materialCss, safe } from '@/lib/design/css'
 
 /*
  * The window's panes. A pane whose call sites may pass `css` is a function that merges it over the
@@ -50,7 +50,12 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
         animationRange: '0 8px',
       },
       '@keyframes toolbar-hairline': { to: { borderBottomColor: 'theme.line.hairline' } },
-      '@media (width < theme.breakpoint.compact)': { borderRadius: 0, padding: '0 theme.space.2' },
+      '@media (width < theme.breakpoint.compact)': {
+        borderRadius: 0,
+        // Under a notch or status bar, the bar grows by the safe area and keeps its controls below it.
+        height: 'calc(theme.layout.toolbar + env(safe-area-inset-top))',
+        padding: `env(safe-area-inset-top) ${safe('theme.space.2', 'right')} 0 ${safe('theme.space.2', 'left')}`,
+      },
       ...css,
     },
   })

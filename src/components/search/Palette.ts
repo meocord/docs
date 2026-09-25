@@ -3,7 +3,7 @@
 import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Component, Div, For, Input, Span, type PortalLayerProps } from '@meonode/ui'
-import { focusCss } from '@/lib/design/css'
+import { focusCss, hitAreaCss, safe } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
 import { PopoverSurface } from '@/components/shell/panes'
@@ -126,6 +126,8 @@ function Row(option: Option, active: boolean, choose: (option: Option) => void, 
     borderRadius: 'theme.radius.row',
     cursor: 'pointer',
     backgroundColor: active ? 'theme.surface.fillHover' : 'transparent',
+    // Rows a finger can take, on a phone.
+    css: { '@media (width < theme.breakpoint.compact)': { minHeight: 44 } },
     children: [
       Span(option.section ? `# ${option.title}` : option.title, {
         key: 'title',
@@ -244,7 +246,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
       'aria-modal': true,
       'aria-label': 'Search the documentation',
       position: 'absolute',
-      top: '12dvh',
+      top: safe('12dvh', 'top'),
       left: '50%',
       width: 'min(640px, calc(100vw - 2 * theme.space.4))',
       maxHeight: '70dvh',
@@ -266,6 +268,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
           gap: 'theme.space.2',
           padding: 'theme.space.3',
           borderBottom: 'theme.line.width solid theme.line.hairline',
+          css: { '@media (width < theme.breakpoint.compact)': { minHeight: 52 } },
           children: [
             Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
             Input({
@@ -290,7 +293,10 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
               color: 'theme.ink.primary',
               fontFamily: 'inherit',
               fontSize: 'theme.type.body.size',
-              css: { '&::-webkit-search-cancel-button': { display: 'none' } },
+              css: {
+                '&::-webkit-search-cancel-button': { display: 'none' },
+                '@media (width < theme.breakpoint.compact)': { minHeight: 44 },
+              },
             }),
             scope
               ? Span(scope.line, {
@@ -370,7 +376,11 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                           fontFamily: 'inherit',
                           fontSize: 'inherit',
                           cursor: 'pointer',
-                          css: { ...focusCss, '&:hover': { backgroundColor: 'theme.surface.fillHover' } },
+                          css: {
+                            ...focusCss,
+                            ...hitAreaCss,
+                            '&:hover': { backgroundColor: 'theme.surface.fillHover' },
+                          },
                         }),
                       ),
                     ],
