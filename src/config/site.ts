@@ -8,4 +8,4 @@ export const SITE_INDEXABLE = process.env.SITE_INDEXABLE === 'true'
 export const NOINDEX = 'noindex, nofollow'
 
 /** The public origin, for absolute URLs in metadata and the sitemap. */
-export const SITE_URL = process.env.SITE_URL ?? 'https://meocord.meoverse.com'
+export const SITE_URL = process.env.SITE_URL ?? 'https://meocord.dev'
