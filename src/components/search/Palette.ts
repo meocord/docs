@@ -111,44 +111,58 @@ function optionsOf(groups: HitGroup[]): { group: HitGroup; options: Option[] }[]
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
-function ResultRow(option: Option, active: boolean, choose: (option: Option) => void, hover: () => void) {
-  return Column({
-    id: option.id,
-    role: 'option',
-    'aria-selected': active,
-    onClick: () => choose(option),
-    onMouseMove: hover,
-    justifyContent: 'center',
-    minHeight: option.section ? 30 : 40,
-    padding: option.section ? '0 theme.space.3 0 theme.space.8' : '0 theme.space.3',
-    borderRadius: 'theme.radius.row',
-    cursor: 'pointer',
-    backgroundColor: active ? 'theme.surface.fillHover' : 'transparent',
-    // Rows a finger can take, on a phone.
-    css: { '@media (width < theme.breakpoint.compact)': { minHeight: 44 } },
-    children: [
-      Span(option.section ? `# ${option.title}` : option.title, {
-        key: 'title',
-        // A section of a page reads as part of it: its size, in the secondary ink.
-        fontSize: 'theme.type.control.size',
-        fontWeight: option.section ? 'theme.font.weight.regular' : 'theme.font.weight.medium',
-        color: option.section ? 'theme.ink.secondary' : 'theme.ink.primary',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }),
-      option.detail
-        ? Span(option.detail, {
-            key: 'detail',
-            fontSize: 'theme.type.caption.size',
-            color: 'theme.ink.secondary',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          })
-        : null,
-    ],
-  })
+/**
+ * One result. It is redrawn only when what it shows changes: its option, whether it is the active one,
+ * and the list its hover looks itself up in. `choose` reads only the router and the palette's close,
+ * which do not change while the palette is open, so a row need not follow it.
+ */
+function ResultRow(
+  option: Option,
+  active: boolean,
+  options: Option[],
+  choose: (option: Option) => void,
+  setActive: (index: number) => void,
+) {
+  return Column(
+    {
+      id: option.id,
+      role: 'option',
+      'aria-selected': active,
+      onClick: () => choose(option),
+      onMouseMove: () => setActive(options.findIndex(candidate => candidate.id === option.id)),
+      justifyContent: 'center',
+      minHeight: option.section ? 30 : 40,
+      padding: option.section ? '0 theme.space.3 0 theme.space.8' : '0 theme.space.3',
+      borderRadius: 'theme.radius.row',
+      cursor: 'pointer',
+      backgroundColor: active ? 'theme.surface.fillHover' : 'transparent',
+      // Rows a finger can take, on a phone.
+      css: { '@media (width < theme.breakpoint.compact)': { minHeight: 44 } },
+      children: [
+        Span(option.section ? `# ${option.title}` : option.title, {
+          key: 'title',
+          // A section of a page reads as part of it: its size, in the secondary ink.
+          fontSize: 'theme.type.control.size',
+          fontWeight: option.section ? 'theme.font.weight.regular' : 'theme.font.weight.medium',
+          color: option.section ? 'theme.ink.secondary' : 'theme.ink.primary',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }),
+        option.detail
+          ? Span(option.detail, {
+              key: 'detail',
+              fontSize: 'theme.type.caption.size',
+              color: 'theme.ink.secondary',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            })
+          : null,
+      ],
+    },
+    [option, active, options],
+  )
 }
 
 /**
@@ -266,7 +280,8 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
           borderBottom: 'theme.line.width solid theme.line.hairline',
           css: { '@media (width < theme.breakpoint.compact)': { minHeight: 52 } },
           children: [
-            Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
+            // Static: typing redraws the field, never the glass.
+            Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }, []),
             Input({
               key: 'input',
               ref: field,
@@ -295,15 +310,20 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
               },
             }),
             scope
-              ? Span(scope.line, {
-                  key: 'scope',
-                  padding: '1px theme.space.2',
-                  borderRadius: 'theme.radius.chip',
-                  backgroundColor: 'theme.surface.fill',
-                  fontSize: 'theme.type.caption.size',
-                  color: 'theme.ink.secondary',
-                  fontVariantNumeric: 'tabular-nums',
-                })
+              ? Span(
+                  scope.line,
+                  {
+                    key: 'scope',
+                    padding: '1px theme.space.2',
+                    borderRadius: 'theme.radius.chip',
+                    backgroundColor: 'theme.surface.fill',
+                    fontSize: 'theme.type.caption.size',
+                    color: 'theme.ink.secondary',
+                    fontVariantNumeric: 'tabular-nums',
+                  },
+                  // Redrawn when the line searched changes, not on each key typed.
+                  [scope.line],
+                )
               : null,
           ],
         }),
@@ -322,22 +342,22 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                 'aria-label': group.title,
                 padding: 'theme.space.1 0',
                 children: [
-                  Div({
-                    'aria-hidden': true,
-                    children: group.title,
-                    padding: 'theme.space.1 theme.space.3',
-                    fontSize: 'theme.type.caption.size',
-                    fontWeight: 'theme.font.weight.semibold',
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    color: 'theme.ink.secondary',
-                  }),
+                  Div(
+                    {
+                      'aria-hidden': true,
+                      children: group.title,
+                      padding: 'theme.space.1 theme.space.3',
+                      fontSize: 'theme.type.caption.size',
+                      fontWeight: 'theme.font.weight.semibold',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: 'theme.ink.secondary',
+                    },
+                    [group.title],
+                  ),
                   For(
                     rows,
-                    option =>
-                      ResultRow(option, options[active]?.id === option.id, choose, () =>
-                        setActive(options.findIndex(candidate => candidate.id === option.id)),
-                      ),
+                    option => ResultRow(option, options[active]?.id === option.id, options, choose, setActive),
                     option => option.id,
                   ),
                 ],
@@ -382,20 +402,24 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                     ],
             })
           : null,
-        Row({
-          key: 'keys',
-          'aria-hidden': true,
-          gap: 'theme.space.4',
-          padding: 'theme.space.2 theme.space.3',
-          borderTop: 'theme.line.width solid theme.line.hairline',
-          fontSize: 'theme.type.caption.size',
-          color: 'theme.ink.secondary',
-          children: [
-            Span('↑↓ to move', { key: 'move' }),
-            Span('↵ to open', { key: 'open' }),
-            Span('esc to close', { key: 'close' }),
-          ],
-        }),
+        Row(
+          {
+            key: 'keys',
+            'aria-hidden': true,
+            gap: 'theme.space.4',
+            padding: 'theme.space.2 theme.space.3',
+            borderTop: 'theme.line.width solid theme.line.hairline',
+            fontSize: 'theme.type.caption.size',
+            color: 'theme.ink.secondary',
+            children: [
+              Span('↑↓ to move', { key: 'move' }),
+              Span('↵ to open', { key: 'open' }),
+              Span('esc to close', { key: 'close' }),
+            ],
+          },
+          // Static: typing and moving through results never change the key hints.
+          [],
+        ),
       ],
     }),
   }).render()
