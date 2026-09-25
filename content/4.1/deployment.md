@@ -33,6 +33,104 @@ npx meocord start --prod
 To deploy `dist/` alone, with no `node_modules` beside it, see
 [Self-contained builds](/docs/4.1/self-contained-builds).
 
+## Configuration and secrets
+
+The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file beside
+`dist` works, and so does setting the variables in the service manager or container, where a file is one
+more thing to copy and protect. `import 'dotenv/config'` in `meocord.config.ts` leaves variables that are
+already set alone, so the environment wins over the file.
+
+Keep the token out of the image, the repository and the logs. [Security](/docs/4.1/security) covers the
+rest.
+
+## Docker
+
+Build inside the image, so native addons are compiled for its platform, and ship only what runs:
+
+```dockerfile
+FROM node:22-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npx meocord build --prod
+
+FROM node:22-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+USER node
+CMD ["node", "dist/main.js"]
+```
+
+Pass the token at run time, never as a build argument, which stays in the image's history:
+
+```bash
+docker run --env-file .env my-bot
+```
+
+`docker stop` waits 10 seconds before killing the process, the same as the bot's default `shutdownTimeout`;
+give it a little more with `--stop-timeout 15`, or `stop_grace_period: 15s` in Compose. Keep `.env`,
+`node_modules` and `dist` out of the build context with a `.dockerignore`. Both stages use the
+same base image on purpose: a native addon built on Debian does not load on Alpine, and the reverse.
+
+## systemd
+
+On a server of your own, a unit restarts the bot when it crashes and starts it at boot:
+
+```ini
+# /etc/systemd/system/my-bot.service
+[Unit]
+Description=My Discord bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=bot
+WorkingDirectory=/srv/my-bot
+EnvironmentFile=/srv/my-bot/.env
+ExecStart=/usr/bin/node dist/main.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it with `systemctl enable --now my-bot`, and read its logs with `journalctl -u my-bot`. A bot that
+cannot log in, with a wrong token for instance, exits with code 1. `Restart=on-failure` retries it, and
+systemd stops after a few failures in a row, rather than retrying a bad token forever. Run it as a user of
+its own, which owns nothing but the bot's folder.
+
+## pm2
+
+```bash
+pm2 start dist/main.js --name my-bot --kill-timeout 12000
+pm2 save
+```
+
+Start it from the project root, or set `cwd` in an ecosystem file: the bot finds `.env` and
+`dist/meocord.config.mjs` from the working directory. pm2 waits 1.6 seconds for a process to stop by default;
+`--kill-timeout` gives the bot's [`onShutdown` hooks](/docs/4.1/lifecycle-hooks#onshutdown) longer than
+`shutdownTimeout`, 10 seconds by default.
+
+## Registering commands on deploy
+
+A production start registers every command, which Discord applies idempotently, so most deploys need
+nothing more. With several replicas, or to keep registration out of startup, set `commands.register` to `false` and run
+`npx meocord register --build` once per deploy, from CI for instance.
+[Registering commands](/docs/4.1/command-registration) covers the scopes.
+
+## Updating
+
+Build the new version, then restart. Discord holds interactions for three seconds, so a click during the
+restart can fail. `@Defer` shortens that window for slow handlers, but nothing closes it; restart when the bot
+is quiet if that matters. Buttons posted before the update keep their custom IDs, so keep the patterns they
+use routed, or answer stale ones with an [exception filter](/docs/4.1/exception-filters).
+
 ## Stopping
 
 `meocord start` passes SIGINT and SIGTERM on to the bot, so it shuts down cleanly whether the signal comes

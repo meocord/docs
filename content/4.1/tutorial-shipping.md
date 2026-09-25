@@ -12,7 +12,7 @@ The last step is to configure the bot for a real server, build it for production
 
 The bot reads three values from the environment. Put them in `.env`, which `meocord create` ignores in git:
 
-```bash
+```dotenv
 DISCORD_TOKEN=your-bot-token
 FEEDBACK_CHANNEL_ID=123456789012345678
 STAFF_ROLE_ID=123456789012345679
