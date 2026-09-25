@@ -14,15 +14,20 @@ export default function HomePage() {
     padding: 24,
     textAlign: 'center',
     children: [
-      H1('MeoCord', { margin: 0, fontSize: '2.5rem', letterSpacing: '-0.02em' }),
+      H1('MeoCord', {
+        margin: 0,
+        fontSize: 'theme.type.h1.size',
+        fontWeight: 600,
+        letterSpacing: 'theme.type.h1.track',
+      }),
       P('Decorator-based Discord bots on discord.js. The documentation is on its way.', {
         margin: 0,
         maxWidth: 520,
-        color: 'theme.surface.muted',
+        color: 'theme.ink.secondary',
       }),
       A({
         href: 'https://github.com/meocord/meocord',
-        color: 'theme.primary.default',
+        color: 'theme.accent.default',
         children: 'Source on GitHub',
       }),
     ],

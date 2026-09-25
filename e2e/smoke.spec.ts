@@ -80,3 +80,27 @@ test('health reports the runtime and is never cached', async ({ request }) => {
   expect(response.headers()['cache-control']).toBe('no-store')
   expect(await response.json()).toMatchObject({ status: 'ok', runtime: expect.stringMatching(/^bun /) })
 })
+
+test('the reading face is preloaded from the site itself', async ({ page, request }) => {
+  await page.goto('/')
+  const href = await page.locator('link[rel="preload"][as="font"]').first().getAttribute('href')
+  expect(href).toMatch(/^\/_next\/static\/media\/.+\.woff2$/)
+  const response = await request.get(href!)
+  expect(response.status()).toBe(200)
+  // The body's face loads from that file rather than falling back.
+  const loaded = await page.evaluate(async () => {
+    await document.fonts.ready
+    const family = getComputedStyle(document.body).fontFamily.split(',')[0].trim()
+    return document.fonts.check(`16px ${family}`) && [...document.fonts].some(face => face.status === 'loaded')
+  })
+  expect(loaded).toBe(true)
+})
+
+test('the palette follows the stamped mode', async ({ page }) => {
+  await page.goto('/')
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'))
+  expect(await background()).toBe('rgb(22, 22, 24)')
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
+  expect(await background()).toBe('rgb(242, 242, 244)')
+})
