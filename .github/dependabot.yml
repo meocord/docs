@@ -8,10 +8,3 @@ updates:
     directory: /
     schedule:
       interval: weekly
-  - package-ecosystem: bun
-    directory: /
-    schedule:
-      interval: weekly
-    ignore:
-      # Held at an exact version on purpose.
-      - dependency-name: typescript
