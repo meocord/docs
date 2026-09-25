@@ -12,6 +12,14 @@ describe('staticGeneration', () => {
     expect(staticGeneration('✓ Generating static pages using 13 workers (1097/1097) in 24.6s')?.seconds).toBe(24.6)
   })
 
+  it('reads a summary Next prints in minutes, past two minutes', () => {
+    expect(staticGeneration('✓ Generating static pages using 3 workers (1527/1527) in 2.1min')).toEqual({
+      workers: 3,
+      pages: 1527,
+      seconds: 126,
+    })
+  })
+
   it('finds nothing without a finished summary', () => {
     expect(staticGeneration('Generating static pages using 3 workers (500/1097)')).toBeUndefined()
     expect(staticGeneration('')).toBeUndefined()
