@@ -47,6 +47,23 @@ jobs:
       # Coverage thresholds are in vitest.config.ts; a run under them fails.
       - run: bun run test:coverage
 
+  # The guides, examples and generated data: links and anchors resolve, every listed version has its
+  # API document and changelog, and each line's examples typecheck against its pinned meocord. The
+  # pipeline's own tests run in Test.
+  content:
+    name: Content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run content:check
+      - run: bun run examples:check
+
   e2e:
     name: Build and e2e
     runs-on: ubuntu-latest
@@ -100,7 +117,7 @@ jobs:
   publish:
     name: Publish image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint, test, e2e, image]
+    needs: [lint, test, content, e2e, image]
     runs-on: ubuntu-latest
     permissions:
       contents: read
