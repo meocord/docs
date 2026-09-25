@@ -41,9 +41,12 @@ test('the home page runs under its CSP with no violation', async ({ page }) => {
   })
 
   const response = await page.goto('/')
+  // The header keeps every directive; the inline scripts' hashes are in a meta tag, first in <head>.
   const csp = response?.headers()['content-security-policy'] ?? ''
-  expect(csp).toMatch(/script-src 'sha256-[^']+'/)
+  expect(csp).toContain("frame-ancestors 'self'")
   expect(csp).not.toContain('__CSP_HASHES__')
+  const meta = page.locator('head > meta[http-equiv="Content-Security-Policy"]')
+  await expect(meta).toHaveAttribute('content', /^script-src 'self'.*( 'sha256-[^']+')+$/)
   await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/)
   await expect(page.getByRole('heading', { name: 'MeoCord', exact: true })).toBeVisible()
   expect(violations).toEqual([])
