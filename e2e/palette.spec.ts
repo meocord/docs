@@ -88,6 +88,37 @@ test('a search with nothing in the line offers the others', async ({ page }) => 
   await expect(field(page)).toHaveAttribute('aria-label', 'Search MeoCord 4.0')
 })
 
+test('its memoized parts still follow what they read: the active row, new results, hover and the line', async ({
+  page,
+}) => {
+  await page.goto('/docs/4.1/defer')
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(field(page)).toBeFocused()
+  await page.keyboard.type('cooldown')
+  const options = dialog(page).getByRole('option')
+  await expect(options.first()).toHaveAttribute('aria-selected', 'true')
+
+  // A row redraws when it becomes, or stops being, the active one.
+  await page.keyboard.press('ArrowDown')
+  await expect(options.nth(0)).toHaveAttribute('aria-selected', 'false')
+  await expect(options.nth(1)).toHaveAttribute('aria-selected', 'true')
+
+  // New results redraw the rows and their groups' titles.
+  await field(page).fill('guard')
+  await expect(options.first()).toContainText('Guard')
+  await expect(dialog(page).getByRole('group', { name: 'Jump to' })).toBeVisible()
+
+  // Hover looks a row up in the current results, not the ones it was first drawn with.
+  await options.nth(2).hover()
+  await expect(options.nth(2)).toHaveAttribute('aria-selected', 'true')
+  await expect(field(page)).toHaveAttribute('aria-activedescendant', (await options.nth(2).getAttribute('id'))!)
+
+  // The line's chip follows the line searched.
+  await field(page).fill('zqxjvw')
+  await dialog(page).getByRole('button', { name: 'Search in 4.0?' }).click()
+  await expect(dialog(page).getByText('4.0', { exact: true })).toBeVisible()
+})
+
 test('the current line is the scope, latest as the current line', async ({ page }) => {
   await page.goto('/docs/latest/guards')
   await page.keyboard.press('ControlOrMeta+k')
