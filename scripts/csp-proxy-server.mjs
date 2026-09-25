@@ -1,10 +1,11 @@
 /**
  * The HTTP hop in front of Next: HTML responses are buffered and get their inline scripts' hashes in
- * the CSP; everything else streams through. A failure on one request ends that request only: before
+ * a CSP meta tag at the top of `<head>`, so the header stays the same size on every page; everything
+ * else streams through. A failure on one request ends that request only: before
  * any header is sent it is answered 502, after that its socket is closed.
  */
 import http from 'node:http'
-import { MARKER, fillPolicy, passthroughPolicy } from './csp-hash.mjs'
+import { MARKER, fillPolicy, passthroughPolicy, splitPolicy } from './csp-hash.mjs'
 
 /**
  * Ends a response an upstream failure left unfinished: a 502 while no header is sent, otherwise
@@ -60,8 +61,11 @@ export function createProxyServer(upstreamPort) {
         up.on('data', chunk => chunks.push(chunk))
         up.on('end', () => {
           if (!up.complete) return
-          const html = Buffer.concat(chunks).toString('utf8')
-          const out = { ...up.headers, 'content-security-policy': fillPolicy(csp, html) }
+          const sent = Buffer.concat(chunks).toString('utf8')
+          // The same bytes in give the same bytes out, so the page's ETag still names what is sent.
+          const split = splitPolicy(csp, sent)
+          const html = split?.html ?? sent
+          const out = { ...up.headers, 'content-security-policy': split?.header ?? fillPolicy(csp, sent) }
           out['content-length'] = String(Buffer.byteLength(html))
           delete out['transfer-encoding']
           res.writeHead(up.statusCode ?? 200, out)

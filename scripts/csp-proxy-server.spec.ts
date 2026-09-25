@@ -57,7 +57,33 @@ function get(port: number, path = '/'): Promise<Result> {
 const cut = (res: http.ServerResponse) => (res.socket as Socket).destroy()
 
 describe('createProxyServer', () => {
-  it('hashes an HTML page into its policy', async () => {
+  it('moves a page’s script hashes into a meta tag at the top of its head, and keeps the header fixed', async () => {
+    const page = (scripts: number) =>
+      `<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>t</title></head><body>${Array.from(
+        { length: scripts },
+        (_, index) => `<script>self.__next_f.push([${index}])</script>`,
+      ).join('')}</body></html>`
+    const policy = `default-src 'self'; script-src ${MARKER} 'self'; frame-ancestors 'self'`
+    const serve = (html: string) =>
+      proxyFor((_req, res) => {
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': policy })
+        res.end(html)
+      })
+    const small = await get(await serve(page(1)))
+    const large = await get(await serve(page(2000)))
+
+    expect(small.headers?.['content-security-policy']).toBe(
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; frame-ancestors 'self'",
+    )
+    // However many scripts a page has, its header is the same.
+    expect(large.headers?.['content-security-policy']).toBe(small.headers?.['content-security-policy'])
+    expect(large.body).toMatch(
+      /^<!DOCTYPE html><html><head><meta charSet="utf-8"\/><meta http-equiv="Content-Security-Policy" content="script-src 'self'( 'sha256-[^']+'){2000}">/,
+    )
+    expect(Number(large.headers?.['content-length'])).toBe(Buffer.byteLength(large.body))
+  })
+
+  it('keeps the whole policy in the header for a page with no head to carry the meta', async () => {
     const port = await proxyFor((_req, res) => {
       res.writeHead(200, { 'content-type': 'text/html', 'content-security-policy': `script-src ${MARKER} 'self'` })
       res.end('<script>a()</script>')

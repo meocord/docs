@@ -6,9 +6,11 @@ import { cacheControlFor, isInertPath, prereleaseRedirect, STATIC_FILE_CSP } fro
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
 /**
- * The document's policy. `script-src` carries a marker that scripts/csp-hash-proxy.mjs replaces with
- * the hashes of the inline scripts actually sent: hashes, unlike a nonce, are safe to cache and share.
- * `'wasm-unsafe-eval'` is for the search index, which runs as WebAssembly.
+ * The document's policy. `script-src` carries a marker for scripts/csp-hash-proxy.mjs, which moves that
+ * directive into a meta tag at the top of `<head>` with the hashes of the inline scripts actually sent:
+ * hashes, unlike a nonce, are safe to cache and share, and in the page rather than the header they never
+ * grow the header past what a reverse proxy accepts. `'wasm-unsafe-eval'` is for the search index,
+ * which runs as WebAssembly.
  */
 const DOCUMENT_CSP = [
   "default-src 'self'",
