@@ -1,6 +1,6 @@
 import { Span, Svg, SvgPath } from '@meonode/ui'
 import { focusCss } from '@/lib/design/css'
-import { MARK_PATHS, MARK_VIEWBOX } from '@/lib/brand/mark'
+import { MARK_PATHS, MARK_VIEWBOX } from '@/lib/brand/mark-paths'
 import { Link } from '@/components/shell/links'
 
 /** The mark, drawn in the current palette's ink and accent. */
