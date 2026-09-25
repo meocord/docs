@@ -50,14 +50,26 @@ export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.Pr
   }
   delete clean.symbolIdMap
   delete clean.files
-  const walk = (node: unknown): void => {
-    if (Array.isArray(node)) return node.forEach(walk)
+  // TypeDoc numbers reflections from a counter that runs across conversions in one process; ids are
+  // rebased on the project's so a document does not depend on what was converted before it
+  const base = clean.id
+  const walk = (node: unknown, key?: string): void => {
+    if (Array.isArray(node)) {
+      // Groups and categories list their children by id
+      if (key === 'children' && node.every(item => typeof item === 'number'))
+        node.forEach((id, i) => (node[i] = id >= base ? id - base : id))
+      else node.forEach(item => walk(item))
+      return
+    }
     if (!node || typeof node !== 'object') return
     const record = node as Record<string, unknown>
     delete record.sources
     // A reference into a bundler chunk names the chunk's file, such as dist/types/errors-DwvuoFVM.d.ts
     delete record.packagePath
-    for (const value of Object.values(record)) walk(value)
+    // References to symbols outside the project, such as lib's Error, have negative targets of their own
+    if (typeof record.id === 'number' && record.id >= base) record.id -= base
+    if (typeof record.target === 'number' && record.target >= base) record.target -= base
+    for (const [name, value] of Object.entries(record)) walk(value, name)
   }
   walk(clean)
   return clean as JSONOutput.ProjectReflection
