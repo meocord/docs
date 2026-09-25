@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   // A native addon, loaded at runtime rather than bundled. The glob takes whichever platform package
   // installed, except musl: the image runs on glibc.
   serverExternalPackages: ['meo-canvas'],
+  // Bundled, off Next's default external list: loaded as an external, it resolves from the alias Next
+  // links into .next/dev/node_modules, where the isolated linker leaves none of its dependencies.
+  transpilePackages: ['shiki'],
   outputFileTracingIncludes: {
     '/og/**': [
       './node_modules/@meo-canvas/*-gnu/**/*',
