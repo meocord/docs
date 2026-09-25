@@ -1,7 +1,17 @@
 import { Box, Path } from 'meo-canvas'
-import { MARK_DARK, MARK_PATHS, MARK_TILE_RADIUS, MARK_VIEWBOX, type MarkColours } from '@/lib/brand/mark-paths'
+import {
+  earsPath,
+  MARK_DARK,
+  MARK_PATHS,
+  MARK_TILE_RADIUS,
+  MARK_VIEWBOX,
+  type MarkColours,
+} from '@/lib/brand/mark-paths'
 
-/** The mark as a meo-canvas node, `size` pixels square; `radius` in grid units, 0 for a full bleed. */
+/**
+ * The mark as a meo-canvas node, `size` pixels square, at the optical size for that many pixels;
+ * `radius` in grid units, 0 for a full bleed.
+ */
 export function markNode(size: number, colours: MarkColours = MARK_DARK, radius = MARK_TILE_RADIUS) {
   const layer = (d: string, fill: string, fillRule: 'nonzero' | 'evenodd') =>
     Path({
@@ -21,6 +31,6 @@ export function markNode(size: number, colours: MarkColours = MARK_DARK, radius 
     overflow: 'hidden',
     backgroundColor: colours.tile,
     borderRadius: (radius * size) / 16,
-    children: [layer(MARK_PATHS.head, colours.ink, 'evenodd'), layer(MARK_PATHS.core, colours.accent, 'nonzero')],
+    children: [layer(earsPath(size), colours.ink, 'evenodd'), layer(MARK_PATHS.cord, colours.accent, 'nonzero')],
   })
 }
