@@ -17,6 +17,7 @@ export const paths = {
   api: (version: string) => path.join(ROOT, 'generated', 'api', `${version}.json`),
   apiDir: path.join(ROOT, 'generated', 'api'),
   changelog: (version: string) => path.join(ROOT, 'generated', 'changelog', `${version}.json`),
+  config: (version: string) => path.join(ROOT, 'generated', 'config', `${version}.json`),
   migrating: (line: string) => path.join(ROOT, 'generated', 'migrating', `${line}.md`),
   since: path.join(ROOT, 'generated', 'since.json'),
   readmeAnchors: (line: string) => path.join(ROOT, 'generated', 'readme-anchors', `${line}.json`),

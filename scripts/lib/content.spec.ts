@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { checkSite, markdownLinks, parsePage, type SiteSnapshot } from './content.js'
+import type { ConfigDocument } from './config-reference.js'
 import type { VersionsConfig } from './versions.js'
 
 // 4.0 shows pages imported from its README; 4.1 has authored guides and is what the site shows for it
@@ -12,6 +13,26 @@ const config: VersionsConfig = {
     { line: '4.0', status: 'current', guides: 'readme', versions: ['4.0.0'] },
   ],
 }
+
+const reference = (version: string): ConfigDocument => ({
+  version,
+  groups: [
+    {
+      interface: 'MeoCordConfig',
+      summary: '',
+      options: [
+        {
+          name: 'externals',
+          type: 'string[]',
+          required: false,
+          summary: 'See [`appName`](#appname).',
+          examples: ["```ts\nexternals: ['x']\n```"],
+        },
+        { name: 'appName', type: 'string', required: false, summary: 'Shown in logs.', examples: [] },
+      ],
+    },
+  ],
+})
 
 const page = (frontmatter: string, body: string) => `---\n${frontmatter}\n---\n\n${body}\n`
 
@@ -56,6 +77,7 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
     '4.0.0': { version: '4.0.0', sections: [] },
   },
   apis: new Set(['4.1.0-beta.0', '4.0.0']),
+  configs: { '4.1.0-beta.0': reference('4.1.0-beta.0'), '4.0.0': reference('4.0.0') },
   examples: {
     '4.1': { 'src/guards/owner.guard.ts': '// #region guard\nexport class OwnerGuard {}\n// #endregion guard\n' },
     '4.0': {},
@@ -190,6 +212,26 @@ describe('checkSite', () => {
       'line 4.0 has no generated/migrating/4.0.md',
       '4.1.0-beta.0 has no generated/api/4.1.0-beta.0.json',
       '4.1.0-beta.0 has no generated/changelog/4.1.0-beta.0.json',
+    ])
+  })
+
+  it('shows the configuration reference as an authored page, and refuses one written by hand', () => {
+    const links = page(
+      'id: a\ntitle: A',
+      '[c](/docs/4.1/config-reference#appname) [x](/docs/4.1/config-reference#nope)',
+    )
+
+    expect(checkSite(withAuthored({ a: links }))).toEqual([
+      'content/4.1/a.md: /docs/4.1/config-reference#nope names no heading of that page',
+    ])
+    expect(checkSite(withAuthored({ 'config-reference': page('id: config-reference\ntitle: C', 'x') }))).toEqual([
+      'content/4.1/config-reference.md: the configuration reference is generated',
+    ])
+  })
+
+  it('reports a version without its configuration reference', () => {
+    expect(checkSite(site({ configs: { '4.1.0-beta.0': reference('4.1.0-beta.0') } }))).toEqual([
+      '4.0.0 has no generated/config/4.0.0.json',
     ])
   })
 

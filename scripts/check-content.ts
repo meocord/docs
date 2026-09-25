@@ -3,6 +3,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import type { ChangelogDocument } from './lib/changelog.js'
+import type { ConfigDocument } from './lib/config-reference.js'
 import { checkSite, type SiteSnapshot } from './lib/content.js'
 import { paths } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
@@ -30,6 +31,7 @@ const site: SiteSnapshot = {
   migrating: {},
   changelogs: {},
   apis: new Set(),
+  configs: {},
   examples: {},
 }
 for (const { line, versions } of config.lines) {
@@ -47,6 +49,8 @@ for (const { line, versions } of config.lines) {
   site.examples[line] = filesUnder(paths.examples(line))
   for (const version of versions) {
     if (existsSync(paths.api(version))) site.apis.add(version)
+    const reference = readIf(paths.config(version))
+    site.configs[version] = reference ? (JSON.parse(reference) as ConfigDocument) : undefined
     const changelog = readIf(paths.changelog(version))
     site.changelogs[version] = changelog ? (JSON.parse(changelog) as ChangelogDocument) : undefined
   }

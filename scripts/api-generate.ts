@@ -1,6 +1,6 @@
 /**
  * Regenerates what the site takes from versions it already lists, verifying each package again: their
- * API documents and changelogs, and for a line's newest version its guides, example pin and migration
+ * API documents, changelogs and configuration references, and for a line's newest version its guides, example pin and migration
  * guide. `bun run api:generate <version...>`, or `--all` after upgrading TypeDoc.
  */
 
@@ -8,7 +8,7 @@ import { formatFiles } from './lib/format.js'
 import { paths } from './lib/layout.js'
 import { loadTrustedRoot } from './lib/provenance.js'
 import { fetchPackument } from './lib/registry.js'
-import { generateVersion, refreshLine, refreshSince } from './lib/sync.js'
+import { generateVersion, refreshConfig, refreshLine, refreshSince } from './lib/sync.js'
 import { fetchVerified } from './lib/verified-package.js'
 import { allVersions, readVersions } from './lib/versions.js'
 
@@ -38,4 +38,5 @@ for (const version of requested) {
   }
 }
 refreshSince()
+refreshConfig()
 await formatFiles(config.lines.map(line => paths.readme(line.line)))

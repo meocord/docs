@@ -1,0 +1,53 @@
+{
+  "version": "4.0.0-beta.2",
+  "groups": [
+    {
+      "interface": "MeoCordConfig",
+      "summary": "Configuration interface for the MeoCord application.\nThis interface defines optional configurations for the application, including\nmetadata, authentication tokens, and bundler configuration overrides.",
+      "options": [
+        {
+          "name": "appName",
+          "type": "string",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "The name of the application.\nIf not specified, it defaults to 'MeoCord'.",
+          "examples": []
+        },
+        {
+          "name": "bundleDependencies",
+          "type": "boolean",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Put everything the bot needs inside `dist`, so it runs without `node_modules`.\n\nOff by default, matching how the build has always behaved: dependencies stay runtime imports,\nso `dist` needs `node_modules` beside it. Turn it on to deploy `dist` alone.\n\nPlain JavaScript is bundled into `main.js`. Native addons -- packages shipping a compiled\n`.node` binary, like `sharp` -- are found while building, kept out of the bundle, and copied\nwith their platform binary into `dist/node_modules`. Such a build only runs on the platform it\nwas built on; it records that platform, and refuses to start anywhere else.",
+          "examples": []
+        },
+        {
+          "name": "discordToken",
+          "type": "string",
+          "required": true,
+          "since": "4.0.0-beta.0",
+          "summary": "The Discord bot token used for authenticating with the Discord API.",
+          "examples": []
+        },
+        {
+          "name": "externals",
+          "type": "(string | RegExp)[]",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Modules to keep out of the bundle.\n\nNative addons need not be listed; they are found and packed on their own. Anything listed here\nas a package name is also copied into `dist/node_modules` when [`bundleDependencies`](#bundledependencies) is on.",
+          "examples": [
+            "```ts\n// Loaded by the runtime rather than bundled, e.g. for instrumentation.\nexternals: ['@opentelemetry/api']\n```"
+          ]
+        },
+        {
+          "name": "rsbuild",
+          "type": "(config: RsbuildConfig) => any",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Function to customize the Rsbuild configuration.\nAllows overriding and extending the default bundler setup for the application.\n\nRsbuild handles images, fonts, svg and media itself, so they need no rules;\n`output.distPath` controls where they land. Raw bundler rules go through `tools.rspack`,\nwhich takes a webpack-shaped config.",
+          "examples": []
+        }
+      ]
+    }
+  ]
+}

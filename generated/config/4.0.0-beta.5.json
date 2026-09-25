@@ -1,0 +1,54 @@
+{
+  "version": "4.0.0-beta.5",
+  "groups": [
+    {
+      "interface": "MeoCordConfig",
+      "summary": "The configuration `meocord.config.ts` exports.",
+      "options": [
+        {
+          "name": "appName",
+          "type": "string",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Shown as a prefix on every log line. Omitted when unset.",
+          "examples": []
+        },
+        {
+          "name": "bundleDependencies",
+          "type": "boolean",
+          "required": false,
+          "default": "`false`",
+          "since": "4.0.0-beta.0",
+          "summary": "Bundles everything the bot needs into `dist`, so it runs without `node_modules`.\n\nNative addons such as `sharp` are copied with their platform binary into `dist/node_modules`.\nA build with native addons only starts on the platform it was built on.",
+          "examples": []
+        },
+        {
+          "name": "discordToken",
+          "type": "string",
+          "required": true,
+          "since": "4.0.0-beta.0",
+          "summary": "The Discord bot token. Read it from the environment rather than committing it.",
+          "examples": []
+        },
+        {
+          "name": "externals",
+          "type": "(string | RegExp)[]",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Modules to keep out of the bundle. With [`bundleDependencies`](#bundledependencies), listed package names are\ncopied into `dist/node_modules`; native addons are found without being listed.",
+          "examples": [
+            "```ts\nexternals: ['@opentelemetry/api']\n```"
+          ]
+        },
+        {
+          "name": "rsbuild",
+          "type": "(config: RsbuildConfig) => any",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Customises the Rsbuild configuration the bot is built with.\n\nImages, fonts, svg and media need no rules. Raw bundler rules go through `tools.rspack`.",
+          "examples": []
+        }
+      ]
+    }
+  ]
+}

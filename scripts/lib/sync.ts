@@ -9,6 +9,7 @@ import semver from 'semver'
 import type { TrustedRoot } from '@sigstore/protobuf-specs'
 import { generateApi } from './api.js'
 import { parseChangelog, rewriteLibraryLinks, sliceChangelog } from './changelog.js'
+import { configReference } from './config-reference.js'
 import {
   forkContent,
   forkExamples,
@@ -23,7 +24,7 @@ import {
 } from './layout.js'
 import { fetchMigrating, migratingFile } from './migrating.js'
 import type { Fetch, Packument } from './registry.js'
-import { apiKeys, computeSince } from './since.js'
+import { apiKeys, computeSince, type SinceEntry } from './since.js'
 import { fetchVerified, type VerifiedPackage } from './verified-package.js'
 import { addVersion, findLine, lineOf, newestIn, type VersionsConfig } from './versions.js'
 import type { JSONOutput } from 'typedoc'
@@ -75,6 +76,19 @@ export function refreshSince(): void {
     keysByVersion[doc.meta.version] = apiKeys(doc.project)
   }
   writeJson(paths.since, computeSince(keysByVersion))
+}
+
+/** Rewrites each version's configuration reference from its API document and since.json. */
+export function refreshConfig(): void {
+  const since = JSON.parse(readFileSync(paths.since, 'utf8')) as Record<string, SinceEntry>
+  for (const file of readdirSync(paths.apiDir).filter(name => name.endsWith('.json'))) {
+    const doc = JSON.parse(readFileSync(`${paths.apiDir}/${file}`, 'utf8')) as {
+      meta: { version: string }
+      project: JSONOutput.ProjectReflection
+    }
+    const reference = configReference(doc.meta.version, doc.project, since)
+    if (reference) writeJson(paths.config(doc.meta.version), reference)
+  }
 }
 
 /**
@@ -145,7 +159,10 @@ export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<Sync
     }
   }
 
-  if (added.length > 0) refreshSince()
+  if (added.length > 0) {
+    refreshSince()
+    refreshConfig()
+  }
   return { config, added, statusChanges }
 }
 
