@@ -182,7 +182,13 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       children: Table({
         children: [
           Thead({ key: 'head', children: Tr({ children: cells(head, 'th') }) }),
-          Tbody({ key: 'body', children: body.map(row => Tr({ key: offset(row), children: cells(row, 'td') })) }),
+          Tbody({
+            key: 'body',
+            children: body.map(row => {
+              const at = offset(row)
+              return Tr({ key: at, children: cells(row, 'td') })
+            }),
+          }),
         ],
       }),
     })
