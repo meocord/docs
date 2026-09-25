@@ -22,6 +22,15 @@ disabled on purpose included, and removes the loading view; `components: []` cle
 returns without answering has its message put back too. When the handler throws, the error is shown to the
 user privately, and the message restored.
 
+## The lock in a test
+
+A test sees the lock as the calls `respond()` made. `createMockMessage()` takes no components, so the
+message the button sits on gets them assigned, built from Discord's JSON:
+
+::example{file="controllers/button/card.lock.spec.ts" region="message"}
+
+::example{file="controllers/button/card.lock.spec.ts" region="lock"}
+
 ## Guards under @Defer
 
 The guard here, `OwnerGuard`, lets only the user whose id the button carries use it:
@@ -54,6 +63,8 @@ With `disable: 'clicked'`, two buttons of one message can run at once: each is d
 handler runs and comes back when that handler finishes, and the loading view stays until both have.
 
 ::example{file="controllers/button/card.button.controller.ts" region="clicked"}
+
+::example{file="controllers/button/card.lock.spec.ts" region="clicked"}
 
 ## Where it does not apply
 
