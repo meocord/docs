@@ -5,6 +5,7 @@ import { VERSIONS } from '@/config/versions'
 import { lines } from '@/lib/docs/site'
 import { lineChangelog, renderChangelog } from '@/lib/docs/reference-pages'
 import { docsHref } from '@/lib/urls'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string }> }
 
@@ -22,11 +23,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line } = await params
   if (lineChangelog(line).length === 0) return {}
-  return {
-    title: `Changelog · ${line}`,
-    description: `Every MeoCord ${line} release and what changed in it.`,
-    alternates: { canonical: docsHref({ kind: 'changelog', line }, VERSIONS) },
-  }
+  return pageMetadata({
+    title: 'Changelog',
+    line,
+    description: `Every MeoCord ${line} release, newest first, and what changed in it.`,
+    canonical: docsHref({ kind: 'changelog', line }, VERSIONS),
+  })
 }
 
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting

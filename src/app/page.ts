@@ -19,8 +19,13 @@ import { sidebar, versionChoices } from '@/lib/docs/site'
 import { claims, features, HOME_LINE, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
 import { docsHref } from '@/lib/urls'
 import { resolveExample } from '../../scripts/lib/pages'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
-export const metadata: Metadata = { alternates: { canonical: '/' } }
+export const metadata: Metadata = pageMetadata({
+  description:
+    'Decorator-based Discord bots, with the pipeline you’d build yourself: guards, interceptors, pipes and a testing module, for discord.js 14.',
+  canonical: '/',
+})
 
 const guide = (slug: string) => docsHref({ kind: 'guide', line: HOME_LINE, slug }, VERSIONS)
 

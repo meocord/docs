@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { listPages } from '../../../../scripts/lib/pages'
 import { guideMeta, lines } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string }> }
 
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line } = await params
   const slug = landing(line)
   const meta = slug && guideMeta(line, slug)
-  return meta ? { title: meta.title, alternates: { canonical: meta.canonical } } : {}
+  return meta ? pageMetadata({ ...meta, line }) : {}
 }
 
 async function lineLanding(line: string) {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { missingArticle, missingParams, renderMissing } from '@/lib/docs/reference-pages'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string; id: string }> }
 
@@ -18,7 +19,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line, id } = await params
   const article = missingArticle(line, id)
-  return article ? { title: `${article.title} is not in ${line}`, robots: { index: false, follow: true } } : {}
+  return article
+    ? pageMetadata({
+        title: `${article.title} (not documented)`,
+        line,
+        description: `${article.title} is not documented for MeoCord ${line}. See where it is, and what ${line} documents.`,
+        index: false,
+      })
+    : {}
 }
 
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting

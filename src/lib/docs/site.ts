@@ -7,6 +7,7 @@ import { VERSIONS } from '@/config/versions'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref, resolveStoredHref } from '@/lib/urls'
 import { versionOption, versionOptions } from '@/lib/version-options'
+import { firstParagraph } from '@/lib/docs/page-metadata'
 
 /** The lines the site renders pages for: every line versions.json lists, archived ones included. */
 export function lines(): string[] {
@@ -88,9 +89,15 @@ export interface GuidePage {
 }
 
 /** A page's title and canonical URL, without lowering it; undefined when the line has no such page. */
-export function guideMeta(line: string, slug: string): { title: string; canonical: string } | undefined {
+export function guideMeta(
+  line: string,
+  slug: string,
+): { title: string; description: string; canonical: string } | undefined {
   const entry = listPages(line).find(page => page.slug === slug)
-  return entry && { title: entry.title, canonical: guideHref(line, slug) }
+  const page = entry && loadPage(line, slug)
+  return (
+    entry && { title: entry.title, description: firstParagraph(page?.body ?? ''), canonical: guideHref(line, slug) }
+  )
 }
 
 /** One page of a line, lowered for Prose; undefined when the line has no such page. */
