@@ -23,6 +23,7 @@ export const LANGUAGES: Record<string, string> = {
   yaml: 'yaml',
   yml: 'yaml',
   toml: 'toml',
+  ini: 'ini',
   dockerfile: 'docker',
   docker: 'docker',
   md: 'markdown',

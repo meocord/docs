@@ -5,6 +5,7 @@ import diff from 'shiki/langs/diff.mjs'
 import docker from 'shiki/langs/docker.mjs'
 import dotenv from 'shiki/langs/dotenv.mjs'
 import html from 'shiki/langs/html.mjs'
+import ini from 'shiki/langs/ini.mjs'
 import javascript from 'shiki/langs/javascript.mjs'
 import json from 'shiki/langs/json.mjs'
 import jsonc from 'shiki/langs/jsonc.mjs'
@@ -137,7 +138,7 @@ let highlighter: ReturnType<typeof createHighlighterCoreSync> | undefined
 function instance() {
   highlighter ??= createHighlighterCoreSync({
     themes: [theme('dark'), theme('light')],
-    langs: [typescript, tsx, javascript, json, jsonc, bash, dotenv, yaml, toml, docker, markdown, html, diff],
+    langs: [typescript, tsx, javascript, json, jsonc, bash, dotenv, yaml, toml, ini, docker, markdown, html, diff],
     engine: createJavaScriptRegexEngine(),
   })
   return highlighter

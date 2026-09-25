@@ -1,6 +1,7 @@
 import { ButtonInteraction, Collection, EmbedBuilder, GuildMember, Locale, User } from 'discord.js'
 import { GuardDeniedError } from 'meocord/common'
 import {
+  createDiscordError,
   createMockClient,
   createMockGuild,
   createMockInteraction,
@@ -64,6 +65,18 @@ describe('ReviewController', () => {
     })
     expect(module.get(FeedbackService).get('1').status).toBe('approved')
   })
+
+  // #region closed-dms
+  it('still records the verdict when the author has closed their DMs', async () => {
+    const { module } = setup()
+    const interaction = click('feedback/1/reject', STAFF)
+    // 50007: Discord refuses to deliver a DM to this user
+    interaction.client.users.send.mockRejectedValue(createDiscordError(50007))
+
+    await expect(module.invoke(ReviewController, 'reject', interaction)).resolves.toEqual({ ran: true })
+    expect(module.get(FeedbackService).get('1').status).toBe('rejected')
+  })
+  // #endregion closed-dms
 
   it('refuses a member without the staff role, and changes nothing', async () => {
     const { module, feedback } = setup()
