@@ -22,20 +22,44 @@ const Panel = createNode('section', {
   backgroundColor: 'theme.surface.canvas',
   boxShadow: 'theme.elevation.2',
   overflow: 'hidden',
+  // The bar's layout follows the panel's width, which never waits on what is inside it.
+  containerType: 'inline-size',
   css: {
-    // The panel's toolbar.
+    // The panel's toolbar: the title, then a column for each control, in their order, sized before any is
+    // drawn, so a page painted before the bar has all arrived draws each control where it stays. The
+    // minimums are the controls' widths in the site's type; e2e/home.spec.ts checks they still fit.
     '& [data-bar]': {
-      display: 'flex',
+      '--bar-choose': '182px',
+      '--bar-step': '52px',
+      '--bar-run': '89px',
+      display: 'grid',
+      gridTemplateColumns:
+        'minmax(0, 1fr) minmax(var(--bar-choose), auto) minmax(var(--bar-step), auto) minmax(var(--bar-run), auto)',
       alignItems: 'center',
-      flexWrap: 'wrap',
       gap: 'theme.space.3',
       minHeight: 44,
       padding: 'theme.space.2 theme.space.2 theme.space.2 theme.space.4',
       borderBottom: 'theme.line.width solid theme.line.hairline',
     },
+    // Each control keeps its own width in its column, as it did in a row; the title fills its own.
+    '& [data-bar] > :not(h2)': { justifySelf: 'start' },
+    // Too narrow for one row: the title above, the controls beneath it from the left.
+    '@container (width < 580px)': {
+      '& [data-bar]': {
+        gridTemplateColumns:
+          'minmax(var(--bar-choose), auto) minmax(var(--bar-step), auto) minmax(var(--bar-run), auto) minmax(0, 1fr)',
+      },
+      '& [data-bar] h2': { gridColumn: '1 / -1' },
+    },
+    // Too narrow for the three controls in a row: Run beneath the other two.
+    '@container (width < 376px)': {
+      '& [data-bar]': {
+        gridTemplateColumns: 'minmax(var(--bar-choose), auto) minmax(var(--bar-step), auto) minmax(0, 1fr)',
+      },
+      '& [data-run]': { gridColumn: '1' },
+    },
     '& [data-bar] h2': {
       margin: 0,
-      flexGrow: 1,
       fontSize: 'theme.type.small.size',
       fontWeight: 'theme.font.weight.semibold',
       color: 'theme.ink.primary',

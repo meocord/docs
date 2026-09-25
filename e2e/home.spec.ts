@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { cutServer, recordShifts } from './partial-paint'
 
 test('the panel paints the finished run without any script', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false })
@@ -145,3 +146,56 @@ test('copying a row’s wrapped code keeps its lines, blank ones too', async ({ 
   expect(source).toContain('\n\n')
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(source)
 })
+
+const VIEWPORTS = [
+  ['desktop', { width: 1440, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const
+
+for (const [label, viewport] of VIEWPORTS) {
+  for (const cut of [
+    { selector: '[data-bar] h2', at: 'close' },
+    { selector: '[data-choose="member"]', at: 'close' },
+    { selector: '[data-step]', at: 'close' },
+  ] as const) {
+    test(`the panel's bar keeps each control where it stays when the page arrives cut after ${cut.selector}, ${label}`, async ({
+      page,
+      baseURL,
+    }) => {
+      await page.setViewportSize(viewport)
+      const served = await cutServer(baseURL!, '/', cut)
+      try {
+        const shifts = await recordShifts(page)
+        await page.goto(served.url, { waitUntil: 'load' })
+        await expect(page.locator('[data-run]')).toBeVisible()
+        const { cls, moved } = await shifts()
+        expect(cls, moved.join('; ')).toBe(0)
+      } finally {
+        await served.close()
+      }
+    })
+  }
+
+  test(`each control of the panel's bar still fits the column kept for it, ${label}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+    await page.evaluate(() => document.fonts.ready)
+    const fits = await page.locator('[data-bar]').evaluate(bar => {
+      const style = getComputedStyle(bar)
+      const kept = (name: string) => parseFloat(style.getPropertyValue(name))
+      const width = (selector: string) => bar.querySelector(selector)!.getBoundingClientRect().width
+      return [
+        ['choose', width('[data-segments]'), kept('--bar-choose')],
+        ['step', width('[data-step]'), kept('--bar-step')],
+        ['run', width('[data-run]'), kept('--bar-run')],
+      ].map(([control, content, column]) => ({
+        control,
+        fits: (content as number) <= (column as number),
+        content,
+        column,
+      }))
+    })
+    // A wider label, weight or face would widen its column as it arrived and move what follows.
+    for (const control of fits) expect(control, JSON.stringify(control)).toMatchObject({ fits: true })
+  })
+}
