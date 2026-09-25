@@ -21,7 +21,7 @@ export function ReadingIsland() {
           pre => pre.offsetParent !== null,
         )
         if (!code) return
-        void navigator.clipboard?.writeText(code.innerText.replace(/\n$/, '')).then(() => {
+        void navigator.clipboard?.writeText((code.textContent ?? '').replace(/\n$/, '')).then(() => {
           copy.setAttribute('data-copied', '')
           copy.setAttribute('aria-label', 'Copied')
           window.setTimeout(() => {

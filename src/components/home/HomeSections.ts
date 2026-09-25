@@ -28,6 +28,15 @@ export const HomeRows = createNode('div', {
     '& [data-row] h3': { margin: '0 0 theme.space.2' },
     '& [data-row] p': { margin: '0 0 theme.space.3', color: 'theme.ink.secondary' },
     '& [data-row] [data-code]': { margin: 0 },
+    // A row's code reads whole at any width: long lines wrap, continuing under a hanging indent. Lines
+    // are rows of a flex column, so the newlines between them are not drawn twice.
+    '& [data-row] [data-code] pre code': { display: 'flex', flexDirection: 'column', whiteSpace: 'pre-wrap' },
+    '& [data-row] [data-code] .line': {
+      minHeight: '1lh',
+      paddingLeft: '4ch',
+      textIndent: '-4ch',
+      overflowWrap: 'anywhere',
+    },
     '& [data-more]': { fontSize: 'theme.type.small.size' },
 
     '& [data-steps]': { margin: 0, padding: 0, listStyle: 'none', counterReset: 'step' },
