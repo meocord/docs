@@ -34,6 +34,10 @@ Every page is rendered once and served byte-identical to every reader, so it can
 - `src/proxy.ts` sets the cache and security headers. Its CSP leaves a marker in `script-src`, which
   `scripts/csp-hash-proxy.mjs`, the server's entrypoint, fills with the hashes of the inline scripts it sends.
 - `/docs/latest/…` serves the current line under its own URL; `/docs/next/…` redirects to the line in prerelease.
+- Search runs in the browser with [Pagefind](https://pagefind.app). `bun run build` first runs `bun run search:build`,
+  which indexes each line's guides, migration guide, changelog and newest API from the committed content, and writes
+  a Pagefind bundle at `/_pagefind/<line>.<hash>/` and a symbol and page index for the command palette at
+  `/palette/<line>.<hash>.json`. Both are cached as immutable; `.search/manifest.json` names them for the app.
 - Open Graph cards are drawn at `/og/<line>/<id>.<hash>.png`, with the content hash in the path, and cached as
   immutable.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt

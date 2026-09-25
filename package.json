@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "start:dev": "rm -rf .next && mkdir -p .next/dev/node_modules && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
-    "build": "rm -rf .next && bun --bun next build",
+    "build": "rm -rf .next && bun run search:build && bun --bun next build",
+    "search:build": "bun scripts/search-build.ts",
     "serve": "bun scripts/serve-standalone.ts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -57,6 +58,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-unused-imports": "^4.4.1",
     "github-slugger": "^2.0.0",
+    "pagefind": "^1.5.2",
     "prettier": "^3.9.9",
     "semver": "^7.8.5",
     "typedoc": "^0.28.20",
