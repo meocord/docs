@@ -43,6 +43,21 @@ describe('rewriteLibraryLinks', () => {
     expect(text).toContain('(/docs/4.1/guards#guards)')
   })
 
+  it('lands an anchor on a page and its own anchor, or on the page itself', () => {
+    const anchors = {
+      'command-parameters': { slug: 'component-routing' },
+      'modal-fields': { slug: 'component-routing', anchor: 'modal-fields' },
+    }
+
+    expect(
+      rewriteLibraryLinks(
+        '[a](https://github.com/meocord/meocord#command-parameters) [b](https://github.com/meocord/meocord#modal-fields)',
+        '4.1',
+        anchors,
+      ),
+    ).toBe('[a](/docs/4.1/component-routing) [b](/docs/4.1/component-routing#modal-fields)')
+  })
+
   it('leaves a README anchor no page holds, and points the bare README at the line', () => {
     expect(
       rewriteLibraryLinks(

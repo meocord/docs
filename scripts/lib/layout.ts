@@ -3,11 +3,13 @@
  * examples and generated data in step with versions.json.
  */
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { ApiDocument } from './api.js'
-import type { ChangelogDocument } from './changelog.js'
+import type { AnchorTarget, ChangelogDocument } from './changelog.js'
+import { pageAnchors, parsePage } from './content.js'
 import { importReadme, pageFile } from './readme.js'
+import type { VersionsConfig } from './versions.js'
 
 /** The repository root; the pipeline's tests point it at a scratch directory. */
 export const ROOT = process.env.MEOCORD_DOCS_ROOT ?? path.resolve(import.meta.dirname, '..', '..')
@@ -70,6 +72,29 @@ export function importLineReadme(
 export function lineAnchors(line: string): Record<string, string> {
   const file = paths.readmeAnchors(line)
   return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>) : {}
+}
+
+/**
+ * Where README anchors land in a line's authored guides: a README section's anchor on the page with
+ * that id, or that id among its `formerly`; any other anchor on the page with a heading of that name.
+ */
+export function authoredAnchors(line: string): Record<string, AnchorTarget> {
+  const dir = paths.content(line)
+  if (!existsSync(dir)) return {}
+  const pages = readdirSync(dir)
+    .filter(file => file.endsWith('.md'))
+    .map(file => ({ slug: file.replace(/\.md$/, ''), ...parsePage(readFileSync(path.join(dir, file), 'utf8')) }))
+  const anchors: Record<string, AnchorTarget> = {}
+  for (const { slug, frontmatter } of pages)
+    for (const id of [frontmatter.id ?? slug, ...(frontmatter.formerly ?? [])]) anchors[id] = { slug }
+  for (const { slug, body } of pages) for (const anchor of pageAnchors(body)) anchors[anchor] ??= { slug, anchor }
+  return anchors
+}
+
+/** The anchor map a line's changelogs and migration guide resolve README links through. */
+export function linkAnchors(config: VersionsConfig, line: string): Record<string, AnchorTarget> {
+  const entry = config.lines.find(candidate => candidate.line === line)
+  return entry?.guides === 'authored' ? authoredAnchors(line) : lineAnchors(line)
 }
 
 /** Starts a new line's authored guides from another line's; an existing line's folder is never touched. */
