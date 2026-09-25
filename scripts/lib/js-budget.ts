@@ -50,12 +50,22 @@ export function measure(pages: Record<string, string>, read: (src: string) => Ui
 
 const kb = (bytes: number) => `${(bytes / 1000).toFixed(1)} KB`
 
-/** The report: every page's total against the budget, then the heaviest page's chunks. */
+/** How many of the heaviest pages the report lists when every page is within the budget. */
+export const LISTED = 10
+
+/**
+ * The report: how many pages were measured, every page over the budget or else the heaviest few,
+ * and the chunks of each page over it or of the heaviest page.
+ */
 export function report(results: PageBudget[], budget = BUDGET_BYTES): { text: string; over: PageBudget[] } {
   const over = results.filter(result => result.total > budget)
-  const width = Math.max(4, ...results.map(result => result.page.length))
-  const lines = [`First-load JS per page (gzip), budget ${kb(budget)}:`, '']
-  for (const result of results) {
+  const listed = over.length > 0 ? over : results.slice(0, LISTED)
+  const width = Math.max(4, ...listed.map(result => result.page.length))
+  const lines = [
+    `First-load JS per page (gzip), budget ${kb(budget)}: ${results.length} page${results.length === 1 ? '' : 's'}, ${over.length} over.`,
+    over.length > 0 ? 'Over the budget:' : `The heaviest ${listed.length}:`,
+  ]
+  for (const result of listed) {
     const mark = result.total > budget ? 'OVER' : 'ok  '
     lines.push(
       `  ${mark}  ${result.page.padEnd(width)}  ${kb(result.total).padStart(9)}  (${result.chunks.length} script${result.chunks.length === 1 ? '' : 's'})`,
