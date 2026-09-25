@@ -39,7 +39,7 @@ Every interaction, message and reaction goes to the handler it belongs to:
 | A slash, context menu or entry point command | its name, and a subcommand's path                          | `@Command(name, Builder)`          |
 | An autocomplete request                      | the command's path and the option being typed              | `@Autocomplete`                    |
 | A button, select menu or modal               | its `customId`, against every pattern, most specific first | `@Command(pattern, CommandType.…)` |
-| A message                                    | its whole text, or any text                                | `@MessageHandler`                  |
+| A message                                    | its words after the prefix, or any text                    | `@MessageHandler`                  |
 | A reaction added or removed                  | its emoji, or any emoji                                    | `@ReactionHandler`                 |
 | Any other client event                       | its name                                                   | `@On` and `@Once`                  |
 

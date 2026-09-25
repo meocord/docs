@@ -11,14 +11,16 @@ Besides interactions, a controller can handle ordinary messages with `@MessageHa
 
 ## Messages
 
-`@MessageHandler(keyword)` runs when a message's whole content, trimmed, is exactly the keyword; the match is
-case-sensitive, so stack two decorators for two spellings. `@MessageHandler()` with no keyword runs for every
-message:
+`@MessageHandler(pattern)` runs for a message that matches the pattern, after the app's prefix: `!ping`, or
+`!roll 20` with `{ sides: '20' }` as the second argument. Patterns, prefixes, and which handler wins when
+several match are covered in [Message commands](/docs/4.1/message-commands).
+
+`@MessageHandler()` with no pattern runs for every message, after the one patterned handler the message
+matched, if any:
 
 ::example{file="controllers/message/keyword.message.controller.ts" region="controller"}
 
-- Messages from bots, the bot's own among them, and messages with no text are skipped.
-- In each controller, the keyword handlers run before the ones for every message, one after another.
+- Messages from bots, the bot's own among them, and messages with no text reach no handler.
 - The handler receives the discord.js `Message`, and answers it with `message.reply()` or
   `message.channel.send()`; `respond()` is for interactions.
 
@@ -57,7 +59,9 @@ global guard written for interactions declares `@Guard({ types: ['interaction'] 
 
 ## Testing
 
-`invoke` runs a message or reaction handler with the arguments dispatch passes:
+`invoke` runs a message or reaction handler with the arguments dispatch passes. Given the app, the testing
+module matches a message after the app's prefix, as the bot does; testing a pattern's routing and params is
+covered in [Message commands](/docs/4.1/message-commands#testing):
 
 ::example{file="controllers/message/keyword.message.controller.spec.ts" region="spec"}
 

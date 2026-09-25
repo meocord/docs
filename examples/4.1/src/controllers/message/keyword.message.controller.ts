@@ -6,13 +6,13 @@ import { Controller, MessageHandler } from 'meocord/decorator'
 export class KeywordMessageController {
   private seen = 0
 
-  // Runs when a message's whole content, trimmed, is exactly `!ping`
-  @MessageHandler('!ping')
+  // !ping, with the app's prefix, in any case: the whole message, word for word
+  @MessageHandler('ping')
   async ping(message: Message) {
     await message.reply('Pong!')
   }
 
-  // Runs for every message, after the keyword handlers
+  // Runs for every message, after the one patterned handler it matched, if any
   @MessageHandler()
   count() {
     this.seen += 1
