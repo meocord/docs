@@ -7,7 +7,7 @@
 import http from 'node:http'
 import { spawn } from 'node:child_process'
 import { connect } from 'node:net'
-import { MARKER, fillPolicy } from './csp-hash.mjs'
+import { MARKER, fillPolicy, passthroughPolicy } from './csp-hash.mjs'
 
 const LISTEN = Number(process.env.PORT ?? 3000)
 const UPSTREAM = Number(process.env.UPSTREAM_PORT ?? LISTEN + 1)
@@ -27,9 +27,11 @@ const server = http.createServer((req, res) => {
       const bodiless = req.method === 'HEAD' || up.statusCode === 304
 
       if (bodiless || up.headers['content-encoding'] || !type.includes('text/html') || !csp?.includes(MARKER)) {
-        // The marker never reaches a browser, even on a response this does not rewrite.
+        // The marker never reaches a browser; a 304 keeps the policy its cached page came with.
         const passthrough = { ...up.headers }
-        if (csp?.includes(MARKER)) passthrough['content-security-policy'] = fillPolicy(csp)
+        const policy = passthroughPolicy(csp, bodiless)
+        if (policy === undefined) delete passthrough['content-security-policy']
+        else passthrough['content-security-policy'] = policy
         res.writeHead(up.statusCode ?? 200, passthrough)
         up.pipe(res)
         return
