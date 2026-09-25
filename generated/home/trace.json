@@ -1,0 +1,51 @@
+{
+  "command": "/greet",
+  "option": {
+    "name": "  Ada  "
+  },
+  "member": {
+    "ran": true,
+    "events": [
+      {
+        "stage": "defer",
+        "note": "deferred"
+      },
+      {
+        "stage": "guard",
+        "note": "allowed"
+      },
+      {
+        "stage": "interceptor:before",
+        "note": "before"
+      },
+      {
+        "stage": "pipe",
+        "note": "\"  Ada  \" → \"Ada\""
+      },
+      {
+        "stage": "interceptor:after",
+        "note": "after"
+      }
+    ],
+    "reply": "Hello, Ada!",
+    "error": null
+  },
+  "blocked": {
+    "ran": false,
+    "events": [
+      {
+        "stage": "defer",
+        "note": "deferred"
+      },
+      {
+        "stage": "guard",
+        "note": "denied"
+      }
+    ],
+    "reply": null,
+    "error": {
+      "name": "GuardDeniedError",
+      "message": "This command is for members."
+    }
+  }
+}

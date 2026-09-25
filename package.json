@@ -26,7 +26,8 @@
     "api:generate": "bun scripts/api-generate.ts",
     "content:check": "bun scripts/check-content.ts",
     "content:backport": "bun scripts/backport.ts",
-    "examples:check": "bun scripts/check-examples.ts"
+    "examples:check": "bun scripts/check-examples.ts",
+    "home:trace": "bun scripts/home-trace.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

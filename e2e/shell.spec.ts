@@ -17,7 +17,7 @@ test('the sidebar marks the page being read', async ({ page }) => {
 })
 
 test('the version menu opens on the current line, moves by arrow keys and hands focus back', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/docs/latest/overview')
   const trigger = page.getByRole('button', { name: /^Documentation version/ })
   await trigger.click()
 
@@ -34,9 +34,9 @@ test('the version menu opens on the current line, moves by arrow keys and hands 
   await expect(items.first()).toBeFocused()
   await page.keyboard.press('End')
   await expect(items.nth(1)).toBeFocused()
-  // Each line links to where it lands, the current one at its alias.
-  await expect(items.first()).toHaveAttribute('href', '/docs/latest')
-  await expect(items.nth(1)).toHaveAttribute('href', '/docs/4.1')
+  // Each line links to the same page on it, the current line at its alias.
+  await expect(items.first()).toHaveAttribute('href', '/docs/latest/overview')
+  await expect(items.nth(1)).toHaveAttribute('href', '/docs/4.1/overview')
 
   await page.keyboard.press('Escape')
   await expect(menu).toBeHidden()
@@ -152,7 +152,7 @@ test('the toolbar offers search by field and shortcut', async ({ page }) => {
 })
 
 test.describe('nothing spills past the reading column', () => {
-  const pages = ['/docs/latest/guards', '/docs/latest/api/decorator/Command', '/docs/latest/changelog']
+  const pages = ['/', '/docs/latest/guards', '/docs/latest/api/decorator/Command', '/docs/latest/changelog']
   for (const width of [390, 1280, 2560]) {
     for (const url of pages) {
       test(`${url} at ${width}px`, async ({ page }) => {

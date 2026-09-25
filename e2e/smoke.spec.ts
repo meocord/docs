@@ -45,7 +45,7 @@ test('the home page runs under its CSP with no violation', async ({ page }) => {
   expect(csp).toMatch(/script-src 'sha256-[^']+'/)
   expect(csp).not.toContain('__CSP_HASHES__')
   await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/)
-  await expect(page.getByRole('heading', { name: 'MeoCord' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'MeoCord', exact: true })).toBeVisible()
   expect(violations).toEqual([])
 })
 
