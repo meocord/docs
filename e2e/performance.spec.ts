@@ -9,8 +9,12 @@ const PAGES = ['/', '/docs/4.1/defer', '/docs/4.1/testing', '/docs/4.1/api/core/
 
 /** The largest-paint budgets the site holds in CI, on Lighthouse's desktop and mobile presets. */
 const LCP_MS = { desktop: 1800, mobile: 3000 }
-/** Lighthouse varies by a few hundred milliseconds from run to run, so each figure is a median. */
-const RUNS = 3
+/**
+ * Lighthouse's simulated LCP falls on one of a few values for the same build, a few hundred
+ * milliseconds apart, depending on how the page's tasks happened to order. Each figure is the median
+ * of five runs, so no single run's value decides it.
+ */
+const RUNS = 5
 
 // Lighthouse drives its own Chromium over the debugging protocol, one page at a time.
 test.describe.configure({ mode: 'serial' })
@@ -103,7 +107,7 @@ async function measure(url: string, preset: 'desktop' | 'mobile') {
         ...shiftedBoxes(result.artifacts?.Trace as { traceEvents?: TraceEvent[] } | undefined),
       )
     }
-    return { lcp: median(lcp), cls: Math.max(...cls), shifts: [...new Set(shifts)] }
+    return { lcp: median(lcp), runs: lcp, cls: Math.max(...cls), shifts: [...new Set(shifts)] }
   } finally {
     await browser.close()
   }
@@ -117,11 +121,14 @@ test.afterAll(() => hop?.stop(true))
 
 for (const path of PAGES) {
   test(`${path} paints its largest content within ${LCP_MS.desktop} ms on desktop and ${LCP_MS.mobile} ms on mobile, without layout shift`, async () => {
-    test.setTimeout(240_000)
+    test.setTimeout(400_000)
     const url = `http://localhost:${hop.port}${path}`
-    const { lcp, cls, shifts: desktopShifts } = await measure(url, 'desktop')
+    const { lcp, runs, cls, shifts: desktopShifts } = await measure(url, 'desktop')
     const mobile = await measure(url, 'mobile')
-    const summary = `desktop LCP ${Math.round(lcp)} ms, CLS ${cls}; mobile LCP ${Math.round(mobile.lcp)} ms, CLS ${mobile.cls}`
+    const each = (values: number[]) => values.map(Math.round).join(', ')
+    const summary =
+      `desktop LCP ${Math.round(lcp)} ms (${each(runs)}), CLS ${cls}; ` +
+      `mobile LCP ${Math.round(mobile.lcp)} ms (${each(mobile.runs)}), CLS ${mobile.cls}`
     test.info().annotations.push({ type: 'lighthouse', description: summary })
     console.log(`[lighthouse] ${path}: ${summary}`)
     expect(lcp, 'desktop LCP (ms)').toBeLessThan(LCP_MS.desktop)
