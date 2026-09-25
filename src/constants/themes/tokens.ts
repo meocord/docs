@@ -71,13 +71,17 @@ export const themeTokens = {
     16: '64px',
   },
 
-  /** By role. Panes meet at hairlines, so they have none. */
-  radius: { control: '6px', code: '8px', callout: '8px', popover: '12px', pane: '0px', round: '9999px' },
+  /**
+   * By role, proportional to size, and nested: an inner radius is the outer one less the padding
+   * between them. Nothing is pill-shaped and nothing is sharp.
+   */
+  radius: { chip: '4px', control: '6px', code: '10px', callout: '10px', popover: '12px', pane: '12px' },
 
   layout: {
     sidebar: '260px',
     inspector: '224px',
-    prose: '68ch',
+    prose: '72ch',
+    gutter: '8px',
     toolbar: '52px',
     row: '28px',
     sheetPad: '40px',

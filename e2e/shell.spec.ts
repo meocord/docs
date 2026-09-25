@@ -113,3 +113,20 @@ test.describe('the mark in the sidebar', () => {
     })
   }
 })
+
+test.describe('the reading region', () => {
+  for (const width of [1440, 1920, 2560]) {
+    test(`is centred in the sheet, with the contents beside the prose, at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/docs/latest/testing')
+      const box = await page.evaluate(() => {
+        const main = document.querySelector('main')!.getBoundingClientRect()
+        const toc = document.querySelector('nav[aria-label="On this page"]')!.closest('aside')!.getBoundingClientRect()
+        const sheet = document.querySelector('main')!.parentElement!.getBoundingClientRect()
+        return { left: main.left - sheet.left, right: sheet.right - toc.right, gap: toc.left - main.right }
+      })
+      expect(Math.abs(box.left - box.right)).toBeLessThanOrEqual(2)
+      expect(box.gap).toBeLessThanOrEqual(64)
+    })
+  }
+})

@@ -9,21 +9,22 @@ import { materialCss } from '@/lib/design/css'
 
 type WithCss<P> = Omit<NonNullable<P>, 'css'> & { css?: ThemedCSSObject }
 
-/** The navigation column: the sidebar material, full height, scrolling on its own. */
+/** The navigation pane: the sidebar material, inset from the window's edge, rounded, scrolling on its own. */
 export const SidebarPane = ({ css, ...props }: WithCss<Parameters<typeof Aside>[0]> = {}) =>
   Aside({
     width: 'theme.layout.sidebar',
-    height: '100dvh',
+    height: 'calc(100dvh - 2 * theme.layout.gutter)',
     position: 'sticky',
-    top: 0,
+    top: 'theme.layout.gutter',
     overflowY: 'auto',
     overscrollBehavior: 'contain',
-    borderRight: 'theme.line.width solid theme.line.hairline',
+    borderRadius: 'theme.radius.pane',
+    boxShadow: 'theme.elevation.1',
     ...props,
     css: { ...materialCss('sidebar'), ...css },
   })
 
-/** The toolbar across the reading column: the chrome material, sticky at the top. */
+/** The toolbar: the reading sheet's header, in the chrome material, sticky as the sheet scrolls. */
 export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[0]> = {}) =>
   Header({
     position: 'sticky',
@@ -33,10 +34,15 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
     display: 'flex',
     alignItems: 'center',
     gap: 'theme.space.2',
-    padding: '0 theme.space.4',
+    padding: '0 theme.space.3 0 theme.space.4',
     borderBottom: 'theme.line.width solid theme.line.hairline',
+    borderRadius: 'theme.radius.pane theme.radius.pane 0 0',
     ...props,
-    css: { ...materialCss('chrome'), ...css },
+    css: {
+      ...materialCss('chrome'),
+      '@media (width < theme.breakpoint.compact)': { borderRadius: 0, padding: '0 theme.space.2' },
+      ...css,
+    },
   })
 
 /** A floating surface for menus and popovers: the popover material, raised, with rounded corners. */
@@ -49,27 +55,44 @@ export const PopoverSurface = ({ css, ...props }: WithCss<Parameters<typeof Div>
     css: { ...materialCss('popover'), ...css },
   })
 
-/** The opaque reading sheet. Reading is never on glass. */
+/** The reading sheet: an opaque, elevated card on the canvas, rounded where it meets it. */
+export const SheetCard = createNode('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  flexGrow: 1,
+  // meonode sets flex-shrink: 0 on every node; the sheet has to give way to the viewport.
+  flexShrink: 1,
+  minWidth: 0,
+  minHeight: 'calc(100dvh - 2 * theme.layout.gutter)',
+  borderRadius: 'theme.radius.pane',
+  backgroundColor: 'theme.surface.sheet',
+  boxShadow: 'theme.elevation.2',
+  // Clips the corners without making a scroll container, so the toolbar can stay sticky.
+  overflow: 'clip',
+  css: {
+    '@media (width < theme.breakpoint.compact)': { borderRadius: 0, boxShadow: 'none', minHeight: '100dvh' },
+  },
+})
+
+/** The prose column inside the sheet. Reading is never on glass. */
 export const SheetPane = createNode('main', {
   id: 'content',
   minWidth: 0,
-  flexGrow: 1,
+  flexGrow: 0,
   flexShrink: 1,
-  backgroundColor: 'theme.surface.sheet',
+  flexBasis: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
   outline: 'none',
 })
 
-/** The right-hand column: on this page, and the page's facts. */
+/** The column beside the prose: on this page, and the page's facts. */
 export const InspectorPane = createNode('aside', {
   width: 'theme.layout.inspector',
   flexShrink: 0,
   position: 'sticky',
-  top: 'theme.layout.toolbar',
-  alignSelf: 'flex-start',
-  maxHeight: 'calc(100dvh - theme.layout.toolbar)',
+  top: 'calc(theme.layout.toolbar + theme.space.2)',
+  maxHeight: 'calc(100dvh - theme.layout.toolbar - theme.space.4)',
   overflowY: 'auto',
-  padding: 'theme.space.8 theme.space.6',
-  backgroundColor: 'theme.surface.sheet',
+  padding: 'theme.space.10 0 theme.space.8',
   // Shown only from the wide breakpoint up.
   css: { '@media (width < theme.breakpoint.wide)': { display: 'none' } },
 })
