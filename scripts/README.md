@@ -6,16 +6,16 @@ exact version they describe.
 
 ## What lives where
 
-| Path                                  | Contents                                                                              | Edited by           |
-| ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------- |
-| `versions.json`                       | The documented versions, grouped into minor lines with a status each, and provenance  | the sync, reviewers |
-| `content/<line>/`                     | A line's guides: one Markdown page each, with `id` and `title` front matter           | people, or the sync |
-| `examples/<line>/`                    | A workspace pinning that line's exact meocord; guides embed its files                 | people              |
-| `generated/api/<version>.json`        | TypeDoc's JSON for the version's declaration files, one module per entry point        | the pipeline only   |
-| `generated/changelog/<version>.json`  | The version's CHANGELOG.md section, split into entries, each marked if breaking       | the pipeline only   |
-| `generated/migrating/<line>.md`       | `docs/MIGRATING.md` at the commit the line's newest version was built from            | the pipeline only   |
-| `generated/readme-anchors/<line>.json`| For a line whose guides are imported from its README: which page holds each heading    | the pipeline only   |
-| `generated/since.json`                | The first version every symbol, member and parameter appears in, from the API diffs    | the pipeline only   |
+| Path                                   | Contents                                                                             | Edited by           |
+| -------------------------------------- | ------------------------------------------------------------------------------------ | ------------------- |
+| `versions.json`                        | The documented versions, grouped into minor lines with a status each, and provenance | the sync, reviewers |
+| `content/<line>/`                      | A line's guides: one Markdown page each, with `id` and `title` front matter          | people, or the sync |
+| `examples/<line>/`                     | A workspace pinning that line's exact meocord; guides embed its files                | people              |
+| `generated/api/<version>.json`         | TypeDoc's JSON for the version's declaration files, one module per entry point       | the pipeline only   |
+| `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking      | the pipeline only   |
+| `generated/migrating/<line>.md`        | `docs/MIGRATING.md` at the commit the line's newest version was built from           | the pipeline only   |
+| `generated/readme-anchors/<line>.json` | For a line whose guides are imported from its README: which page holds each heading  | the pipeline only   |
+| `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs  | the pipeline only   |
 
 A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and
 `next` the one in prerelease. A line's `guides` is `readme` while its pages are imported from the README
@@ -38,16 +38,16 @@ exact version is listed under `provenance.integrityOnly`, which a reviewer adds 
 
 ## Commands
 
-| Command                                  | What it does                                                                                    |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `bun run versions:sync`                  | Adds every version published since `versions.json`'s `since` that the site lacks, verified      |
-| `bun run api:generate <version...>`      | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
-| `bun run content:check`                  | Checks front matter, examples, links and anchors, and that every version has its generated data |
-| `bun run examples:check [line...]`       | Typechecks each line's examples against its pinned meocord                                      |
-| `bun run content:backport <sha> --to <line>` | Applies a commit's change to one line's guides to another line, on a branch of its own       |
-| `bun run test:pipeline`                  | The pipeline's own tests, offline; `test:pipeline:coverage` enforces the coverage thresholds    |
+| Command                                      | What it does                                                                                          |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `bun run versions:sync`                      | Adds every version published since `versions.json`'s `since` that the site lacks, verified            |
+| `bun run api:generate <version...>`          | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
+| `bun run content:check`                      | Checks front matter, examples, links and anchors, and that every version has its generated data       |
+| `bun run examples:check [line...]`           | Typechecks each line's examples against its pinned meocord                                            |
+| `bun run content:backport <sha> --to <line>` | Applies a commit's change to one line's guides to another line, on a branch of its own                |
 
-Install with `bun install --linker isolated`, so each example workspace resolves its own meocord.
+`bunfig.toml` sets Bun's isolated linker, so each example workspace resolves its own meocord. The pipeline's
+tests run offline with the rest of the repository's, in `bun run test:coverage`.
 
 Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard"}`, a path under
 `examples/<line>/src/` and a region between `// #region guard` and `// #endregion guard`. A written guide
