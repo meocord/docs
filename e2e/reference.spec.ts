@@ -29,7 +29,8 @@ test('switching to a line without the page lands on a page saying so', async ({ 
 
 test('a missing page is noindexed, and one for a page no line has is a 404', async ({ request }) => {
   const html = await (await request.get('/docs/4.0/missing/interceptors')).text()
-  expect(html).toContain('<meta name="robots" content="noindex, follow"/>')
+  // Noindex always; its links are followed once the site is indexable, which this build is not.
+  expect(html).toContain('<meta name="robots" content="noindex, nofollow"/>')
   expect((await request.get('/docs/4.0/missing/no-such-page')).status()).toBe(404)
   expect((await request.get('/docs/4.1/missing/interceptors')).status()).toBe(404)
 })
