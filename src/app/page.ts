@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { Node } from '@meonode/ui'
+import { Div, H1, Node } from '@meonode/ui'
 import {
   FeatureSection,
   HomeRows,
@@ -47,8 +47,8 @@ async function home() {
     children: Prose({
       maxWidth: 'none',
       children: [
-        Node('h1', { key: 'title', children: 'MeoCord' }),
-        Node('div', {
+        H1('MeoCord', { key: 'title' }),
+        Div({
           key: 'subtitle',
           'data-subtitle': true,
           children: [

@@ -1,4 +1,23 @@
-import { type Children, createNode, Node } from '@meonode/ui'
+import {
+  A,
+  type Children,
+  Code,
+  createNode,
+  Dd,
+  Div,
+  Dl,
+  Dt,
+  H2,
+  H3,
+  Li,
+  Ol,
+  P,
+  Pre,
+  Section,
+  Span,
+  Strong,
+  Ul,
+} from '@meonode/ui'
 import { markSvgNode } from '@/components/home/mark-node'
 import { hitAreaCss } from '@/lib/design/css'
 import { codeFrame } from '@/lib/prose/code'
@@ -164,22 +183,19 @@ export const HomeRows = createNode('div', {
 
 // The bot's answer, as the channel shows it: its mark, its name, and what it said.
 function botMessage(body: Children, secret: boolean) {
-  return Node('div', {
+  return Div({
     'data-message': true,
     children: [
-      Node('div', { key: 'avatar', 'data-avatar': true, 'aria-hidden': true, children: markSvgNode(18) }),
-      Node('div', {
+      Div({ key: 'avatar', 'data-avatar': true, 'aria-hidden': true, children: markSvgNode(18) }),
+      Div({
         key: 'body',
         children: [
-          Node('div', {
+          Div({
             key: 'who',
             'data-who': true,
-            children: [
-              Node('strong', { key: 'n', children: 'greeter' }),
-              Node('span', { key: 'a', 'data-app': true, children: 'APP' }),
-            ],
+            children: [Strong('greeter', { key: 'n' }), Span('APP', { key: 'a', 'data-app': true })],
           }),
-          secret ? Node('div', { key: 'private', 'data-private': true, children: 'Only you can see this' }) : null,
+          secret ? Div({ key: 'private', 'data-private': true, children: 'Only you can see this' }) : null,
           body,
         ],
       }),
@@ -188,17 +204,17 @@ function botMessage(body: Children, secret: boolean) {
 }
 
 function ResultPanel(result: FeatureResult) {
-  const label = (children: Children) => Node('p', { key: 'label', 'data-result-label': true, children })
+  const label = (children: Children) => P(children, { key: 'label', 'data-result-label': true })
   if (result.kind === 'route') {
     const row = (term: string, value: string) => [
-      Node('dt', { key: `${term}-t`, children: term }),
-      Node('dd', { key: `${term}-d`, children: value }),
+      Dt({ key: `${term}-t`, children: term }),
+      Dd({ key: `${term}-d`, children: value }),
     ]
-    return Node('div', {
+    return Div({
       'data-result': 'route',
       children: [
-        label(['A click on ', Node('code', { key: 'c', children: result.customId }), ' reaches']),
-        Node('dl', {
+        label(['A click on ', Code(result.customId, { key: 'c' }), ' reaches']),
+        Dl({
           key: 'route',
           'data-route': true,
           children: [
@@ -211,45 +227,42 @@ function ResultPanel(result: FeatureResult) {
   }
   const said =
     result.kind === 'private'
-      ? Node('div', { key: 'said', 'data-said': true, children: result.text })
-      : Node('div', {
+      ? Div({ key: 'said', 'data-said': true, children: result.text })
+      : Div({
           key: 'said',
           'data-embed': true,
           style: { '--embed-color': result.color },
-          children: [
-            Node('strong', { key: 't', children: result.title }),
-            Node('span', { key: 'd', 'data-said': true, children: result.text }),
-          ],
+          children: [Strong(result.title, { key: 't' }), Span(result.text, { key: 'd', 'data-said': true })],
         })
-  return Node('div', {
+  return Div({
     'data-result': result.kind,
     children: [
-      label(['After ', Node('code', { key: 'c', children: result.command }), ', the user sees']),
+      label(['After ', Code(result.command, { key: 'c' }), ', the user sees']),
       botMessage(said, result.kind === 'private' || result.private),
     ],
   })
 }
 
 export function FeatureSection(items: Feature[]) {
-  return Node('section', {
+  return Section({
     key: 'features',
     'aria-labelledby': 'features',
     children: [
-      Node('h2', { key: 'h', id: 'features', children: 'What you write, what they see' }),
-      ...items.map((item, index) =>
-        Node('div', {
-          key: index,
+      H2('What you write, what they see', { key: 'h', id: 'features' }),
+      ...items.map(item =>
+        Div({
+          key: item.title,
           'data-row': true,
           children: [
-            Node('div', {
+            Div({
               key: 'text',
               children: [
-                Node('h3', { key: 'h', children: item.title }),
-                Node('p', { key: 'p', children: item.body }),
-                Node('a', { key: 'a', 'data-more': true, href: item.href, children: 'Read the guide' }),
+                H3(item.title, { key: 'h' }),
+                P(item.body, { key: 'p' }),
+                A({ key: 'a', 'data-more': true, href: item.href, children: 'Read the guide' }),
               ],
             }),
-            Node('div', {
+            Div({
               key: 'code',
               children: [codeFrame(item.code, 'ts', { key: 0, file: item.file }), ResultPanel(item.result)],
             }),
@@ -261,22 +274,22 @@ export function FeatureSection(items: Feature[]) {
 }
 
 export function WhySection(claims: Claim[]) {
-  return Node('section', {
+  return Section({
     key: 'why',
     'aria-labelledby': 'why',
     children: [
-      Node('h2', { key: 'h', id: 'why', children: 'Why MeoCord' }),
-      ...claims.map((claim, index) =>
-        Node('div', {
-          key: index,
+      H2('Why MeoCord', { key: 'h', id: 'why' }),
+      ...claims.map(claim =>
+        Div({
+          key: claim.title,
           'data-row': true,
           children: [
-            Node('div', {
+            Div({
               key: 'text',
               children: [
-                Node('h3', { key: 'h', children: claim.title }),
-                Node('p', { key: 'p', children: claim.body }),
-                Node('a', { key: 'a', 'data-more': true, href: claim.href, children: 'Read the guide' }),
+                H3(claim.title, { key: 'h' }),
+                P(claim.body, { key: 'p' }),
+                A({ key: 'a', 'data-more': true, href: claim.href, children: 'Read the guide' }),
               ],
             }),
             codeFrame(claim.code, 'ts', { key: 1, file: claim.file }),
@@ -289,18 +302,13 @@ export function WhySection(claims: Claim[]) {
 
 export function StartSection(guideHref: string) {
   const step = (key: number, text: string, code: string, language: string) =>
-    Node('li', {
-      key,
-      children: Node('div', {
-        children: [Node('p', { key: 'p', children: text }), codeFrame(code, language, { key: 1 })],
-      }),
-    })
-  return Node('section', {
+    Li({ key, children: Div({ children: [P(text, { key: 'p' }), codeFrame(code, language, { key: 1 })] }) })
+  return Section({
     key: 'start',
     'aria-labelledby': 'start',
     children: [
-      Node('h2', { key: 'h', id: 'start', children: 'Start in three steps' }),
-      Node('ol', {
+      H2('Start in three steps', { key: 'h', id: 'start' }),
+      Ol({
         key: 'steps',
         'data-steps': true,
         children: [
@@ -309,47 +317,46 @@ export function StartSection(guideHref: string) {
           step(3, 'Run it, rebuilding as you save.', 'npx meocord start --dev', 'shell'),
         ],
       }),
-      Node('a', { key: 'more', 'data-more': true, href: guideHref, children: 'Read the quick start' }),
+      A({ key: 'more', 'data-more': true, href: guideHref, children: 'Read the quick start' }),
     ],
   })
 }
 
 export function TestingSection(spec: { file: string; code: string; report: string[] }, href: string) {
   const output = [
-    Node('span', { key: 'file', 'data-pass': true, children: `✓ ${spec.file}` }),
+    Span(`✓ ${spec.file}`, { key: 'file', 'data-pass': true }),
     `  (${spec.report.length} ${spec.report.length === 1 ? 'test' : 'tests'})\n`,
-    ...spec.report.map((line, index) => Node('span', { key: `t${index}`, children: `  ✓ ${line}\n` })),
+    ...spec.report.map((line, index) => Span(`  ✓ ${line}\n`, { key: `t${index}` })),
     '\n',
-    Node('span', { key: 'sum', children: `Test Files  ` }),
-    Node('span', { key: 'p', 'data-pass': true, children: '1 passed' }),
+    Span(`Test Files  `, { key: 'sum' }),
+    Span('1 passed', { key: 'p', 'data-pass': true }),
     `\n     Tests  `,
-    Node('span', { key: 'p2', 'data-pass': true, children: `${spec.report.length} passed` }),
+    Span(`${spec.report.length} passed`, { key: 'p2', 'data-pass': true }),
   ]
-  return Node('section', {
+  return Section({
     key: 'testing',
     'aria-labelledby': 'testing',
     children: [
-      Node('h2', { key: 'h', id: 'testing', children: 'Tested the way it runs' }),
-      Node('div', {
+      H2('Tested the way it runs', { key: 'h', id: 'testing' }),
+      Div({
         key: 'row',
         'data-row': true,
         children: [
-          Node('div', {
+          Div({
             key: 'text',
             children: [
-              Node('p', {
-                key: 'p',
-                children:
-                  'This spec is the one the docs run against every build. invoke() takes the call through the same stages dispatch does, so the order it asserts is the order your bot runs.',
-              }),
-              Node('a', { key: 'a', 'data-more': true, href, children: 'Read about testing' }),
+              P(
+                'This spec is the one the docs run against every build. invoke() takes the call through the same stages dispatch does, so the order it asserts is the order your bot runs.',
+                { key: 'p' },
+              ),
+              A({ key: 'a', 'data-more': true, href, children: 'Read about testing' }),
             ],
           }),
-          Node('div', {
+          Div({
             key: 'code',
             children: [
               codeFrame(spec.code, 'ts', { key: 0, file: spec.file }),
-              Node('pre', { key: 'out', 'data-run-output': true, 'aria-label': 'Vitest output', children: output }),
+              Pre(output, { key: 'out', 'data-run-output': true, 'aria-label': 'Vitest output' }),
             ],
           }),
         ],
@@ -359,22 +366,17 @@ export function TestingSection(spec: { file: string; code: string; report: strin
 }
 
 export function NewSection(line: string, items: { title: string; href: string }[], href: string) {
-  return Node('section', {
+  return Section({
     key: 'new',
     'aria-labelledby': 'new',
     children: [
-      Node('h2', { key: 'h', id: 'new', children: `New in ${line}` }),
-      Node('ul', {
+      H2(`New in ${line}`, { key: 'h', id: 'new' }),
+      Ul({
         key: 'items',
         'data-news': true,
-        children: items.map(item =>
-          Node('li', { key: item.href, children: Node('a', { href: item.href, children: item.title }) }),
-        ),
+        children: items.map(({ href: to, title }) => Li({ key: to, children: A({ href: to, children: title }) })),
       }),
-      Node('p', {
-        key: 'more',
-        children: Node('a', { 'data-more': true, href, children: `Read what’s new in ${line}` }),
-      }),
+      P(A({ 'data-more': true, href, children: `Read what’s new in ${line}` }), { key: 'more' }),
     ],
   })
 }
