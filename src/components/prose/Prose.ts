@@ -94,6 +94,13 @@ export const Prose = createNode('article', {
       color: 'theme.ink.secondary',
     },
     '& [data-code] figcaption [data-file]': { color: 'theme.ink.primary' },
+    // A long file name gives way, with an ellipsis, rather than pushing the copy button out.
+    '& [data-code] figcaption > span': {
+      minWidth: 0,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
     '& [data-code] figcaption [role="group"]': { display: 'flex', gap: 2, marginLeft: -8 },
     '& [data-code] pre': {
       margin: 0,
@@ -115,7 +122,7 @@ export const Prose = createNode('article', {
       fontSize: 'inherit',
       cursor: 'pointer',
     },
-    '& [data-copy]': { width: 28, height: 28, padding: 0 },
+    '& [data-copy]': { flexShrink: 0, width: 28, height: 28, padding: 0 },
     '& [data-pm-choice]': { height: 24, padding: '0 theme.space.2' },
     '& [data-copy]:hover, & [data-pm-choice]:hover': { color: 'theme.ink.primary' },
     '& [data-copy]:focus-visible, & [data-pm-choice]:focus-visible': {

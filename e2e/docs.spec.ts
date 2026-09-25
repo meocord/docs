@@ -41,9 +41,9 @@ test('a line lands on its first page, and an unknown page is a 404', async ({ pa
   expect((await request.get('/docs/latest/no-such-page')).status()).toBe(404)
 })
 
-test('the home page links into the current line', async ({ page }) => {
+test('the home page links into the guides of the line it shows', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Read the guides' }).click()
-  await expect(page).toHaveURL(/\/docs\/latest$/)
+  await page.getByRole('link', { name: 'Read the quick start' }).click()
+  await expect(page).toHaveURL(/\/docs\/4\.1\/quick-start$/)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })

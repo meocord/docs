@@ -11,14 +11,16 @@ export interface WindowProps extends ToolbarProps {
   toc?: TocEntry[]
   /** Facts for the inspector under the headings, such as the edit link. */
   inspector?: Children
+  /** A page wider than the prose measure, such as the home page, with no contents column. */
+  wide?: boolean
   children: Children
 }
 
 /** The foot of every page: the credit for the site's images. */
-function SiteFooter() {
+function SiteFooter({ wide }: { wide?: boolean } = {}) {
   return Footer({
     key: 'footer',
-    maxWidth: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
+    maxWidth: wide ? 'none' : 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
     margin: 'theme.space.16 0 0',
     padding: 'theme.space.6 theme.layout.sheetPad theme.space.10',
     borderTop: 'theme.line.width solid theme.line.hairline',
@@ -70,7 +72,7 @@ function SkipLink() {
  * breakpoint the sidebar becomes a sheet opened from the toolbar and the card fills the screen; below
  * the wide one the table of contents is not shown. Everything it draws comes from its props.
  */
-export function Window({ crumbs, groups, version, repository, toc = [], inspector, children }: WindowProps) {
+export function Window({ crumbs, groups, version, repository, toc = [], inspector, wide, children }: WindowProps) {
   return Div({
     display: 'flex',
     alignItems: 'flex-start',
@@ -99,8 +101,12 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
             padding: '0 theme.space.6',
             css: { '@media (width < theme.breakpoint.compact)': { padding: 0 } },
             children: [
-              SheetPane({ tabIndex: -1, children: [children, SiteFooter()] }),
-              Inspector({ toc, children: inspector }),
+              SheetPane({
+                tabIndex: -1,
+                ...(wide ? { flexBasis: 'min(1200px, 100%)' } : {}),
+                children: [children, SiteFooter({ wide })],
+              }),
+              wide ? null : Inspector({ toc, children: inspector }),
             ],
           }),
         ],
