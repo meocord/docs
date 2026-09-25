@@ -107,20 +107,31 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
       SheetCard({
         children: [
           Toolbar({ crumbs, groups, version, repository }),
+          // Tracks sized by the viewport alone, so the page's width never waits on what fills them: the
+          // contents column keeps its track while empty.
           Div({
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: wide
+              ? 'minmax(0, min(1200px, 100%))'
+              : 'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad))',
             justifyContent: 'center',
-            alignItems: 'flex-start',
-            gap: 'theme.space.12',
+            alignItems: 'start',
+            columnGap: 'theme.space.12',
             flexGrow: 1,
             padding: '0 theme.space.6',
-            css: { '@media (width < theme.breakpoint.compact)': { padding: 0 } },
+            css: {
+              '@media (width < theme.breakpoint.compact)': { padding: 0 },
+              ...(wide
+                ? {}
+                : {
+                    '@media (width >= theme.breakpoint.wide)': {
+                      gridTemplateColumns:
+                        'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad)) theme.layout.inspector',
+                    },
+                  }),
+            },
             children: [
-              SheetPane({
-                tabIndex: -1,
-                ...(wide ? { flexBasis: 'min(1200px, 100%)' } : {}),
-                children: [children, SiteFooter({ wide })],
-              }),
+              SheetPane({ tabIndex: -1, children: [children, SiteFooter({ wide })] }),
               wide ? null : Inspector({ toc, children: inspector }),
             ],
           }),
