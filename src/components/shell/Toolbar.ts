@@ -25,6 +25,19 @@ function Breadcrumbs(crumbs: Crumb[]) {
       fontSize: 'theme.type.control.size',
       whiteSpace: 'nowrap',
       overflow: 'hidden',
+      css: {
+        // Each crumb gives way with an ellipsis (flex-shrink set explicitly, l7aromeo/meonode#33).
+        '& > li > a, & > li > span[aria-current]': {
+          flexShrink: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        },
+        // A phone shows only where the reader is, as a native navigation bar does.
+        '@media (width < theme.breakpoint.compact)': {
+          '& > li:not(:last-child), & > li > [aria-hidden]': { display: 'none' },
+        },
+      },
       children: For(
         crumbs,
         (crumb, index) =>

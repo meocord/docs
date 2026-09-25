@@ -51,6 +51,7 @@ function paramsTable(params: ApiParam[], key: string, ownerSince?: string) {
   return Node('div', {
     key,
     'data-table': true,
+    'data-params': true,
     children: Node('table', {
       children: [
         Node('thead', {
@@ -124,7 +125,7 @@ function signatureDetails(
   if (signature.returns) {
     out.push(
       heading('Returns', ids?.returns),
-      Node('p', { key: `${key}-returns`, children: Node('code', { children: code(signature.returns.type) }) }),
+      signatureBlock([signature.returns.type], `${key}-returns`),
       ...markdown(signature.returns.description, `${key}-returns-d`),
     )
   }

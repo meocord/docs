@@ -70,7 +70,7 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
     for (const section of changelog.sections) {
       const sectionId = `${id}-${slug(section.title)}`
       nodes.push(
-        Node('h3', { key: sectionId, id: sectionId, children: section.title }),
+        Node('h3', { key: sectionId, id: sectionId, 'data-group': true, children: section.title }),
         Node('ul', {
           key: `${sectionId}-list`,
           children: section.entries.map((entry, index) =>

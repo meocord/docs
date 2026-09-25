@@ -28,6 +28,17 @@ export const Prose = createNode('article', {
     '& h1': { ...heading('h1'), margin: '0 0 theme.space.6' },
     '& h2': { ...heading('h2'), margin: 'theme.space.12 0 theme.space.4' },
     '& h3': { ...heading('h3'), margin: 'theme.space.10 0 theme.space.3' },
+    // A heading that only groups what follows, such as a changelog's kinds of change: a label, as the
+    // sidebar's and the contents' group titles are.
+    '& h3[data-group]': {
+      margin: 'theme.space.8 0 theme.space.2',
+      fontSize: 'theme.type.caption.size',
+      lineHeight: 'theme.type.caption.line',
+      fontWeight: 'theme.font.weight.semibold',
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      color: 'theme.ink.secondary',
+    },
     '& h4': { ...heading('h4'), margin: 'theme.space.8 0 theme.space.2' },
     '& p': { margin: '0 0 theme.space.4' },
     '& strong': { fontWeight: 'theme.font.weight.semibold' },
@@ -79,7 +90,7 @@ export const Prose = createNode('article', {
     },
     '@media (width >= theme.breakpoint.wide)': {
       // Code and tables may run a little past the prose measure, into the sheet's margin.
-      '& [data-code], & [data-table]': { marginInline: 'calc(-1 * theme.space.4)' },
+      '& [data-code], & [data-table], & [data-signature]': { marginInline: 'calc(-1 * theme.space.4)' },
     },
     '& [data-code] figcaption': {
       display: 'flex',
@@ -215,11 +226,33 @@ export const Prose = createNode('article', {
       whiteSpace: 'pre-wrap',
       overflowWrap: 'anywhere',
     },
+    // A parameter's name reads whole; its type wraps between words, never inside one.
+    '& [data-params] td:first-child code': { whiteSpace: 'nowrap' },
+    '& [data-params] td code': { overflowWrap: 'normal' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
     '& [data-doc] > :last-child': { marginBottom: 0 },
     '& td [data-doc] p': { margin: 0 },
     '& [data-since]': { whiteSpace: 'nowrap' },
+
+    // A page's one action, such as opening search: the accent push button, as the home panel's Run.
+    '& [data-action]': {
+      height: 32,
+      padding: '0 theme.space.4',
+      border: 'none',
+      borderRadius: 'theme.radius.control',
+      backgroundColor: 'theme.accent.default',
+      color: 'theme.accent.content',
+      fontFamily: 'inherit',
+      fontSize: 'theme.type.control.size',
+      fontWeight: 'theme.font.weight.semibold',
+      cursor: 'pointer',
+    },
+    '& [data-action]:hover': { backgroundColor: 'theme.accent.hover' },
+    '& [data-action]:focus-visible': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: 'theme.focus.offset',
+    },
 
     // The page's context, muted under its title.
     '& [data-subtitle]': {

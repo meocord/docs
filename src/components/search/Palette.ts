@@ -129,7 +129,8 @@ function Row(option: Option, active: boolean, choose: (option: Option) => void, 
     children: [
       Span(option.section ? `# ${option.title}` : option.title, {
         key: 'title',
-        fontSize: option.section ? 'theme.type.small.size' : 'theme.type.control.size',
+        // A section of a page reads as part of it: its size, in the secondary ink.
+        fontSize: 'theme.type.control.size',
         fontWeight: option.section ? 'theme.font.weight.regular' : 'theme.font.weight.medium',
         color: option.section ? 'theme.ink.secondary' : 'theme.ink.primary',
         overflow: 'hidden',
