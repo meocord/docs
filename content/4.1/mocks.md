@@ -23,6 +23,10 @@ The second argument sets properties as the mock is built. It is the only way to 
 read-only, such as a modal's `customId` and `fields`, a component's `message`, or a context menu's
 `targetUser`. A misspelled property name is a compile error.
 
+`inGuild()`, `inCachedGuild()` and `inRawGuild()` answer from the `guildId` and `guild` a mock is given, as
+discord.js does: a `guildId` is a server, a `guildId` with a `guild` a cached one, and a mock with neither is a
+direct message, where all three are `false`.
+
 To put a command somewhere a user-installed app can be used, set `context` and
 `authorizingIntegrationOwners`:
 
@@ -42,7 +46,9 @@ reading only one of the two is caught. For autocomplete, `focused` names the opt
 ## Messages, users and the rest
 
 - `createMockMessage()` mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()`
-  and the rest throw once it is, and `edit()` and `reply()` resolve to a new mock message.
+  and the rest throw once it is, and `edit()` and `reply()` resolve to a new mock message. It takes an
+  `id`, `content`, `components`, `embeds` and `flags`; components and embeds may be Discord's JSON, builders
+  or discord.js objects.
 - `createMockUser()`, `createMockClient()`, `createMockGuild()` and `createMockChannel(Class)` mock the
   classes a handler reads most, with their managers stubbed.
 - `createMock<Interface>()` mocks a type with no class at runtime, such as a service's interface.

@@ -27,9 +27,8 @@ describe('ModerationSlashController', () => {
 
   // #region unit
   it('reads the roles from the handler, in a unit test of the guard', () => {
+    // Created without a guildId, the mock is outside a server, with no member to have the roles
     const interaction = createMockInteraction(ChatInputCommandInteraction)
-    // Outside a server, there is no member to have the roles
-    interaction.inCachedGuild.mockReturnValue(false)
     const guard = new RolesGuard(createExecutionContext(ModerationSlashController, 'ban', { args: [interaction] }))
 
     expect(guard.canActivate(interaction)).toBe(false)

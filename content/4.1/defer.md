@@ -24,8 +24,8 @@ user privately, and the message restored.
 
 ## The lock in a test
 
-A test sees the lock as the calls `respond()` made. `createMockMessage()` takes no components, so the
-message the button sits on gets them assigned, built from Discord's JSON:
+A test sees the lock as the calls `respond()` made. The message the button sits on is a
+`createMockMessage()` given the controls it shows, as Discord's JSON:
 
 ::example{file="controllers/button/card.lock.spec.ts" region="message"}
 
