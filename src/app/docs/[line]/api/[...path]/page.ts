@@ -5,6 +5,7 @@ import { VERSIONS } from '@/config/versions'
 import { apiModel, apiParams, exactApiParams } from '@/lib/docs/api-site'
 import { renderApiPage } from '@/lib/docs/api-render'
 import { docsHref } from '@/lib/urls'
+import { firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string; path: string[] }> }
 
@@ -35,17 +36,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const target = parse(path)
   const symbol = target && apiModel(line, target.version)?.symbol(target.entry, target.symbol)
   if (!target || !symbol) return {}
-  const title = `${symbol.name} · ${symbol.entry}`
   const lineHasIt = !!apiModel(line)?.symbol(target.entry, target.symbol)
   const canonical = lineHasIt
     ? docsHref({ kind: 'api', line, entry: target.entry, symbol: target.symbol }, VERSIONS)
     : undefined
-  return {
-    title,
-    description: symbol.description.split('\n')[0] || undefined,
-    alternates: canonical ? { canonical } : undefined,
-    ...(target.version ? { robots: { index: false, follow: true } } : {}),
-  }
+  return pageMetadata({
+    title: target.version ? `${symbol.name} · ${symbol.entry} ${target.version}` : `${symbol.name} · ${symbol.entry}`,
+    line,
+    // The doc comment's summary, or what the symbol is when it has none.
+    description: firstParagraph(symbol.description) || `${symbol.kind} ${symbol.name} in ${symbol.entry}.`,
+    canonical,
+    // An exact version's page points at the line's; only the line's is indexed.
+    index: !target.version,
+  })
 }
 
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting

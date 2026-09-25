@@ -6,8 +6,13 @@ import { Window } from '@/components/shell/Window'
 import { CURRENT_LINE } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
-export const metadata: Metadata = { title: 'Page not found', robots: { index: false } }
+export const metadata: Metadata = pageMetadata({
+  title: 'Page not found',
+  description: 'The address may be from an older version of the docs, or the page has moved.',
+  index: false,
+})
 
 // Cached for the life of the build, like every page drawn from the repository's files.
 async function notFoundPage() {

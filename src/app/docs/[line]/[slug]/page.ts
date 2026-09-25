@@ -3,6 +3,7 @@ import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { guideMeta, pageParams } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string; slug: string }> }
 
@@ -18,7 +19,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line, slug } = await params
   const meta = guideMeta(line, slug)
-  return meta ? { title: meta.title, alternates: { canonical: meta.canonical } } : {}
+  return meta ? pageMetadata({ ...meta, line }) : {}
 }
 
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting

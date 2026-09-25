@@ -5,6 +5,7 @@ import { VERSIONS } from '@/config/versions'
 import { lines } from '@/lib/docs/site'
 import { hasMigrating, renderMigrating } from '@/lib/docs/reference-pages'
 import { docsHref } from '@/lib/urls'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 
 type Params = { params: Promise<{ line: string }> }
 
@@ -22,11 +23,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line } = await params
   if (!hasMigrating(line)) return {}
-  return {
-    title: `Migrating · ${line}`,
-    description: `Upgrading a bot to MeoCord ${line}.`,
-    alternates: { canonical: docsHref({ kind: 'migrating', line }, VERSIONS) },
-  }
+  return pageMetadata({
+    title: 'Migrating',
+    line,
+    description: `Upgrading a bot to MeoCord ${line}: what changed, and what to do about it.`,
+    canonical: docsHref({ kind: 'migrating', line }, VERSIONS),
+  })
 }
 
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting
