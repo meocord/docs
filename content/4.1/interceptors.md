@@ -21,6 +21,20 @@ refuses to start if one does. Options for one use go through `{ provide, params 
 
 ::example{file="interceptors/reporting.interceptor.ts" region="interceptor"}
 
+## The call's params
+
+`context.getHandlerParams()` reads the handler's params as they stand when the interceptor asks: raw before
+`next.handle()`, validated and piped after it, as the handler received them. `context.getArgs()` follows the
+same stages. An audit interceptor can record both:
+
+::example{file="interceptors/audit.interceptor.ts" region="interceptor"}
+
+On a button whose `uid` is validated and piped into an account:
+
+::example{file="controllers/button/redeem.button.controller.ts" region="controller"}
+
+::example{file="controllers/button/redeem.button.controller.spec.ts" region="spec"}
+
 ## Where interceptors apply
 
 `@UseInterceptor` goes on a method, or on a controller for every handler it declares or inherits, and

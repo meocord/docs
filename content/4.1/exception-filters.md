@@ -30,6 +30,17 @@ Errors outside any handler reach global filters too. An interaction no handler m
 As with interceptors, one instance serves every call, so a filter cannot inject `ExecutionContext`, and
 `{ provide, params }` is read with `context.getParams()`.
 
+## The call's params
+
+`context.getHandlerParams()` gives a filter the handler's params as they were when the error was thrown:
+raw when a pipe or validation threw, piped when the handler did. A filter can answer with what the user
+asked for:
+
+::example{file="filters/unknown-account.filter.ts" region="filter"}
+
+The redeem button [above](/docs/4.1/interceptors#the-calls-params) applies it, so a uid with no account is
+answered privately with the text the user sent.
+
 ## The built-in fallback
 
 An error no filter handles goes to the built-in fallback. It logs the error, and answers the user through
