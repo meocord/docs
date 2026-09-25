@@ -36,13 +36,28 @@ const MIGRATING = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/blob\/[
 const README = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/?(?:#([\w-]+))?(?=[)\s])/g
 
 /**
+ * Where a README anchor lands on a line's pages: the slug of the page holding it, keeping the anchor,
+ * or a page and the anchor to use there, none for the page itself.
+ */
+export type AnchorTarget = string | { slug: string; anchor?: string }
+
+/** The stored href a README anchor lands on, or undefined when no page of the line has it. */
+export function anchorHref(line: string, anchors: Record<string, AnchorTarget>, anchor: string): string | undefined {
+  const target = anchors[anchor]
+  if (target === undefined) return undefined
+  return typeof target === 'string'
+    ? storedHref({ kind: 'guide', line, slug: target, anchor })
+    : storedHref({ kind: 'guide', line, slug: target.slug, anchor: target.anchor })
+}
+
+/**
  * Points links at the library's migration guide and README to the site's pages for `line`.
- * README anchors resolve through `readmeAnchors`, which maps an anchor to the page holding it.
+ * README anchors resolve through `anchors`, which maps an anchor to where it lands.
  */
 export function rewriteLibraryLinks(
   markdown: string,
   line: string,
-  readmeAnchors: Record<string, string> = {},
+  anchors: Record<string, AnchorTarget> = {},
 ): string {
   return markdown
     .replace(MIGRATING, (_match, anchor: string | undefined) =>
@@ -50,8 +65,7 @@ export function rewriteLibraryLinks(
     )
     .replace(README, (match, anchor: string | undefined) => {
       if (!anchor) return storedHref({ kind: 'line', line })
-      const page = readmeAnchors[anchor]
-      return page ? storedHref({ kind: 'guide', line, slug: page, anchor }) : match
+      return anchorHref(line, anchors, anchor) ?? match
     })
 }
 

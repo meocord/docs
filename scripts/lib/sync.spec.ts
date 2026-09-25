@@ -12,7 +12,7 @@ import type { VersionsConfig } from './versions.js'
 const root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-sync-'))
 vi.stubEnv('MEOCORD_DOCS_ROOT', root)
 const { sync, missingVersions, syncSummary } = await import('./sync.js')
-const { forkContent, forkExamples } = await import('./layout.js')
+const { authoredAnchors, forkContent, forkExamples, linkAnchors } = await import('./layout.js')
 const { unpack } = await import('./tarball.js')
 
 const fixture = path.join(import.meta.dirname, '..', '__fixtures__', 'package')
@@ -201,6 +201,37 @@ describe('forking a line', () => {
     forkExamples('8.0', '8.1', '8.1.0')
 
     expect(existsSync(path.join(root, 'examples', '8.1'))).toBe(false)
+  })
+})
+
+describe('README anchors for an authored line', () => {
+  it('lands a section on the page with its id or former id, and a heading on the page holding it', () => {
+    mkdirSync(path.join(root, 'content', '8.1'), { recursive: true })
+    writeFileSync(
+      path.join(root, 'content', '8.1', 'component-routing.md'),
+      '---\nid: command-parameters\ntitle: Routing\n---\n\n## Modal fields\n',
+    )
+    writeFileSync(
+      path.join(root, 'content', '8.1', 'overview.md'),
+      '---\nid: overview\ntitle: Overview\nformerly: [features]\n---\n\n## Modal fields\n',
+    )
+
+    expect(authoredAnchors('8.1')).toEqual({
+      'command-parameters': { slug: 'component-routing' },
+      overview: { slug: 'overview' },
+      features: { slug: 'overview' },
+      'modal-fields': { slug: 'component-routing', anchor: 'modal-fields' },
+    })
+  })
+
+  it('takes a line’s anchors from its authored guides once authored, and from its README before', () => {
+    const lines = (guides: 'readme' | 'authored') =>
+      ({ lines: [{ line: '8.1', status: 'prerelease', guides, versions: [] }] }) as unknown as VersionsConfig
+    mkdirSync(path.join(root, 'generated', 'readme-anchors'), { recursive: true })
+    writeFileSync(path.join(root, 'generated', 'readme-anchors', '8.1.json'), '{"guards":"guards"}')
+
+    expect(linkAnchors(lines('readme'), '8.1')).toEqual({ guards: 'guards' })
+    expect(linkAnchors(lines('authored'), '8.1')).toMatchObject({ overview: { slug: 'overview' } })
   })
 })
 

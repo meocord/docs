@@ -17,7 +17,7 @@ describe('migratingFile', () => {
         line: '4.1',
         version: '4.1.0-beta.0',
         commit: 'abc',
-        readmeAnchors: { guards: 'guards' },
+        anchors: { guards: 'guards' },
       },
     )
 

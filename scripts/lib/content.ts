@@ -72,7 +72,8 @@ export function markdownLinks(markdown: string): string[] {
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 
-function pageAnchors(body: string): Set<string> {
+/** The anchors of a page's headings, as GitHub and the site give them. */
+export function pageAnchors(body: string): Set<string> {
   const slugger = new GithubSlugger()
   const anchors = new Set<string>()
   for (const line of withoutCode(body).split('\n')) {

@@ -14,7 +14,7 @@ import {
   forkContent,
   forkExamples,
   importLineReadme,
-  lineAnchors,
+  linkAnchors,
   paths,
   pinExamples,
   writeApi,
@@ -61,7 +61,7 @@ export async function generateVersion(pkg: VerifiedPackage, config: VersionsConf
       commit: pkg.provenance?.commit,
     }),
   )
-  const section = rewriteLibraryLinks(sliceChangelog(pkg.changelog(), pkg.version), line, lineAnchors(line))
+  const section = rewriteLibraryLinks(sliceChangelog(pkg.changelog(), pkg.version), line, linkAnchors(config, line))
   writeChangelog(parseChangelog(pkg.version, section))
 }
 
@@ -115,7 +115,7 @@ export async function refreshLine(
       line: line.line,
       version: pkg.version,
       commit: pkg.provenance.commit,
-      readmeAnchors: lineAnchors(line.line),
+      anchors: linkAnchors(config, line.line),
     }),
   )
 }

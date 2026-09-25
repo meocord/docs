@@ -4,7 +4,7 @@
  */
 
 import GithubSlugger from 'github-slugger'
-import { rewriteLibraryLinks } from './changelog'
+import { anchorHref, rewriteLibraryLinks, type AnchorTarget } from './changelog'
 import type { Fetch } from './registry'
 import { storedHref } from './stored-links'
 
@@ -41,16 +41,16 @@ export function migratingFile(
     line,
     version,
     commit,
-    readmeAnchors,
-  }: { line: string; version: string; commit: string; readmeAnchors: Record<string, string> },
+    anchors,
+  }: { line: string; version: string; commit: string; anchors: Record<string, AnchorTarget> },
 ): string {
   // The guide sits in docs/, so it reaches the README as ../README.md
-  const body = rewriteLibraryLinks(markdown, line, readmeAnchors).replace(
+  const body = rewriteLibraryLinks(markdown, line, anchors).replace(
     /\]\(\.\.\/README\.md(?:#([\w-]+))?\)/g,
     (match, anchor?: string) => {
       if (!anchor) return `](${storedHref({ kind: 'line', line })})`
-      const page = readmeAnchors[anchor]
-      return page ? `](${storedHref({ kind: 'guide', line, slug: page, anchor })})` : match
+      const href = anchorHref(line, anchors, anchor)
+      return href ? `](${href})` : match
     },
   )
   return `<!-- docs/MIGRATING.md from ${LIBRARY_REPOSITORY}@${commit} (${version}); generated, do not edit -->\n\n${body.trim()}\n`
