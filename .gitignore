@@ -22,3 +22,4 @@ CLAUDE.md
 /.search/
 # The reference's formatted code, by `bun run api:layout`
 /.api-layout/
+build.log
