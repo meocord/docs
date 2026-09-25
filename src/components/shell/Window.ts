@@ -1,4 +1,4 @@
-import { A, Div, Footer, Node } from '@meonode/ui'
+import { A, Div, Footer, Grid, Node, Row } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { safe } from '@/lib/design/css'
@@ -86,8 +86,7 @@ function SkipLink() {
  * from its props.
  */
 export function Window({ crumbs, groups, version, repository, toc = [], inspector, wide, children }: WindowProps) {
-  return Div({
-    display: 'flex',
+  return Row({
     gap: 'theme.layout.gutter',
     height: '100dvh',
     padding: 'theme.layout.gutter',
@@ -109,8 +108,7 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
           Toolbar({ crumbs, groups, version, repository }),
           // Tracks sized by the viewport alone, so the page's width never waits on what fills them: the
           // contents column keeps its track while empty.
-          Div({
-            display: 'grid',
+          Grid({
             gridTemplateColumns: wide
               ? 'minmax(0, min(1200px, 100%))'
               : 'minmax(0, calc(theme.layout.prose + 2 * theme.layout.sheetPad))',
