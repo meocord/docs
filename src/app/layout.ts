@@ -7,11 +7,12 @@ import { Wrapper } from '@/components/Wrapper'
 import { themeModes } from '@/constants/themes/modes'
 import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
+import { mono, sans } from '@/app/fonts'
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0d0e12' },
-    { media: '(prefers-color-scheme: light)', color: '#f7f7fa' },
+    { media: '(prefers-color-scheme: dark)', color: '#161618' },
+    { media: '(prefers-color-scheme: light)', color: '#f2f2f4' },
   ],
 }
 
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return Html({
     lang: 'en',
+    className: `${sans.variable} ${mono.variable}`,
     // The mode is stamped as `data-theme` before paint, so the server's markup never depends on the reader.
     suppressHydrationWarning: true,
     children: [

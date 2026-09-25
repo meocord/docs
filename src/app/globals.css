@@ -1,27 +1,85 @@
 /*
  * The palettes, and the only place a colour is written down. Dark is `:root` so a reader whose
  * pre-paint script cannot run still gets a styled page; light overrides it by attribute.
+ * src/constants/themes/tokens.ts names these, and tokens.spec.ts checks both blocks declare the same set.
  */
 :root {
   color-scheme: dark;
-  --surface-default: #0d0e12;
-  --surface-content: #e7e8ee;
-  --surface-muted: rgba(231, 232, 238, 0.6);
-  --surface-line: rgba(231, 232, 238, 0.12);
-  --primary-default: #8f9bff;
-  --primary-content: #0d0e12;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --mc-canvas: #161618;
+  --mc-sheet: #1e1e21;
+  --mc-ink-primary: rgb(255 255 255 / 0.88);
+  --mc-ink-secondary: rgb(255 255 255 / 0.62);
+  --mc-ink-quiet: rgb(255 255 255 / 0.4);
+  --mc-hairline: rgb(255 255 255 / 0.1);
+  --mc-hairline-strong: rgb(255 255 255 / 0.16);
+  --mc-fill: rgb(255 255 255 / 0.05);
+  --mc-fill-hover: rgb(255 255 255 / 0.08);
+  --mc-scrim: rgb(0 0 0 / 0.4);
+
+  --mc-accent: #8c98ff;
+  --mc-accent-hover: #a4aeff;
+  --mc-accent-content: #14162e;
+  --mc-accent-tint: rgb(140 152 255 / 0.14);
+  --mc-accent-band: rgb(140 152 255 / 0.06);
+  --mc-accent-halo: rgb(140 152 255 / 0.4);
+
+  --mc-tip: #5cc08a;
+  --mc-tip-tint: rgb(92 192 138 / 0.1);
+  --mc-warning: #e0a84a;
+  --mc-warning-tint: rgb(224 168 74 / 0.1);
+  --mc-danger: #f07a72;
+  --mc-danger-tint: rgb(240 122 114 / 0.1);
+
+  --mc-material-sidebar: rgb(30 30 33 / 0.66);
+  --mc-material-sidebar-solid: #1e1e21;
+  --mc-material-chrome: rgb(36 36 40 / 0.72);
+  --mc-material-chrome-solid: #242428;
+  --mc-material-popover: rgb(44 44 48 / 0.84);
+  --mc-material-popover-solid: #2c2c30;
+
+  /* Dark elevation is a 6% top highlight over a dark ring rather than an ambient shadow. */
+  --mc-shadow-1: inset 0 0.5px 0 rgb(255 255 255 / 0.06), 0 0 0 0.5px rgb(0 0 0 / 0.4);
+  --mc-shadow-2: inset 0 0.5px 0 rgb(255 255 255 / 0.06), 0 0 0 0.5px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.3);
+  --mc-shadow-3: inset 0 0.5px 0 rgb(255 255 255 / 0.06), 0 0 0 0.5px rgb(0 0 0 / 0.6), 0 12px 32px rgb(0 0 0 / 0.45);
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --surface-default: #f7f7fa;
-  --surface-content: #16171d;
-  --surface-muted: rgba(22, 23, 29, 0.62);
-  --surface-line: rgba(22, 23, 29, 0.12);
-  --primary-default: #4150d8;
-  --primary-content: #ffffff;
+  --mc-canvas: #f2f2f4;
+  --mc-sheet: #ffffff;
+  --mc-ink-primary: rgb(22 22 24 / 0.88);
+  --mc-ink-secondary: rgb(22 22 24 / 0.62);
+  --mc-ink-quiet: rgb(22 22 24 / 0.48);
+  --mc-hairline: rgb(22 22 24 / 0.1);
+  --mc-hairline-strong: rgb(22 22 24 / 0.16);
+  --mc-fill: rgb(22 22 24 / 0.05);
+  --mc-fill-hover: rgb(22 22 24 / 0.08);
+  --mc-scrim: rgb(22 22 24 / 0.24);
+
+  --mc-accent: #4b5bd7;
+  --mc-accent-hover: #3e4dc4;
+  --mc-accent-content: #ffffff;
+  --mc-accent-tint: rgb(75 91 215 / 0.14);
+  --mc-accent-band: rgb(75 91 215 / 0.06);
+  --mc-accent-halo: rgb(75 91 215 / 0.4);
+
+  --mc-tip: #277d4f;
+  --mc-tip-tint: rgb(39 125 79 / 0.08);
+  --mc-warning: #96620f;
+  --mc-warning-tint: rgb(150 98 15 / 0.08);
+  --mc-danger: #c2413a;
+  --mc-danger-tint: rgb(194 65 58 / 0.08);
+
+  --mc-material-sidebar: rgb(236 236 240 / 0.72);
+  --mc-material-sidebar-solid: #ececf0;
+  --mc-material-chrome: rgb(248 248 250 / 0.78);
+  --mc-material-chrome-solid: #f8f8fa;
+  --mc-material-popover: rgb(252 252 253 / 0.86);
+  --mc-material-popover-solid: #fcfcfd;
+
+  --mc-shadow-1: 0 0 0 0.5px rgb(22 22 24 / 0.1), 0 1px 2px rgb(22 22 24 / 0.06);
+  --mc-shadow-2: 0 0 0 0.5px rgb(22 22 24 / 0.1), 0 4px 12px rgb(22 22 24 / 0.08);
+  --mc-shadow-3: 0 0 0 0.5px rgb(22 22 24 / 0.12), 0 12px 32px rgb(22 22 24 / 0.14);
 }
 
 *,
@@ -34,8 +92,14 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--surface-default);
-  color: var(--surface-content);
-  font-family: var(--font-sans);
+  background: var(--mc-canvas);
+  color: var(--mc-ink-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--mc-accent-tint);
 }
