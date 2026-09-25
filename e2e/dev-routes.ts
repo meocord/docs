@@ -1,5 +1,6 @@
 /**
- * Starts `next dev` briefly and loads one page of every docs route, by its line and through `latest`,
+ * Starts `next dev` briefly, from a cold cache, and loads the home page and one page of every docs
+ * route, by its line and through `latest`,
  * failing on a non-200 answer or on a validation error in the dev log, such as a route blocking on
  * runtime data during prerender. The production build does not run these checks; `next dev` does, and
  * shows their errors to anyone working on the site.
@@ -7,6 +8,7 @@
  *   bun run check:dev-routes
  */
 import { spawn } from 'node:child_process'
+import { mkdirSync, rmSync } from 'node:fs'
 import { e2ePort } from './port'
 import { CURRENT_LINE } from '../src/config/versions'
 import * as guide from '../src/app/docs/[line]/[slug]/page'
@@ -28,8 +30,9 @@ const ROUTES: [pattern: string, params: () => Params[] | Promise<Params[]>][] = 
   ['/docs/[line]/missing/[id]', missing.generateStaticParams],
 ]
 
-// A validation error from the dev server, as its log prints one.
-const PROBLEM = /encountered runtime data during prerendering|blocking-prerender|Error: Route "/
+// A validation or module-loading error from the dev server, as its log prints one.
+const PROBLEM =
+  /encountered runtime data during prerendering|blocking-prerender|Error: Route "|Failed to load external module/
 
 // Its own port, beside the e2e server's pair, so both can run from one checkout.
 const PORT = Number(process.env.DEV_CHECK_PORT ?? e2ePort() + 2)
@@ -52,7 +55,8 @@ async function urls(): Promise<string[]> {
     const current = params.find(entry => entry.line === CURRENT_LINE)
     if (current) found.push(fill(pattern, { ...current, line: 'latest' }))
   }
-  return [...new Set(found)]
+  // The home page, which highlights code above the fold.
+  return ['/', ...new Set(found)]
 }
 
 async function waitForServer(log: () => string): Promise<void> {
@@ -68,6 +72,10 @@ async function waitForServer(log: () => string): Promise<void> {
 }
 
 const targets = await urls()
+// Cold, as `bun run start:dev` starts: a warm cache serves pages without loading what renders them.
+// The same empty node_modules too, where Next links the packages it keeps external.
+for (const dir of ['.next/dev', '.next/cache']) rmSync(dir, { recursive: true, force: true })
+mkdirSync('.next/dev/node_modules', { recursive: true })
 const child = spawn('bun', ['--bun', 'next', 'dev', '-p', String(PORT)], {
   detached: true,
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -80,18 +88,31 @@ child.stderr.on('data', chunk => (output += chunk))
 const failures: string[] = []
 try {
   await waitForServer(() => output)
-  for (const url of targets) {
+  let home = ''
+  const check = async (url: string) => {
     const before = output.length
     const response = await fetch(ORIGIN + url)
-    await response.arrayBuffer()
+    const body = await response.text()
     // Validation reports after the response; give it a moment to reach the log.
     await new Promise(resolve => setTimeout(resolve, 1500))
     const logged = output.slice(before)
-    const problem = logged.split('\n').find(line => PROBLEM.test(line))
-    const verdict = response.status !== 200 ? `answered ${response.status}` : problem ? problem.trim() : undefined
+    const problem = logged
+      .split('\n')
+      .find(line => PROBLEM.test(line))
+      ?.trim()
+    const verdict = response.status !== 200 ? `answered ${response.status}${problem ? `: ${problem}` : ''}` : problem
     console.log(`${verdict ? 'FAIL' : 'ok  '}  ${url}${verdict ? `  ${verdict}` : ''}`)
     if (verdict) failures.push(`${url}: ${verdict}`)
+    return body
   }
+  for (const url of targets) {
+    const body = await check(url)
+    if (url === '/') home = body
+  }
+  // The home page's OG card, which loads meo-canvas, the other package kept external.
+  const card = /<meta property="og:image" content="([^"]+)"/.exec(home)?.[1]
+  if (card) await check(new URL(card).pathname)
+  else failures.push('/: names no og:image')
 } finally {
   // The dev server and everything it started, as one process group.
   try {
