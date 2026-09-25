@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   cacheControlFor,
+  IMMUTABLE,
+  isInertPath,
   MOVING_PAGE,
   NAMED_FILE,
   pathKind,
@@ -44,5 +46,28 @@ describe('prereleaseRedirect', () => {
   it('leaves other paths alone', () => {
     expect(prereleaseRedirect('/docs/nextjs', '4.1')).toBeUndefined()
     expect(prereleaseRedirect('/docs/latest', '4.1')).toBeUndefined()
+  })
+})
+
+describe('search assets', () => {
+  it('caches a hashed search bundle and palette index as immutable', () => {
+    expect(pathKind('/_pagefind/4.1.0123456789/pagefind.js')).toBe('search-bundle')
+    expect(pathKind('/_pagefind/4.1.0123456789/fragment/en_abc.pf_fragment')).toBe('search-bundle')
+    expect(pathKind('/palette/4.1.0123456789.json')).toBe('palette')
+    expect(cacheControlFor('/_pagefind/4.1.0123456789/wasm.en.pagefind')).toBe(IMMUTABLE)
+    expect(cacheControlFor('/palette/4.0.abcdef0123.json')).toBe(IMMUTABLE)
+  })
+
+  it('does not treat an unhashed path as immutable', () => {
+    expect(pathKind('/_pagefind/pagefind.js')).toBe('page')
+    expect(pathKind('/palette/4.1.json')).toBe('page')
+    expect(pathKind('/_pagefind/4.1.XYZ/pagefind.js')).toBe('page')
+  })
+
+  it('gives the palette the flat-deny policy and the search bundle the document policy', () => {
+    expect(isInertPath('/palette/4.1.0123456789.json')).toBe(true)
+    expect(isInertPath('/icon-32.png')).toBe(true)
+    expect(isInertPath('/_pagefind/4.1.0123456789/pagefind-worker.js')).toBe(false)
+    expect(isInertPath('/docs/4.1/guards')).toBe(false)
   })
 })

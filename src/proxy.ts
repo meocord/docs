@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { DOC_ALIASES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE } from '@/config/site'
-import { cacheControlFor, pathKind, prereleaseRedirect, STATIC_FILE_CSP } from '@/lib/cache-policy'
+import { cacheControlFor, isInertPath, prereleaseRedirect, STATIC_FILE_CSP } from '@/lib/cache-policy'
 
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
@@ -44,7 +44,7 @@ export function proxy(request: NextRequest) {
     return response
   }
   response.headers.set('Cache-Control', cacheControlFor(pathname))
-  response.headers.set('Content-Security-Policy', pathKind(pathname) === 'file' ? STATIC_FILE_CSP : DOCUMENT_CSP)
+  response.headers.set('Content-Security-Policy', isInertPath(pathname) ? STATIC_FILE_CSP : DOCUMENT_CSP)
   return response
 }
 
