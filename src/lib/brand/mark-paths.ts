@@ -26,15 +26,16 @@ export const MARK_PATHS = {
 
 /**
  * The crown split at the valley between the ears, where they turn when they flick: each ear with its
- * share of the head, overlapping the other by 0.2 below the valley so no seam opens as they move.
+ * share of the head, overlapping the other by 0.3 from y 8.9 down, so no seam opens as they move and
+ * nothing overlaps above the valley.
  */
 export const MARK_EARS = {
   near: {
-    crown: 'M2.4 12Q1.9 7.2 3.4 4.1Q4.1 2.8 5 3.8Q6.4 5.6 7.3 8Q8.4 7.6 9.6 8.4L9.8 8.5V12Z',
+    crown: 'M2.4 12Q1.9 7.2 3.4 4.1Q4.1 2.8 5 3.8Q6.4 5.6 7.3 8Q8.4 7.6 9.6 8.4V8.9H9.9V12Z',
     inner: 'M3.7 9.6Q3.6 7 4.3 5.6Q5.6 7.4 6.2 9.6Z',
   },
   far: {
-    crown: 'M9.6 8.4Q11 6.9 12.9 6.1Q13.9 5.3 14.1 6.4Q14.3 9.3 13.4 12H9.4V8.5Z',
+    crown: 'M9.6 8.4Q11 6.9 12.9 6.1Q13.9 5.3 14.1 6.4Q14.3 9.3 13.4 12H9.3V8.9H9.6Z',
     inner: 'M10.8 9.8Q11.8 8.3 12.9 7.6Q13.1 8.8 12.8 9.8Z',
   },
 } as const

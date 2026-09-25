@@ -49,7 +49,7 @@ export function Mark(size = 20) {
       '& [data-ears]': { fill: 'theme.ink.primary' },
       // Opaque ink under the group's opacity, so where the ears overlap reads as one shape.
       '@supports (color: rgb(from red r g b))': {
-        '& [data-ears]': { fill: 'rgb(from var(--mc-ink-primary) r g b)', opacity: 0.88 },
+        '& [data-ears]': { fill: 'rgb(from var(--mc-ink-primary) r g b / 1)', opacity: 0.88 },
       },
     },
     children: [
