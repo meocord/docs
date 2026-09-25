@@ -30,7 +30,7 @@ Start it in production:
 npx meocord start --prod
 ```
 
-To deploy `dist/` alone, with no `node_modules` beside it, see
+To deploy `dist/` alone, with no `node_modules` beside it, under node or bun, see
 [Self-contained builds](/docs/4.1/self-contained-builds).
 
 ## Configuration and secrets

@@ -52,8 +52,9 @@ that way.
 
 ## On bun
 
-With no `node_modules` in reach, bun downloads any package the moment something imports it. `meocord start`
-passes `--no-install` for you; launching the bundle yourself, pass it too:
+A self-contained build runs under bun as under node. With no `node_modules` in reach, bun downloads any
+package the moment something imports it; `meocord start` passes `--no-install` for you, and launching the
+bundle yourself, pass it too:
 
 ```dockerfile
 CMD ["bun", "--no-install", "dist/main.js"]

@@ -37,6 +37,11 @@ returns it, modified. Some things need no rule of your own:
 - **Asset file names:** `output.filename.image`, and `svg`, `font` and `media`, accept a function, for two
   files that share a name in different folders.
 - **Raw bundler rules** go through `tools.rspack`, as in the example above.
+- **Source maps:** `source-map` in production and `cheap-module-source-map` in development, so a stack trace
+  points into your source. Change them with `output.sourceMap.js`. An `eval` devtool, set there or through
+  `tools.rspack`, is built as the same map without the eval, `eval-source-map` as `source-map` and plain
+  `eval` as none, with a warning: the bundle reads `import.meta`, which a module evaluated from a string
+  cannot. Set the non-eval devtool yourself to silence the warning.
 
 ## Optional dependencies
 
