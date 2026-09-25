@@ -57,6 +57,8 @@ export const Prose = createNode('article', {
       padding: '0.1em 0.3em',
       borderRadius: 'theme.radius.control',
       backgroundColor: 'theme.surface.fill',
+      // A long identifier or call breaks where it must rather than running off a phone's screen.
+      overflowWrap: 'anywhere',
     },
     // In a heading, code keeps the heading's size and weight and reads as code by its face and a tint
     // of the accent, not by a block behind it.
@@ -172,20 +174,41 @@ export const Prose = createNode('article', {
 
     // API reference pages: the kind and entry line under the title, badges, linked signatures and
     // doc comments, whose last paragraph sits flush with what follows.
-    '& [data-api-meta]': { margin: '-12px 0 theme.space.6', color: 'theme.ink.secondary' },
+    '& [data-api-meta]': {
+      margin: '-12px 0 theme.space.8',
+      fontSize: 'theme.type.small.size',
+      color: 'theme.ink.secondary',
+    },
     '& [data-badge]': {
       display: 'inline-block',
       fontSize: 'theme.type.caption.size',
       lineHeight: 1.6,
       fontWeight: 'theme.font.weight.regular',
       letterSpacing: 0,
-      padding: '0 theme.space.1',
-      borderRadius: 'theme.radius.control',
-      border: '1px solid theme.accent.tint',
+      padding: '0 theme.space.2',
+      // A chip: a quiet tinted fill, rounded to its size.
+      borderRadius: 'theme.radius.chip',
+      backgroundColor: 'theme.accent.band',
       color: 'theme.accent.default',
       verticalAlign: 'middle',
     },
-    '& [data-badge="deprecated"]': { borderColor: 'theme.callout.warning.glyph', color: 'theme.callout.warning.glyph' },
+    '& [data-badge="deprecated"]': {
+      backgroundColor: 'theme.callout.warning.fill',
+      color: 'theme.callout.warning.glyph',
+    },
+    // A signature: framed like code, and wrapped rather than scrolled, since it is read, not copied.
+    '& [data-signature]': {
+      margin: '0 0 theme.space.6',
+      padding: 'theme.space.3 theme.space.4',
+      borderRadius: 'theme.radius.code',
+      border: 'theme.line.width solid theme.line.hairline',
+      backgroundColor: 'theme.surface.canvas',
+      fontSize: 'theme.type.code.size',
+      lineHeight: 'theme.type.code.line',
+      whiteSpace: 'pre-wrap',
+      overflowWrap: 'anywhere',
+    },
+    '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
     '& [data-doc] > :last-child': { marginBottom: 0 },
     '& td [data-doc] p': { margin: 0 },
