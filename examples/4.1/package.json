@@ -6,7 +6,8 @@
     "discord.js": "^14.27.0",
     "dotenv": "^18.0.3",
     "meocord": "4.1.0-beta.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@swc/core": "^1.16.2",
