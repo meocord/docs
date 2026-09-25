@@ -122,3 +122,26 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(lowest).toBeGreaterThanOrEqual(4.5)
   })
 }
+
+for (const width of [1440, 2560]) {
+  test(`every row's code reads whole, without sideways scrolling, at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const hidden = await page
+      .locator('[data-row] [data-code] pre')
+      .evaluateAll(pres => pres.map(pre => pre.scrollWidth - pre.clientWidth))
+    expect(hidden.length).toBeGreaterThan(4)
+    expect(hidden.every(width => width === 0)).toBe(true)
+  })
+}
+
+test('copying a row’s wrapped code keeps its lines, blank ones too', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  const frame = page.locator('section[aria-labelledby="features"] [data-code]').nth(2)
+  await frame.locator('[data-copy]').click()
+  const source = (await frame.locator('pre code').textContent())!.replace(/\n$/, '')
+  expect(source).toContain('\n\n')
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(source)
+})
