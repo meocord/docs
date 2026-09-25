@@ -42,9 +42,13 @@ export function ReadingIsland() {
       }
     }
 
-    // The current heading is the last one above a line 30% down the viewport, or the first.
-    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')]
-    const headings = links.map(link => document.getElementById(link.dataset.toc ?? '')).filter(Boolean) as HTMLElement[]
+    // The current heading is the last one above a line 30% down the viewport, or the first. Looked for
+    // in the page on show: Next keeps a page it navigated away from, hidden, with the same ids.
+    const sheet = [...document.querySelectorAll<HTMLElement>('[data-sheet]')].find(el => el.checkVisibility())
+    const links = [...(sheet?.querySelectorAll<HTMLAnchorElement>('[data-toc]') ?? [])]
+    const headings = links
+      .map(link => sheet?.querySelector<HTMLElement>(`#${CSS.escape(link.dataset.toc ?? '')}`))
+      .filter(Boolean) as HTMLElement[]
     let frame = 0
     const track = () => {
       frame = 0

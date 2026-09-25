@@ -11,7 +11,7 @@ test.describe('on a desktop', () => {
 
   test('the sheet scrolls under its toolbar while the window stays put', async ({ page }) => {
     await page.goto('/docs/4.1/guards')
-    const toolbar = page.locator('[data-sheet]:visible header').first()
+    const toolbar = page.locator('[data-toolbar]:visible').first()
     // Its hairline shows only once the page has scrolled beneath it.
     await expect(toolbar).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)')
     await page.mouse.move(800, 500)
@@ -29,10 +29,10 @@ test.describe('on a desktop', () => {
 
   test('the sidebar scrolls on its own', async ({ page }) => {
     await page.goto('/docs/4.1/guards')
-    const sidebar = page.locator('aside').first()
+    const sidebar = page.locator('[data-sidebar-body]:visible')
     await page.mouse.move(140, 500)
     await page.mouse.wheel(0, 400)
-    await expect.poll(() => sidebar.evaluate(pane => pane.scrollTop)).toBeGreaterThan(0)
+    await expect.poll(() => sidebar.evaluate(body => body.scrollTop)).toBeGreaterThan(0)
     expect(await sheetTop(page)).toBe(0)
   })
 
@@ -78,5 +78,5 @@ test('on a phone the document scrolls, with the toolbar at the top', async ({ pa
   await page.mouse.move(200, 400)
   await page.mouse.wheel(0, 900)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(600)
-  expect((await page.locator('[data-sheet]:visible header').first().boundingBox())?.y).toBe(0)
+  expect((await page.locator('[data-toolbar]:visible').first().boundingBox())?.y).toBe(0)
 })

@@ -7,7 +7,9 @@ const heading = (level: 'h1' | 'h2' | 'h3' | 'h4') => ({
   letterSpacing: `theme.type.${level}.track`,
   fontWeight: 'theme.font.weight.semibold',
   color: 'theme.ink.primary',
-  scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)',
+  // The sheet's body scrolls below the toolbar on a desktop; on a phone the toolbar sits over the page.
+  scrollMarginTop: 'theme.space.4',
+  '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)' },
 })
 
 /**
