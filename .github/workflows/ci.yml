@@ -79,7 +79,9 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: bun run build
+      - run: bun run build 2>&1 | tee build.log
+      # Prerendering every page within 180 s, so the growth of exact-version pages shows early
+      - run: bun scripts/check-static-generation.ts build.log
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
       - run: bun run budget:js
       - run: bun --bun x playwright install --with-deps chromium
