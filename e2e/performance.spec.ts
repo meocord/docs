@@ -7,14 +7,19 @@ import { e2ePort } from './port'
 // The longest guide, one with code near its top, an API page and the changelog as well as home.
 const PAGES = ['/', '/docs/4.1/defer', '/docs/4.1/testing', '/docs/4.1/api/core/ShardContext', '/docs/4.1/changelog']
 
-/** The largest-paint budgets the site holds in CI, on Lighthouse's desktop and mobile presets. */
-const LCP_MS = { desktop: 1800, mobile: 3000 }
+/**
+ * The largest-paint budgets the site holds in CI: on Lighthouse's desktop and mobile presets, which
+ * simulate the page's load from a trace, and on the mobile preset with its throttling applied to a
+ * real load in the browser (`applied`), which Lighthouse measures rather than models.
+ */
+const LCP_MS = { desktop: 1800, mobile: 3000, applied: 1500 }
 /**
  * Lighthouse's simulated LCP falls on one of a few values for the same build, a few hundred
  * milliseconds apart, depending on how the page's tasks happened to order. Each figure is the median
- * of five runs, so no single run's value decides it.
+ * of five runs, so no single run's value decides it. An applied run is a real throttled load, whose
+ * LCP varies by tens of milliseconds and takes several times as long, so it takes three.
  */
-const RUNS = 5
+const RUNS = { desktop: 5, mobile: 5, applied: 3 }
 
 // Lighthouse drives its own Chromium over the debugging protocol, one page at a time.
 test.describe.configure({ mode: 'serial' })
@@ -84,17 +89,23 @@ interface LayoutShift {
 
 const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]
 
-async function measure(url: string, preset: 'desktop' | 'mobile') {
+async function measure(url: string, preset: keyof typeof LCP_MS) {
   const port = e2ePort() + 2
   const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] })
   try {
     const lcp: number[] = []
     const cls: number[] = []
     const shifts: string[] = []
-    for (let run = 0; run < RUNS; run += 1) {
+    for (let run = 0; run < RUNS[preset]; run += 1) {
       const result = await lighthouse(
         url,
-        { port, output: 'json', logLevel: 'error', onlyCategories: ['performance'] },
+        {
+          port,
+          output: 'json',
+          logLevel: 'error',
+          onlyCategories: ['performance'],
+          throttlingMethod: preset === 'applied' ? 'devtools' : 'simulate',
+        },
         preset === 'desktop' ? desktop : undefined,
       )
       if (!result || result.lhr.runtimeError) {
@@ -120,20 +131,24 @@ test.beforeAll(({ baseURL }) => {
 test.afterAll(() => hop?.stop(true))
 
 for (const path of PAGES) {
-  test(`${path} paints its largest content within ${LCP_MS.desktop} ms on desktop and ${LCP_MS.mobile} ms on mobile, without layout shift`, async () => {
-    test.setTimeout(400_000)
+  test(`${path} paints its largest content within ${LCP_MS.desktop} ms on desktop, ${LCP_MS.mobile} ms on mobile and ${LCP_MS.applied} ms on mobile with applied throttling, without layout shift`, async () => {
+    test.setTimeout(600_000)
     const url = `http://localhost:${hop.port}${path}`
     const { lcp, runs, cls, shifts: desktopShifts } = await measure(url, 'desktop')
     const mobile = await measure(url, 'mobile')
+    const applied = await measure(url, 'applied')
     const each = (values: number[]) => values.map(Math.round).join(', ')
     const summary =
       `desktop LCP ${Math.round(lcp)} ms (${each(runs)}), CLS ${cls}; ` +
-      `mobile LCP ${Math.round(mobile.lcp)} ms (${each(mobile.runs)}), CLS ${mobile.cls}`
+      `mobile LCP ${Math.round(mobile.lcp)} ms (${each(mobile.runs)}), CLS ${mobile.cls}; ` +
+      `applied LCP ${Math.round(applied.lcp)} ms (${each(applied.runs)}), CLS ${applied.cls}`
     test.info().annotations.push({ type: 'lighthouse', description: summary })
     console.log(`[lighthouse] ${path}: ${summary}`)
     expect(lcp, 'desktop LCP (ms)').toBeLessThan(LCP_MS.desktop)
     expect(cls, `desktop CLS: ${desktopShifts.join('; ')}`).toBe(0)
     expect(mobile.lcp, 'mobile LCP (ms)').toBeLessThan(LCP_MS.mobile)
     expect(mobile.cls, `mobile CLS: ${mobile.shifts.join('; ')}`).toBe(0)
+    expect(applied.lcp, 'mobile LCP with applied throttling (ms)').toBeLessThanOrEqual(LCP_MS.applied)
+    expect(applied.cls, `mobile CLS with applied throttling: ${applied.shifts.join('; ')}`).toBe(0)
   })
 }
