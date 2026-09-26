@@ -33,10 +33,11 @@ bun run serve          # the production build, run as the image runs it
 compression happens downstream in production. Lighthouse pointed straight at it measures several times the bytes a
 reader downloads. Measure through `e2e/performance.spec.ts` instead. It puts a hop in front of the build that stands
 for the edge (`e2e/edge-hop.ts`: HTTP/2 over TLS, with brotli), and holds the largest-paint budgets CI enforces, on
-Lighthouse's desktop and mobile presets and on mobile with applied throttling:
+Lighthouse's desktop and mobile presets and on mobile with applied throttling. `PERF_SHARD=k/n` measures every n-th
+page from the k-th, as CI's performance jobs do:
 
 ```bash
-bun run build && bun run test:e2e e2e/performance.spec.ts
+bun run build && bun run test:e2e --grep @performance
 ```
 
 ## How it is served
