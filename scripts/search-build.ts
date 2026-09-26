@@ -18,7 +18,7 @@ import { paths, ROOT } from './lib/layout.js'
 import { listPages, loadPage, resolveExample } from './lib/pages.js'
 import {
   apiDocuments,
-  changelogDocument,
+  changelogDocuments,
   guideDocument,
   migratingDocument,
   paletteIndex,
@@ -81,7 +81,7 @@ for (const line of config.lines) {
 
   const newestFirst = [...line.versions].sort(semver.rcompare)
   const changelogs = newestFirst.flatMap(version => readJson<ChangelogDocument>(paths.changelog(version)) ?? [])
-  if (changelogs.length > 0) documents.push(changelogDocument(line.line, changelogs, config))
+  documents.push(...changelogDocuments(line.line, changelogs, config))
 
   // The line's API is its newest version's; exact versions stay out of search.
   const api = newestFirst.length > 0 ? readJson<ApiDocument>(paths.api(newestFirst[0])) : undefined

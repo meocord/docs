@@ -15,6 +15,7 @@ import * as guide from '../src/app/docs/[line]/[slug]/page'
 import * as landing from '../src/app/docs/[line]/page'
 import * as api from '../src/app/docs/[line]/api/[...path]/page'
 import * as changelog from '../src/app/docs/[line]/changelog/page'
+import * as release from '../src/app/docs/[line]/changelog/[version]/page'
 import * as migrating from '../src/app/docs/[line]/migrating/page'
 import * as missing from '../src/app/docs/[line]/missing/[id]/page'
 
@@ -26,6 +27,7 @@ const ROUTES: [pattern: string, params: () => Params[] | Promise<Params[]>][] = 
   ['/docs/[line]/[slug]', guide.generateStaticParams],
   ['/docs/[line]/api/[...path]', api.generateStaticParams],
   ['/docs/[line]/changelog', changelog.generateStaticParams],
+  ['/docs/[line]/changelog/[version]', release.generateStaticParams],
   ['/docs/[line]/migrating', migrating.generateStaticParams],
   ['/docs/[line]/missing/[id]', missing.generateStaticParams],
 ]

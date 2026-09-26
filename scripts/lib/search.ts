@@ -7,7 +7,7 @@
 
 import GithubSlugger from 'github-slugger'
 import { ReflectionKind, type JSONOutput } from 'typedoc'
-import { changelogAnchor, docsHref, entrySegment, memberAnchor, resolveStoredHref } from '../../src/lib/urls.js'
+import { changelogSectionAnchor, docsHref, entrySegment, memberAnchor, resolveStoredHref } from '../../src/lib/urls.js'
 import type { ApiDocument } from './api.js'
 import type { ChangelogDocument } from './changelog.js'
 import { parsePage } from './content.js'
@@ -164,25 +164,29 @@ export function migratingDocument(line: string, markdown: string, versions: Vers
   }
 }
 
-/** A line's changelog page: one section per version, at the anchor its entry carries. */
-export function changelogDocument(
+/**
+ * A document per release of a line, at the release's own page: one section per group of its notes,
+ * at the anchor the page gives that group's heading.
+ */
+export function changelogDocuments(
   line: string,
   changelogs: ChangelogDocument[],
   versions: VersionsConfig,
-): SearchDocument {
-  return {
-    url: docsHref({ kind: 'changelog', line }, versions),
-    title: 'Changelog',
+): SearchDocument[] {
+  return changelogs.map(changelog => ({
+    url: docsHref({ kind: 'changelog', line, version: changelog.version }, versions),
+    title: `${changelog.version} changelog`,
     kind: 'changelog',
     line,
-    sections: changelogs.map(changelog => ({
-      anchor: changelogAnchor(changelog.version),
-      heading: changelog.version,
-      text: changelog.sections
-        .flatMap(section => section.entries.map(entry => markdownText(entry.markdown)))
-        .join('\n\n'),
-    })),
-  }
+    sections:
+      changelog.sections.length === 0
+        ? [{ text: 'No changes recorded.' }]
+        : changelog.sections.map(section => ({
+            anchor: changelogSectionAnchor(section.title),
+            heading: section.title,
+            text: section.entries.map(entry => markdownText(entry.markdown)).join('\n\n'),
+          })),
+  }))
 }
 
 type Declaration = JSONOutput.DeclarationReflection

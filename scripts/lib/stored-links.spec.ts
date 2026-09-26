@@ -7,7 +7,7 @@ describe('storedHref', () => {
   it('names the line, whatever its status', () => {
     expect(storedHref({ kind: 'guide', line: '4.0', slug: 'guards', anchor: 'params' })).toBe('/docs/4.0/guards#params')
     expect(storedHref({ kind: 'changelog', line: '4.1', version: '4.1.0-beta.0' })).toBe(
-      '/docs/4.1/changelog#v4.1.0-beta.0',
+      '/docs/4.1/changelog/4.1.0-beta.0',
     )
   })
 })
@@ -24,7 +24,8 @@ describe('parseStored', () => {
     expect(parseStored('/docs/4.1/api/4.1.0-beta.0/core/ShardContext#call', lines)).toMatchObject({
       target: { kind: 'api', version: '4.1.0-beta.0', member: 'call' },
     })
-    expect(parseStored('/docs/4.1/changelog#v4.1.0-beta.0', lines)).toMatchObject({
+    expect(parseStored('/docs/4.1/changelog', lines)).toEqual({ target: { kind: 'changelog', line: '4.1' } })
+    expect(parseStored('/docs/4.1/changelog/4.1.0-beta.0', lines)).toMatchObject({
       target: { kind: 'changelog', version: '4.1.0-beta.0' },
     })
     expect(parseStored('/docs/4.0/migrating#start', lines)).toMatchObject({

@@ -67,7 +67,7 @@ const site = (overrides: Partial<SiteSnapshot> = {}): SiteSnapshot => ({
           entries: [
             {
               markdown:
-                'See [start](/docs/4.1/migrating#start), [notes](/docs/4.1/changelog#v4.1.0-beta.0) and [Defer](/docs/4.1/api/decorator/Defer).',
+                'See [start](/docs/4.1/migrating#start), [notes](/docs/4.1/changelog/4.1.0-beta.0) and [Defer](/docs/4.1/api/decorator/Defer).',
               breaking: true,
             },
           ],
@@ -179,8 +179,9 @@ describe('checkSite', () => {
       '[b](/docs/4.0/nowhere)',
       '[c](/docs/4.0/guards#nowhere)',
       '[d](/docs/4.1/migrating#nowhere)',
-      '[e](/docs/4.1/changelog#v4.0.0)',
-      '[e2](/docs/4.1/changelog#4.1.0-beta.0)',
+      '[e](/docs/4.1/changelog/4.0.0)',
+      '[e2](/docs/4.1/changelog#v4.1.0-beta.0)',
+      '[e3](/docs/4.1/changelog/4.1.0-beta.9)',
       '[f](#nowhere)',
       '[g](../README.md)',
       '[h](https://example.com/page.md)',
@@ -192,8 +193,9 @@ describe('checkSite', () => {
       'content/4.1/a.md: /docs/4.0/nowhere names no page of generated/readme/4.0',
       'content/4.1/a.md: /docs/4.0/guards#nowhere names no heading of that page',
       'content/4.1/a.md: /docs/4.1/migrating#nowhere names no heading of the migration guide',
-      'content/4.1/a.md: /docs/4.1/changelog#v4.0.0 is not a valid link: 4.0.0 is not a version of line 4.1.',
-      'content/4.1/a.md: /docs/4.1/changelog#4.1.0-beta.0 is not in its stored form, /docs/4.1/changelog#v4.1.0-beta.0',
+      'content/4.1/a.md: /docs/4.1/changelog/4.0.0 is not a valid link: 4.0.0 is not a version of line 4.1.',
+      'content/4.1/a.md: /docs/4.1/changelog#v4.1.0-beta.0 is not in its stored form, /docs/4.1/changelog',
+      'content/4.1/a.md: /docs/4.1/changelog/4.1.0-beta.9 names no version of 4.1',
       'content/4.1/a.md: no heading for #nowhere',
       'content/4.1/a.md: ../README.md does not point at a page of the site',
     ])

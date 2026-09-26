@@ -8,7 +8,6 @@ import GithubSlugger from 'github-slugger'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
-import { changelogAnchor } from '../../src/lib/urls'
 import { isKnownLanguage } from '../../src/lib/prose/languages'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
@@ -161,10 +160,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       const line = lines.get(link.line)!
       if (link.kind === 'line' || link.kind === 'api' || link.kind === 'missing') continue
       if (link.kind === 'changelog') {
-        if (
-          link.version !== undefined &&
-          !line.versions.some(version => changelogAnchor(version) === `v${link.version}`)
-        )
+        if (link.version !== undefined && !line.versions.includes(link.version))
           problems.push(`${where}: ${target} names no version of ${link.line}`)
         continue
       }

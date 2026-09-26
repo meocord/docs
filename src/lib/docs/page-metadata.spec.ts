@@ -3,6 +3,7 @@ import * as guide from '@/app/docs/[line]/[slug]/page'
 import * as landing from '@/app/docs/[line]/page'
 import * as api from '@/app/docs/[line]/api/[...path]/page'
 import * as changelog from '@/app/docs/[line]/changelog/page'
+import * as release from '@/app/docs/[line]/changelog/[version]/page'
 import * as migrating from '@/app/docs/[line]/migrating/page'
 import * as missing from '@/app/docs/[line]/missing/[id]/page'
 import * as home from '@/app/page'
@@ -112,14 +113,22 @@ describe('page metadata', () => {
     })
   })
 
-  it('a changelog and a migration guide', async () => {
+  it("a changelog, a release's page and a migration guide", async () => {
     expect(await changelog.generateMetadata(params({ line: '4.1' }))).toEqual(
       expected(
         'Changelog · MeoCord 4.1',
-        'Every MeoCord 4.1 release, newest first, and what changed in it.',
+        'The newest MeoCord 4.1 release in full, and every earlier one with its day and what it holds.',
         '/docs/4.1/changelog',
       ),
     )
+    expect(await release.generateMetadata(params({ line: '4.1', version: '4.1.0-beta.1' }))).toEqual(
+      expected(
+        '4.1.0-beta.1 changelog · MeoCord 4.1',
+        'What changed in MeoCord 4.1.0-beta.1: 1 minor change and 2 patch changes.',
+        '/docs/4.1/changelog/4.1.0-beta.1',
+      ),
+    )
+    expect(await release.generateMetadata(params({ line: '4.1', version: '4.0.0' }))).toEqual({})
     expect(await migrating.generateMetadata(params({ line: '4.1' }))).toEqual(
       expected(
         'Migrating · MeoCord 4.1',

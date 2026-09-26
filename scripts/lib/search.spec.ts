@@ -3,7 +3,7 @@ import type { ApiDocument } from './api.js'
 import { parsePage } from './content.js'
 import {
   apiDocuments,
-  changelogDocument,
+  changelogDocuments,
   guideDocument,
   markdownText,
   migratingDocument,
@@ -177,22 +177,35 @@ describe('documents', () => {
       url: '/docs/4.1/migrating',
       sections: [{ anchor: 'from-40', heading: 'From 4.0', text: 'Steps.' }],
     })
-    const changelog = changelogDocument(
+    const [beta1, beta0] = changelogDocuments(
       '4.1',
       [
         {
           version: '4.1.0-beta.1',
-          sections: [{ title: 'Patch Changes', entries: [{ markdown: 'Fix `x`.', breaking: false }] }],
+          sections: [
+            { title: 'Minor Changes', entries: [{ markdown: 'Add `y`.', breaking: false }] },
+            {
+              title: 'Patch Changes',
+              entries: [
+                { markdown: 'Fix `x`.', breaking: false },
+                { markdown: 'Fix `z`.', breaking: false },
+              ],
+            },
+          ],
         },
         { version: '4.1.0-beta.0', sections: [] },
       ],
       config,
     )
-    expect(changelog.url).toBe('/docs/4.1/changelog')
-    expect(changelog.sections).toEqual([
-      { anchor: 'v4.1.0-beta.1', heading: '4.1.0-beta.1', text: 'Fix x.' },
-      { anchor: 'v4.1.0-beta.0', heading: '4.1.0-beta.0', text: '' },
+    expect(beta1).toMatchObject({ url: '/docs/4.1/changelog/4.1.0-beta.1', title: '4.1.0-beta.1 changelog' })
+    expect(beta1.sections).toEqual([
+      { anchor: 'minor-changes', heading: 'Minor Changes', text: 'Add y.' },
+      { anchor: 'patch-changes', heading: 'Patch Changes', text: 'Fix x.\n\nFix z.' },
     ])
+    expect(beta0).toMatchObject({
+      url: '/docs/4.1/changelog/4.1.0-beta.0',
+      sections: [{ text: 'No changes recorded.' }],
+    })
   })
 
   it('builds one API document per symbol, own members as sections, names unsafe in a URL left out', () => {

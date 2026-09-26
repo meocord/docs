@@ -20,7 +20,7 @@ export type DocsTarget =
   | { kind: 'guide'; line: string; slug: string; anchor?: string }
   /** A symbol in a line's API; with `version`, in that exact version's API instead. */
   | { kind: 'api'; line: string; entry: string; symbol: string; member?: string; version?: string }
-  /** A line's changelog; with `version`, at that version's entry. */
+  /** A line's changelog; with `version`, that version's own page. */
   | { kind: 'changelog'; line: string; version?: string }
   | { kind: 'migrating'; line: string; anchor?: string }
   /** The page shown for a page id a line does not have. */
@@ -58,10 +58,12 @@ export function memberAnchor(member: string): string {
   return member.toLowerCase()
 }
 
-/** The id of a version's entry on its line's changelog page: `v4.1.0-beta.0`. */
-export function changelogAnchor(version: string): string {
-  lineOf(version)
-  return `v${version}`
+/** The id of a changelog section's heading on its release's page: `Patch Changes` gives `patch-changes`. */
+export function changelogSectionAnchor(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 function check(value: string, pattern: RegExp, what: string): string {
@@ -109,7 +111,9 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
       if (target.version !== undefined && lineOf(target.version) !== target.line) {
         throw new Error(`${target.version} is not a version of line ${target.line}.`)
       }
-      return withAnchor(`/docs/${segment}/changelog`, target.version && changelogAnchor(target.version))
+      return target.version === undefined
+        ? `/docs/${segment}/changelog`
+        : `/docs/${segment}/changelog/${target.version}`
     }
 
     case 'migrating':
