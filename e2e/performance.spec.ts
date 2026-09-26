@@ -2,6 +2,7 @@ import { gzipSync } from 'node:zlib'
 import { chromium, expect, test } from '@playwright/test'
 import lighthouse from 'lighthouse'
 import desktop from 'lighthouse/core/config/desktop-config.js'
+import { cpuSlowdownFor } from '../scripts/lib/cpu-slowdown'
 import { e2ePort } from './port'
 
 // The longest guide, one with code near its top, an API page and the changelog as well as home.
@@ -89,44 +90,66 @@ interface LayoutShift {
 
 const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]
 
-async function measure(url: string, preset: keyof typeof LCP_MS) {
+type Run = NonNullable<Awaited<ReturnType<typeof lighthouse>>>
+
+/** Runs Lighthouse `runs` times on `url` in a fresh Chromium, with the given flags and config. */
+async function lighthouseRuns(url: string, runs: number, flags: Parameters<typeof lighthouse>[1], config?: object) {
   const port = e2ePort() + 2
   const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] })
   try {
-    const lcp: number[] = []
-    const cls: number[] = []
-    const shifts: string[] = []
-    for (let run = 0; run < RUNS[preset]; run += 1) {
-      const result = await lighthouse(
-        url,
-        {
-          port,
-          output: 'json',
-          logLevel: 'error',
-          onlyCategories: ['performance'],
-          throttlingMethod: preset === 'applied' ? 'devtools' : 'simulate',
-        },
-        preset === 'desktop' ? desktop : undefined,
-      )
+    const results: Run[] = []
+    for (let run = 0; run < runs; run += 1) {
+      const result = await lighthouse(url, { port, output: 'json', logLevel: 'error', ...flags }, config)
       if (!result || result.lhr.runtimeError) {
         throw new Error(`Lighthouse failed on ${url}: ${result?.lhr.runtimeError?.message}`)
       }
-      lcp.push(result.lhr.audits['largest-contentful-paint'].numericValue ?? Infinity)
-      cls.push(result.lhr.audits['cumulative-layout-shift'].numericValue ?? Infinity)
-      shifts.push(
-        ...layoutShifts(result.lhr.audits['layout-shifts']),
-        ...shiftedBoxes(result.artifacts?.Trace as { traceEvents?: TraceEvent[] } | undefined),
-      )
+      results.push(result)
     }
-    return { lcp: median(lcp), runs: lcp, cls: Math.max(...cls), shifts: [...new Set(shifts)] }
+    return results
   } finally {
     await browser.close()
   }
 }
 
+/**
+ * The applied runs' CPU slowdown, set once per run of this spec from the host's `benchmarkIndex`, so
+ * that throttled CPU means Lighthouse's target phone on a fast laptop and on a slow CI runner alike.
+ */
+let slowdown = 4
+
+async function measure(url: string, preset: keyof typeof LCP_MS) {
+  const results = await lighthouseRuns(
+    url,
+    RUNS[preset],
+    preset === 'applied'
+      ? {
+          onlyCategories: ['performance'],
+          throttlingMethod: 'devtools',
+          throttling: { cpuSlowdownMultiplier: slowdown },
+        }
+      : { onlyCategories: ['performance'], throttlingMethod: 'simulate' },
+    preset === 'desktop' ? desktop : undefined,
+  )
+  const lcp = results.map(result => result.lhr.audits['largest-contentful-paint'].numericValue ?? Infinity)
+  const cls = results.map(result => result.lhr.audits['cumulative-layout-shift'].numericValue ?? Infinity)
+  const shifts = results.flatMap(result => [
+    ...layoutShifts(result.lhr.audits['layout-shifts']),
+    ...shiftedBoxes(result.artifacts?.Trace as { traceEvents?: TraceEvent[] } | undefined),
+  ])
+  return { lcp: median(lcp), runs: lcp, cls: Math.max(...cls), shifts: [...new Set(shifts)] }
+}
+
 let hop: ReturnType<typeof compressing>
-test.beforeAll(({ baseURL }) => {
+test.beforeAll(async ({ baseURL }) => {
+  test.setTimeout(120_000)
   hop = compressing(baseURL!)
+  // Lighthouse measures the host on every run; the median of three short runs sets the slowdown.
+  const runs = await lighthouseRuns(`http://localhost:${hop.port}/`, 3, { onlyAudits: ['first-contentful-paint'] })
+  const indexes = runs.map(run => run.lhr.environment.benchmarkIndex)
+  slowdown = cpuSlowdownFor(median(indexes))
+  console.log(
+    `[lighthouse] host benchmarkIndex ${median(indexes)} (${indexes.join(', ')}); applied cpuSlowdownMultiplier ${slowdown.toFixed(2)}`,
+  )
 })
 test.afterAll(() => hop?.stop(true))
 
@@ -141,7 +164,7 @@ for (const path of PAGES) {
     const summary =
       `desktop LCP ${Math.round(lcp)} ms (${each(runs)}), CLS ${cls}; ` +
       `mobile LCP ${Math.round(mobile.lcp)} ms (${each(mobile.runs)}), CLS ${mobile.cls}; ` +
-      `applied LCP ${Math.round(applied.lcp)} ms (${each(applied.runs)}), CLS ${applied.cls}`
+      `applied LCP ${Math.round(applied.lcp)} ms at ${slowdown.toFixed(2)}x CPU (${each(applied.runs)}), CLS ${applied.cls}`
     test.info().annotations.push({ type: 'lighthouse', description: summary })
     console.log(`[lighthouse] ${path}: ${summary}`)
     expect(lcp, 'desktop LCP (ms)').toBeLessThan(LCP_MS.desktop)
