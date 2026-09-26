@@ -62,7 +62,7 @@ export async function generateVersion(pkg: VerifiedPackage, config: VersionsConf
     }),
   )
   const section = rewriteLibraryLinks(sliceChangelog(pkg.changelog(), pkg.version), line, linkAnchors(config, line))
-  writeChangelog(parseChangelog(pkg.version, section))
+  writeChangelog(parseChangelog(pkg.version, section, pkg.published))
 }
 
 /** Rewrites since.json from every API document in the repository. */

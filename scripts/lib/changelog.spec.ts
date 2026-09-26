@@ -87,4 +87,11 @@ describe('parseChangelog', () => {
 
     expect(doc.sections[0].entries[0].breaking).toBe(true)
   })
+
+  it("dates the version by the registry's publish time, as its UTC day, and leaves an undated one undated", () => {
+    expect(parseChangelog('4.0.0', sliceChangelog(CHANGELOG, '4.0.0'), '2026-05-04T23:59:01.123Z').published).toBe(
+      '2026-05-04',
+    )
+    expect(parseChangelog('4.0.0', sliceChangelog(CHANGELOG, '4.0.0'))).not.toHaveProperty('published')
+  })
 })
