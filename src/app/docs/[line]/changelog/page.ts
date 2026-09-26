@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return pageMetadata({
     title: 'Changelog',
     line,
-    description: `Every MeoCord ${line} release, newest first, and what changed in it.`,
+    description: `The newest MeoCord ${line} release in full, and every earlier one with its day and what it holds.`,
     canonical: docsHref({ kind: 'changelog', line }, VERSIONS),
   })
 }

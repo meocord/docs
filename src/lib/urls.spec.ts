@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  changelogAnchor,
   docsHref,
   entrySegment,
   lineOf,
@@ -75,11 +74,12 @@ describe('docsHref', () => {
     )
   })
 
-  it('builds changelog URLs with the version anchor, dots kept', () => {
+  it("builds a line's changelog URL, and each release's own page under it, dots kept", () => {
     expect(docsHref({ kind: 'changelog', line: '4.1' }, BETA)).toBe('/docs/4.1/changelog')
     expect(docsHref({ kind: 'changelog', line: '4.1', version: '4.1.0-beta.0' }, BETA)).toBe(
-      '/docs/4.1/changelog#v4.1.0-beta.0',
+      '/docs/4.1/changelog/4.1.0-beta.0',
     )
+    expect(docsHref({ kind: 'changelog', line: '4.0', version: '4.0.0' }, BETA)).toBe('/docs/latest/changelog/4.0.0')
   })
 
   it('builds the URL a line lands on', () => {
@@ -162,7 +162,8 @@ describe('helpers', () => {
 
   it('shares the anchors pages give their headings', () => {
     expect(memberAnchor('startShards')).toBe('startshards')
-    expect(changelogAnchor('4.1.0-beta.0')).toBe('v4.1.0-beta.0')
-    expect(() => changelogAnchor('next')).toThrow('"next" is not a version.')
+    expect(() => docsHref({ kind: 'changelog', line: '4.1', version: 'next' }, BETA)).toThrow(
+      '"next" is not a version.',
+    )
   })
 })

@@ -17,6 +17,7 @@ async function pages(request: import('@playwright/test').APIRequestContext): Pro
     '/',
     '/docs/latest/guards',
     '/docs/4.1/changelog',
+    '/docs/4.1/changelog/4.1.0-beta.0',
     '/docs/4.1/migrating',
     '/docs/4.0/missing/interceptors',
   ]

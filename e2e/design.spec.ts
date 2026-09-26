@@ -93,7 +93,7 @@ test('an API return type is framed as its signature is, after what it returns', 
   await expect(page.locator('h2#returns + p + pre[data-signature]')).toBeVisible()
 })
 
-test('a changelog groups its entries under labels, below the version headings', async ({ page }) => {
+test('a changelog groups its entries under labels, below the version heading', async ({ page }) => {
   await page.goto('/docs/4.1/changelog')
   const label = page.locator('h3[data-group]').first()
   await expect(label).toHaveCSS('text-transform', 'uppercase')

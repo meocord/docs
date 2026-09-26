@@ -2,13 +2,14 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
 // The page types a reader meets: home, the longest guide and one with code near its top, an API page,
-// the changelog, a missing page.
+// the changelog and a release's page, a missing page.
 const PAGES = [
   '/',
   '/docs/4.1/defer',
   '/docs/4.1/testing',
   '/docs/4.1/api/core/ShardContext',
   '/docs/4.1/changelog',
+  '/docs/4.1/changelog/4.1.0-beta.0',
   '/docs/4.0/missing/interceptors',
 ]
 

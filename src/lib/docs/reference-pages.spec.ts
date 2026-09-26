@@ -1,26 +1,80 @@
 import { describe, expect, it } from 'vitest'
 import {
   changelogArticle,
+  changelogParams,
+  changelogSummary,
   lineChangelog,
   migratingArticle,
   missingArticle,
   missingParams,
   renderChangelog,
   renderMigrating,
+  releaseArticle,
   renderMissing,
+  renderRelease,
 } from '@/lib/docs/reference-pages'
 
 // These read the repository's generated changelogs, migration guides and pages.
 describe('changelog', () => {
-  it('lists the versions of a line newest first, each at its v<version> anchor', () => {
-    expect(
-      lineChangelog('4.0')
-        .map(changelog => changelog.version)
-        .slice(0, 2),
-    ).toEqual(['4.0.0', '4.0.0-beta.5'])
+  it('reads a line newest first, each release dated by the registry', () => {
+    const changelogs = lineChangelog('4.0')
+    expect(changelogs.map(changelog => changelog.version).slice(0, 2)).toEqual(['4.0.0', '4.0.0-beta.5'])
+    expect(changelogs.every(changelog => /^\d{4}-\d{2}-\d{2}$/.test(changelog.published ?? ''))).toBe(true)
+  })
+
+  it('gives the newest release in full and the earlier ones a line each, so the page stays one release long', () => {
+    const [newest, ...earlier] = lineChangelog('4.0')
     const article = changelogArticle('4.0')!
-    expect(article.toc[0]).toEqual({ id: 'v4.0.0', title: '4.0.0', depth: 2 })
-    expect(article.toc.every(entry => entry.id === `v${entry.title}`)).toBe(true)
+    expect(article.toc).toEqual([
+      { id: '4-0-0', title: '4.0.0', depth: 2 },
+      { id: 'earlier-releases', title: 'Earlier releases', depth: 2 },
+    ])
+    type Raw = { rawProps?: Record<string, unknown> }
+    const props = (node: unknown) => (node as Raw).rawProps ?? {}
+    // Group headings and entry lists for the newest release only, then one list naming the others.
+    const groups = article.nodes.filter(node => props(node)['data-group'])
+    expect(groups.map(node => props(node).id)).toEqual(
+      newest.sections.map(section => `4-0-0-${section.title.toLowerCase().replace(/ /g, '-')}`),
+    )
+    const releases = article.nodes.find(node => props(node)['data-releases'])
+    const items = props(releases).children as Raw[]
+    expect(items.map(item => item.rawProps?.key)).toEqual(earlier.map(changelog => changelog.version))
+  })
+
+  it('prerenders a page for every release of every line, each with its groups in the table of contents', () => {
+    const params = changelogParams()
+    expect(params).toContainEqual({ line: '4.1', version: '4.1.0-beta.0' })
+    expect(params).toContainEqual({ line: '4.0', version: '4.0.0' })
+    const article = releaseArticle('4.1', '4.1.0-beta.0')!
+    expect(article.toc.map(entry => entry.id)).toEqual(['minor-changes', 'patch-changes'])
+    expect(article.toc.every(entry => entry.depth === 2)).toBe(true)
+    expect(releaseArticle('4.1', '4.0.0')).toBeUndefined()
+    expect(renderRelease('4.1', '4.1.0-beta.0')).toBeDefined()
+    expect(renderRelease('4.1', '9.9.9')).toBeUndefined()
+  })
+
+  it('sums a release up in one line: its groups counted, breaking entries called out', () => {
+    const entry = (breaking = false) => ({ markdown: 'x', breaking })
+    expect(
+      changelogSummary({
+        version: '4.1.0',
+        sections: [
+          { title: 'Minor Changes', entries: [entry(true), entry()] },
+          { title: 'Patch Changes', entries: [entry()] },
+        ],
+      }),
+    ).toBe('2 minor changes and 1 patch change, 1 breaking')
+    expect(
+      changelogSummary({
+        version: '4.1.0',
+        sections: [
+          { title: 'Major Changes', entries: [entry(true)] },
+          { title: 'Minor Changes', entries: [entry()] },
+          { title: 'Patch Changes', entries: [entry(), entry()] },
+        ],
+      }),
+    ).toBe('1 major change, 1 minor change and 2 patch changes, 1 breaking')
+    expect(changelogSummary({ version: '4.1.0', sections: [] })).toBe('No changes recorded.')
   })
 
   it('has no page for a line without changelogs', () => {
