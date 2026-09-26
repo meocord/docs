@@ -52,6 +52,13 @@ Every page is rendered once and served byte-identical to every reader, so it can
   `/palette/<line>.<hash>.json`. Both are cached as immutable; `.search/manifest.json` names them for the app.
 - Open Graph cards are drawn at `/og/<line>/<id>.<hash>.png`, with the content hash in the path, and cached as
   immutable.
+- `bun run build` ends with `bun run precompress`, which writes a brotli copy at the highest quality beside each
+  script, stylesheet and JSON file under `.next/static`, `public/_pagefind` and `public/palette` (`<file>.br`, only
+  where it is smaller), then checks that every copy decompresses to its source; `bun run precompress -- --check` only
+  checks. They are for a server in front to send in place of compressing each response itself: when the request's
+  `Accept-Encoding` allows `br` and `<file>.br` exists, it answers with that file's bytes, `Content-Encoding: br` and
+  `Vary: Accept-Encoding`, keeping the source's `Content-Type` and cache headers. Pages have no copy: the CSP proxy
+  writes each page's hashes into its `<head>` as it serves it.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
   disallows everything and the sitemap is empty. It is read at build time; set `SITE_INDEXABLE=true` to build the
   indexable site.

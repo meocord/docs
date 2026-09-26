@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "start:dev": "rm -rf .next && bun run api:layout && mkdir -p .next/dev/node_modules && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
-    "build": "rm -rf .next && bun run search:build && bun run api:layout && bun --bun next build",
+    "build": "rm -rf .next && bun run search:build && bun run api:layout && bun --bun next build && bun run precompress",
+    "precompress": "bun scripts/precompress.ts",
     "search:build": "bun scripts/search-build.ts",
     "api:layout": "bun scripts/api-layout.ts",
     "serve": "bun scripts/serve-standalone.ts",
