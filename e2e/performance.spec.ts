@@ -58,6 +58,28 @@ function shiftedBoxes(trace: { traceEvents?: TraceEvent[] } | undefined): string
     )
 }
 
+interface DevtoolsEvent {
+  method?: string
+  params?: { requestId?: string; request?: { url?: string }; errorText?: string; canceled?: boolean }
+}
+
+/**
+ * The requests a load lost, from its DevTools log: each one that failed without the page cancelling
+ * it, such as a script whose body did not decode. A page that lost one ran without it.
+ */
+function failedRequests(log: DevtoolsEvent[] | undefined): string[] {
+  const urls = new Map<string, string>()
+  const failed: string[] = []
+  for (const event of log ?? []) {
+    const id = event.params?.requestId ?? ''
+    if (event.method === 'Network.requestWillBeSent') urls.set(id, event.params?.request?.url ?? '')
+    if (event.method === 'Network.loadingFailed' && !event.params?.canceled) {
+      failed.push(`${urls.get(id) ?? id}: ${event.params?.errorText}`)
+    }
+  }
+  return failed
+}
+
 interface TraceEvent {
   name?: string
   args?: {
@@ -116,6 +138,11 @@ async function measure(url: string, preset: keyof typeof LCP_MS) {
       : { onlyCategories: ['performance'], throttlingMethod: 'simulate' },
     preset === 'desktop' ? desktop : undefined,
   )
+  // A figure from a page that lost a request is not the page's figure.
+  for (const result of results) {
+    const failed = failedRequests(result.artifacts?.DevtoolsLog as DevtoolsEvent[] | undefined)
+    if (failed.length > 0) throw new Error(`${url} lost requests while measured on ${preset}: ${failed.join('; ')}`)
+  }
   const lcp = results.map(result => result.lhr.audits['largest-contentful-paint'].numericValue ?? Infinity)
   const cls = results.map(result => result.lhr.audits['cumulative-layout-shift'].numericValue ?? Infinity)
   const shifts = results.flatMap(result => [
