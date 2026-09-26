@@ -55,10 +55,10 @@ Every page is rendered once and served byte-identical to every reader, so it can
 - `bun run build` ends with `bun run precompress`, which writes a brotli copy at the highest quality beside each
   script, stylesheet and JSON file under `.next/static`, `public/_pagefind` and `public/palette` (`<file>.br`, only
   where it is smaller), then checks that every copy decompresses to its source; `bun run precompress -- --check` only
-  checks. They are for a server in front to send in place of compressing each response itself: when the request's
-  `Accept-Encoding` allows `br` and `<file>.br` exists, it answers with that file's bytes, `Content-Encoding: br` and
-  `Vary: Accept-Encoding`, keeping the source's `Content-Type` and cache headers. Pages have no copy: the CSP proxy
-  writes each page's hashes into its `<head>` as it serves it.
+  checks. The CSP proxy sends them: for `/_next/static/…`, `/_pagefind/…` and `/palette/…`, when the request's
+  `Accept-Encoding` allows `br` and the copy exists, it answers with the copy's bytes, `Content-Encoding: br` and
+  `Vary: Accept-Encoding`, keeping Next's `Content-Type` and cache headers; otherwise it streams the source from Next,
+  as for any other path. Pages have no copy: the proxy writes each page's hashes into its `<head>` as it serves it.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
   disallows everything and the sitemap is empty. It is read at build time; set `SITE_INDEXABLE=true` to build the
   indexable site.

@@ -1,8 +1,12 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import type { AddressInfo, Socket } from 'node:net'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { brotliCompressSync } from 'node:zlib'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MARKER } from './csp-hash.mjs'
-import { createProxyServer, fail } from './csp-proxy-server.mjs'
+import { acceptsBrotli, brotliCopyPath, createProxyServer, fail } from './csp-proxy-server.mjs'
 
 const servers: http.Server[] = []
 
@@ -196,5 +200,150 @@ describe('fail', () => {
       }),
     )
     expect(await get(port)).toMatchObject({ status: 502, body: 'upstream unreachable: refused' })
+  })
+})
+
+describe('brotli copies', () => {
+  const script = 'export const words = "' + 'the quick brown fox '.repeat(100) + '"\n'
+  const brotli = brotliCompressSync(script)
+  let root: string
+
+  afterEach(() => rmSync(root, { recursive: true, force: true }))
+
+  /** A build's files under a fresh root, and a proxy in front of an upstream serving `script` as Next would. */
+  async function serve(files: Record<string, string | Buffer>): Promise<number> {
+    root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-proxy-'))
+    for (const [name, content] of Object.entries(files)) {
+      mkdirSync(path.dirname(path.join(root, name)), { recursive: true })
+      writeFileSync(path.join(root, name), content)
+    }
+    const upstream = await listen(
+      http.createServer((req, res) => {
+        if (req.url?.includes('missing')) {
+          res.writeHead(404, { 'content-type': 'text/plain' })
+          res.end('not found')
+          return
+        }
+        res.writeHead(200, {
+          'content-type': 'application/javascript; charset=UTF-8',
+          'cache-control': 'public, max-age=31536000, immutable',
+          etag: '"abc"',
+          'x-accept-encoding': String(req.headers['accept-encoding']),
+        })
+        res.end(req.method === 'HEAD' ? undefined : script)
+      }),
+    )
+    return listen(createProxyServer(upstream, { root }))
+  }
+
+  function fetchRaw(port: number, url: string, headers: http.OutgoingHttpHeaders = {}, method = 'GET') {
+    return new Promise<{ status?: number; headers: http.IncomingHttpHeaders; body: Buffer }>((resolve, reject) => {
+      const request = http.request({ host: '127.0.0.1', port, path: url, method, headers }, response => {
+        const chunks: Buffer[] = []
+        response.on('data', chunk => chunks.push(chunk))
+        response.on('end', () =>
+          resolve({ status: response.statusCode, headers: response.headers, body: Buffer.concat(chunks) }),
+        )
+      })
+      request.on('error', reject)
+      request.end()
+    })
+  }
+
+  it("sends a static chunk's brotli copy to a client that takes brotli, with Next's type and caching", async () => {
+    const port = await serve({ '.next/static/chunks/a.js': script, '.next/static/chunks/a.js.br': brotli })
+    const response = await fetchRaw(port, '/_next/static/chunks/a.js', { 'accept-encoding': 'gzip, deflate, br, zstd' })
+    expect(response.status).toBe(200)
+    expect(response.headers['content-encoding']).toBe('br')
+    expect(response.headers['content-length']).toBe(String(brotli.byteLength))
+    expect(response.headers.vary).toBe('Accept-Encoding')
+    expect(response.headers['content-type']).toBe('application/javascript; charset=UTF-8')
+    expect(response.headers['cache-control']).toBe('public, max-age=31536000, immutable')
+    expect(response.headers.etag).toBe('"abc-br"')
+    // Next is still asked for identity, whatever the client takes.
+    expect(response.headers['x-accept-encoding']).toBe('identity')
+    expect(response.body.equals(brotli)).toBe(true)
+  })
+
+  it('sends the search bundles and palette indexes from public the same way', async () => {
+    const port = await serve({
+      'public/_pagefind/4.1.abc/pagefind.js.br': brotli,
+      'public/_pagefind/4.1.abc/pagefind.js': script,
+      'public/palette/4.1.abc.json.br': brotli,
+      'public/palette/4.1.abc.json': script,
+    })
+    for (const url of ['/_pagefind/4.1.abc/pagefind.js', '/palette/4.1.abc.json']) {
+      const response = await fetchRaw(port, url, { 'accept-encoding': 'br' })
+      expect(response.headers['content-encoding'], url).toBe('br')
+      expect(response.body.equals(brotli), url).toBe(true)
+    }
+  })
+
+  it('streams the source from Next to a client without brotli, or one that refuses it, still varying on it', async () => {
+    const port = await serve({ '.next/static/chunks/a.js': script, '.next/static/chunks/a.js.br': brotli })
+    for (const accept of [undefined, 'gzip, deflate', 'gzip, br;q=0']) {
+      const response = await fetchRaw(port, '/_next/static/chunks/a.js', accept ? { 'accept-encoding': accept } : {})
+      expect(response.headers['content-encoding'], accept).toBeUndefined()
+      expect(response.headers.vary, accept).toBe('Accept-Encoding')
+      expect(response.headers.etag, accept).toBe('"abc"')
+      expect(response.body.toString(), accept).toBe(script)
+    }
+  })
+
+  it('streams from Next when there is no copy, the path has none, or Next does not answer 200', async () => {
+    const port = await serve({ '.next/static/chunks/a.js': script, 'public/icon.svg.br': brotli })
+    for (const url of ['/_next/static/chunks/a.js', '/icon.svg']) {
+      const response = await fetchRaw(port, url, { 'accept-encoding': 'br' })
+      expect(response.headers['content-encoding'], url).toBeUndefined()
+      expect(response.headers.vary, url).toBeUndefined()
+      expect(response.body.toString(), url).toBe(script)
+    }
+    const missing = await fetchRaw(port, '/_next/static/chunks/missing.js', { 'accept-encoding': 'br' })
+    expect(missing.status).toBe(404)
+    expect(missing.headers['content-encoding']).toBeUndefined()
+  })
+
+  it("answers HEAD with the copy's headers and no body", async () => {
+    const port = await serve({ '.next/static/chunks/a.js': script, '.next/static/chunks/a.js.br': brotli })
+    const response = await fetchRaw(port, '/_next/static/chunks/a.js', { 'accept-encoding': 'br' }, 'HEAD')
+    expect(response.headers['content-encoding']).toBe('br')
+    expect(response.headers['content-length']).toBe(String(brotli.byteLength))
+    expect(response.body.byteLength).toBe(0)
+  })
+
+  it('never reads a copy outside the build, however the path is written', async () => {
+    const port = await serve({ 'secret.js.br': brotli, '.next/static/chunks/a.js': script })
+    for (const url of [
+      '/_next/static/../../secret.js',
+      '/_next/static/%2e%2e/%2e%2e/secret.js',
+      '/palette/..%2f..%2fsecret.js',
+    ]) {
+      const response = await fetchRaw(port, url, { 'accept-encoding': 'br' })
+      expect(response.headers['content-encoding'], url).toBeUndefined()
+    }
+  })
+})
+
+describe('acceptsBrotli', () => {
+  it('takes br listed with no weight or a positive one, and not at q=0 or absent', () => {
+    expect(acceptsBrotli('gzip, deflate, br, zstd')).toBe(true)
+    expect(acceptsBrotli('BR;q=0.5')).toBe(true)
+    expect(acceptsBrotli('br;q=0')).toBe(false)
+    expect(acceptsBrotli('gzip')).toBe(false)
+    expect(acceptsBrotli('brotli')).toBe(false)
+    expect(acceptsBrotli()).toBe(false)
+  })
+})
+
+describe('brotliCopyPath', () => {
+  it('maps the three asset paths under their roots, and nothing else', () => {
+    const root = '/app'
+    expect(brotliCopyPath(root, '/_next/static/chunks/a.js?v=1')).toBe('/app/.next/static/chunks/a.js.br')
+    expect(brotliCopyPath(root, '/_pagefind/4.1.abc/pagefind.js')).toBe('/app/public/_pagefind/4.1.abc/pagefind.js.br')
+    expect(brotliCopyPath(root, '/palette/4.1.abc.json')).toBe('/app/public/palette/4.1.abc.json.br')
+    expect(brotliCopyPath(root, '/docs/4.1/defer')).toBeUndefined()
+    expect(brotliCopyPath(root, '/_next/static/')).toBeUndefined()
+    expect(brotliCopyPath(root, '/_next/static/../../etc/passwd')).toBeUndefined()
+    expect(brotliCopyPath(root, '/_next/static/%E0%A4%A.js')).toBeUndefined()
   })
 })
