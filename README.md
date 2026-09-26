@@ -27,6 +27,18 @@ bun run serve          # the production build, run as the image runs it
 | `bun run budget:js`     | After a build, fail if any prerendered page loads more than 220 KB of gzipped JavaScript, and list its chunks                   |
 | `bun run icons`         | Redraw the icons in `public/` and `src/app/favicon.ico`, and commit them                                                        |
 
+### Measuring page speed
+
+`bun run serve` sends uncompressed responses: the CSP hash proxy asks Next for identity bodies so it can hash them, and
+compression happens downstream in production. Lighthouse pointed straight at it measures several times the bytes a
+reader downloads. Measure through `e2e/performance.spec.ts` instead, which puts a gzip hop in front of the build and
+holds the largest-paint budgets CI enforces, on Lighthouse's desktop and mobile presets and on mobile with applied
+throttling:
+
+```bash
+bun run build && bun run test:e2e e2e/performance.spec.ts
+```
+
 ## How it is served
 
 Every page is rendered once and served byte-identical to every reader, so it can be cached at the edge:
