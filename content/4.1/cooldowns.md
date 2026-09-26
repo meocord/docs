@@ -12,9 +12,11 @@ limits:
 
 ::example{file="controllers/slash/daily.slash.controller.ts" region="cooldown"}
 
-Stacked cooldowns are counted in the order they read, a controller's first, and a call one of them blocks has
-already spent those above it. With the short one first, as here, a call made a second after the last is
-refused by the three-second cooldown before it reaches the per-minute one.
+Stacked cooldowns are counted together, a controller's first: a call is counted against all of them only if
+all allow it, so a call one refuses spends none of the others, and it waits the longest wait among those that
+refuse it. Here, a call made a second after the last is refused by the three-second cooldown and keeps its
+per-minute uses. Every store MeoCord ships counts this way; a store of your own counts them one after another
+unless it [overrides `consumeMany`](#any-other-database).
 
 | Option    | Default  | What it does                                                                                                                            |
 | --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -90,7 +92,8 @@ are exact across them.
 
 - The manager's counts last while it runs: a shard that restarts keeps them, but they start again when the
   whole bot restarts, as the default store's do.
-- If the manager does not answer within a second, the shard counts the call itself and logs a warning, once.
+- A handler's stacked cooldowns go to the manager in one message. A manager that does not answer in time is a
+  [store failure](#when-the-store-fails).
 - Without process sharding, it counts in the one process, which is exact there too.
 
 ### Redis
@@ -109,6 +112,11 @@ you have. With node-redis:
 - With ioredis, run the script as `(script, keys, args) => redis.eval(script, keys.length, ...keys, ...args)`.
 - `evalsha` is optional. With it, the script is sent by its SHA1, and in full only when the server answers
   `NOSCRIPT`; without it, every call sends the whole script.
+- One script counts all of a handler's stacked cooldowns, so a call costs one round trip however many it has.
+- On Redis Cluster, a handler's keys usually sit in different slots, which one script cannot reach. The store
+  then counts each key with a script of its own, in order, so a call one cooldown refuses has counted against
+  those before it. `{ hashTag: 'handler' }` keeps each handler's keys in one slot, and its cooldowns one step;
+  every call to that handler then lands on that slot.
 - Keys start with `meocord:cooldown:`. Pass `{ prefix }` for your own, to keep two bots on one server apart.
 - The same script runs on Redis 5 and later, Valkey, KeyDB, Dragonfly and Upstash, which runs `EVAL`. Garnet
   runs Lua only in part, so [check it](#checking-a-store) before relying on it.
@@ -117,7 +125,30 @@ you have. With node-redis:
 
 Extend `CooldownStore`. It is resolved like a [service](/docs/4.1/services), so it can inject its client, and
 its `consume` must check and record a call in one step, so two calls at the limit cannot both pass.
+
+`@Cooldown` calls `consumeMany(entries)` once per call, with every stacked cooldown. Its default calls `consume`
+for each in order and stops at the first refusal. Override it to check them all and record the call against
+all only if all allow it, in one round trip, as the built-in stores do; it is worth it for any store behind a
+network.
 [A cooldown store](/docs/4.1/recipe-cooldown-stores) builds one for PostgreSQL, SQLite and MongoDB.
+
+## When the store fails
+
+A shared store can be down, restarting or cut off. When it throws, rejects or does not answer within
+`cooldownStoreTimeoutMs`, a second by default, `cooldownStoreFailure` decides what the call gets:
+
+::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
+
+- **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown
+  that cannot be checked is not known to allow it. The built-in fallback answers only the caller: "Cooldowns
+  can't be checked right now: try again shortly." An exception filter catching `CooldownStoreError` can say it
+  another way, or in the user's language. [Observers](/docs/4.1/observers) see `outcome: 'error'` with that
+  error.
+- **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
+
+Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how
+many calls failed. MeoCord never counts a call itself or asks twice, so a store that answers after the timeout
+records the call once, in the store; under `'deny'`, that call was refused and still spent a use there.
 
 ## Checking a store
 
@@ -133,7 +164,10 @@ It checks that:
 - `retryAfterMs` counts from the oldest call still in the window, so "try again in 12s" means the same
   whatever the store;
 - each key counts on its own, and calls in the same millisecond stay distinct;
-- of several concurrent calls at the limit, exactly one passes.
+- of several concurrent calls at the limit, exactly one passes;
+- a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
+- for a store that overrides `consumeMany`, a batch one cooldown refuses records nothing, and of several
+  concurrent batches at the limit, exactly one passes.
 
 It uses real time with short windows, so it takes a few seconds. Each case asks the factory for a store and
 counts under keys of its own, so it can run against a database that outlives the test. What it cannot see is

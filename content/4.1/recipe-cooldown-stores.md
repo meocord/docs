@@ -17,9 +17,11 @@ PostgreSQL 18, SQLite through `node:sqlite`, and MongoDB 8.2.
 ## What a store does
 
 A store is a [service](/docs/4.1/services) that extends `CooldownStore` and injects its client by a token, as
-the [database recipe](/docs/4.1/recipe-database) does. Its one method, `consume(key, { uses, windowMs })`,
+the [database recipe](/docs/4.1/recipe-database) does. Its one required method, `consume(key, { uses, windowMs })`,
 records a call if fewer than `uses` were made within the last `windowMs`, and otherwise answers how long until
-one may be. Three things make it correct:
+one may be. The stores below leave `consumeMany` to its default, which counts a handler's stacked cooldowns one
+after another; [override it](/docs/4.1/cooldowns#any-other-database) to count them in one step. Three things
+make it correct:
 
 - **One step.** The check and the record happen together, in a transaction holding a lock on the key or in a
   single atomic update, so two calls at the limit cannot both pass.
