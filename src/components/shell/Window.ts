@@ -11,9 +11,12 @@ import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { NavGroup, TocEntry } from '@/components/shell/types'
 
-export interface WindowProps extends ToolbarProps {
-  /** The sidebar's links, grouped. */
-  groups: NavGroup[]
+export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
+  /**
+   * The sidebar's links, grouped. Without them the window has no sidebar, as the not-found page, which
+   * every page's data carries, draws it.
+   */
+  groups?: NavGroup[]
   toc?: TocEntry[]
   /** Facts for the inspector under the headings, such as the edit link. */
   inspector?: Children
@@ -90,6 +93,8 @@ function SkipLink() {
  * from its props.
  */
 export function Window({ crumbs, groups, version, repository, toc = [], inspector, wide, children }: WindowProps) {
+  // A window without a sidebar has no inspector either, so its one column sits in the middle of the sheet
+  const inspected = !wide && Boolean(groups)
   return Row({
     gap: 'theme.layout.gutter',
     height: '100dvh',
@@ -113,17 +118,18 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
     },
     children: [
       SkipLink(),
-      SidebarPane({
-        flexShrink: 0,
-        css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
-        children: [
-          Div({ key: 'header', flexShrink: 0, padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }),
-          SidebarBody({ key: 'body', children: [SidebarNav({ groups }), Node(SidebarScroll, { key: 'scroll' })] }),
-        ],
-      }),
+      groups &&
+        SidebarPane({
+          flexShrink: 0,
+          css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
+          children: [
+            Div({ key: 'header', flexShrink: 0, padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }),
+            SidebarBody({ key: 'body', children: [SidebarNav({ groups }), Node(SidebarScroll, { key: 'scroll' })] }),
+          ],
+        }),
       SheetCard({
         children: [
-          Toolbar({ crumbs, version, repository }),
+          Toolbar({ crumbs, version, repository, sidebar: Boolean(groups) }),
           SheetBody({
             key: 'body',
             children:
@@ -140,7 +146,7 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
                 padding: '0 theme.space.6',
                 css: {
                   '@media (width < theme.breakpoint.compact)': { padding: 0 },
-                  ...(wide
+                  ...(!inspected
                     ? {}
                     : {
                         '@media (width >= theme.breakpoint.wide)': {
@@ -151,7 +157,7 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
                 },
                 children: [
                   SheetPane({ tabIndex: -1, children: [children, SiteFooter({ wide })] }),
-                  wide ? null : Inspector({ toc, children: inspector }),
+                  inspected ? Inspector({ toc, children: inspector }) : null,
                 ],
               }),
           }),
