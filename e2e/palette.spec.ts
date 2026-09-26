@@ -27,12 +27,31 @@ function watch(page: Page): string[] {
   return problems
 }
 
-test('the palette and its index load only when it first opens', async ({ page }) => {
+/** Whether the palette's own code has been fetched: the chunk that carries its error message. */
+function paletteCode(page: Page): () => boolean {
+  let fetched = false
+  page.on('response', async response => {
+    if (!response.url().includes('/_next/static/chunks/')) return
+    if ((await response.text().catch(() => '')).includes('Search could not load')) fetched = true
+  })
+  return () => fetched
+}
+
+/** Keeps the page from ever being idle, so the palette's code loads only when something asks for it. */
+async function neverIdle(page: Page) {
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0
+  })
+}
+
+test("the palette's code loads once the page is idle, and its index only when it first opens", async ({ page }) => {
+  const code = paletteCode(page)
   const loaded: string[] = []
   page.on('request', request => {
     if (/\/_pagefind\/|\/palette\//.test(request.url())) loaded.push(request.url())
   })
   await page.goto('/docs/4.1/defer')
+  await expect.poll(code).toBe(true)
   await page.waitForLoadState('networkidle')
   expect(loaded).toEqual([])
 
@@ -40,6 +59,30 @@ test('the palette and its index load only when it first opens', async ({ page })
   await expect(field(page)).toBeFocused()
   await expect.poll(() => loaded.some(url => url.includes('/_pagefind/4.1.'))).toBe(true)
 })
+
+for (const approach of ['pointing at', 'focusing'] as const) {
+  test(`${approach} the search field loads the palette's code before the page is idle`, async ({ page }) => {
+    await neverIdle(page)
+    const code = paletteCode(page)
+    await page.goto('/docs/4.1/defer')
+    await page.waitForLoadState('networkidle')
+    expect(code()).toBe(false)
+    const trigger = page.getByRole('button', { name: 'Search the documentation' })
+    // Again until it loads, in case the first approach came before the island listened.
+    await expect
+      .poll(async () => {
+        if (approach === 'pointing at') {
+          await page.mouse.move(0, 0)
+          await trigger.hover()
+        } else {
+          await trigger.blur()
+          await trigger.focus()
+        }
+        return code()
+      })
+      .toBe(true)
+  })
+}
 
 test('a search groups results, and Enter opens the one the arrows reach', async ({ page }) => {
   const problems = watch(page)
@@ -126,6 +169,7 @@ test('the current line is the scope, latest as the current line', async ({ page 
 })
 
 test('keys typed while the palette first loads reach its field', async ({ page }) => {
+  await neverIdle(page)
   await page.goto('/docs/4.1/defer')
   await page.keyboard.press('ControlOrMeta+k')
   await page.keyboard.type('cooldown')
@@ -134,6 +178,7 @@ test('keys typed while the palette first loads reach its field', async ({ page }
 })
 
 test('a key that reaches the field as it takes the loading keys adds to them', async ({ page }) => {
+  await neverIdle(page)
   await page.goto('/docs/4.1/defer')
   // The palette's chunk waits until the keys typed while it loads are in the buffer.
   let release: () => void = () => {}
@@ -187,6 +232,7 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 test('a palette that fails to load leaves the keys to the page, and the next open tries again', async ({ page }) => {
+  await neverIdle(page)
   // Whether the page's last key press was taken, read after every listener on the document has run.
   await page.addInitScript(() => {
     window.addEventListener('keydown', event =>
