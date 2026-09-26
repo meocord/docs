@@ -31,9 +31,9 @@ bun run serve          # the production build, run as the image runs it
 
 `bun run serve` sends uncompressed responses: the CSP hash proxy asks Next for identity bodies so it can hash them, and
 compression happens downstream in production. Lighthouse pointed straight at it measures several times the bytes a
-reader downloads. Measure through `e2e/performance.spec.ts` instead, which puts a gzip hop in front of the build and
-holds the largest-paint budgets CI enforces, on Lighthouse's desktop and mobile presets and on mobile with applied
-throttling:
+reader downloads. Measure through `e2e/performance.spec.ts` instead. It puts a hop in front of the build that stands
+for the edge (`e2e/edge-hop.ts`: HTTP/2 over TLS, with brotli), and holds the largest-paint budgets CI enforces, on
+Lighthouse's desktop and mobile presets and on mobile with applied throttling:
 
 ```bash
 bun run build && bun run test:e2e e2e/performance.spec.ts

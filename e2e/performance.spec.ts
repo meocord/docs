@@ -1,8 +1,8 @@
-import { gzipSync } from 'node:zlib'
 import { chromium, expect, test } from '@playwright/test'
 import lighthouse from 'lighthouse'
 import desktop from 'lighthouse/core/config/desktop-config.js'
 import { calculatorSlowdown, cpuSlowdownFor } from '../scripts/lib/cpu-slowdown'
+import { type EdgeHop, edgeHop } from './edge-hop'
 import { e2ePort } from './port'
 
 // The longest guide, one with code near its top, an API page and the changelog as well as home.
@@ -13,7 +13,7 @@ const PAGES = ['/', '/docs/4.1/defer', '/docs/4.1/testing', '/docs/4.1/api/core/
  * simulate the page's load from a trace, and on the mobile preset with its throttling applied to a
  * real load in the browser (`applied`), which Lighthouse measures rather than models.
  */
-const LCP_MS = { desktop: 1800, mobile: 3000, applied: 1800 }
+const LCP_MS = { desktop: 1800, mobile: 2500, applied: 1800 }
 /** Where the applied figure should get to on the target phone; each run prints it beside the budget. */
 const APPLIED_TARGET_MS = 1500
 /**
@@ -26,36 +26,6 @@ const RUNS = { desktop: 5, mobile: 5, applied: 3 }
 
 // Lighthouse drives its own Chromium over the debugging protocol, one page at a time.
 test.describe.configure({ mode: 'serial' })
-
-const COMPRESSIBLE = /text|javascript|json|css|svg|x-component/
-
-/**
- * A gzip hop in front of the served build, standing for Cloudflare, which compresses what readers
- * download. The CSP proxy asks Next for uncompressed bodies to hash them, so without this the pages
- * would be measured at several times the bytes a reader downloads.
- */
-function compressing(upstream: string) {
-  return Bun.serve({
-    port: e2ePort() + 3,
-    async fetch(request) {
-      const url = new URL(request.url)
-      const response = await fetch(new URL(url.pathname + url.search, upstream), {
-        headers: request.headers,
-        redirect: 'manual',
-      })
-      const headers = new Headers(response.headers)
-      const type = headers.get('content-type') ?? ''
-      if (!COMPRESSIBLE.test(type) || !(request.headers.get('accept-encoding') ?? '').includes('gzip')) {
-        return new Response(response.body, { status: response.status, headers })
-      }
-      const body = gzipSync(new Uint8Array(await response.arrayBuffer()))
-      headers.set('content-encoding', 'gzip')
-      headers.set('content-length', String(body.byteLength))
-      headers.delete('transfer-encoding')
-      return new Response(body, { status: response.status, headers })
-    },
-  })
-}
 
 /** What moved, for a failure to name: each shift's element and, when Lighthouse knows it, its cause. */
 function layoutShifts(audit: { details?: unknown } | undefined): string[] {
@@ -97,7 +67,8 @@ type Run = NonNullable<Awaited<ReturnType<typeof lighthouse>>>
 /** Runs Lighthouse `runs` times on `url` in a fresh Chromium, with the given flags and config. */
 async function lighthouseRuns(url: string, runs: number, flags: Parameters<typeof lighthouse>[1], config?: object) {
   const port = e2ePort() + 2
-  const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] })
+  // The hop's certificate is made for the run, so the browser is told to accept it.
+  const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`, '--ignore-certificate-errors'] })
   try {
     const results: Run[] = []
     for (let run = 0; run < runs; run += 1) {
@@ -143,12 +114,12 @@ async function measure(url: string, preset: keyof typeof LCP_MS) {
   return { lcp: median(lcp), runs: lcp, cls: Math.max(...cls), shifts: [...new Set(shifts)] }
 }
 
-let hop: ReturnType<typeof compressing>
+let hop: EdgeHop
 test.beforeAll(async ({ baseURL }) => {
   test.setTimeout(120_000)
-  hop = compressing(baseURL!)
+  hop = await edgeHop(baseURL!, e2ePort() + 3)
   // Lighthouse measures the host on every run; the median of three short runs sets the slowdown.
-  const runs = await lighthouseRuns(`http://localhost:${hop.port}/`, 3, { onlyAudits: ['first-contentful-paint'] })
+  const runs = await lighthouseRuns(`${hop.origin}/`, 3, { onlyAudits: ['first-contentful-paint'] })
   const indexes = runs.map(run => run.lhr.environment.benchmarkIndex)
   benchmarkIndex = median(indexes)
   slowdown = cpuSlowdownFor(benchmarkIndex)
@@ -159,12 +130,12 @@ test.beforeAll(async ({ baseURL }) => {
         : ''),
   )
 })
-test.afterAll(() => hop?.stop(true))
+test.afterAll(() => hop?.close())
 
 for (const path of PAGES) {
   test(`${path} paints its largest content within ${LCP_MS.desktop} ms on desktop, ${LCP_MS.mobile} ms on mobile and ${LCP_MS.applied} ms on mobile with applied throttling, without layout shift`, async () => {
     test.setTimeout(600_000)
-    const url = `http://localhost:${hop.port}${path}`
+    const url = `${hop.origin}${path}`
     const { lcp, runs, cls, shifts: desktopShifts } = await measure(url, 'desktop')
     const mobile = await measure(url, 'mobile')
     const applied = await measure(url, 'applied')
