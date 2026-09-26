@@ -18,6 +18,8 @@ export interface ChangelogSection {
 
 export interface ChangelogDocument {
   version: string
+  /** The day the registry published the version, `YYYY-MM-DD` in UTC, when it records one. */
+  published?: string
   sections: ChangelogSection[]
 }
 
@@ -69,8 +71,11 @@ export function rewriteLibraryLinks(
     })
 }
 
-/** Splits a version's section into its `### ` groups and their top-level `- ` entries. */
-export function parseChangelog(version: string, section: string): ChangelogDocument {
+/**
+ * Splits a version's section into its `### ` groups and their top-level `- ` entries, dated by
+ * `published`, the registry's publish time for the version.
+ */
+export function parseChangelog(version: string, section: string, published?: string): ChangelogDocument {
   const sections: ChangelogSection[] = []
   let current: ChangelogSection | undefined
   let entry: string[] | undefined
@@ -97,5 +102,5 @@ export function parseChangelog(version: string, section: string): ChangelogDocum
     }
   }
   flush()
-  return { version, sections }
+  return published ? { version, published: published.slice(0, 10), sections } : { version, sections }
 }

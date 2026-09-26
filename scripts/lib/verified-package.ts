@@ -14,6 +14,8 @@ import { identityFor, type VersionsConfig } from './versions.js'
 export interface VerifiedPackage extends Unpacked {
   version: string
   integrity: string
+  /** When the registry published it, as its packument records. */
+  published?: string
   /** Absent only for a version versions.json accepts on integrity alone. */
   provenance?: Provenance
   readme(): string
@@ -52,6 +54,7 @@ export async function fetchVerified(
     ...unpacked,
     version,
     integrity: packument.versions[version].dist.integrity,
+    published: packument.time?.[version],
     provenance,
     readme: () => read('README.md'),
     changelog: () => read('CHANGELOG.md'),
