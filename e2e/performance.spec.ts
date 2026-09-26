@@ -5,8 +5,16 @@ import { calculatorSlowdown, cpuSlowdownFor } from '../scripts/lib/cpu-slowdown'
 import { type EdgeHop, edgeHop } from './edge-hop'
 import { e2ePort } from './port'
 
-// The longest guide, one with code near its top, an API page and the changelog as well as home.
-const PAGES = ['/', '/docs/4.1/defer', '/docs/4.1/testing', '/docs/4.1/api/core/ShardContext', '/docs/4.1/changelog']
+// The longest guide, one with code near its top, an API page, the changelog and its heaviest release as
+// well as home.
+const PAGES = [
+  '/',
+  '/docs/4.1/defer',
+  '/docs/4.1/testing',
+  '/docs/4.1/api/core/ShardContext',
+  '/docs/4.1/changelog',
+  '/docs/4.1/changelog/4.1.0-beta.0',
+]
 /**
  * The pages this run measures: all of them, or with `PERF_SHARD=k/n` every n-th starting at the k-th,
  * so CI can measure them on several runners at once, each calibrated to itself.
