@@ -90,7 +90,7 @@ jobs:
       - run: bun run home:trace --check
 
   e2e:
-    name: Build and e2e
+    name: E2E
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -112,7 +112,8 @@ jobs:
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
       - run: bun run budget:js
       - run: bun --bun x playwright install --with-deps chromium
-      - run: bun run test:e2e
+      # Everything but the timed runs, which have runners of their own below
+      - run: bun run test:e2e --grep-invert @performance
       # Every docs route under next dev: its validation errors never reach the production build
       - run: bun run check:dev-routes
       - if: failure()
@@ -121,6 +122,47 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  # The largest-paint budgets, measured on runners that run nothing else meanwhile, a few pages each,
+  # every one calibrating its CPU slowdown to itself.
+  performance:
+    name: Performance (${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/3', '2/3', '3/3']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun --bun x playwright install --with-deps chromium
+      - run: bun run test:e2e --grep @performance
+        env:
+          PERF_SHARD: ${{ matrix.shard }}
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-performance-${{ strategy.job-index }}
+          path: playwright-report
+          retention-days: 7
+
+  # The check branch protection requires: the build, the e2e suite and every performance shard passed.
+  build-and-e2e:
+    name: Build and e2e
+    if: always()
+    needs: [e2e, performance]
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "$E2E" = success && test "$PERFORMANCE" = success
+        env:
+          E2E: ${{ needs.e2e.result }}
+          PERFORMANCE: ${{ needs.performance.result }}
 
   image:
     name: Image
@@ -154,7 +196,7 @@ jobs:
   publish:
     name: Publish image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint, test, content, e2e, image]
+    needs: [lint, test, content, build-and-e2e, image]
     runs-on: ubuntu-latest
     permissions:
       contents: read
