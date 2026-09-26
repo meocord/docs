@@ -199,3 +199,49 @@ for (const [label, viewport] of VIEWPORTS) {
     for (const control of fits) expect(control, JSON.stringify(control)).toMatchObject({ fits: true })
   })
 }
+
+// The sections below the pipeline panel are drawn only as the reader nears them (content-visibility).
+test.describe('the sections below the panel, drawn as the reader nears them', () => {
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`a link to #features or #testing lands on its heading, at ${viewport.width} px`, async ({ page }) => {
+      await page.setViewportSize(viewport)
+      for (const id of ['features', 'testing']) {
+        await page.goto(`/#${id}`)
+        const heading = page.locator(`h2#${id}`)
+        await expect(heading).toBeInViewport()
+        // At the top of the view, below the toolbar, not merely somewhere on screen.
+        await expect.poll(async () => (await heading.boundingBox())?.y ?? Infinity).toBeLessThan(200)
+      }
+    })
+  }
+
+  test('their text stays in the accessibility tree and within reach of find-in-page', async ({ page }) => {
+    await page.goto('/')
+    // Every section below the panel is drawn on demand; the panel itself is not.
+    const visibility = await page.evaluate(() =>
+      [...document.querySelectorAll('main section[aria-labelledby]')].map(section => [
+        section.getAttribute('aria-labelledby'),
+        getComputedStyle(section).contentVisibility,
+      ]),
+    )
+    expect(visibility).toEqual([
+      ['pipeline-title', 'visible'],
+      ['why', 'auto'],
+      ['features', 'auto'],
+      ['start', 'auto'],
+      ['testing', 'auto'],
+      ['new', 'auto'],
+    ])
+    await expect(page.getByRole('heading', { level: 2, name: 'Tested the way it runs' })).toBeAttached()
+    await expect(page.locator('section[aria-labelledby="testing"]')).not.toBeInViewport()
+    // The browser's own find matches text it has not drawn yet: the match is the section's heading.
+    const found = await page.evaluate(() => {
+      const hit = (window as unknown as { find(text: string): boolean }).find('Tested the way it runs')
+      return hit ? (window.getSelection()?.anchorNode?.parentElement?.closest('h2')?.id ?? null) : null
+    })
+    expect(found).toBe('testing')
+  })
+})

@@ -11,6 +11,15 @@ export const HomeRows = createNode('div', {
   flexDirection: 'column',
   gap: 'theme.space.16',
   css: {
+    // Drawn only as the reader nears them: before the first paint the browser skips their style,
+    // layout and paint, while they stay in the accessibility tree and find-in-page. Each size is the
+    // section's measured height, which `auto` replaces with the real one once it has been drawn.
+    '& > section': { contentVisibility: 'auto' },
+    '& > section[aria-labelledby="why"]': { containIntrinsicSize: 'auto 1600px' },
+    '& > section[aria-labelledby="features"]': { containIntrinsicSize: 'auto 2500px' },
+    '& > section[aria-labelledby="start"]': { containIntrinsicSize: 'auto 632px' },
+    '& > section[aria-labelledby="testing"]': { containIntrinsicSize: 'auto 790px' },
+    '& > section[aria-labelledby="new"]': { containIntrinsicSize: 'auto 143px' },
     '& section > h2': { margin: '0 0 theme.space.6' },
     '& [data-row]': {
       display: 'grid',
@@ -22,7 +31,15 @@ export const HomeRows = createNode('div', {
       borderTop: 'theme.line.width solid theme.line.hairline',
     },
     '& [data-row]:first-of-type': { borderTop: 'none', paddingTop: 0 },
-    '@media (width < 1100px)': { '& [data-row]': { gridTemplateColumns: 'minmax(0, 1fr)' } },
+    '@media (width < 1100px)': {
+      '& [data-row]': { gridTemplateColumns: 'minmax(0, 1fr)' },
+      // One column: the rows stack, so each section runs taller.
+      '& > section[aria-labelledby="why"]': { containIntrinsicSize: 'auto 2750px' },
+      '& > section[aria-labelledby="features"]': { containIntrinsicSize: 'auto 3750px' },
+      '& > section[aria-labelledby="start"]': { containIntrinsicSize: 'auto 686px' },
+      '& > section[aria-labelledby="testing"]': { containIntrinsicSize: 'auto 1166px' },
+      '& > section[aria-labelledby="new"]': { containIntrinsicSize: 'auto 191px' },
+    },
     '& [data-row] h3': { margin: '0 0 theme.space.2' },
     '& [data-row] p': { margin: '0 0 theme.space.3', color: 'theme.ink.secondary' },
     '& [data-row] [data-code]': { margin: 0 },
