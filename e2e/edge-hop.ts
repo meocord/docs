@@ -60,6 +60,25 @@ interface Reply {
   end(body: Buffer | string): unknown
 }
 
+/**
+ * The upstream's answer exactly as it sent it: status, headers and bytes. fetch() would decode an
+ * encoded body and keep its Content-Encoding, and the hop would pass on bytes that match neither.
+ */
+function ask(url: URL, method: string, headers: Record<string, string>) {
+  return new Promise<{ status: number; headers: http.IncomingHttpHeaders; body: Buffer }>((resolve, reject) => {
+    const request = http.request(url, { method, headers }, response => {
+      const chunks: Buffer[] = []
+      response.on('data', chunk => chunks.push(chunk))
+      response.on('end', () =>
+        resolve({ status: response.statusCode ?? 502, headers: response.headers, body: Buffer.concat(chunks) }),
+      )
+      response.on('error', reject)
+    })
+    request.on('error', reject)
+    request.end()
+  })
+}
+
 export interface EdgeHop {
   /** Where the hop answers, such as `https://127.0.0.1:4303`. */
   origin: string
@@ -91,13 +110,16 @@ export async function edgeHop(upstream: string, port: number, protocol: 'h2' | '
     for (const [name, value] of Object.entries(req.headers)) {
       if (!name.startsWith(':') && !HOP_BY_HOP.has(name) && typeof value === 'string') headers[name] = value
     }
-    const response = await fetch(new URL(req.url ?? '/', upstream), { method: req.method, headers, redirect: 'manual' })
+    const response = await ask(new URL(req.url ?? '/', upstream), req.method ?? 'GET', headers)
     const out: Record<string, string> = {}
-    response.headers.forEach((value, name) => {
-      if (!HOP_BY_HOP.has(name) && name !== 'content-length') out[name] = value
-    })
-    let body = Buffer.from(await response.arrayBuffer())
-    if (COMPRESSIBLE.test(response.headers.get('content-type') ?? '') && !response.headers.has('content-encoding')) {
+    for (const [name, value] of Object.entries(response.headers)) {
+      if (value !== undefined && !HOP_BY_HOP.has(name) && name !== 'content-length') {
+        out[name] = Array.isArray(value) ? value.join(', ') : value
+      }
+    }
+    let body = response.body
+    // A body the server already encoded, such as a build asset's brotli copy, goes on as it is.
+    if (COMPRESSIBLE.test(out['content-type'] ?? '') && !out['content-encoding']) {
       if (encoding === 'br') body = brotliCompressSync(body, { params: { [constants.BROTLI_PARAM_QUALITY]: 4 } })
       else if (encoding === 'gzip') body = gzipSync(body)
       if (encoding !== 'identity') out['content-encoding'] = encoding
