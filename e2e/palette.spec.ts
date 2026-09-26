@@ -185,3 +185,39 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(serious).toEqual([])
   })
 }
+
+test('a palette that fails to load leaves the keys to the page, and the next open tries again', async ({ page }) => {
+  // Whether the page's last key press was taken, read after every listener on the document has run.
+  await page.addInitScript(() => {
+    window.addEventListener('keydown', event =>
+      document.documentElement.toggleAttribute('data-taken', event.defaultPrevented),
+    )
+  })
+  let offline = true
+  let refused = 0
+  await page.route('**/_next/static/chunks/**', async route => {
+    const response = await route.fetch()
+    if (offline && (await response.text()).includes('Search could not load')) {
+      refused += 1
+      return route.abort()
+    }
+    return route.fulfill({ response })
+  })
+  await page.goto('/docs/4.1/defer')
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect.poll(() => refused).toBeGreaterThan(0)
+
+  // Once the load has failed, a key the palette would have kept for its field is the page's again.
+  const html = page.locator('html')
+  await expect
+    .poll(async () => {
+      await page.keyboard.press('a')
+      return html.getAttribute('data-taken')
+    })
+    .toBeNull()
+  await expect(dialog(page)).toBeHidden()
+
+  offline = false
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(field(page)).toBeFocused()
+})

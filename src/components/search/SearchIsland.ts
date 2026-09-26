@@ -37,8 +37,14 @@ export const SearchIsland = Component<SearchIslandProps>(function SearchIsland({
       if (open.current || lines.length === 0) return
       open.current = true
       typed = []
-      const { PaletteLayer } = await import('@/components/search/Palette')
-      portal.open(PaletteLayer, {
+      const loaded = await import('@/components/search/Palette').catch(() => undefined)
+      if (!loaded) {
+        // Keys go back to the page, and the next open tries again.
+        open.current = false
+        typed = undefined
+        return
+      }
+      portal.open(loaded.PaletteLayer, {
         lines,
         typed: () => {
           const text = typed?.join('') ?? ''
