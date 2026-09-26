@@ -142,14 +142,17 @@ export interface ToolbarProps {
   version: { current: VersionOption; options: VersionOption[] }
   /** The source repository, linked at the end of the bar. */
   repository: string
+  /** Whether the window has a sidebar; without one the bar has no menu, and shows the home mark at every width. */
+  sidebar?: boolean
 }
 
 /** The bar over the reading column: the phone menu, where the reader is, and the page-wide controls. */
-export function Toolbar({ crumbs, version, repository }: ToolbarProps) {
+export function Toolbar({ crumbs, version, repository, sidebar = true }: ToolbarProps) {
   return ToolbarBar({
+    'data-bare': sidebar ? undefined : true,
     children: [
-      Node(MobileNav),
-      // The home link, while the sidebar that carries it is hidden.
+      sidebar ? Node(MobileNav) : null,
+      // The home link, wherever no sidebar carries it.
       Link({
         href: '/',
         'aria-label': 'MeoCord home',
@@ -162,7 +165,7 @@ export function Toolbar({ crumbs, version, repository }: ToolbarProps) {
           ...focusCss,
           ...touchCss,
           ...earFlickCss(['&:hover', '&:focus-visible']),
-          '@media (width >= theme.breakpoint.compact)': { display: 'none' },
+          ...(sidebar && { '@media (width >= theme.breakpoint.compact)': { display: 'none' } }),
         },
         children: Mark(),
       }),

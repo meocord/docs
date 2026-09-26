@@ -70,6 +70,13 @@ export const ToolbarBar = ({ css, ...props }: WithCss<Parameters<typeof Header>[
         height: 'calc(theme.layout.toolbar + env(safe-area-inset-top))',
         padding: `env(safe-area-inset-top) ${safe('theme.space.2', 'right')} 0 ${safe('theme.space.2', 'left')}`,
       },
+      // A window without a sidebar: no menu, and the home mark first, at every width.
+      '&[data-bare]': {
+        gridTemplateColumns: 'auto minmax(0, 1fr) 220px minmax(71px, auto) 86px minmax(51px, auto)',
+        '@media (width < theme.breakpoint.compact)': {
+          gridTemplateColumns: '44px minmax(0, 1fr) 44px minmax(71px, auto)',
+        },
+      },
       ...css,
     },
   })

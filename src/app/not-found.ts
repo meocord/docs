@@ -5,7 +5,7 @@ import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import { CURRENT_LINE } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
-import { sidebar, versionChoices } from '@/lib/docs/site'
+import { versionChoices } from '@/lib/docs/site'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
 export const metadata: Metadata = pageMetadata({
@@ -18,9 +18,9 @@ export const metadata: Metadata = pageMetadata({
 async function notFoundPage() {
   'use cache'
   cacheLife('max')
+  // No sidebar: the root layout carries this page in every page's data, for notFound() to show
   return Window({
     crumbs: [{ title: 'Not found' }],
-    groups: sidebar(CURRENT_LINE),
     version: versionChoices(CURRENT_LINE),
     repository: REPOSITORY,
     children: Prose({
@@ -49,7 +49,7 @@ async function notFoundPage() {
   }).render()
 }
 
-/** The page for any address the site does not have: the docs window, with ways back in. */
+/** The page for any address the site does not have: the docs window without its sidebar, with ways back in. */
 export default async function NotFound() {
   return notFoundPage()
 }

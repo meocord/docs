@@ -1,12 +1,69 @@
 import { expect, test } from '@playwright/test'
 
-test('an address the site does not have opens the docs window, with ways back in', async ({ page }) => {
+test('an address the site does not have opens the docs window without its sidebar, with ways back in', async ({
+  page,
+}) => {
   const response = await page.goto('/docs/4.1/no-such-page')
   expect(response?.status()).toBe(404)
   await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible()
-  await expect(page.locator('aside nav')).toBeVisible()
+  // Every page's data carries this page, so it draws no sidebar; the toolbar leads home instead
+  await expect(page.locator('aside nav')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'MeoCord home' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'documentation' })).toHaveAttribute('href', '/docs/latest')
   await page.getByRole('button', { name: 'Search the docs' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
+})
+
+test('every way of reaching a missing page answers 404 with the same page', async ({ request }) => {
+  for (const path of [
+    '/no-such-page',
+    '/docs/latest/no-such-page',
+    '/docs/4.1/api/core/NoSuchSymbol',
+    '/docs/4.0/missing/no-such-page',
+  ]) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(404)
+    expect(await response.text(), path).toContain('Page not found')
+  }
+})
+
+for (const [label, width] of [
+  ['a phone', 390],
+  ['a desktop', 1440],
+] as const) {
+  test(`on ${label} the missing page's toolbar keeps every control on one row, with no menu`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto('/no-such-page')
+    await expect(page.getByRole('button', { name: 'Open navigation' })).toHaveCount(0)
+    const home = page.getByRole('link', { name: 'MeoCord home' })
+    await expect(home).toBeVisible()
+    const crumb = page.getByRole('navigation', { name: 'Breadcrumb' }).getByText('Not found')
+    // One row: the mark and the crumb share a line, and the crumb is not cut short
+    const [a, b] = [await home.boundingBox(), await crumb.boundingBox()]
+    expect(Math.abs(a!.y + a!.height / 2 - (b!.y + b!.height / 2))).toBeLessThan(4)
+    expect(await crumb.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  })
+}
+
+test('on a wide window the missing page is centred, with its footer rule under the column', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/no-such-page')
+  const box = await page.evaluate(() => {
+    // The sheet's content box: the grid inside its scrollbar gutter
+    const sheet = document.querySelector('main')!.parentElement!.getBoundingClientRect()
+    const column = document.querySelector('main')!.getBoundingClientRect()
+    const rule = document.querySelector('main footer')!.getBoundingClientRect()
+    return {
+      left: column.left - sheet.left,
+      right: sheet.right - column.right,
+      ruleLeft: rule.left,
+      ruleRight: rule.right,
+      column,
+    }
+  })
+  expect(Math.abs(box.left - box.right)).toBeLessThan(2)
+  expect(Math.abs(box.ruleLeft - box.column.left)).toBeLessThan(2)
+  expect(Math.abs(box.ruleRight - box.column.right)).toBeLessThan(2)
 })
 
 test('on a phone the toolbar names only the current page, without overlap', async ({ page }) => {
