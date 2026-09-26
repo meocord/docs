@@ -20,7 +20,8 @@ export const viewport: Viewport = {
   ],
 }
 
-const description = 'Documentation for MeoCord, the decorator-based Discord bot framework built on discord.js.'
+const description =
+  'Decorator-based framework for Discord bots on discord.js, with dependency injection, guards, a CLI and a testing toolkit.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
