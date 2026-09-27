@@ -95,10 +95,10 @@ It says "An error occurred while executing the command.", or "Command not found!
 `CommandNotFoundError`, a `GuardDeniedError`'s own message, a `CooldownError`'s wait, a `ValidationError`'s list of
 issues, and a `UserError`'s own message. The last four stay private even on a public deferred command.
 
-After a message command, the fallback replies to the message, without a ping, with the command's usage when the
-message does not fit it, or with a guard's or validation's reason, deleted after
-`@MeoCord({ messages: { deleteUsageRepliesAfter } })` seconds, and with a `UserError`'s message. A `UserError` from an
-event handler replies to the message the event carries, if it carries one. Other errors of message, reaction and
+After a message command, the fallback replies to the message, without a ping: with the command's usage when the
+message does not fit it, or a guard's or validation's reason, each deleted after
+`@MeoCord({ messages: { deleteUsageRepliesAfter } })` seconds. A `UserError`'s message is a reply that stays. A
+`UserError` from an event handler replies to the message the event carries, if it carries one. Other errors of message, reaction and
 event handlers are only logged. The fallback never throws.
 
 ## Testing
