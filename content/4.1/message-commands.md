@@ -8,8 +8,9 @@ since: 4.1.0
 
 A message command is a `@MessageHandler` with a pattern: `!roll 20` in a channel runs a handler that
 receives `{ sides: '20' }`. Patterns, prefixes and the order handlers win in are set in decorators, and
-checked when the bot starts. For handlers that run on every message, reactions and the intents both need,
-see [Messages and reactions](/docs/4.1/messages-and-reactions).
+checked when the bot starts. Typed params, flags and lists are in
+[Message command params](/docs/4.1/message-params). For handlers that run on every message, reactions and the
+intents both need, see [Messages and reactions](/docs/4.1/messages-and-reactions).
 
 ## Patterns
 
@@ -18,19 +19,72 @@ params arrive as the handler's second argument:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
-| In a pattern | Matches                                                                                             |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| `roll`       | The word `roll`, in any case unless `caseSensitive` is set                                          |
-| `{name}`     | One word. Words in quotes, `"like this"` or `“like this”`, count as one, and the quotes are removed |
-| `{name...}`  | The rest of the message, as typed. Only last                                                        |
-| `{name?}`    | One word, or nothing. Only last; `{name...?}` is the optional rest                                  |
+| In a pattern     | Matches                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `roll`           | The word `roll`, in any case unless `caseSensitive` is set                                                |
+| `{name}`         | One word. Words in quotes, `"like this"` or `“like this”`, count as one, and the quotes are removed       |
+| `{name:type}`    | One word, read as a number, a member and so on; see [Typed params](/docs/4.1/message-params#typed-params) |
+| `{name...}`      | The rest of the message, as typed. Only last                                                              |
+| `{name:type...}` | Each of the remaining words, as a list of values of the type; see [Lists](/docs/4.1/message-params#lists) |
+| `{name?}`        | One word, or nothing. Only optional params follow it; `{name...?}` is the optional rest                   |
+| `{--name}`       | A flag, `--name`, anywhere after the command word; see [Flags](/docs/4.1/message-params#flags)            |
 
 - A pattern without params, such as `'ping'`, matches exactly that message, whatever the spacing between
   its words.
-- A param value keeps the case it was typed in, and is always a string until
+- A param with no type keeps the case it was typed in, and is a string until
   [validation](#params-validation-and-cooldowns) converts it.
 - The handler receives the discord.js `Message`, and answers it with `message.reply()` or
   `message.channel.send()`; `respond()` is for interactions.
+
+## Usage errors
+
+A message that names a command, after a prefix or mention, but does not fit its pattern gets the
+command's usage in reply, and the handler does not run:
+
+```text
+!pay @ana lots   ->  Usage: !pay <to> <amount> [note…]
+                     amount: "lots" is not a whole number
+!pay @ana        ->  Usage: !pay <to> <amount> [note…]
+                     amount is missing
+```
+
+- The reply does not ping the user, and is deleted after 10 seconds.
+  `@MeoCord({ messages: { deleteUsageRepliesAfter } })` sets another number of seconds, and `0` keeps it.
+- A reply the bot cannot send or delete, for a missing permission or a message already gone, is logged and
+  left.
+- A message with no prefix or mention is never taken for a command. In an app without a prefix,
+  `pay @ana lots` is chat that happens to begin with a command's word, and gets no reply.
+
+The error is a `MessageUsageError` from `meocord/common`, carrying `usage` and `issues`. It goes through the
+handler's [exception filters](/docs/4.1/exception-filters) first, so a filter can answer it in the app's own
+words or language.
+
+## Aliases, descriptions and scope
+
+A handler's options say more about its command:
+
+::example{file="controllers/message/moderation.message.controller.ts" region="metadata"}
+
+- `aliases` are other words for the command, in place of the words the pattern begins with: `!m @ana 1h`
+  runs `mute`. An alias can be several words, such as `'cfg set'` for `config set {key} {value...}`, is
+  ranked by its own words, and answers a misuse with the usage as the user typed it.
+- `description` is what the command does, for a [help command](#a-help-command).
+- `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an
+  out-of-scope handler matches is answered `This command works in a server only.` or
+  `This command works in direct messages only.` A command with a `member`, `role` or `channel` param works
+  in servers only whatever its scope says, and `scope: 'dm'` with one stops the bot at startup.
+
+## A help command
+
+MeoCord does not answer `!help` itself, since help is where bots differ most. `HandlerRegistry` gives what
+one needs: each message command, listed once, with its `command` words, `aliases`, `description`, `scope`,
+`usage(prefix)` and `matches(words)`:
+
+::example{file="controllers/message/help.message.controller.ts" region="help"}
+
+`usage('!')` gives `!mute <target> [duration] [reason…]`, the text a usage error shows. `matches` compares
+in any case unless the handler or the app is case-sensitive. See
+[Handler discovery](/docs/4.1/handler-discovery) for the rest of the registry.
 
 ## Prefixes
 
@@ -40,19 +94,22 @@ Set the prefix once, for the whole app, with `@MeoCord({ messages })`:
 
 - `prefix` is a string, or a list such as `['!', '?']`. Without one, a pattern matches the message as it
   is. The longest prefix that fits is used, and a space after it is allowed, so `! roll 20` works too.
-- `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix.
+- `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix, including in
+  an app whose handlers all set their own prefix.
 - `caseSensitive: true` matches the prefix and a pattern's literal words in the case written. It is off by
-  default.
+  default. Param values always keep the case they were typed in.
 
 A handler can set its own `prefix` and `caseSensitive`. Its prefix replaces the app's, though a mention
-still counts, and `prefix: false` matches the message as it is:
+still counts. `prefix: ''` matches the message without a prefix, and `prefix: false` matches the message
+as it is, never after a mention:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="prefixes"}
 
 ### A prefix for each server
 
 `prefix` can also be a function of the message, which returns a prefix or a list and may be async. It is
-called for each message, so keep it to a lookup, from a cache the bot fills:
+called for each message some handler needs the app's prefix for, so keep it to a lookup, from a cache the
+bot fills:
 
 ::example{file="app-with-guild-prefix.ts" region="app"}
 
@@ -69,9 +126,10 @@ controller.
 3. Then a pattern without an optional param beats one with it, and fewer params beat more.
 4. Patterns still equal go to the one whose first differing word is literal: `roll {x}` beats `{verb} 6`.
 
-The order is fixed at startup, so declaration order and file layout never decide it. Then every
-`@MessageHandler()` without a pattern runs, whether or not a pattern matched. Messages from bots, the
-bot's own among them, and messages with no text reach no handler.
+A handler whose `scope` fits where the message was sent runs before one whose scope does not, so `help`
+can have a server handler and a DM handler. The order is fixed at startup, so declaration order and file
+layout never decide it. Then every `@MessageHandler()` without a pattern runs, whether or not a pattern
+matched. Messages from bots, the bot's own among them, and messages with no text reach no handler.
 
 ## Params, validation and cooldowns
 
@@ -79,27 +137,45 @@ A pattern's params go through [the same stages](/docs/4.1/how-a-handler-runs) as
 params:
 
 - [`@Validate`](/docs/4.1/validation) checks them, and the handler receives the schema's output: the
-  `roll` handler above gets `sides` as a number, and `!roll 1` is refused with a `ValidationError`. Pipes
-  transform them the same way.
+  `roll` handler above gets `sides` as a number, and `!roll 1` is answered with the reason. Pipes transform
+  them the same way.
 - [`@Cooldown({ by })`](/docs/4.1/cooldowns#counting-per-resource) reads them to count per resource.
-- Guards, interceptors and filters read them with `ExecutionContext.getHandlerParams()`: the raw params
-  before validation, and the validated ones after it.
+- Interceptors and filters read them with `ExecutionContext.getHandlerParams()`: the raw params before
+  validation, and the validated ones after it. Guards read them as entity refs; see
+  [Guards and what they see](/docs/4.1/message-params#guards-and-what-they-see).
 
 `@Validate` and `@UsePipe` need a pattern: on a `@MessageHandler()` for every message, they stop the bot at
 startup.
+
+## Replies with the theme's emoji
+
+MeoCord's replies to a message are plain text: a usage error, a guard's or validation's reason, and a
+`UserError`'s message, whether a command or an `@On` handler of a message event threw it. A theme does not
+change that text, so a test that checks it keeps passing when the colours change.
+`@MeoCord({ messages: { replyEmoji: true } })` begins each of them with the call's `emojis.warning`: the
+app's theme, a handler's `@UseTheme`, or the server's or user's theme from `themeFor`.
+
+```text
+⚠️ Usage: !roll <sides>
+sides: "lots" is not a whole number
+```
 
 ## Errors at startup
 
 The message routes are built when the bot starts, and a mistake in them stops it with an error naming the
 handler, before it logs in:
 
-| Mistake                                          | Error                                                                                   |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| A rest before another word, `'{text...} please'` | `{text...} takes the rest of the message, so it must be last.`                          |
-| An optional param before another word            | `{name?} is optional, so it must be last.`                                              |
-| A name used twice, `'swap {a} {a}'`              | `{a} appears twice; give each param its own name.`                                      |
-| Braces inside a word, `'a{b}'`                   | `"a{b}" is not a param: a param is a whole word, such as {name}, {name...} or {name?}.` |
-| Two patterns that match the same messages        | `… match the same messages, so only one of them could ever run.`                        |
+| Mistake                                                   | Error                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| A rest before another word, `'{text...} please'`          | `{text...} takes the rest of the message, so it must be last.`                              |
+| A required word after an optional param                   | `{name?} is optional, so only optional params may follow it; …`                             |
+| Text, optional, before another optional param             | `{name?} comes before another optional param, so it needs a type …`                         |
+| A type no one added, `'{accent:colour}'`                  | `{accent:colour} names no type. The types are …`                                            |
+| A name used twice, `'swap {a} {a}'`                       | `{a} appears twice; give each param and flag its own name.`                                 |
+| A flag's name that does not start with a letter           | `{--9lives}: a flag's name starts with a letter, as a message could not give it otherwise.` |
+| Braces inside a word, `'a{b}'`                            | `"a{b}" is not a param: a param is a whole word, …`                                         |
+| `scope: 'dm'` on a command with a `member` param          | `scope is 'dm', but {target:member} is found only in a server.`                             |
+| Two patterns, or an alias and a pattern, that match alike | `… match the same messages, so only one of them could ever run.`                            |
 
 A pattern error begins with the handler it is about, such as `@MessageHandler('swap {a} {a}') in
 DiceMessageController.swap:`, and the last names both handlers. Two patterns match the same messages when
@@ -118,6 +194,12 @@ does, and passes the handler the params its pattern captures, through validation
 
 A message the handler's pattern does not match is refused before anything runs, so a typo in a test fails
 rather than passing silently.
+
+For typed params, give the message a server whose caches hold what the command names:
+`createMockGuild({ members, roles, channels })`, then `createMockMessage({ guild })`, or `guild: null` for a
+DM. `module.dispatch(message)` sends the message through routing as the bot does, usage replies included:
+
+::example{file="controllers/message/economy.message.controller.spec.ts" region="spec"}
 
 `resolveRoute` cannot call a prefix function, so for an app that has one, pass the prefix the message has.
 `invoke` calls the function with the message, as the bot does:
