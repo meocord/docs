@@ -39,6 +39,7 @@ describe('publishedLinks', () => {
       writeFileSync(path.join(root, file), text)
     }
     write('src/core/app.ts', `/** @see {@link ${link('guards')} | Guards} */`)
+    write('src/bin/app-template/README.md.template', `Read the [guide](${link('getting-started')}).`)
     write('dist/types/core/index.d.cts', `/** @see ${link('guards')} */`)
     write('README.md', `[Docs](${link('overview')})`)
     write('CHANGELOG.md', `See [cooldowns](${link('cooldowns#stacking')}).`)
@@ -52,6 +53,7 @@ describe('publishedLinks', () => {
     expect([...publishedLinks(root)]).toEqual([
       ['/docs/4.1/cooldowns#stacking', ['CHANGELOG.md']],
       ['/docs/4.1/faq', ['.github/ISSUE_TEMPLATE/documentation.yml']],
+      ['/docs/4.1/getting-started', ['src/bin/app-template/README.md.template']],
       ['/docs/4.1/guards', ['src/core/app.ts', 'dist/types/core/index.d.cts']],
       ['/docs/4.1/migrating', ['docs/MIGRATING.md']],
       ['/docs/4.1/overview', ['README.md']],

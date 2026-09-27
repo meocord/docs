@@ -38,7 +38,7 @@ export function textsUnder(dir: string, extensions: string[]): string[] {
  * changelog, and its issue and pull request templates.
  */
 export const PUBLISHED: { path: string; extensions: string[] }[] = [
-  { path: 'src', extensions: ['.ts', '.md', '.hbs'] },
+  { path: 'src', extensions: ['.ts', '.template'] },
   { path: 'dist/types', extensions: ['.d.ts', '.d.cts'] },
   { path: 'README.md', extensions: ['.md'] },
   { path: 'CHANGELOG.md', extensions: ['.md'] },
