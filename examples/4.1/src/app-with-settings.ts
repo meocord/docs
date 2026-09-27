@@ -1,11 +1,11 @@
 import { GatewayIntentBits } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
 import { settingsProvider } from '@src/services/settings/settings'
-import { WeatherController } from '@src/services/weather/weather.controller'
+import { ReportController } from '@src/services/settings/report.controller'
 
 // #region app
 @MeoCord({
-  controllers: [WeatherController],
+  controllers: [ReportController],
   providers: [settingsProvider],
   clientOptions: { intents: [GatewayIntentBits.Guilds] },
 })
