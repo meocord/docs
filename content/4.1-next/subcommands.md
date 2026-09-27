@@ -34,17 +34,18 @@ The builder describes the command once, its groups and subcommands included:
 
 ::example{file="controllers/slash/settings.slash.controller.ts" region="controller"}
 
-`settings` carries the builder, and handles the command itself. `notifyEmail` handles `/settings notify email`: its
-name is the path, with spaces between the parts as Discord displays them, and it receives that subcommand's
-`enabled` option.
+`settings` carries the builder. Once a command has subcommands, Discord doesn't let a member run `/settings` alone, so
+its handler runs only for a subcommand no method claims; here `notify email` has its own. `notifyEmail` handles
+`/settings notify email`: its name is the path, with spaces between the parts as Discord displays them, and it
+receives that subcommand's `enabled` option.
 
 ## How it works
 
 When a command arrives, MeoCord tries its full path first, `settings notify email`, then the command's own name,
 `settings`. The first handler that matches runs, through the full [pipeline](guide:how-a-call-runs).
 
-- **One builder per command.** A subcommand handler takes `CommandType.SLASH` and no builder. The parent's builder
-  already describes it, and Discord would reject a second command registered under the same name.
+- **One builder per command.** A subcommand handler takes `CommandType.SLASH` and no builder, since the parent's
+  builder already describes every subcommand.
 - **Options are flattened.** A subcommand handler receives its own options, `{ enabled }`, not the subcommand around
   them.
 - **A subcommand no method claims** falls back to the command's own handler, which can list the choices or answer
@@ -66,8 +67,11 @@ An option inside a subcommand is autocompleted by the subcommand's path and the 
 
 ## Gotchas
 
-- **A subcommand handler with a builder describes a second command.** The parent's builder already describes every
-  subcommand, and Discord would reject a second command for it. Give subcommand handlers `CommandType.SLASH`.
+- **A subcommand handler with a builder stops the bot.** The builder is asked to build a command named by the path,
+  `settings notify email`, and discord.js refuses the spaces, so the controller fails to load with
+  `SettingsCommandBuilder could not build "settings notify email": Invalid string format…`. A builder that sets the
+  name `settings` itself is registered once, with a warning that the command is built more than once. Give subcommand
+  handlers `CommandType.SLASH`.
 - **A typo in the path falls back silently.** `@Command('settings notfy email', …)` never matches, so the command's
   own handler runs instead. Test each path with `invoke`, which refuses a path its handler doesn't handle.
 

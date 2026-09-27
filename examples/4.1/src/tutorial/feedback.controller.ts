@@ -29,10 +29,12 @@ import { t } from '@src/tutorial/i18n'
 
 @Controller()
 export class FeedbackController {
+  // #region constructor
   constructor(
     private readonly feedback: FeedbackService,
     private readonly settings: FeedbackSettings,
   ) {}
+  // #endregion constructor
 
   // #region open
   // `/feedback` opens a form; the form's custom ID routes its submission below
