@@ -1,5 +1,7 @@
 import { ButtonInteraction, Collection, EmbedBuilder, GuildMember, Locale, User } from 'discord.js'
+// #region step:guards
 import { GuardDeniedError } from 'meocord/common'
+// #endregion step:guards
 import {
   createDiscordError,
   createMockClient,
@@ -46,7 +48,10 @@ describe('ReviewController', () => {
     })
   }
 
+  // before:localisation it('lets staff approve: the post shows the verdict, and the author hears back', async () => {
+  // #region step:localisation
   it('lets staff approve: the post shows the verdict, and the author hears in their language', async () => {
+    // #endregion step:localisation
     const { module } = setup()
     const interaction = click('feedback/1/approve', STAFF)
 
@@ -57,7 +62,10 @@ describe('ReviewController', () => {
     expect(payload.embeds[0]).toMatchObject({ title: 'Feedback #1 from ada', footer: { text: 'Approved by grace.' } })
     expect(payload.components).toEqual([])
     expect(interaction.client.users.send).toHaveBeenCalledWith('111', {
+      // before:localisation content: 'Your feedback “Music bot” was approved. Thank you!',
+      // #region step:localisation
       content: 'Masukanmu “Music bot” disetujui. Terima kasih!',
+      // #endregion step:localisation
     })
     expect(module.get(FeedbackService).get('1').status).toBe('approved')
   })
@@ -74,6 +82,7 @@ describe('ReviewController', () => {
   })
   // #endregion closed-dms
 
+  // #region step:guards
   it('refuses a member without the staff role, and changes nothing', async () => {
     const { module, feedback } = setup()
 
@@ -82,7 +91,9 @@ describe('ReviewController', () => {
     )
     expect(feedback.status).toBe('open')
   })
+  // #endregion step:guards
 
+  // #region step:exception-filters
   it('answers a button whose feedback is gone privately, in the member’s words', async () => {
     const { module } = setup()
     const interaction = click('feedback/7/approve', STAFF)
@@ -92,5 +103,6 @@ describe('ReviewController', () => {
     expect(JSON.stringify(getResponse(interaction).calls.at(-1)?.payload)).toContain('That feedback no longer exists.')
     expect(interaction.client.users.send).not.toHaveBeenCalled()
   })
+  // #endregion step:exception-filters
 })
 // #endregion spec
