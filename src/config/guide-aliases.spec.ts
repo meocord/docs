@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { GUIDE_PLAN } from '../../scripts/lib/guide'
 import { listPages } from '../../scripts/lib/pages'
 import { GUIDE_ALIASES, guideAliasRedirects } from '@/config/guide-aliases'
 import manifest from '../../versions.json'
@@ -54,5 +55,10 @@ describe('guideAliasRedirects', () => {
     const ids = new Set(listPages(newest).map(page => page.slug))
     expect(Object.values(GUIDE_ALIASES).filter(id => !ids.has(id))).toEqual([])
     expect(Object.keys(GUIDE_ALIASES).filter(slug => ids.has(slug))).toEqual([])
+  })
+
+  it("aliases only slugs of the Guide's plan, its one list of slugs", () => {
+    const planned = new Set(Object.values(GUIDE_PLAN).flat())
+    expect(Object.keys(GUIDE_ALIASES).filter(slug => !planned.has(slug))).toEqual([])
   })
 })
