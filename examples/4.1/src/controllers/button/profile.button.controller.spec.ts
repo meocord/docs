@@ -28,14 +28,13 @@ describe('ProfileButtonController', () => {
   it('routes an id both patterns match to the more literal one', () => {
     const route = (customId: string) => resolveRoute(App, { type: CommandType.BUTTON, customId })
 
-    expect(route('profile/summary/123/456')).toMatchObject({
-      method: 'showSummary',
-      params: { ownerId: '123', uid: '456' },
-    })
-    expect(route('profile/123/456')).toMatchObject({ method: 'showProfile' })
+    expect(route('profile/summary/456')).toMatchObject({ method: 'showSummary', params: { uid: '456' } })
+    expect(route('profile/123/456')).toMatchObject({ method: 'showProfile', params: { ownerId: '123', uid: '456' } })
   })
 
-  it('has no two patterns that can take one id', () => {
-    expect(findRouteConflicts(App)).toEqual([])
+  it('lists the pair, which MeoCord warns about at startup', () => {
+    expect(findRouteConflicts(App)).toEqual([
+      { type: CommandType.BUTTON, patterns: ['profile/summary/{uid}', 'profile/{ownerId}/{uid}'] },
+    ])
   })
 })

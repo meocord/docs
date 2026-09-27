@@ -73,7 +73,7 @@ A param can name its type, `{name:type}`, and the handler receives the value rat
 
 ## Overlapping patterns
 
-Patterns with different segment counts never compete. When two with the same count both match, the one
+Patterns with different segment counts never compete. When two with the same count can both match an id, the one
 spelling out more literal text wins, whatever order they were declared in:
 
 ::example{file="controllers/button/profile.button.controller.ts" region="overlap"}
@@ -81,12 +81,15 @@ spelling out more literal text wins, whatever order they were declared in:
 Between equally literal patterns, the one with fewer parameters wins, then the one whose typed parameters take fewer
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}`
 takes `page/5` and leaves `page/last` to the other, whatever order they're declared in. The ranking is computed
-once, when the bot starts. Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and
-`a/b/{y}`, both take `a/b/c` with neither more literal, and MeoCord warns about the pair at startup, as it does for
-two typed parameters that share a value, such as `r/{w:on|off}` and `r/{f:bool}`.
+once, when the bot starts.
+
+MeoCord warns at startup about every pair of patterns of one component type that can both take an id: the two
+above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`, which both take `a/b/c` with neither more
+literal. The bot still starts, and the ranking decides which handler runs. Patterns with different literals in the
+same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
 `resolveRoute` from `meocord/testing` answers which handler an id reaches, in a plain unit test, and
-`findRouteConflicts` lists the pairs MeoCord would warn about, so a test can keep them out:
+`findRouteConflicts` lists the pairs MeoCord warns about, most specific first, so a test can pin them:
 
 ::example{file="controllers/button/profile.button.controller.spec.ts"}
 
