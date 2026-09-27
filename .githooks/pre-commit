@@ -14,7 +14,7 @@ while IFS= read -r -d '' file; do
   info=$("$prettier" --file-info "$file")
   [[ $info == *'"ignored": true'* || $info == *'"inferredParser": null'* ]] && continue
   # Formatted and compared, as Prettier's --check on stdin passes a file it cannot parse
-  git show ":$file" | "$prettier" --stdin-filepath "$file" 2> /dev/null | cmp -s - <(git show ":$file") \
+  git show ":$file" | "$prettier" --stdin-filepath "$file" | cmp -s - <(git show ":$file") \
     || unformatted+=("$file")
 done < <(git diff --cached --name-only --diff-filter=ACMR -z)
 [ ${#unformatted[@]} -eq 0 ] && exit 0
