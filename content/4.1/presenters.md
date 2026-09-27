@@ -19,8 +19,9 @@ to answer in the user's language, for instance:
 
 ::example{file="app-with-presenter.ts" region="app"}
 
-Without a presenter, errors are titled "Oops!" in `Theme.errorColor`, and the loading view is
-"⏳ Working on it…" in `Theme.primaryColor`.
+Without a presenter, errors are titled "Oops!" in the colour of their tone, and the loading view is "Working on it…"
+with the theme's loading emoji in its primary colour, both in the user's language where the app
+[translates MeoCord's texts](/docs/4.1/localisation#meocords-own-texts).
 
 A presenter is plain code, so its test needs no module:
 
