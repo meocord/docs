@@ -64,8 +64,8 @@ This one sets the bot's status once it's ready, through its `onReady` [lifecycle
 
 ## Providers
 
-Not everything a bot shares is a class it can construct itself. The app's `providers` supply these, and classes
-inject them like any service:
+Not everything a bot shares is a class it can construct itself. The app's
+[`providers`](api:decorators/MeoCord#providers) supply these, and classes inject them like any service:
 
 ::example{file="app-with-providers.ts" region="app"}
 

@@ -18,6 +18,8 @@ export interface Token {
 
 export interface ApiParam {
   name: string
+  /** The id of its row, for a property of an options parameter on the symbol's own page: `i18n`. */
+  anchor?: string
   type: Token[]
   optional: boolean
   defaultValue?: string
@@ -74,6 +76,8 @@ export interface ApiSymbol {
   seeAlso: Token[]
   /** The kind of API its `@group` tag files it under, such as `Decorators`; undefined where it has none. */
   group?: string
+  /** Every id a link can name on its page: its members', then its options'. */
+  anchors: string[]
 }
 
 export interface SinceData {
@@ -308,10 +312,12 @@ export class ApiModel {
     if (!found) return undefined
     const { entries, declaration } = found
     const key = `${entries[0]}:${declaration.name}`
-    const signatures = (declaration.signatures ?? []).map(signature => this.#signature(signature, key))
     const members = (declaration.children ?? [])
       .filter(member => SAFE_NAME.test(member.name) && !member.flags?.isInherited && !member.flags?.isPrivate)
       .map(member => this.#member(declaration, member, `${key}.${member.name}`))
+    // Its options take the anchors its members leave free
+    const anchors = new Set(members.map(member => member.anchor))
+    const signatures = (declaration.signatures ?? []).map(signature => this.#signature(signature, key, anchors))
     return {
       name: declaration.name,
       kind: kindName(declaration.kind),
@@ -328,6 +334,7 @@ export class ApiModel {
       examples: examples(declaration.comment),
       seeAlso: this.#seeAlso(declaration.comment),
       group: group(declaration),
+      anchors: [...anchors],
     }
   }
 
@@ -356,8 +363,15 @@ export class ApiModel {
     }
   }
 
-  #signature(signature: Signature, key: string): ApiSignature {
+  /** A signature's details; with `anchors`, the ids taken on its page, its options' rows get ids of their own. */
+  #signature(signature: Signature, key: string, anchors?: Set<string>): ApiSignature {
     const params: ApiParam[] = []
+    const anchor = (property: string) => {
+      const id = memberAnchor(property)
+      if (!anchors || anchors.has(id)) return undefined
+      anchors.add(id)
+      return id
+    }
     for (const parameter of signature.parameters ?? []) {
       params.push(this.#param(parameter, `${key}(${parameter.name})`))
       // `@param options.seconds` documents a property of the parameter's type.
@@ -365,9 +379,25 @@ export class ApiModel {
       for (const [property, parts] of Object.entries(highlighted ?? {})) {
         params.push({
           name: `${parameter.name}.${property}`,
+          anchor: anchor(property),
           type: [],
           optional: false,
           description: this.#parts(parts),
+        })
+      }
+      // An options object typed inline documents each of its properties where it declares them.
+      const inline =
+        parameter.type?.type === 'reflection' && !parameter.type.declaration.signatures
+          ? (parameter.type.declaration.children ?? [])
+          : []
+      for (const property of inline.filter(each => SAFE_NAME.test(each.name))) {
+        params.push({
+          name: `${parameter.name}.${property.name}`,
+          anchor: anchor(property.name),
+          type: property.type ? this.type(property.type) : [],
+          optional: !!property.flags?.isOptional,
+          defaultValue: defaultValue(property),
+          description: this.#text(property.comment),
         })
       }
     }

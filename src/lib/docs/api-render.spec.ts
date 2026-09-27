@@ -34,6 +34,7 @@ describe('apiArticle', () => {
   it('keeps a section anchor clear of a member with the same name', () => {
     const symbol = { ...model.symbol('core', 'ShardContext')! }
     symbol.members = [{ ...symbol.members[0], name: 'members', anchor: 'members' }]
+    symbol.anchors = ['members']
     const ids = apiArticle(symbol).toc.map(entry => entry.id)
     expect(ids).toContain('members-section')
     expect(ids).toContain('members')
@@ -169,6 +170,15 @@ describe('the API by kind', () => {
     vi.stubEnv('DOCS_NEXT', '')
     expect(renderApiIndex('4.1')).toBeUndefined()
     vi.stubEnv('DOCS_NEXT', '1')
+  })
+
+  it("gives each option its row's anchor, and lists the options in the contents", () => {
+    const meocord = apiModel('4.1')!.symbol('decorators', 'MeoCord')!
+    const { nodes, toc } = apiArticle(meocord)
+    expect(html(nodes)).toContain('<tr id="i18n">')
+    expect(toc.filter(entry => entry.depth === 3).map(entry => entry.id)).toEqual(
+      expect.arrayContaining(['i18n', 'theme', 'cooldownstore', 'cooldownstorefailure']),
+    )
   })
 
   it("names every entry point a symbol can be imported from, and trails to its kind's page", () => {

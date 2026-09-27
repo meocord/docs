@@ -149,6 +149,7 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSin
           children: params.map(param =>
             Tr({
               key: param.name,
+              id: param.anchor,
               children: [
                 Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
                 Td({
@@ -174,9 +175,9 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSin
   })
 }
 
-/** The anchors a page's own sections use, kept clear of its members' anchors. */
-function sectionIds(members: ApiMember[]) {
-  const taken = new Set(members.map(member => member.anchor))
+/** The anchors a page's own sections use, kept clear of its members' and options' anchors. */
+function sectionIds(anchors: string[]) {
+  const taken = new Set(anchors)
   const id = (name: string) => (taken.has(name) ? `${name}-section` : name)
   return {
     parameters: id('parameters'),
@@ -208,6 +209,11 @@ function signatureDetails(
       heading('Parameters', ids?.parameters),
       paramsTable(signature.params, layouts, `${key}-params`, ownerSince),
     )
+    // Each option under its parameters, where it has an anchor to go to
+    if (level === 'h2') {
+      for (const param of signature.params)
+        if (param.anchor) toc.push({ id: param.anchor, title: param.name.split('.').pop()!, depth: 3 })
+    }
   }
   if (signature.returns) {
     out.push(
@@ -270,7 +276,7 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
  */
 export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
-  const ids = sectionIds(symbol.members)
+  const ids = sectionIds(symbol.anchors)
   const nodes: Child[] = [
     H1(symbol.name, { key: 'title' }),
     P(

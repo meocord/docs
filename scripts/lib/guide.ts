@@ -8,6 +8,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
+import { memberAnchor } from '../../src/lib/urls'
 
 /** The Guide's chapters, in reading order, then the appendices. */
 export const CHAPTERS = [
@@ -206,7 +207,8 @@ function apiRefProblem(ref: string, symbols: GuideContext['apiSymbols']): string
   if (!symbol) return 'names no symbol of the API'
   if (symbol.kinds.length > 0 && !symbol.kinds.includes(kind))
     return `names a symbol filed under ${symbol.kinds.join(' and ')}, not ${kind}`
-  if (member !== undefined && !symbol.members.includes(member)) return `names no member of ${name}`
+  // A member is written as named, `#cooldownStore`, and linked by its anchor, as the page renders it
+  if (member !== undefined && !symbol.members.includes(memberAnchor(member))) return `names no member of ${name}`
   return undefined
 }
 

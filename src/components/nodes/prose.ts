@@ -252,6 +252,13 @@ export const Prose = createNode('article', {
       outlineOffset: -2,
     },
     // A parameter's name reads whole; its type wraps between words, never inside one.
+    // An option's row is a link's target, as a heading is: clear of the toolbar, and marked at its edge while it
+    // is the target, leaving the background its code's colours are measured against.
+    '& [data-params] tr[id]': {
+      scrollMarginTop: 'theme.space.4',
+      '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)' },
+    },
+    '& [data-params] tr:target': { boxShadow: 'inset 3px 0 0 theme.accent.default' },
     '& [data-params] td:first-child code': { whiteSpace: 'nowrap' },
     '& [data-params] td code': { overflowWrap: 'normal' },
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },

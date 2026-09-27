@@ -16,9 +16,9 @@ import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
 
-/** A line's API as the site renders it: a symbol's page by section and name, with its members' anchors. */
+/** A line's API as the site renders it: a symbol's page by section and name, with the anchors on it. */
 export interface ApiLookup {
-  symbol(section: string, name: string): { members: { anchor: string }[] } | undefined
+  symbol(section: string, name: string): { anchors: string[] } | undefined
 }
 
 export interface SiteSnapshot {
@@ -244,8 +244,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     if (!api) return undefined
     const symbol = api.symbol(link.section, link.symbol)
     if (!symbol) return `names no symbol of ${link.version ?? link.line}'s API`
-    if (link.member && !symbol.members.some(member => member.anchor === link.member))
-      return `names no member of ${link.symbol}`
+    if (link.member && !symbol.anchors.includes(link.member)) return `names no member of ${link.symbol}`
     return undefined
   }
   // The set the site shows for a line: its imported pages until its guides are authored

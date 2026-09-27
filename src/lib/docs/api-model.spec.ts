@@ -255,3 +255,23 @@ describe('ApiModel by kind', () => {
     )
   })
 })
+
+describe('ApiModel options', () => {
+  const beta6 = (
+    JSON.parse(readFileSync('generated/api/4.1.0-beta.6.json', 'utf8')) as { project: JSONOutput.ProjectReflection }
+  ).project
+  const byKind = new ApiModel('4.1', beta6, versions, since, undefined, { by: 'kind' })
+
+  it('gives each property of an options object typed inline a row, with its type, docs and an anchor', () => {
+    const meocord = byKind.symbol('decorators', 'MeoCord')!
+    const i18n = meocord.signatures[0].params.find(param => param.name === 'options.i18n')!
+    expect(i18n).toMatchObject({ anchor: 'i18n', optional: true })
+    expect(text(i18n.type)).not.toBe('')
+    expect(i18n.description).not.toBe('')
+    expect(meocord.anchors).toEqual(expect.arrayContaining(['i18n', 'theme', 'providers', 'cooldownstore']))
+    expect(byKind.symbol('decorators', 'UseTheme')!.anchors).toEqual(['buttons', 'colors', 'emojis'])
+    expect(byKind.href({ ...byKind.find('MeoCord')!, member: 'cooldownStore' })).toBe(
+      '/docs/4.1/api/decorators/MeoCord#cooldownstore',
+    )
+  })
+})
