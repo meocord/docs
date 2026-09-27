@@ -5,8 +5,9 @@ import path from 'path'
 import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
 import { checkSite, EXAMPLE_SOURCE, type SiteSnapshot } from './lib/content.js'
+import { checkGuide } from './lib/guide.js'
 import { paths } from './lib/layout.js'
-import { readVersions } from './lib/versions.js'
+import { newestIn, readVersions } from './lib/versions.js'
 
 const readIf = (file: string) => (existsSync(file) ? readFileSync(file, 'utf8') : undefined)
 
@@ -59,6 +60,24 @@ for (const { line, versions } of config.lines) {
 site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
 const problems = checkSite(site)
+
+// A line's Guide in the overhauled template, where one is being written: content/<line>-next/.
+let guidePages = 0
+for (const line of config.lines) {
+  const dir = paths.guide(line.line)
+  if (!existsSync(dir)) continue
+  const files = Object.fromEntries(
+    Object.entries(filesUnder(dir))
+      .filter(([file]) => file.endsWith('.md'))
+      .map(([file, text]) => [file.replace(/\.md$/, ''), text]),
+  )
+  guidePages += Object.keys(files).length
+  const api = JSON.parse(readFileSync(paths.api(newestIn(line)), 'utf8')) as {
+    project: { children?: { children?: { name: string }[] }[] }
+  }
+  const apiSymbols = new Set(api.project.children?.flatMap(entry => entry.children?.map(symbol => symbol.name) ?? []))
+  problems.push(...checkGuide(files, { line: line.line, examples: site.examples, apiSymbols }))
+}
 if (problems.length > 0) {
   console.error(`${problems.length} content problem(s):\n  ${problems.join('\n  ')}`)
   process.exit(1)
@@ -66,5 +85,5 @@ if (problems.length > 0) {
 const count = (sets: Record<string, Record<string, string>>) =>
   Object.values(sets).reduce((sum, pages) => sum + Object.keys(pages).length, 0)
 console.log(
-  `Content is consistent: ${config.lines.length} lines, ${count(site.readme)} imported and ${count(site.authored)} authored pages.`,
+  `Content is consistent: ${config.lines.length} lines, ${count(site.readme)} imported and ${count(site.authored)} authored pages${guidePages ? `, and ${guidePages} Guide pages` : ''}.`,
 )
