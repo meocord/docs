@@ -4,10 +4,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
-import { checkSite, EXAMPLE_SOURCE, type SiteSnapshot } from './lib/content.js'
+import { checkSite, EXAMPLE_SOURCE, overlongLines, PROSE_WIDTH, type SiteSnapshot } from './lib/content.js'
 import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
-import { paths } from './lib/layout.js'
+import { paths, ROOT } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
 import { apiModel } from '../src/lib/docs/api-site.js'
 
@@ -64,6 +64,12 @@ for (const { line, versions } of config.lines) {
 site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
 const problems = checkSite(site)
+
+// Prose wraps at PROSE_WIDTH in every Markdown file of content/, the Guide and migration guides included
+for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
+  if (file.endsWith('.md'))
+    for (const { line, length } of overlongLines(text))
+      problems.push(`content/${file}:${line}: a line of ${length} characters; wrap prose at ${PROSE_WIDTH}`)
 
 // A line's Guide in the overhauled template, where one is being written: content/<line>-next/.
 let guidePages = 0

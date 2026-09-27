@@ -28,9 +28,9 @@ the Developer Portal, under Bot, then Privileged Gateway Intents, as the message
 list of every option of the wrong type. An option MeoCord does not know, often a typo, is only a warning. See
 [Configuration](/docs/4.1/configuration#options).
 
-**"This build carries native addons compiled for …"**: a [self-contained build](/docs/4.1/self-contained-builds#native-addons)
-made on one platform was started on another. Build where it runs; for a container, run `meocord build` inside
-the image.
+**"This build carries native addons compiled for …"**: a
+[self-contained build](/docs/4.1/self-contained-builds#native-addons) made on one platform was started on another. Build
+where it runs; for a container, run `meocord build` inside the image.
 
 **"… cannot be created: parameter 1 of its constructor has no runtime type"**: a controller or service asks
 for a parameter MeoCord cannot inject. Usually two services import each other, so the one loaded second

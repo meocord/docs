@@ -5,9 +5,9 @@ section: Start
 order: 3
 ---
 
-`meocord create` writes this layout, plus a README, `.gitignore` and `.prettierrc.mjs`. Nothing in it is required by the framework except `meocord.config.ts`
-at the root and the entry point, `src/main.ts`; the folders are a convention that `meocord generate`
-follows.
+`meocord create` writes this layout, plus a README, `.gitignore` and `.prettierrc.mjs`. Nothing in it is required by the
+framework except `meocord.config.ts` at the root and the entry point, `src/main.ts`; the folders are a convention that
+`meocord generate` follows.
 
 ```text
 .

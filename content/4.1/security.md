@@ -48,10 +48,10 @@ The command keeps its default for the menu, and the guard enforces it:
 
 ## Components carry no authority
 
-A button's custom ID is written by the bot, but anyone who can see the message can click it. Before a button
-acts for someone, check who clicked: a guard that compares the clicking user with the id the custom ID
-carries, such as [`OwnerGuard`](/docs/4.1/recipe-pagination#the-handlers) in the pagination recipe, or one that checks a role, as the tutorial's
-[staff guard](/docs/4.1/tutorial-guards) does. Keep secrets out of custom IDs; they are visible to anyone who
+A button's custom ID is written by the bot, but anyone who can see the message can click it. Before a button acts for
+someone, check who clicked: a guard that compares the clicking user with the id the custom ID carries, such as
+[`OwnerGuard`](/docs/4.1/recipe-pagination#the-handlers) in the pagination recipe, or one that checks a role, as the
+tutorial's [staff guard](/docs/4.1/tutorial-guards) does. Keep secrets out of custom IDs; they are visible to anyone who
 inspects the message.
 
 A select menu's values are what the client sent. Act only on values the bot offered, as the
