@@ -15,7 +15,10 @@ import { respond } from 'meocord/common'
 // #region step:theming
 import { useTheme } from 'meocord/common'
 // #endregion step:theming
-import { Command, Controller, Cooldown } from 'meocord/decorator'
+import { Command, Controller } from 'meocord/decorator'
+// #region step:cooldowns
+import { Cooldown } from 'meocord/decorator'
+// #endregion step:cooldowns
 import { CommandType } from 'meocord/enum'
 import { FeedbackCommandBuilder } from '@src/tutorial/feedback.builder'
 import { FeedbackService } from '@src/tutorial/feedback.service'
@@ -34,7 +37,9 @@ export class FeedbackController {
   // #region open
   // `/feedback` opens a form; the form's custom ID routes its submission below
   @Command('feedback', FeedbackCommandBuilder)
+  // #region step:cooldowns
   @Cooldown({ uses: 1, seconds: 300 })
+  // #endregion step:cooldowns
   async open(interaction: ChatInputCommandInteraction) {
     // #region step:localisation
     const text = t.for(interaction)
