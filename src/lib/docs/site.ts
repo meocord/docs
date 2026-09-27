@@ -1,6 +1,4 @@
-import { existsSync } from 'node:fs'
-import path from 'node:path'
-import { listPages, loadPage, resolveExample, type PageEntry } from '../../../scripts/lib/pages'
+import { listPages, loadPage, migratingGuide, resolveExample, type PageEntry } from '../../../scripts/lib/pages'
 import type { GlyphName } from '@/components/shell/icons'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
@@ -61,7 +59,7 @@ export function sidebar(line: string, currentSlug?: string): NavGroup[] {
 /** The line's reference pages: its migration guide, where it has one, and its changelog. */
 function referenceGroup(line: string, currentSlug?: string): NavGroup {
   const reference = [
-    ...(existsSync(path.join(process.cwd(), 'generated', 'migrating', `${line}.md`))
+    ...(migratingGuide(line) !== undefined
       ? [
           {
             title: 'Migrating',

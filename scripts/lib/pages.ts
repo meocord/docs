@@ -48,6 +48,12 @@ export function pagesDir(line: string, { root = process.cwd() }: Options = {}): 
   return entry.guides === 'authored' ? path.join(root, 'content', line) : path.join(root, 'generated', 'readme', line)
 }
 
+/** A line's migration guide, from content/migrating/<line>.md; undefined for a line without one. */
+export function migratingGuide(line: string, { root = process.cwd() }: Options = {}): string | undefined {
+  const file = path.join(root, 'content', 'migrating', `${line}.md`)
+  return existsSync(file) ? readFileSync(file, 'utf8') : undefined
+}
+
 /**
  * The configuration reference page of an authored line, generated from its newest version's
  * `generated/config/<version>.json`; undefined for a line showing its README, or without the file.

@@ -256,9 +256,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     checkPages('authored', name)
 
     const guide = site.migrating[name]
-    if (guide) checkLinks(`generated/migrating/${name}.md`, guide, undefined, () => new Set(markdownAnchors(guide)))
-    else if (line.versions.some(version => !site.config.provenance.integrityOnly.includes(version)))
-      problems.push(`line ${name} has no generated/migrating/${name}.md`)
+    if (guide) checkLinks(`content/migrating/${name}.md`, guide, undefined, () => new Set(markdownAnchors(guide)))
   }
 
   for (const line of site.config.lines) {

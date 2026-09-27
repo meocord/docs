@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { A, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Time, Ul } from '@meonode/ui'
-import { listPages, type PageEntry } from '../../../scripts/lib/pages'
+import { listPages, migratingGuide, type PageEntry } from '../../../scripts/lib/pages'
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { TocEntry } from '@/components/shell/types'
@@ -250,16 +250,16 @@ export function releaseArticle(line: string, version: string): { nodes: Child[];
   return { nodes, toc: release.toc }
 }
 
-/** The migration guide's content, as the library ships it for the line. */
 /** Whether a line has a migration guide, without lowering it. */
 export function hasMigrating(line: string): boolean {
-  return existsSync(generated('migrating', `${line}.md`))
+  return migratingGuide(line) !== undefined
 }
 
+/** A line's migration guide, lowered for Prose, with its table of contents. */
 export function migratingArticle(line: string): { nodes: Child[]; toc: TocEntry[] } | undefined {
-  const file = generated('migrating', `${line}.md`)
-  if (!existsSync(file)) return undefined
-  const lowered = lower(readFileSync(file, 'utf8'))
+  const guide = migratingGuide(line)
+  if (guide === undefined) return undefined
+  const lowered = lower(guide)
   const toc = lowered.headings
     .filter(heading => heading.depth === 2 || heading.depth === 3)
     .map(heading => ({ id: heading.id, title: heading.title, depth: heading.depth as 2 | 3 }))

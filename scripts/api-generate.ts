@@ -30,7 +30,7 @@ let trustedRoot: ReturnType<typeof loadTrustedRoot> | undefined
 for (const version of requested) {
   const pkg = await fetchVerified(config, packument, version, () => (trustedRoot ??= loadTrustedRoot()))
   try {
-    await refreshLine(config, pkg)
+    refreshLine(config, pkg)
     await generateVersion(pkg, config)
     console.log(`${version}: regenerated`)
   } finally {
