@@ -66,7 +66,7 @@ export function guideArticle(line: string, view: GuideView): Child[] {
       children: [
         `MeoCord ${line}`,
         page.chapter === 'appendix' ? undefined : chapter.title,
-        view.progress ? `${view.progress.index} of ${view.progress.total}` : undefined,
+        view.progress ? `page ${view.progress.index} of ${view.progress.total}` : undefined,
         page.since ? `since ${page.since}` : undefined,
       ]
         .filter(Boolean)
