@@ -37,7 +37,7 @@ describe('the pre-commit hook', () => {
     repo.write('a.ts', FORMATTED)
     const run = repo.hook()
     expect(run.status).toBe(1)
-    expect(run.stderr).toContain('Not formatted, as staged: a.ts')
+    expect(run.stderr).toContain('Not formatted, or not parseable, as staged: a.ts')
     expect(run.stderr).toContain('run `bun run format`')
   })
 
@@ -46,6 +46,14 @@ describe('the pre-commit hook', () => {
     repo.stage('a.ts', FORMATTED)
     repo.write('a.ts', UNFORMATTED)
     expect(repo.hook().status).toBe(0)
+  })
+
+  it('refuses a file staged with a syntax error, which Prettier cannot format', () => {
+    const repo = repository()
+    repo.stage('a.ts', 'const x = (\n')
+    const run = repo.hook()
+    expect(run.status).toBe(1)
+    expect(run.stderr).toContain('Not formatted, or not parseable, as staged: a.ts')
   })
 
   it('leaves a file .prettierignore excludes, and one Prettier does not format', () => {
