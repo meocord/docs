@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkSite, fenceLanguages, markdownLinks, parsePage, type SiteSnapshot } from './content.js'
+import { checkSite, fenceLanguages, markdownLinks, overlongLines, parsePage, type SiteSnapshot } from './content.js'
 import type { ConfigDocument } from './config-reference.js'
 import type { VersionsConfig } from './versions.js'
 
@@ -392,5 +392,37 @@ describe('fenceLanguages', () => {
       'shell',
       'md',
     ])
+  })
+})
+
+describe('overlongLines', () => {
+  const words = (count: number) => Array.from({ length: count }, (_, i) => `word${i}`).join(' ')
+
+  it('reports prose past the width that could have wrapped, by line', () => {
+    const text = ['Short line.', words(30), words(10)].join('\n')
+    expect(overlongLines(text, 60)).toEqual([{ line: 2, length: words(30).length }])
+  })
+
+  it('leaves front matter, fenced code, tables and a line that cannot break alone', () => {
+    const long = words(30)
+    const url = `https://example.com/${'a'.repeat(80)}`
+    const text = [
+      '---',
+      `title: ${long}`,
+      '---',
+      '```text',
+      long,
+      '```',
+      `| ${long} |`,
+      url,
+      `\`${long}\``,
+      `- [a link](${url})`,
+    ].join('\n')
+    expect(overlongLines(text, 60)).toEqual([])
+  })
+
+  it('counts a line by the characters a reader sees, an emoji sequence as one', () => {
+    const family = '👨‍👩‍👧'
+    expect(overlongLines(`${'a '.repeat(29)}${family}`, 60)).toEqual([])
   })
 })

@@ -44,10 +44,9 @@ The buttons live in a controller of their own:
 
 ::example{file="tutorial/review.controller.ts" region="controller"}
 
-`@Defer()` acknowledges the click at once. Once the call is allowed, it disables the post's buttons and shows
-a loading view while the handler works. The handler then replaces the post in one edit: the same embed with a footer naming the
-reviewer, and no buttons, so feedback is decided once. [Deferring](/docs/4.1/defer) covers the rest of its
-options.
+`@Defer()` acknowledges the click at once. Once the call is allowed, it disables the post's buttons and shows a loading
+view while the handler works. The handler then replaces the post in one edit: the same embed with a footer naming the
+reviewer, and no buttons, so feedback is decided once. [Deferring](/docs/4.1/defer) covers the rest of its options.
 
 The DM uses the locale stored with the feedback, since the author is not the one clicking. Members can
 close their DMs, and `.catch(() => undefined)` keeps that from failing the review.
