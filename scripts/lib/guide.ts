@@ -4,6 +4,8 @@
  * and `api:` targets that the check resolves, and pulls every code block from the line's examples.
  */
 
+import { existsSync } from 'fs'
+import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
 
@@ -114,6 +116,16 @@ export interface GuidePage {
   api: string[]
   since?: string
   formerly: string[]
+}
+
+/** Where a line's Guide is written, below the repository root (the tests point it at a scratch directory). */
+export function guideFolder(line: string, root = process.env.MEOCORD_DOCS_ROOT ?? process.cwd()): string {
+  return path.join(root, 'content', `${line}-next`)
+}
+
+/** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
+export function guideRendered(line: string): boolean {
+  return process.env.DOCS_NEXT === '1' && existsSync(guideFolder(line))
 }
 
 export function parseGuidePage(text: string): { frontmatter: GuideFrontmatter; body: string } {
