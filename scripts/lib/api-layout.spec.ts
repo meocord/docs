@@ -4,7 +4,8 @@ import { LAYOUT_WIDTH, layoutKey } from '../../src/lib/docs/api-layout.js'
 import type { Token } from '../../src/lib/docs/api-model.js'
 import { apiModel } from '../../src/lib/docs/api-site.js'
 
-const model = apiModel('4.1')!
+// A fixed release, so the layouts are checked against signatures that do not change with each sync.
+const model = apiModel('4.1', '4.1.0-beta.4')!
 const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
 const symbol = (entry: string, name: string) => model.symbol(entry, name)!
 const nonSpace = (value: string) => value.replace(/\s+/g, '')
