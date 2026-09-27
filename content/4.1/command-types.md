@@ -48,3 +48,7 @@ An activity's entry point has no builder class in discord.js, so its builder ret
 itself:
 
 ::example{file="controllers/context-menu/builders/launch.builder.ts" region="builder"}
+
+Its `handler` is `EntryPointCommandHandlerType.AppHandler`, so Discord sends the interaction to the bot, where
+`@Command('launch', LaunchCommandBuilder)` handles it. With `DiscordLaunchActivity`, Discord launches the activity
+itself and the bot receives nothing.

@@ -34,6 +34,20 @@ value wins, and development logs a warning.
 
 ::example{file="controllers/modal-submit/feedback.modal.controller.ts" region="modal"}
 
+## Building customIds with a route
+
+`route()` from `meocord/common` turns a pattern into a value `@Command` takes and that builds the ids it matches,
+so the button you send and the handler that receives it share one definition:
+
+::example{file="controllers/button/ticket.button.controller.ts" region="route"}
+
+`build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a handler whose
+params name something the route doesn't capture. A value may be a string, a number or a bigint, and its type isn't
+checked, since `@Validate` and pipes change it. A `/` or `%` inside a value is encoded, and the handler receives it
+decoded, so a value never spills into the next segment. An empty value, or an id longer than Discord's 100
+characters, throws. A route is ranked, and checked for duplicates, exactly as its pattern's text would be, and plain
+string patterns keep working beside routes.
+
 ## Overlapping patterns
 
 Patterns with different segment counts never compete. When two with the same count both match, the one
@@ -45,7 +59,8 @@ Between equally literal patterns, the one with fewer parameters wins. The rankin
 bot starts. Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and `a/b/{y}`,
 both take `a/b/c` with neither more literal, and MeoCord warns about the pair at startup.
 
-`resolveRoute` from `meocord/testing` answers which handler an id reaches, in a plain unit test:
+`resolveRoute` from `meocord/testing` answers which handler an id reaches, in a plain unit test, and
+`findRouteConflicts` lists the pairs MeoCord would warn about, so a test can keep them out:
 
 ::example{file="controllers/button/profile.button.controller.spec.ts"}
 
