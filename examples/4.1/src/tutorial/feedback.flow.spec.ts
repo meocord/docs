@@ -54,7 +54,10 @@ describe('the feedback bot, from form to verdict', () => {
     })
     await module.invoke(FeedbackController, 'submit', submit)
     expect(getResponse(submit).calls[0].payload).toMatchObject({
+      // before:localisation content: 'Thanks! The staff will read it soon.',
+      // #region step:localisation
       content: 'Terima kasih! Staf akan segera membacanya.',
+      // #endregion step:localisation
     })
 
     // The review post, as the staff channel received it; its first button routes to approve
@@ -82,13 +85,21 @@ describe('the feedback bot, from form to verdict', () => {
 
     // While it worked, the post showed the presenter's loading view in her language; then the
     // verdict, in the server's
-    const [, loading, verdict] = getResponse(approve).calls
-    expect(JSON.stringify(loading.payload)).toContain('Sedang diproses…')
-    expect(JSON.parse(JSON.stringify(verdict.payload)).embeds[0]).toMatchObject({
+    const { calls } = getResponse(approve)
+    // #region step:presenters
+    // before:localisation expect(JSON.stringify(calls[1].payload)).toContain('Working on it…')
+    // #endregion step:presenters
+    // #region step:localisation
+    expect(JSON.stringify(calls[1].payload)).toContain('Sedang diproses…')
+    // #endregion step:localisation
+    expect(JSON.parse(JSON.stringify(calls.at(-1)?.payload)).embeds[0]).toMatchObject({
       title: 'Feedback #1 from ada',
       footer: { text: 'Approved by grace.' },
     })
+    // before:localisation expect(client.users.send).toHaveBeenCalledWith('111', { content: 'Your feedback “Music bot” was approved. Thank you!' })
+    // #region step:localisation
     expect(client.users.send).toHaveBeenCalledWith('111', { content: 'Masukanmu “Music bot” disetujui. Terima kasih!' })
+    // #endregion step:localisation
   })
 })
 // #endregion spec

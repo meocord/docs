@@ -1,5 +1,7 @@
 import { ChatInputCommandInteraction, Locale, ModalSubmitInteraction, TextChannel, User } from 'discord.js'
+// #region step:cooldowns
 import { CooldownError } from 'meocord/common'
+// #endregion step:cooldowns
 import {
   createMockChannel,
   createMockClient,
@@ -23,21 +25,35 @@ describe('FeedbackController', () => {
     }).compile()
   const ada = createMockInteraction(User, { id: '111', username: 'ada' })
 
-  it('opens the form in the member’s language, once every five minutes', async () => {
-    const module = compile()
-    const open = () => createMockInteraction(ChatInputCommandInteraction, { user: ada, locale: Locale.Indonesian })
-    const interaction = open()
+  // before:localisation it('opens the form', async () => {
+  // #region step:localisation
+  it('opens the form in the member’s language', async () => {
+    // #endregion step:localisation
+    const interaction = createMockInteraction(ChatInputCommandInteraction, { user: ada, locale: Locale.Indonesian })
 
-    await module.invoke(FeedbackController, 'open', interaction)
+    await compile().invoke(FeedbackController, 'open', interaction)
 
     const [call] = getResponse(interaction).calls
     expect(call.method).toBe('showModal')
     expect(JSON.parse(JSON.stringify(call.payload))).toMatchObject({
       custom_id: 'feedback/submit',
+      // before:localisation title: 'Send feedback',
+      // #region step:localisation
       title: 'Kirim masukan',
+      // #endregion step:localisation
     })
+  })
+
+  // #region step:cooldowns
+  it('opens the form once every five minutes for each member', async () => {
+    const module = compile()
+    const open = () => createMockInteraction(ChatInputCommandInteraction, { user: ada })
+
+    await module.invoke(FeedbackController, 'open', open())
+
     await expect(module.invoke(FeedbackController, 'open', open())).rejects.toBeInstanceOf(CooldownError)
   })
+  // #endregion step:cooldowns
 
   it('posts the feedback for review with its buttons, and thanks the author privately', async () => {
     const channel = createMockChannel(TextChannel)
