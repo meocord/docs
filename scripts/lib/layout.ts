@@ -25,6 +25,8 @@ export const paths = {
   readmeAnchors: (line: string) => path.join(ROOT, 'generated', 'readme-anchors', `${line}.json`),
   /** A line's authored guides, written by people; the pipeline only creates a new line's folder. */
   content: (line: string) => path.join(ROOT, 'content', line),
+  /** A line's Guide, in the overhauled template, written ahead of replacing its guides. */
+  guide: (line: string) => path.join(ROOT, 'content', `${line}-next`),
   /** A line's guides imported from its README, which the site shows until the line's guides are authored. */
   readme: (line: string) => path.join(ROOT, 'generated', 'readme', line),
   examples: (line: string) => path.join(ROOT, 'examples', line),

@@ -6,18 +6,19 @@ exact version they describe.
 
 ## What lives where
 
-| Path                                   | Contents                                                                             | Edited by           |
-| -------------------------------------- | ------------------------------------------------------------------------------------ | ------------------- |
-| `versions.json`                        | The documented versions, grouped into minor lines with a status each, and provenance | the sync, reviewers |
-| `content/<line>/`                      | A line's authored guides: one Markdown page each, with `id` and `title` front matter | people              |
-| `generated/readme/<line>/`             | A line's guides imported from the README its newest version shipped                  | the pipeline only   |
-| `examples/<line>/`                     | A workspace pinning that line's exact meocord; guides embed its files                | people              |
-| `generated/api/<version>.json`         | TypeDoc's JSON for the version's declaration files, one module per entry point       | the pipeline only   |
-| `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking      | the pipeline only   |
-| `generated/migrating/<line>.md`        | `docs/MIGRATING.md` at the commit the line's newest version was built from           | the pipeline only   |
-| `generated/readme-anchors/<line>.json` | For a line whose guides are imported from its README: which page holds each heading  | the pipeline only   |
-| `generated/config/<version>.json`      | The version's `meocord.config.ts` options, read from its API document and since.json | the pipeline only   |
-| `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs  | the pipeline only   |
+| Path                                   | Contents                                                                                                                   | Edited by           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `versions.json`                        | The documented versions, grouped into minor lines with a status each, and provenance                                       | the sync, reviewers |
+| `content/<line>/`                      | A line's authored guides: one Markdown page each, with `id` and `title` front matter                                       | people              |
+| `content/<line>-next/`                 | A line's Guide in the overhauled template, written ahead of replacing its guides; `content:check` holds it to the template | people              |
+| `generated/readme/<line>/`             | A line's guides imported from the README its newest version shipped                                                        | the pipeline only   |
+| `examples/<line>/`                     | A workspace pinning that line's exact meocord; guides embed its files                                                      | people              |
+| `generated/api/<version>.json`         | TypeDoc's JSON for the version's declaration files, one module per entry point                                             | the pipeline only   |
+| `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking                                            | the pipeline only   |
+| `generated/migrating/<line>.md`        | `docs/MIGRATING.md` at the commit the line's newest version was built from                                                 | the pipeline only   |
+| `generated/readme-anchors/<line>.json` | For a line whose guides are imported from its README: which page holds each heading                                        | the pipeline only   |
+| `generated/config/<version>.json`      | The version's `meocord.config.ts` options, read from its API document and since.json                                       | the pipeline only   |
+| `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs                                        | the pipeline only   |
 
 A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and
 `next` the one in prerelease. A line's `guides` decides what the site shows for it: `readme`, the pages in
