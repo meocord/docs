@@ -73,8 +73,9 @@ what the framework stores: it throws as the decorator applies.
 
 ## Gotchas
 
-- **The last guard applied runs first.** `applyDecorators(UseGuard(A), UseGuard(B))` runs `B` before `A`, as two
-  stacked `@UseGuard` lines would. For a set order, pass both to one `UseGuard(A, B)`, which runs them as listed.
+- **`applyDecorators` runs its guards in the reverse of stacking.** It applies its list first to last, so
+  `applyDecorators(UseGuard(A), UseGuard(B))` runs `B` before `A`, where `@UseGuard(A)` stacked above `@UseGuard(B)`
+  runs `A` first. For a set order, pass both to one `UseGuard(A, B)`, which runs them as listed.
 - **A method-only decorator can't go on a controller.** `@Defer` and `@Validate` apply to handlers only, so a custom
   decorator that includes them does too.
 

@@ -45,7 +45,8 @@ or threw.
 ## How it works
 
 Interceptors run after the guards and the fetch of a message's entities. They wrap validation, pipes, the cooldown
-count and the handler, so an interceptor sees invalid input or a cooldown as the handler's error.
+count and the handler, so an interceptor sees invalid input or a cooldown as the handler's error. The exception is a
+message command's cooldown check before its params are fetched, which runs before the interceptors.
 
 `intercept` decides what happens to the call:
 

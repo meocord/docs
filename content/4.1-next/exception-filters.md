@@ -95,19 +95,23 @@ controller or handler. Catch it globally to answer an expired button in your own
 The fallback logs an error no filter handled, then answers the user through `respond()` if the interaction can still
 take an answer, in the style of the app's [presenter](guide:presenters):
 
-| The interaction                                       | The fallback                                                      |
-| ----------------------------------------------------- | ----------------------------------------------------------------- |
-| Not answered yet                                      | replies privately                                                 |
-| A command whose reply is deferred                     | edits the deferred reply into the error                           |
-| A button, select menu or modal from a private message | adds the error to that message                                    |
-| Any other button, select menu or modal                | follows up privately; it never edits the message the user clicked |
-| Autocomplete                                          | closes the menu with an empty list                                |
-| Expired (Discord error 10062)                         | logs only                                                         |
+| The interaction                                        | The fallback                                                      |
+| ------------------------------------------------------ | ----------------------------------------------------------------- |
+| Not answered yet                                       | replies privately                                                 |
+| A command whose reply is deferred                      | edits the deferred reply into the error                           |
+| A button, select menu or modal on an ephemeral message | adds the error to that message, if it fits                        |
+| Any other button, select menu or modal                 | follows up privately; it never edits the message the user clicked |
+| Autocomplete                                           | closes the menu with an empty list                                |
+| Expired (Discord error 10062)                          | logs only                                                         |
+
+An error that doesn't fit the message it would edit, such as one past Discord's limit of embeds, follows up privately
+instead.
 
 It says "An error occurred while executing the command." for a fault, and "Command not found!" for
-`CommandNotFoundError`. A `UserError`, a guard's `GuardDeniedError`, a `CooldownError` and a `ValidationError` show
-their own message, only to the caller: on a public deferred command, the deferral is deleted and the message follows up
-privately.
+`CommandNotFoundError`, both in the user's language when the app's translator has them; see
+[Localisation](guide:localisation). A `UserError`, a guard's `GuardDeniedError`, a `CooldownError` and a
+`ValidationError` show their own message, only to the caller: on a public deferred command, the deferral is deleted
+and the message follows up privately.
 
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's
 or validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
