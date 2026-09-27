@@ -1,4 +1,9 @@
 import { expect, test } from '@playwright/test'
+import manifest from '../versions.json'
+
+// The 4.1 line's releases, newest last, so the changelog's checks follow each sync.
+const releases = manifest.lines.find(entry => entry.line === '4.1')?.versions ?? []
+const [previous, newest] = releases.slice(-2)
 
 test('the changelog gives the newest release in full and links each earlier one, marking itself in the sidebar', async ({
   page,
@@ -6,10 +11,12 @@ test('the changelog gives the newest release in full and links each earlier one,
   const response = await page.goto('/docs/4.1/changelog')
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Changelog for 4.1')
-  await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText('4.1.0-beta.4')
+  await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText(newest)
   await expect(page.locator('h3[data-group]').first()).toBeVisible()
   const earlier = page.locator('ul[data-releases] li')
-  await expect(earlier.first()).toContainText(/4\.1\.0-beta\.3 · \d+ \w+ \d{4} · \d+ patch change/)
+  await expect(earlier.first()).toContainText(
+    new RegExp(`${previous.replaceAll('.', '\\.')} · \\d+ \\w+ \\d{4} · \\d+ \\w+ changes?`),
+  )
   await expect(page.getByRole('link', { name: 'Changelog', exact: true })).toHaveAttribute('aria-current', 'page')
 
   // An earlier release opens on its own page, its groups at their anchors, under the changelog in the crumbs.

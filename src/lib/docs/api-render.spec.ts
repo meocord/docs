@@ -6,7 +6,8 @@ import { apiArticle, apiSidebar } from '@/lib/docs/api-render'
 import { apiModel } from '@/lib/docs/api-site'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
 
-const model = apiModel('4.1')!
+// A fixed release, so the layouts are checked against signatures that do not change with each sync.
+const model = apiModel('4.1', '4.1.0-beta.4')!
 
 describe('apiArticle', () => {
   it('lists the sections and members in the table of contents, at their anchors', () => {
