@@ -20,6 +20,18 @@ export default defineCatalog({
     },
     staffOnly: 'Only the staff can review feedback.',
     notFound: 'That feedback no longer exists.',
+    // #region step:localisation
+    chat: {
+      filed: 'Filed as feedback #{id}. Thank you!',
+      status: {
+        open: 'Feedback #{id} is open.',
+        approved: 'Feedback #{id} is approved.',
+        rejected: 'Feedback #{id} is rejected.',
+      },
+      unknown: 'There is no feedback #{id}.',
+    },
+    welcome: 'Thanks for adding me! Use /{command}, or mention me: {example}',
+    // #endregion step:localisation
   },
   presenter: { loading: 'Working on it…', failed: 'Something went wrong' },
 })
