@@ -1,0 +1,270 @@
+---
+id: message-commands
+title: Message commands
+chapter: messages
+order: 1
+summary: Run a handler when a message matches a pattern, such as `!roll 20`, after the app's prefix or a mention.
+learn:
+  - Write a pattern and receive its params
+  - Set prefixes for the app, a handler, or each server
+  - Know which handler runs, and what a user sees on a misuse
+  - Give a command aliases, a scope and a help listing
+requires: [first-command]
+api:
+  [
+    decorators/MessageHandler,
+    configuration/MessageHandlerOptions,
+    configuration/MessageCommandOptions,
+    responses/MessageUsageError,
+  ]
+since: 4.1.0
+---
+
+A message command is a `@MessageHandler` with a pattern. A user types `!roll 20` in a channel, and the handler
+runs with `{ sides: '20' }`. Patterns, prefixes and which handler wins are set in decorators and checked when
+the bot starts, so a mistake stops the bot before it logs in rather than surfacing in chat.
+
+## When to use it
+
+Use a message command for text a user types in chat: a quick `!roll`, a moderation command staff type from
+habit, or a bot that has always been prefix-driven. Slash commands are usually the better choice for anything
+new: Discord shows their options, checks their types and works in every client, so reach for
+[slash commands](guide:slash-commands) unless people will type the command.
+
+For a handler that runs on every message, such as logging or auto-moderation, use `@MessageHandler()` with no
+pattern, covered in [Reactions and other messages](guide:reactions). Reading a message's text needs the
+privileged `MessageContent` intent, unless every command starts with a mention of the bot or works in direct
+messages only.
+
+## Example
+
+::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
+
+With the app's prefix set to `!`, `!roll 20 for initiative` runs `roll` with `sides` and `note`. `@Validate`
+turns `sides` into a number, and a message such as `!roll 1` is answered with the reason, so the handler only
+sees a valid roll.
+
+## How it works
+
+A message goes through three steps before the handler runs:
+
+1. **Start.** The message must begin with a prefix, or a mention of the bot when `mention` is on. A message
+   with neither is chat, and no command handles it.
+2. **Match.** The rest is split into words, and every pattern is matched against them. Only one patterned
+   handler runs: the most specific match, as [Which handler runs](#which-handler-runs) explains.
+3. **Pipeline.** The handler's [guards](guide:guards), [validation and pipes](guide:validation),
+   [cooldowns](guide:cooldowns) and [filters](guide:exception-filters) run as they do for a command, with the
+   params as the handler's second argument.
+
+The handler receives the discord.js `Message` and answers it with `message.reply()` or
+`message.channel.send()`. [`respond()`](api:responses/respond) is for interactions.
+
+## Patterns
+
+A pattern is matched word by word, with the same `{name}` params as a component's customId:
+
+| In a pattern  | Matches                                                                                             |
+| ------------- | --------------------------------------------------------------------------------------------------- |
+| `roll`        | The word `roll`, in any case unless `caseSensitive` is set                                          |
+| `{name}`      | One word. Words in quotes, `"like this"` or `“like this”`, count as one, and the quotes are removed |
+| `{name...}`   | The rest of the message, as typed. Only last                                                        |
+| `{name?}`     | One word, or nothing. Only optional params follow it; `{name...?}` is the optional rest             |
+| `{name:type}` | One word, read as a number, a member and so on                                                      |
+| `{--name}`    | A flag, anywhere after the command word                                                             |
+
+A pattern without params, such as `'ping'`, matches exactly that message, whatever the spacing between its
+words. A param with no type keeps the case it was typed in and is a string. Typed params, flags and lists
+have [their own page](guide:message-params).
+
+## Prefixes
+
+Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
+
+::example{file="app-beyond-commands.ts" region="app"}
+
+- `prefix` is a string, or a list such as `['!', '?']`. The longest prefix that fits is used, and a space
+  after it is allowed, so `! roll 20` works too. Without one, a pattern matches the message as it is.
+- `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix.
+- `mention: 'only'` starts every command in a server with a mention of the bot and nothing else. A direct
+  message, addressed to the bot already, starts as usual. Discord sends a message's text without the
+  privileged `MessageContent` intent when it mentions the bot, and in direct messages, so a mention-only bot
+  needs no such intent.
+- `caseSensitive: true` matches the prefix and a pattern's literal words in the case written. Param values
+  always keep the case they were typed in.
+
+A handler can set its own `prefix`, `caseSensitive` and `mention: 'only'`. Its prefix replaces the app's,
+though a mention still counts. `prefix: ''` matches the message with no prefix, and `prefix: false` matches it
+exactly as it is, never after a mention:
+
+::example{file="controllers/message/dice.message.controller.ts" region="prefixes"}
+
+### A prefix for each server
+
+`prefix` can also be a function of the message, which returns a prefix or a list and may be async. It is
+called for each message a handler needs the app's prefix for, so keep it to a lookup from a cache the bot
+fills:
+
+::example{file="app-with-guild-prefix.ts" region="app"}
+
+A prefix function that throws goes to the app's global [exception filters](guide:exception-filters), then the
+built-in fallback, and the handlers for every message still run.
+
+## Which handler runs
+
+Only one patterned handler runs for a message: the most specific one that matches, across every controller.
+
+1. More literal words win: `roll 20` beats `roll {sides}`, which beats `{anything...}`.
+2. Then a fixed number of words beats a rest: `roll {a} {b}` beats `roll {rest...}`.
+3. Then a pattern without an optional param beats one with it, and fewer params beat more.
+4. Patterns still equal go to the one whose first differing word is literal: `roll {x}` beats `{verb} 6`.
+
+A handler whose `scope` fits where the message was sent comes first, so `help` can have a server handler and a
+DM handler. The order is fixed at startup: declaration order and file layout never decide it. Two patterns
+that match exactly the same messages stop the bot at startup, naming both handlers. Then every
+`@MessageHandler()` without a pattern runs, whether or not a pattern matched.
+
+## Usage errors
+
+A message that names a command, after a prefix or mention, but does not fit its pattern gets the command's
+usage in reply, and the handler does not run:
+
+```text
+!pay @ana lots   ->  Usage: !pay <to> <amount> [note…]
+                     amount: "lots" is not a valid whole number
+```
+
+The reply doesn't ping the user, and is deleted after 10 seconds; `deleteUsageRepliesAfter` in
+`@MeoCord({ messages })` sets another number of seconds, and `0` keeps it. A guard that throws
+`GuardDeniedError`, and input `@Validate` refuses, are answered the same way, with the reason. The texts are in
+the server's language where the app's catalog translates them; see
+[MeoCord's own texts](guide:localisation#meocords-own-texts).
+
+The error is a [`MessageUsageError`](api:responses/MessageUsageError), carrying `usage` and `issues`. It
+reaches the handler's exception filters first, so a filter can answer in the app's own words, and
+[observers](guide:observers) see its outcome as `'invalid'`.
+
+### Naming only a command's first words
+
+A message that names only a command's leading words, such as `!config` when `config set …` and `config get …`
+exist, or an unknown subcommand, such as `!config reset`, gets the usage of each subcommand, one line per
+handler:
+
+```text
+!config    ->  Usage:
+               !config get <key>
+               !config set <key> <value…>
+```
+
+A handler of its own, `config` or `config {key}`, still takes such a message. A subcommand with a
+[guard](guide:guards), and one whose options say `hidden: true`, is left out of the list, since the list runs
+no guards and must not name what a caller may be refused; named, it still gets its own usage.
+
+## Aliases, descriptions and scope
+
+A handler's options say more about its command:
+
+::example{file="controllers/message/moderation.message.controller.ts" region="metadata"}
+
+- `aliases` are other words for the command: `!m @ana 1h` runs `mute`. An alias can be several words, such as
+  `'cfg set'`, and a misuse is answered with the usage as the user typed it.
+- `description` is what the command does, for the help listing.
+- `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an out-of-scope
+  handler matches is answered that the command works in a server only, or in direct messages only.
+- `hidden: true` leaves the command out of the help listing and a parent's list of subcommands.
+
+## A help command
+
+`help: true` in `@MeoCord({ messages })` turns on a built-in `!help`. It lists the message commands the caller
+can use where they asked, one line each with its `description`, and `!help <command>` shows one, by its words
+or an alias:
+
+::example{file="app-message-commands.ts" region="app"}
+
+```text
+!help      ->  Commands:
+               !kick <targets…>
+               !mute <target> [duration] [reason…] — Times a member out, for 10 minutes unless told otherwise.
+               !pay <to> <amount> [note…]
+               !poll <question> <options…>
+               !purge <count> [--bots] [--from=<from>]
+               Type !help <command> for one command's usage.
+!help m    ->  Usage: !mute <target> [duration] [reason…]
+               Times a member out, for 10 minutes unless told otherwise.
+               target: member · duration (optional): length of time, such as 10m · reason (optional): text
+               Also: !m, !shush
+               Works in servers only.
+```
+
+- It answers only after a prefix or a mention. `help: { command: 'commands', aliases: ['h'] }` names other
+  words.
+- The list leaves out a command with a guard, on its method or its controller, and one marked `hidden`: `!ban`
+  is missing above, since `OutranksTargetGuard` decides who may use it. Named, either is shown. A command that
+  works only in servers is left out in a DM.
+- `!help config`, for words with no handler of their own, lists their subcommands.
+- An app's own `@MessageHandler('help …')` always runs instead, and the bot warns at startup that the built-in
+  never answers the word.
+
+The reply is plain text, in the server's language where the app's catalog has MeoCord's help texts. To write it
+another way, such as in an embed, give the app's [presenter](guide:presenters) a `messageHelp(help, message)`
+method. `help` is what the built-in found: a `list`, one `command`, a `parent`'s subcommands, an `unknown`
+name, or `empty`:
+
+::example{file="presenters/help.presenter.ts" region="presenter"}
+
+A help command of the app's own gets the same model from
+[`HandlerRegistry.messageHelp(message, query?)`](api:controllers/HandlerRegistry), so which commands a caller
+can reach, and which guards hide, are not worked out again:
+
+::example{file="controllers/message/help.message.controller.ts" region="help"}
+
+## Testing
+
+`resolveRoute(App, { content })` returns the handler a message reaches, from decorator metadata alone.
+`module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage replies
+and the built-in help included:
+
+::example{file="controllers/message/economy.message.controller.spec.ts" region="spec"}
+
+`module.invoke(Controller, 'method', message)` runs one handler, and first checks that dispatch would give it
+the message: `!roll 20` for `roll {sides}`, in an app that also has a `roll 20` handler, rejects naming the
+handler that runs. See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
+
+## Gotchas
+
+- **Nothing runs.** The bot needs the `GuildMessages` intent. A command started by a prefix or plain text also
+  needs `MessageContent`, enabled both in `clientOptions` and in the Discord developer portal; the bot warns at
+  startup when it is missing. Messages from bots never reach a handler.
+- **A keyword stops working after adding a prefix.** The app's prefix applies to every patterned handler, so
+  `'ping'` then needs `!ping`. Give a handler that should match the bare message `{ prefix: false }`.
+- **Two handlers, one pattern.** Patterns that differ only in param names, such as `'roll {sides}'` and
+  `'roll {count}'`, match the same messages and stop the bot at startup. Change one, or give one its own
+  prefix.
+
+## Build it
+
+The feedback bot takes feedback from chat too. A member mentions the bot, names the kind of feedback, and
+writes it:
+
+```text
+@Feedback feedback idea Add a dark mode
+```
+
+Add a message controller beside the slash command. It files through the same `FeedbackService`:
+
+::example{file="tutorial/feedback.message.controller.ts" region="message-commands"}
+
+`{about:bug|idea|praise}` takes one of three words, and `{details...}` the rest of the message. `scope: 'guild'`
+keeps it to servers. In the app, add the controller, the `GuildMessages` intent that delivers messages in
+servers, and `messages: { mention: 'only' }`, so a command starts with a mention of the bot and nothing else:
+
+::example{file="tutorial/app.ts" region="app"}
+
+A mention carries its text without the privileged `MessageContent` intent, so the bot doesn't ask for it.
+Try `@Feedback feedback wish Add a dark mode`: `wish` isn't one of the three words, so the bot answers with the
+command's usage.
+
+## Next steps
+
+- [Typed params, flags and lists](guide:message-params): read members, numbers and options from the words.
+- [Reactions and other messages](guide:reactions): handle every message, and reactions to them.
+- [Guards](guide:guards): decide who may run a command, and tell them why not.
