@@ -25,7 +25,7 @@ const links = docsLinks(texts)
 const problems: string[] = []
 for (const link of links) {
   const response = await fetch(new URL(link.split('#')[0], site))
-  const problem = linkProblem(link, response.status, await response.text())
+  const problem = linkProblem(link, response.status, await response.text(), response.url)
   if (problem) problems.push(problem)
 }
 if (problems.length > 0) {

@@ -37,5 +37,9 @@ describe('linkProblem', () => {
       '/docs/4.1/guards#nope: the page has no #nope',
     )
     expect(linkProblem('/docs/4.1/nope', 404, '')).toBe('/docs/4.1/nope: answered 404')
+    // The page a line shows for a topic it lacks answers 200, but the link has missed.
+    expect(
+      linkProblem('/docs/4.0/components', 200, '<h1>', 'http://localhost/docs/4.0/missing/component-routing'),
+    ).toBe('/docs/4.0/components: its line has no such page (it lands on /docs/4.0/missing/component-routing)')
   })
 })

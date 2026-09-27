@@ -34,8 +34,10 @@ const nextConfig: NextConfig = {
   },
   // Guide slugs meocord's JSDoc links ahead of their pages, sent to the page that holds the topic now.
   async redirects() {
-    const lines = manifest.lines.map(({ line }) => ({ line, ids: listPages(line).map(page => page.slug) }))
-    return guideAliasRedirects(lines, DOC_ALIASES.latest)
+    const lines = manifest.lines.map(({ line }) => ({ line, pages: listPages(line) }))
+    // The aliases name pages of the line whose guides are authored, which the Guide is written for.
+    const authored = manifest.lines.find(entry => entry.guides === 'authored')?.line ?? DOC_ALIASES.next
+    return guideAliasRedirects(lines, DOC_ALIASES.latest, authored)
   },
   async rewrites() {
     return [
