@@ -7,6 +7,7 @@
     "examples/*"
   ],
   "scripts": {
+    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "start:dev": "rm -rf .next && bun run api:layout && bun run home:trace && mkdir -p .next/dev/node_modules && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
     "build": "rm -rf .next && bun run search:build && bun run api:layout && bun run home:trace && bun --bun next build && bun run precompress",
     "precompress": "bun scripts/precompress.ts",

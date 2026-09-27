@@ -19,6 +19,9 @@ bun run build          # production build
 bun run serve          # the production build, run as the image runs it
 ```
 
+`bun install` also points git at `.githooks/`, whose pre-commit hook checks the formatting of the staged files,
+as CI's `format:check` does.
+
 | Command                 | Use it to                                                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `bun run lint`          | Run ESLint                                                                                                                      |

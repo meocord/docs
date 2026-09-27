@@ -1,0 +1,8 @@
+#!/bin/sh
+# Checks the formatting of the staged files Prettier formats, as CI's format:check does, before they are committed.
+# `bun install` points git at this folder. Skip it for one commit with `git commit --no-verify`.
+files=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$files" ] && exit 0
+git diff --cached --name-only --diff-filter=ACMR -z \
+  | xargs -0 bunx prettier --check --ignore-unknown --no-error-on-unmatched-pattern \
+  || { echo "Formatting: run \`bun run format\`, then stage the files again." >&2; exit 1; }
