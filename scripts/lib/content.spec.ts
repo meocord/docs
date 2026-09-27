@@ -466,4 +466,28 @@ describe('genderedInMarkdown', () => {
       { line: 2, word: 'his' },
     ])
   })
+
+  it('reads front matter, and not URLs, link definitions, HTML or code however it is written', () => {
+    const text = [
+      '---',
+      'title: Her page',
+      '---',
+      '[a page](https://example.com/his-page) and <https://example.com/her>.',
+      '',
+      '[his]: https://example.com/',
+      '',
+      '<img alt="her photo">',
+      '',
+      'A long `code span that',
+      'has his inside` ends, and `` his `x` `` too.',
+      '',
+      '    const his = 1',
+      '',
+      'Then her last line.',
+    ].join('\n')
+    expect(genderedInMarkdown(text)).toEqual([
+      { line: 2, word: 'Her' },
+      { line: 15, word: 'her' },
+    ])
+  })
 })

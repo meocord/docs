@@ -10,6 +10,7 @@ import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { isKnownLanguage } from '../../src/lib/prose/languages'
 import { markdownLinkNodes } from './markdown-links'
+import type { Nodes } from 'mdast'
 import { markdownTree, nodesOf } from './markdown-tree'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
@@ -141,11 +142,32 @@ export function gendered(text: string, lineOf: (offset: number) => number): { li
   return [...text.matchAll(GENDERED)].map(match => ({ line: lineOf(match.index), word: match[0] }))
 }
 
-/** The gendered pronouns of a Markdown file's prose, leaving code alone. */
+/**
+ * The gendered pronouns of a Markdown file, by line: in its front matter, and in the text of its prose as the site
+ * parses it, so code, URLs, link definitions and HTML are not read.
+ */
 export function genderedInMarkdown(markdown: string): { line: number; word: string }[] {
-  return withoutCode(markdown)
+  const { tree, frontMatterLines } = markdownTree(markdown)
+  const found = markdown
     .split('\n')
+    .slice(0, frontMatterLines)
     .flatMap((text, index) => gendered(text, () => index + 1))
+  // An autolink or a bare URL shows its address as its text; a written link's text is prose
+  const address = (node: Nodes) =>
+    node.type === 'link' &&
+    node.children.length === 1 &&
+    node.children[0].type === 'text' &&
+    node.url.replace(/^mailto:/, '').endsWith(node.children[0].value.replace(/^mailto:/, ''))
+  const visit = (node: Nodes) => {
+    if (address(node)) return
+    if (node.type === 'text' && node.position) {
+      const first = node.position.start.line
+      found.push(...gendered(node.value, index => first + node.value.slice(0, index).split('\n').length - 1))
+    }
+    if ('children' in node) for (const child of node.children) visit(child)
+  }
+  visit(tree)
+  return found.sort((a, b) => a.line - b.line)
 }
 
 /** The language each opening code fence names, in order; an unmarked fence names none. */
