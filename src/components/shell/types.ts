@@ -10,6 +10,13 @@ export interface NavItem {
   badge?: string
 }
 
+/** One of the sidebar's top-level tabs, such as the Guide or the API; the current one is marked. */
+export interface NavTab {
+  title: string
+  href: string
+  current?: boolean
+}
+
 /** A titled group of sidebar links. */
 export interface NavGroup {
   title: string

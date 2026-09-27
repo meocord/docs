@@ -8,6 +8,8 @@ import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref, resolveStoredHref } from '@/lib/urls'
 import { versionOption, versionOptions } from '@/lib/version-options'
 import { firstParagraph } from '@/lib/docs/page-metadata'
+import { guideEnabled, guideEntries, guidePageHref, guideSidebar } from '@/lib/docs/guide-site'
+import { guidePath } from '../../../scripts/lib/guide'
 
 /** The lines the site renders pages for: every line versions.json lists, archived ones included. */
 export function lines(): string[] {
@@ -15,8 +17,12 @@ export function lines(): string[] {
 }
 
 /** Every `{ line, slug }` a docs page is prerendered for. */
-export function pageParams(): { line: string; slug: string }[] {
-  return lines().flatMap(line => listPages(line).map(page => ({ line, slug: page.slug })))
+export function pageParams(): { line: string; slug: string[] }[] {
+  return lines().flatMap(line =>
+    guideEnabled(line)
+      ? guideEntries(line).map(({ page }) => ({ line, slug: guidePath(page).split('/') }))
+      : listPages(line).map(page => ({ line, slug: [page.slug] })),
+  )
 }
 
 const guideHref = (line: string, slug: string) => docsHref({ kind: 'guide', line, slug }, VERSIONS)
@@ -35,6 +41,7 @@ const SECTION_ICONS: Record<string, GlyphName> = {
 
 /** The sidebar: a line's pages in order, grouped by section in the order sections first appear. */
 export function sidebar(line: string, currentSlug?: string): NavGroup[] {
+  if (guideEnabled(line)) return [...guideSidebar(line), referenceGroup(line, currentSlug)]
   const groups: NavGroup[] = []
   for (const page of listPages(line)) {
     const title = page.section ?? 'Guides'
@@ -47,6 +54,12 @@ export function sidebar(line: string, currentSlug?: string): NavGroup[] {
       badge: page.since && page.since.startsWith(`${line}.0`) ? 'New' : undefined,
     })
   }
+  groups.push(referenceGroup(line, currentSlug))
+  return groups
+}
+
+/** The line's reference pages: its migration guide, where it has one, and its changelog. */
+function referenceGroup(line: string, currentSlug?: string): NavGroup {
   const reference = [
     ...(existsSync(path.join(process.cwd(), 'generated', 'migrating', `${line}.md`))
       ? [
@@ -59,8 +72,7 @@ export function sidebar(line: string, currentSlug?: string): NavGroup[] {
       : []),
     { title: 'Changelog', href: docsHref({ kind: 'changelog', line }, VERSIONS), current: currentSlug === 'changelog' },
   ]
-  groups.push({ title: 'Reference', icon: SECTION_ICONS.Reference, items: reference })
-  return groups
+  return { title: 'Reference', icon: SECTION_ICONS.Reference, items: reference }
 }
 
 /**
@@ -93,6 +105,10 @@ export function guideMeta(
   line: string,
   slug: string,
 ): { title: string; description: string; canonical: string } | undefined {
+  if (guideEnabled(line)) {
+    const view = guideEntries(line).find(entry => guidePath(entry.page) === slug)
+    return view && { title: view.page.title, description: view.page.summary, canonical: guidePageHref(line, view.page) }
+  }
   const entry = listPages(line).find(page => page.slug === slug)
   const page = entry && loadPage(line, slug)
   return (

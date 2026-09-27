@@ -17,7 +17,8 @@ export interface VersionsManifest {
 export type DocsTarget =
   /** A line's first page, where the version switcher lands. */
   | { kind: 'line'; line: string }
-  | { kind: 'guide'; line: string; slug: string; anchor?: string }
+  /** A guide page; `group` places a recipe or coming-from page of the Guide's appendix under its own path. */
+  | { kind: 'guide'; line: string; slug: string; anchor?: string; group?: 'recipes' | 'coming-from' }
   /** A symbol in a line's API; with `version`, in that exact version's API instead. */
   | { kind: 'api'; line: string; entry: string; symbol: string; member?: string; version?: string }
   /** A line's changelog; with `version`, that version's own page. */
@@ -94,7 +95,10 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
       return `/docs/${segment}`
 
     case 'guide':
-      return withAnchor(`/docs/${segment}/${check(target.slug, SLUG, 'page slug')}`, target.anchor)
+      return withAnchor(
+        `/docs/${segment}/${target.group ? `${target.group}/` : ''}${check(target.slug, SLUG, 'page slug')}`,
+        target.anchor,
+      )
 
     case 'api': {
       const path = [entrySegment(target.entry), check(target.symbol, SYMBOL, 'symbol name')].join('/')

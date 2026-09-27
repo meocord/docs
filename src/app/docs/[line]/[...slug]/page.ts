@@ -5,7 +5,8 @@ import { guideMeta, pageParams } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
-type Params = { params: Promise<{ line: string; slug: string }> }
+// A guide page by its path below the line: one segment, or two for a recipe or coming-from page of the Guide.
+type Params = { params: Promise<{ line: string; slug: string[] }> }
 
 // Every page that exists is prerendered from generateStaticParams. What remains may block: an unknown
 // page, which must answer a real 404 rather than stream a shell, and, under `next dev`, a page reached
@@ -18,7 +19,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { line, slug } = await params
-  const meta = guideMeta(line, slug)
+  const meta = guideMeta(line, slug.join('/'))
   return meta ? pageMetadata({ ...meta, line }) : {}
 }
 
@@ -32,5 +33,5 @@ async function guide(line: string, slug: string) {
 
 export default async function GuidePage({ params }: Params) {
   const { line, slug } = await params
-  return (await guide(line, slug)) ?? notFound()
+  return (await guide(line, slug.join('/'))) ?? notFound()
 }

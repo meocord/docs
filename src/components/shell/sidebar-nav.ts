@@ -1,8 +1,8 @@
-import { Details, For, Li, Nav, Span, Summary, Ul } from '@meonode/ui'
+import { Details, Div, For, Li, Nav, Span, Summary, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
 import { Glyph, type GlyphName } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
-import type { NavGroup, NavItem } from '@/components/shell/types'
+import type { NavGroup, NavItem, NavTab } from '@/components/shell/types'
 
 /** One link row, with no styles of its own: `SidebarNav` styles every row. */
 function NavRow(item: NavItem) {
@@ -48,7 +48,16 @@ function NavSection(group: NavGroup) {
  * The sidebar's links, grouped. Drawn once, in the sidebar pane; the sheet that replaces the pane on
  * phones reads them back from it with `readNavGroups`.
  */
-export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGroup[]; label?: string }) {
+export function SidebarNav({
+  groups,
+  tabs = [],
+  label = 'Documentation',
+}: {
+  groups: NavGroup[]
+  /** Top-level tabs above the groups, such as Guide and API; none draws no tab row. */
+  tabs?: NavTab[]
+  label?: string
+}) {
   return Nav({
     'aria-label': label,
     display: 'flex',
@@ -118,14 +127,42 @@ export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGro
         fontWeight: 'theme.font.weight.medium',
         backgroundColor: 'theme.accent.tint',
       },
+      // A long title wraps to a second line rather than being cut short.
       '& :where(li > a > span[title])': {
         flexGrow: 1,
         // Set explicitly: a flex shorthand loses to the default flex-shrink 0 (l7aromeo/meonode#33).
         flexShrink: 1,
         minWidth: 0,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
+        paddingBlock: 'theme.space.1',
+        overflowWrap: 'anywhere',
+      },
+      // The tabs: two or more links side by side, the current one tinted as a current row is.
+      '& [data-nav-tabs]': {
+        display: 'flex',
+        gap: 'theme.space.1',
+        margin: '0 0 theme.space.2',
+        padding: 'theme.space.1',
+        borderRadius: 'theme.radius.row',
+        backgroundColor: 'theme.surface.fill',
+      },
+      '& [data-nav-tabs] > a': {
+        flex: '1 1 0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'theme.layout.row',
+        borderRadius: 'theme.radius.row',
+        fontSize: 'theme.type.small.size',
+        fontWeight: 'theme.font.weight.medium',
+        textDecoration: 'none',
+        color: 'theme.ink.secondary',
+        ...transitionCss(),
+      },
+      '& [data-nav-tabs] > a:hover': { color: 'theme.ink.primary' },
+      '& [data-nav-tabs] > a:focus-visible': focusCss['&:focus-visible'],
+      '& [data-nav-tabs] > a[aria-current="page"]': {
+        color: 'theme.ink.primary',
+        backgroundColor: 'theme.surface.sheet',
       },
       '& :where(li > a > [data-badge])': {
         // A long title shortens rather than the badge.
@@ -140,8 +177,33 @@ export function SidebarNav({ groups, label = 'Documentation' }: { groups: NavGro
       '& :where(li > a[aria-current="page"] > [data-badge])': { color: 'theme.accent.hover' },
       '@media (prefers-reduced-motion: reduce)': { '& [data-chevron]': { transitionDuration: '0s' } },
     },
-    children: For(groups, NavSection, group => group.title),
+    children: [
+      tabs.length > 0
+        ? Div({
+            key: 'tabs',
+            'data-nav-tabs': true,
+            children: tabs.map(tab =>
+              Link({
+                key: tab.href,
+                href: tab.href,
+                'aria-current': tab.current ? 'page' : undefined,
+                children: tab.title,
+              }),
+            ),
+          })
+        : null,
+      ...For(groups, NavSection, group => group.title),
+    ],
   })
+}
+
+/** The tabs a `SidebarNav` was drawn with, read back from its markup, as `readNavGroups` reads its groups. */
+export function readNavTabs(nav: Element): NavTab[] {
+  return [...nav.querySelectorAll<HTMLAnchorElement>(':scope > [data-nav-tabs] > a')].map(link => ({
+    title: link.textContent ?? '',
+    href: link.getAttribute('href') ?? '',
+    current: link.getAttribute('aria-current') === 'page' || undefined,
+  }))
 }
 
 /**

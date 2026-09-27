@@ -278,5 +278,60 @@ export const Prose = createNode('article', {
       fontSize: 'theme.type.small.size',
       color: 'theme.ink.secondary',
     },
+
+    // A Guide page's opening: its summary, then what it teaches and what to read first, side by side.
+    '& [data-summary]': {
+      margin: '-16px 0 theme.space.6',
+      fontSize: 'theme.type.body.size',
+      lineHeight: 'theme.type.body.line',
+      color: 'theme.ink.secondary',
+    },
+    '& [data-guide-intro]': {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: 'theme.space.4',
+      margin: '0 0 theme.space.8',
+      padding: 'theme.space.4',
+      borderRadius: 'theme.radius.callout',
+      backgroundColor: 'theme.surface.canvas',
+    },
+    '& [data-guide-intro] ul': { margin: 0 },
+    '& [data-guide-label]': {
+      margin: '0 0 theme.space.1',
+      fontSize: 'theme.type.caption.size',
+      lineHeight: 'theme.type.caption.line',
+      fontWeight: 'theme.font.weight.semibold',
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      color: 'theme.ink.secondary',
+    },
+
+    // After the body: the API entries the page teaches, then the pages before and after it.
+    '& [data-guide-api]': {
+      margin: 'theme.space.12 0 0',
+      paddingTop: 'theme.space.6',
+      borderTop: 'theme.line.width solid theme.line.hairline',
+    },
+    '& [data-guide-api] h2': { margin: '0 0 theme.space.3', fontSize: 'theme.type.h3.size' },
+    '& [data-pager]': {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 'theme.space.4',
+      margin: 'theme.space.12 0 0',
+    },
+    '& [data-pager] a': {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 'theme.space.1',
+      padding: 'theme.space.3 theme.space.4',
+      border: 'theme.line.width solid theme.line.hairline',
+      borderRadius: 'theme.radius.code',
+      textDecoration: 'none',
+    },
+    '& [data-pager] a[rel="next"]': { gridColumn: 2, textAlign: 'right' },
+    '& [data-pager] a > span:first-child': {
+      fontSize: 'theme.type.caption.size',
+      color: 'theme.ink.secondary',
+    },
   },
 })

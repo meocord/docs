@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import * as guide from '@/app/docs/[line]/[slug]/page'
+import * as guide from '@/app/docs/[line]/[...slug]/page'
 import * as landing from '@/app/docs/[line]/page'
 import * as api from '@/app/docs/[line]/api/[...path]/page'
 import * as changelog from '@/app/docs/[line]/changelog/page'
@@ -49,7 +49,7 @@ describe('page metadata', () => {
   })
 
   it('a guide on a prerelease line: its first paragraph, canonical at its line', async () => {
-    expect(await guide.generateMetadata(params({ line: '4.1', slug: 'guards' }))).toEqual(
+    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['guards'] }))).toEqual(
       expected(
         'Guards · MeoCord 4.1',
         'A guard decides whether a handler runs. It implements canActivate, returning true to let the call through and false to stop it silently. To tell the user…',
@@ -59,21 +59,21 @@ describe('page metadata', () => {
   })
 
   it('a guide on the current line: canonical at latest', async () => {
-    const meta = await guide.generateMetadata(params({ line: '4.0', slug: 'guards' }))
+    const meta = await guide.generateMetadata(params({ line: '4.0', slug: ['guards'] }))
     expect(meta.title).toEqual({ absolute: 'Guards · MeoCord 4.0' })
     expect(meta.alternates).toEqual({ canonical: '/docs/latest/guards' })
     expect(meta.openGraph).toMatchObject({ url: '/docs/latest/guards' })
   })
 
   it('a tutorial page and a recipe page, as guides', async () => {
-    expect(await guide.generateMetadata(params({ line: '4.1', slug: 'tutorial' }))).toEqual(
+    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['tutorial'] }))).toEqual(
       expected(
         'Tutorial: a feedback bot · MeoCord 4.1',
         'This tutorial builds a complete bot, a step at a time, on top of A first command. Members send feedback with /feedback. It opens a form, and the bot…',
         '/docs/4.1/tutorial',
       ),
     )
-    expect(await guide.generateMetadata(params({ line: '4.1', slug: 'recipe-tickets' }))).toEqual(
+    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['recipe-tickets'] }))).toEqual(
       expected(
         'A ticket system · MeoCord 4.1',
         '/ticket asks for a subject and details in a modal, opens a private thread with the member in it, and posts a Close button that the member or the staff…',

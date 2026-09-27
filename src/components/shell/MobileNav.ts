@@ -6,9 +6,9 @@ import { focusCss, safe, touchCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
 import { SidebarPane } from '@/components/shell/panes'
-import { readNavGroups, SidebarNav } from '@/components/shell/sidebar-nav'
+import { readNavGroups, readNavTabs, SidebarNav } from '@/components/shell/sidebar-nav'
 import { ThemeControl } from '@/components/shell/ThemeControl'
-import type { NavGroup } from '@/components/shell/types'
+import type { NavGroup, NavTab } from '@/components/shell/types'
 
 const iconButton = {
   display: 'inline-flex',
@@ -24,7 +24,7 @@ const iconButton = {
   cursor: 'pointer',
 } as const
 
-function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
+function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[]; tabs: NavTab[] }>) {
   const ref = useRef<HTMLDivElement>(null)
   useLayerFocus(ref, close)
 
@@ -77,7 +77,7 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[] }>) {
           // A followed link replaces the page underneath, so the sheet closes with it.
           Div({
             onClick: (event: { target: EventTarget }) => (event.target as HTMLElement).closest('a') && close(),
-            children: SidebarNav({ groups: data.groups }),
+            children: SidebarNav({ groups: data.groups, tabs: data.tabs }),
           }),
         ],
       }),
@@ -99,7 +99,7 @@ export const MobileNav = Component(function MobileNav() {
     'aria-haspopup': 'dialog',
     onClick: () => {
       const nav = document.querySelector('[data-sidebar-body] nav')
-      portal.open(NavSheet, { groups: nav ? readNavGroups(nav) : [] })
+      portal.open(NavSheet, { groups: nav ? readNavGroups(nav) : [], tabs: nav ? readNavTabs(nav) : [] })
     },
     css: {
       ...transitionCss(),

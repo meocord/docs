@@ -29,6 +29,7 @@ import type { ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } fr
 import { apiLayouts, apiModel } from '@/lib/docs/api-site'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
+import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref, entrySegment, resolveStoredHref } from '@/lib/urls'
@@ -334,7 +335,8 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
 /** The sidebar of an API page: the line's guides, then one group per entry point. */
 export function apiSidebar(line: string, model: ApiModel, current?: string): NavGroup[] {
   return [
-    ...sidebar(line),
+    // Where the Guide is rendered, the Guide and the API are tabs of their own.
+    ...(guideEnabled(line) ? [] : sidebar(line)),
     ...model.entries().map(({ entry, symbols }) => ({
       title: entry,
       items: symbols.map(symbol => ({
@@ -375,6 +377,7 @@ export function renderApiPage(line: string, entry: string, name: string, version
   return Window({
     crumbs,
     groups: apiSidebar(line, model, href),
+    tabs: guideEnabled(line) ? guideTabs(line, 'api') : undefined,
     version: apiVersions(line, entrySegment(symbol.entry), symbol.name),
     repository: REPOSITORY,
     toc,

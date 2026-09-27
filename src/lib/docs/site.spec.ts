@@ -7,7 +7,7 @@ describe('the docs site data', () => {
   it('lists a page for every line and slug', () => {
     expect(lines()).toEqual(expect.arrayContaining(['4.0', '4.1']))
     const params = pageParams()
-    expect(params).toContainEqual({ line: '4.0', slug: 'testing' })
+    expect(params).toContainEqual({ line: '4.0', slug: ['testing'] })
     expect(params.filter(param => param.line === '4.1').length).toBeGreaterThan(0)
   })
 

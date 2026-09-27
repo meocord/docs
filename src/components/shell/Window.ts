@@ -9,7 +9,7 @@ import { SheetScroll } from '@/components/shell/SheetScroll'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
 import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
-import type { NavGroup, TocEntry } from '@/components/shell/types'
+import type { NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 
 export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   /**
@@ -17,6 +17,8 @@ export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
    * every page's data carries, draws it.
    */
   groups?: NavGroup[]
+  /** Top-level tabs above the sidebar's groups, such as Guide and API. */
+  tabs?: NavTab[]
   toc?: TocEntry[]
   /** Facts for the inspector under the headings, such as the edit link. */
   inspector?: Children
@@ -92,7 +94,17 @@ function SkipLink() {
  * and its panes scroll, each on its own; on a phone the document scrolls. Everything it draws comes
  * from its props.
  */
-export function Window({ crumbs, groups, version, repository, toc = [], inspector, wide, children }: WindowProps) {
+export function Window({
+  crumbs,
+  groups,
+  tabs,
+  version,
+  repository,
+  toc = [],
+  inspector,
+  wide,
+  children,
+}: WindowProps) {
   // A window without a sidebar has no inspector either, so its one column sits in the middle of the sheet
   const inspected = !wide && Boolean(groups)
   return Row({
@@ -124,7 +136,10 @@ export function Window({ crumbs, groups, version, repository, toc = [], inspecto
           css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
           children: [
             Div({ key: 'header', flexShrink: 0, padding: 'theme.space.3 theme.space.3 0', children: BrandLink() }),
-            SidebarBody({ key: 'body', children: [SidebarNav({ groups }), Node(SidebarScroll, { key: 'scroll' })] }),
+            SidebarBody({
+              key: 'body',
+              children: [SidebarNav({ groups, tabs }), Node(SidebarScroll, { key: 'scroll' })],
+            }),
           ],
         }),
       SheetCard({
