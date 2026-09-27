@@ -127,17 +127,9 @@ To send one message as written, pass `{ fill: false }` as the second argument to
 
 ## Replies to messages
 
-MeoCord answers a message in plain text: a command's usage, a guard's or validation's reason, and a `UserError`'s
-message, whether a command threw it or an `@On` listener of a message event. A theme leaves that text as it is, so a
-test that checks it keeps passing when the colours change.
-
-`@MeoCord({ messages: { replyEmoji: true } })` begins every one of these text replies to a message, `@On` listeners'
-included, with the call's `emojis.warning`, from the app's theme or a handler's `@UseTheme`:
-
-```text
-⚠️ Usage: !roll <sides>
-sides: "lots" is not a whole number
-```
+MeoCord answers a message in plain text, which a theme leaves as it is. With
+`@MeoCord({ messages: { replyEmoji: true } })` each of those replies begins with the call's `emojis.warning`: see
+[Replies with the theme's emoji](/docs/4.1/message-commands#replies-with-the-themes-emoji).
 
 ## Per server and per user
 
