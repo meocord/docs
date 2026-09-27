@@ -1,23 +1,38 @@
 import { type ButtonInteraction, EmbedBuilder } from 'discord.js'
 import { respond } from 'meocord/common'
-import { Command, Controller, Defer, UseFilter, UseGuard } from 'meocord/decorator'
+import { Command, Controller, Defer } from 'meocord/decorator'
+// #region step:guards
+import { UseGuard } from 'meocord/decorator'
+// #endregion step:guards
+// #region step:exception-filters
+import { UseFilter } from 'meocord/decorator'
+// #endregion step:exception-filters
 // #region step:theming
 import { useTheme } from 'meocord/common'
 import { UseTheme } from 'meocord/decorator'
 // #endregion step:theming
 import { CommandType } from 'meocord/enum'
+// #region step:exception-filters
 import { FeedbackNotFoundFilter } from '@src/tutorial/feedback-not-found.filter'
+// #endregion step:exception-filters
 import { FeedbackService } from '@src/tutorial/feedback.service'
+// #region step:guards
 import { StaffGuard } from '@src/tutorial/staff.guard'
+// #endregion step:guards
 // #region step:localisation
 import { t } from '@src/tutorial/i18n'
 // #endregion step:localisation
 
 // #region controller
-// Both buttons need the staff role, and answer a missing feedback with the filter's words
 @Controller()
+// #region step:guards
+// Both buttons need the staff role
 @UseGuard(StaffGuard)
+// #endregion step:guards
+// #region step:exception-filters
+// A missing feedback is answered in the filter's words
 @UseFilter(FeedbackNotFoundFilter)
+// #endregion step:exception-filters
 // #region step:theming
 @UseTheme({ emojis: { loading: '📝' } })
 // #endregion step:theming
