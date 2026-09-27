@@ -36,10 +36,11 @@ for a builder that sets `ApplicationCommandType.User`, and `MessageContextMenuCo
 
 - **The kind is checked as the code compiles.** MeoCord reads it from the builder's `setType()`, so a handler that
   declares the other kind doesn't compile, however its interaction is imported.
-- **A builder whose kind the compiler can't tell,** one that never calls `setType()` or picks the kind at runtime,
-  lets its handler declare either, and the kind is checked as the bot starts instead: a handler of the other kind
-  stops the bot, naming the handler and the builder. That check needs the interaction class imported as a value, as
-  the generated controller does, since `import { type … }` erases it.
+- **A builder whose kind the compiler can't tell,** one whose `build()` declares its return type as
+  `ContextMenuCommandBuilder` or that picks the kind at runtime, lets its handler declare either, and the kind is
+  checked as the bot starts instead: a handler of the other kind stops the bot, naming the handler and the builder.
+  That check needs the interaction class imported as a value, as the generated controller does, since
+  `import { type … }` erases it.
 - **A handler for both kinds** takes their union, and narrows it with `isUserContextMenuCommand()` or
   `isMessageContextMenuCommand()`.
 - **A user command and a message command may share a name,** as Discord allows, and each reaches its own handler.
