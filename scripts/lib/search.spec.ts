@@ -5,12 +5,14 @@ import {
   apiDocuments,
   changelogDocuments,
   guideDocument,
+  guidePageDocuments,
   markdownText,
   migratingDocument,
   paletteIndex,
   searchHtml,
   splitSections,
 } from './search.js'
+import type { GuidePage } from './guide.js'
 import type { VersionsConfig } from './versions.js'
 
 const config = {
@@ -170,6 +172,38 @@ describe('documents', () => {
     expect(document).toMatchObject({ url: '/docs/latest/guards', title: 'Guards', kind: 'guide', line: '4.0' })
     expect(document.sections.map(section => section.anchor)).toEqual([undefined, 'global-guards'])
     expect(guideDocument('4.1', 'x', parsePage('body'), config).title).toBe('x')
+  })
+
+  it("builds a line's Guide pages at their paths, each with its examples as they stand at that page", () => {
+    const page = (id: string, title: string, group?: GuidePage['group']) =>
+      ({
+        id,
+        title,
+        chapter: 'appendix',
+        order: 1,
+        group,
+        summary: '',
+        learn: [],
+        requires: [],
+        api: [],
+        formerly: [],
+      }) as GuidePage
+    const shownAt: string[] = []
+    const documents = guidePageDocuments(
+      '4.1',
+      [
+        { page: page('guards', 'Guards'), body: 'Guards run first.\n::example{file="app.ts" region="step:guards"}\n' },
+        { page: page('tickets', 'Tickets', 'recipes'), body: 'A ticket bot.\n' },
+      ],
+      config,
+      at => (file, region) => (shownAt.push(at), `${file} ${region} at ${at}`),
+    )
+    expect(documents.map(document => [document.url, document.title])).toEqual([
+      ['/docs/4.1/guards', 'Guards'],
+      ['/docs/4.1/recipes/tickets', 'Tickets'],
+    ])
+    expect(documents[0].sections[0].text).toContain('app.ts step:guards at guards')
+    expect(shownAt).toEqual(['guards'])
   })
 
   it('builds the migration guide and the changelog, one section per version at its anchor', () => {

@@ -99,9 +99,8 @@ export function loadPage(line: string, slug: string, options: Options = {}): Pag
 }
 
 /**
- * The code an ::example embeds: a file under examples/<line>/src/, or the lines between its
- * `// #region <name>` and `// #endregion <name>`, dedented, with any other region markers dropped. A
- * tutorial file is taken as it stands at the page shown on (see steps.ts).
+ * The code an ::example embeds: a file under examples/<line>/src/, or its region. A tutorial file is
+ * taken as it stands at the page shown on (see steps.ts).
  */
 export function resolveExample(
   line: string,
@@ -113,14 +112,35 @@ export function resolveExample(
   const full = path.resolve(base, file)
   if (!full.startsWith(base + path.sep)) throw new Error(`Example "${file}" is outside examples/${line}/src.`)
   if (!existsSync(full)) throw new Error(`examples/${line}/src/${file} does not exist.`)
-  let lines = asOf(readFileSync(full, 'utf8'), page).split('\n')
-  if (region) {
-    const start = lines.findIndex(text => text.trim() === `// #region ${region}`)
-    const end = lines.findIndex(text => text.trim() === `// #endregion ${region}`)
-    if (start === -1 || end <= start) throw new Error(`examples/${line}/src/${file} has no region "${region}".`)
-    lines = lines.slice(start + 1, end)
-  }
-  lines = lines.filter(text => !/^\s*\/\/ #(end)?region\b/.test(text))
+  const code = excerpt(asOf(readFileSync(full, 'utf8'), page), region)
+  if (code === undefined) throw new Error(`examples/${line}/src/${file} has no region "${region}".`)
+  return code
+}
+
+/**
+ * A file's code, or a region's: every block between its `// #region <name>` and `// #endregion <name>`
+ * in file order, each dedented, with `// …` between them, since a step adds an import at the top and a
+ * decorator further down. Other region markers are dropped; undefined when the region has no block.
+ */
+export function excerpt(source: string, region?: string): string | undefined {
+  const lines = source.split('\n')
+  const blocks: string[][] = region ? [] : [lines]
+  let block: string[] | undefined
+  if (region)
+    for (const text of lines) {
+      if (text.trim() === `// #region ${region}`) block = []
+      else if (text.trim() === `// #endregion ${region}` && block) {
+        blocks.push(block)
+        block = undefined
+      } else block?.push(text)
+    }
+  if (blocks.length === 0) return undefined
+  return blocks.map(dedent).join('\n// …\n')
+}
+
+/** A block's code without region markers, dedented and trimmed. */
+function dedent(block: string[]): string {
+  const lines = block.filter(text => !/^\s*\/\/ #(end)?region\b/.test(text))
   const indent = Math.min(...lines.filter(text => text.trim()).map(text => /^\s*/.exec(text)![0].length))
   return lines
     .map(text => text.slice(Number.isFinite(indent) ? indent : 0))

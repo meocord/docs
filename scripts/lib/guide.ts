@@ -4,7 +4,7 @@
  * and `api:` targets that the check resolves, and pulls every code block from the line's examples.
  */
 
-import { existsSync } from 'fs'
+import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
@@ -155,6 +155,19 @@ export function readingOrder(pages: GuidePage[]): GuidePage[] {
   return [...pages].sort(
     (a, b) => chapter(a) - chapter(b) || group(a) - group(b) || a.order - b.order || a.id.localeCompare(b.id),
   )
+}
+
+/** A line's Guide in reading order, each page with its body; a page whose front matter fails content:check is left out. */
+export function readGuide(line: string, root?: string): { page: GuidePage; body: string }[] {
+  const dir = guideFolder(line, root)
+  if (!existsSync(dir)) return []
+  const read = readdirSync(dir)
+    .filter(file => file.endsWith('.md'))
+    .flatMap(file => {
+      const { page, body } = readGuidePage(file.replace(/\.md$/, ''), readFileSync(path.join(dir, file), 'utf8'))
+      return page ? [{ page, body }] : []
+    })
+  return readingOrder(read.map(entry => entry.page)).map(page => read.find(entry => entry.page === page)!)
 }
 
 /** The sections a chapter page has, in order; `required` ones must be there. */
