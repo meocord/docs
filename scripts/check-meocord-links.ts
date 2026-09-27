@@ -2,10 +2,10 @@
  * Checks the docs links in a meocord checkout against a docs site: every
  * `https://meocord.dev/docs/…` URL in its src/ and, when built, dist/types/ must answer 200, have the
  * heading it names, and not land on a line's page for a topic it lacks. Run before a release, against
- * the site as it will be: the live one, or, before it is up, a build of docs main served locally.
+ * the live site, which serves docs main. For docs changes not merged yet, serve their build locally.
  *
- *   bun run links:meocord -- <meocord checkout> [--site https://meocord.dev]
- *   bun run build && PORT=3140 bun run serve   # then --site http://127.0.0.1:3140
+ *   bun run links:meocord -- <meocord checkout>
+ *   bun run build && PORT=3140 bun run serve   # then add --site http://127.0.0.1:3140
  */
 import path from 'path'
 import { docsLinks, linkProblem, textsUnder } from './lib/meocord-links.js'
