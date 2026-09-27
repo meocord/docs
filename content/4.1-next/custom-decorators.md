@@ -68,8 +68,8 @@ two never collide:
 `ExecutionContext.get(key)`. Prefer `createMetadata`: its values are typed, and its key can't collide with another
 library's.
 
-`SetMetadata` refuses the keys MeoCord keeps its own metadata under, such as `'guards'`, where a value would replace what
-the framework stores: it throws as the decorator applies.
+`SetMetadata` refuses the keys MeoCord keeps its own metadata under, such as `'guards'`, where a value would replace
+what the framework stores: it throws as the decorator applies.
 
 ## Gotchas
 
