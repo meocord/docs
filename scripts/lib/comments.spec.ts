@@ -13,4 +13,15 @@ describe('commentsOf', () => {
       { text: '/** A block comment */', offset: source.indexOf('/**') },
     ])
   })
+
+  it('finds the comments after a template with a substitution, and after a regex holding a quote', () => {
+    const source = [
+      'const greeting = `Hello, ${name}!`',
+      '// after a template',
+      "const quote = /'/",
+      '// after a regex',
+      'const note = `${a} // not a comment`',
+    ].join('\n')
+    expect(commentsOf(source).map(comment => comment.text)).toEqual(['// after a template', '// after a regex'])
+  })
 })
