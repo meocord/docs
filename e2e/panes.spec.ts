@@ -32,8 +32,23 @@ const visibleLink = (page: Page) =>
     return link.getAttribute('href')!
   })
 
+/** Scrolls the sidebar past its current link, so the link is out of sight. */
+const hideCurrentLink = (page: Page) =>
+  sidebarBody(page).evaluate(body => {
+    const link = body.querySelector<HTMLElement>('[aria-current="page"]')!
+    body.scrollTop += link.getBoundingClientRect().bottom - body.getBoundingClientRect().top + 100
+  })
+
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  if (test.info().project.name === 'no-navigation-api')
+    await page.addInitScript(() => delete (window as { navigation?: unknown }).navigation)
+})
+
+test('the no-navigation-api project runs without the Navigation API', async ({ page }) => {
+  test.skip(test.info().project.name !== 'no-navigation-api')
+  await page.goto('/docs/4.1/guards')
+  expect(await page.evaluate(() => 'navigation' in window)).toBe(false)
 })
 
 test('the sidebar’s header stays put and only its navigation scrolls, beside its own scrollbar', async ({ page }) => {
@@ -54,18 +69,39 @@ test('the sidebar’s header stays put and only its navigation scrolls, beside i
 
 test('the sidebar keeps its place as the reader moves on, and a page gone back to keeps its own', async ({ page }) => {
   await page.goto('/docs/4.1/guards')
-  await sidebarBody(page).evaluate(body => (body.scrollTop = 300))
+  // Scrolled past the current link, so going back must keep the reader's place rather than show the link.
+  await hideCurrentLink(page)
+  expect(await inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(false)
   const first = await top(sidebarBody(page))
 
   await page.locator(`[data-sidebar-body]:visible a[href="${await visibleLink(page)}"]`).click()
   await expect(page).not.toHaveURL(/\/guards$/)
   await expect.poll(() => top(sidebarBody(page))).toBe(first)
 
-  // Scrolled on the second page, then back: the first page's sidebar is where it was left.
-  await sidebarBody(page).evaluate(body => (body.scrollTop = 120))
+  // Scrolled on the second page, past its own link, then back: the first page's sidebar is where it was left.
+  await hideCurrentLink(page)
+  const second = await top(sidebarBody(page))
   await page.goBack()
   await expect(page).toHaveURL(/\/guards$/)
   await expect.poll(() => top(sidebarBody(page))).toBe(first)
+
+  // Forward again: the second page's sidebar, left away from its current link, keeps that place too.
+  await page.goForward()
+  await expect(page).not.toHaveURL(/\/guards$/)
+  await expect.poll(() => top(sidebarBody(page))).toBe(second)
+  expect(await inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(false)
+})
+
+test('a sidebar link to a page read earlier shows its current link, however its sidebar was left', async ({ page }) => {
+  await page.goto('/docs/4.1/guards')
+  await hideCurrentLink(page)
+  await page.locator(`[data-sidebar-body]:visible a[href="${await visibleLink(page)}"]`).click()
+  await expect(page).not.toHaveURL(/\/guards$/)
+
+  // Following Guards' link is a new visit, not Back: Guards' kept sidebar brings its link into view.
+  await page.locator('[data-sidebar-body]:visible a[href="/docs/4.1/guards"]').click()
+  await expect(page).toHaveURL(/\/guards$/)
+  await expect.poll(() => inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(true)
 })
 
 test('the current link is brought into view only when it is out of sight', async ({ page }) => {

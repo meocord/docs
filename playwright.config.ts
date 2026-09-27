@@ -11,7 +11,11 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: `http://localhost:${PORT}`, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The panes again as a browser without the Navigation API sees them, such as an older Safari or Firefox.
+    { name: 'no-navigation-api', use: { ...devices['Desktop Chrome'] }, testMatch: 'panes.spec.ts' },
+  ],
   // The production build behind the CSP proxy, on its own ports, stopped when the run ends.
   webServer: {
     command: 'bun run serve',
