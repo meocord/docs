@@ -37,9 +37,9 @@ have, a type its param's value does not fit, or an optional param declared as al
 with no type is text that `@Validate` or a pipe may turn into anything, so it is not checked, and neither
 are params declared as `Record<string, string>`.
 
-A word that is not its type gets the command's [usage reply](/docs/4.1/message-commands#usage-errors), and so does a member who is
-not in the server. A command with a `member`, `role` or `channel` param works in servers only: sent in a
-DM, it is answered `This command works in a server only.`
+A word that is not its type gets the command's [usage reply](/docs/4.1/message-commands#usage-errors), and so does
+a member who is not in the server. A command with a `member`, `role` or `channel` param works in servers only: sent
+in a DM, it is answered `This command works in a server only.`
 
 ### Optional params
 
