@@ -58,6 +58,19 @@ describe('rewriteLibraryLinks', () => {
     ).toBe('[a](/docs/4.1/component-routing) [b](/docs/4.1/component-routing#modal-fields)')
   })
 
+  it('stores a link to the site by its address as its path, and leaves the address in text', () => {
+    expect(
+      rewriteLibraryLinks(
+        'See [Guards](https://meocord.dev/docs/4.1/guards#options) and [API](https://meocord.dev/docs/4.1/api/core/MeoCordFactory). ' +
+          'Docs live at https://meocord.dev/docs/4.1/guards.',
+        '4.1',
+      ),
+    ).toBe(
+      'See [Guards](/docs/4.1/guards#options) and [API](/docs/4.1/api/core/MeoCordFactory). ' +
+        'Docs live at https://meocord.dev/docs/4.1/guards.',
+    )
+  })
+
   it('reads the README by its file on a branch or commit as by the repository', () => {
     const anchors = {
       theming: 'theming',

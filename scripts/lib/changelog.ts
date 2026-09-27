@@ -35,6 +35,8 @@ export function sliceChangelog(changelog: string, version: string): string {
 }
 
 const MIGRATING = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/blob\/[^/\s)]+\/docs\/MIGRATING\.md(#[\w-]+)?/g
+// A link to the site's docs by its address, stored as its path so content:check reads it like any other
+const SITE = /\]\(https:\/\/meocord\.dev(\/docs(?:[/#][^\s)]*)?)\)/g
 // The README by the repository's address or its file on a branch or commit, with or without an anchor
 const README =
   /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord(?:\/blob\/[^/\s)]+\/README\.md|\/)?(?:#([\w-]+))?(?=[)\s])/g
@@ -55,8 +57,9 @@ export function anchorHref(line: string, anchors: Record<string, AnchorTarget>, 
 }
 
 /**
- * Points links at the library's migration guide and README to the site's pages for `line`.
- * README anchors resolve through `anchors`, which maps an anchor to where it lands.
+ * Points links at the library's migration guide and README to the site's pages for `line`, and stores a
+ * link to the site by its address as its path. README anchors resolve through `anchors`, which maps an
+ * anchor to where it lands.
  */
 export function rewriteLibraryLinks(
   markdown: string,
@@ -64,6 +67,7 @@ export function rewriteLibraryLinks(
   anchors: Record<string, AnchorTarget> = {},
 ): string {
   return markdown
+    .replace(SITE, ']($1)')
     .replace(MIGRATING, (_match, anchor: string | undefined) =>
       storedHref({ kind: 'migrating', line, anchor: anchor?.slice(1) }),
     )

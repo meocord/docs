@@ -8,7 +8,7 @@ import { checkSite, EXAMPLE_SOURCE, type SiteSnapshot } from './lib/content.js'
 import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths } from './lib/layout.js'
-import { newestIn, readVersions } from './lib/versions.js'
+import { readVersions } from './lib/versions.js'
 import { apiModel } from '../src/lib/docs/api-site.js'
 
 const readIf = (file: string) => (existsSync(file) ? readFileSync(file, 'utf8') : undefined)
@@ -77,10 +77,16 @@ for (const line of config.lines) {
       .map(([file, text]) => [file.replace(/\.md$/, ''), text]),
   )
   guidePages += Object.keys(files).length
-  const api = JSON.parse(readFileSync(paths.api(newestIn(line)), 'utf8')) as {
-    project: { children?: { children?: { name: string }[] }[] }
+  // Each symbol by name, as the site renders it: the kinds its @group files it under, and its members
+  const model = apiModel(line.line)
+  const apiSymbols = new Map<string, { kinds: string[]; members: string[] }>()
+  for (const { entry, symbol: name } of model?.params() ?? []) {
+    const symbol = model!.symbol(entry, name)!
+    const known = apiSymbols.get(name) ?? { kinds: [], members: [] }
+    if (symbol.group) known.kinds.push(symbol.group.toLowerCase())
+    known.members.push(...symbol.members.map(member => member.anchor))
+    apiSymbols.set(name, known)
   }
-  const apiSymbols = new Set(api.project.children?.flatMap(entry => entry.children?.map(symbol => symbol.name) ?? []))
   const migrating = site.migrating[line.line]
   const report = checkGuide(files, {
     line: line.line,

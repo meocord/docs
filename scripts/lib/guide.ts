@@ -189,6 +189,27 @@ const SUMMARY_LIMIT = 160
 const FENCES = new Set(['bash', 'json', 'yaml', 'text'])
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
+const NOT_AN_API_REF = 'is not api:<kind>/<Symbol>'
+
+/** A link to the site by its address, which a page writes as a guide: or api: link instead. */
+const SELF_LINK = /^https?:\/\/(?:www\.)?meocord\.dev(?:\/|$)/
+
+/**
+ * What is wrong with an API reference, `<kind>/<Symbol>[#member]`, or undefined: a form other than that, a
+ * symbol the API lacks, a kind other than the one its `@group` files it under, or a member it lacks.
+ */
+function apiRefProblem(ref: string, symbols: GuideContext['apiSymbols']): string | undefined {
+  const [path, member] = ref.split('#', 2)
+  const [kind, name, ...rest] = path.split('/')
+  if (rest.length > 0 || !(API_KINDS as readonly string[]).includes(kind) || !name) return NOT_AN_API_REF
+  const symbol = symbols.get(name)
+  if (!symbol) return 'names no symbol of the API'
+  if (symbol.kinds.length > 0 && !symbol.kinds.includes(kind))
+    return `names a symbol filed under ${symbol.kinds.join(' and ')}, not ${kind}`
+  if (member !== undefined && !symbol.members.includes(member)) return `names no member of ${name}`
+  return undefined
+}
+
 const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md$/
 
 /** What the check reads besides the pages: the line's example files and the API's symbol names. */
@@ -197,10 +218,10 @@ export interface GuideContext {
   /** Example files per folder, keyed by their path under examples/<folder>/. */
   examples: Record<string, Record<string, string>>
   /**
-   * Every symbol the line's newest version exports, by name. Only the name is checked: a symbol's kind
-   * comes from its `@group` tag, which the API documents do not carry yet.
+   * Every symbol the line's newest version exports, by name: the kinds its `@group` tags file it under,
+   * lowercased, and its members' anchors. A symbol with no `@group` has no kind to check.
    */
-  apiSymbols: Set<string>
+  apiSymbols: Map<string, { kinds: string[]; members: string[] }>
   /** The headings of the line's migration guide, which `guide:migrating#…` links. */
   migratingAnchors?: Set<string>
   /**
@@ -377,10 +398,10 @@ function checkLinks(
       } else if (PLANNED.has(targetPath) && !context.complete) planned.push(`${where}: ${target}`)
       else problems.push(`${where}: ${target} names no Guide page`)
     } else if (base.startsWith('api:')) {
-      const [kind, symbol, ...rest] = base.slice('api:'.length).split('/')
-      if (rest.length > 0 || !(API_KINDS as readonly string[]).includes(kind) || !symbol)
-        problems.push(`${where}: ${target} is not api:<kind>/<Symbol>`)
-      else if (!context.apiSymbols.has(symbol)) problems.push(`${where}: ${target} names no symbol of the API`)
+      const problem = apiRefProblem(target.slice('api:'.length), context.apiSymbols)
+      if (problem) problems.push(`${where}: ${target} ${problem}`)
+    } else if (SELF_LINK.test(target)) {
+      problems.push(`${where}: ${target} links the site by its address; write guide:<id> or api:<kind>/<Symbol>`)
     } else if (GITHUB_MIGRATING.test(base)) {
       problems.push(
         `${where}: ${target} links the migration guide on GitHub; write guide:migrating${anchor ? `#${anchor}` : ''}`,
@@ -423,9 +444,11 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
       if (PLANNED.has(id) && !context.complete) planned.push(`${where}: requires "${id}"`)
       else problems.push(`${where}: requires "${id}", which is no page`)
     }
-    for (const entry of page.api)
-      if (!context.apiSymbols.has(entry.split('/')[1].split('#')[0]))
-        problems.push(`${where}: api entry "${entry}" names no symbol of the API`)
+    // An entry of the wrong form is reported with the front matter
+    for (const entry of page.api) {
+      const problem = apiRefProblem(entry, context.apiSymbols)
+      if (problem && problem !== NOT_AN_API_REF) problems.push(`${where}: api entry "${entry}" ${problem}`)
+    }
     checkSections(where, page, body, problems)
     for (const language of fenceLanguages(body))
       if (!FENCES.has(language) && !TYPESCRIPT_FENCE.test(`\`\`\`${language}`))
