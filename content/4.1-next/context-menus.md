@@ -60,13 +60,14 @@ A message command's builder sets the type `Message`, and its handler reads `inte
 A handler declares the kind of interaction its builder registers: `UserContextMenuCommandInteraction` for a builder that
 sets `ApplicationCommandType.User`, and `MessageContextMenuCommandInteraction` for `Message`, as the examples do.
 MeoCord reads the kind from the builder's `setType()`, so a handler that declares the other kind doesn't compile,
-however its interaction is imported. The error is on its `@Command`, and its last line names what the declared kind
-lacks, such as `targetMessage`.
+however its interaction is imported. The error is on its `@Command`, and its last line names what the interaction the
+builder registers lacks, such as `targetMessage` for a message handler on a user builder.
 
-A builder whose kind the compiler can't tell, one that never calls `setType()` or picks the kind at runtime, lets its
-handler declare either. MeoCord then checks the kind as the bot starts: a handler of the other kind stops the bot,
-naming the handler and the builder. That check reads the decorator metadata the compiler emits, so it needs the
-interaction class imported as a value, as the generated controller does; `import { type … }` erases it.
+A builder whose kind the compiler can't tell, one whose `build()` declares its return type as
+`ContextMenuCommandBuilder` or that picks the kind at runtime, lets its handler declare either. MeoCord then checks the
+kind as the bot starts: a handler of the other kind stops the bot, naming the handler and the builder. That check reads
+the decorator metadata the compiler emits, so it needs the interaction class imported as a value, as the generated
+controller does; `import { type … }` erases it.
 
 A handler that serves both kinds takes their union, and narrows it with `isUserContextMenuCommand()` or
 `isMessageContextMenuCommand()`. `meocord g co context-menu Report` generates a user command with its handler typed to
