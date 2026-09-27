@@ -13,6 +13,9 @@ const context: GuideContext = {
   apiSymbols: new Set(['UseGuard', 'Guard']),
 }
 
+const check = (files: Record<string, string>, with_: Partial<GuideContext> = {}) =>
+  checkGuide(files, { ...context, ...with_ }).problems
+
 interface Fields {
   id?: string
   title?: string
@@ -62,11 +65,11 @@ const valid = () => ({ guards: page(guards, chapterBody()), services: page(servi
 
 describe('checkGuide', () => {
   it('accepts pages in the template', () => {
-    expect(checkGuide(valid(), context)).toEqual([])
+    expect(check(valid(), context)).toEqual([])
   })
 
   it('names what the front matter lacks or gets wrong', () => {
-    const problems = checkGuide(
+    const problems = check(
       {
         ...valid(),
         guards: page(
@@ -88,12 +91,12 @@ describe('checkGuide', () => {
   })
 
   it('asks for two to four things to learn, and an api entry as <kind>/<Symbol> of the API', () => {
-    const named = checkGuide(
+    const named = check(
       { ...valid(), guards: page({ ...guards, api: ['decorators/UseGuard#guards', 'utilities/Nope'] }, chapterBody()) },
       context,
     )
     expect(named).toEqual(['content/4.1-next/guards.md: api entry "utilities/Nope" names no symbol of the API'])
-    const problems = checkGuide(
+    const problems = check(
       { ...valid(), guards: page({ ...guards, learn: ['a'], api: ['decorator/UseGuard', 'UseGuard'] }, chapterBody()) },
       context,
     )
@@ -105,7 +108,7 @@ describe('checkGuide', () => {
   })
 
   it('keeps groups to the appendix, where every page has one', () => {
-    const problems = checkGuide(
+    const problems = check(
       {
         ...valid(),
         guards: page({ ...guards, group: 'recipes' }, chapterBody()),
@@ -132,7 +135,7 @@ describe('checkGuide', () => {
       '## Gotchas',
       '## Next steps',
     ].join('\n\n')
-    expect(checkGuide({ ...valid(), guards: page(guards, scrambled) }, context)).toEqual([
+    expect(check({ ...valid(), guards: page(guards, scrambled) }, context)).toEqual([
       'content/4.1-next/guards.md: the body has an H1; the title is the H1',
       'content/4.1-next/guards.md: a heading is deeper than ###',
       'content/4.1-next/guards.md: the fixed sections run When to use it, Example, How it works, Gotchas, Build it, Next steps',
@@ -142,10 +145,10 @@ describe('checkGuide', () => {
     // Without Gotchas, a topic section after Next steps is still out of place.
     const trailing =
       chapterBody().replace('## Next steps', '## Build it\n\nGrow the bot.\n\n## Next steps') + '\n\n## Extra'
-    expect(checkGuide({ ...valid(), guards: page(guards, trailing) }, context)).toEqual([
+    expect(check({ ...valid(), guards: page(guards, trailing) }, context)).toEqual([
       'content/4.1-next/guards.md: a topic section sits outside How it works … Gotchas, Build it and Next steps',
     ])
-    const missing = checkGuide({ ...valid(), guards: page(guards, 'Lead only.\n\n## Example') }, context)
+    const missing = check({ ...valid(), guards: page(guards, 'Lead only.\n\n## Example') }, context)
     expect(missing).toContain('content/4.1-next/guards.md: the page has no "## When to use it" section')
     expect(missing).toContain('content/4.1-next/guards.md: the page has no "## Next steps" section')
   })
@@ -160,15 +163,20 @@ describe('checkGuide', () => {
       summary: 'A ticket system.',
     }
     const body = ['Lead.', '## How it works', '## The code', '## Setup', '## Next steps'].join('\n\n')
-    expect(checkGuide({ ...valid(), tickets: page(recipe, body) }, context)).toEqual([
+    expect(check({ ...valid(), tickets: page(recipe, body) }, context)).toEqual([
       'content/4.1-next/tickets.md: a recipe has a "## Variations" section',
       'content/4.1-next/tickets.md: "## Setup" is no recipe section; use ### under one of them',
       "content/4.1-next/tickets.md: a recipe's sections run The code, How it works, Variations, Next steps",
     ])
+    // An extra H2 in order is reported once, as the section it is not.
+    const extra = ['Lead.', '## The code', '## Setup', '## How it works', '## Variations', '## Next steps'].join('\n\n')
+    expect(check({ ...valid(), tickets: page(recipe, extra) }, context)).toEqual([
+      'content/4.1-next/tickets.md: "## Setup" is no recipe section; use ### under one of them',
+    ])
   })
 
   it('checks orders within a chapter, and what a page requires', () => {
-    const problems = checkGuide(
+    const problems = check(
       { ...valid(), cooldowns: page({ ...guards, id: 'cooldowns', requires: ['nothing'] }, chapterBody()) },
       context,
     )
@@ -190,15 +198,65 @@ describe('checkGuide', () => {
       '[h](/docs/4.1/guards)',
       '[i](#when-to-use-it)',
       '[j](#nowhere)',
-      '[k](https://github.com/meocord/meocord/blob/main/docs/MIGRATING.md#theming)',
+      '[k](https://discord.com/developers/docs/interactions/receiving-and-responding#responding-to-an-interaction)',
     ].join(' ')
-    expect(checkGuide({ ...valid(), guards: page(guards, chapterBody(links)) }, context)).toEqual([
+    expect(check({ ...valid(), guards: page(guards, chapterBody(links)) }, context)).toEqual([
       'content/4.1-next/guards.md: guide:services#no-such names no heading of that page',
       'content/4.1-next/guards.md: guide:nothing names no Guide page',
       'content/4.1-next/guards.md: api:decorators/NoSuch names no symbol of the API',
       'content/4.1-next/guards.md: api:decorator/UseGuard is not api:<kind>/<Symbol>',
       'content/4.1-next/guards.md: /docs/4.1/guards links a page by path; write guide:<id> or api:<kind>/<Symbol>',
       'content/4.1-next/guards.md: no heading for #nowhere',
+    ])
+  })
+
+  it('counts a link to a planned page not written yet, and fails it once the Guide is complete', () => {
+    const body = chapterBody('[a](guide:slash-commands) [b](guide:slash-commands#options) [c](guide:recipes/tickets)')
+    const files = { ...valid(), guards: page({ ...guards, requires: ['services', 'first-command'] }, body) }
+    expect(checkGuide(files, context)).toEqual({
+      problems: [],
+      planned: [
+        'content/4.1-next/guards.md: requires "first-command"',
+        'content/4.1-next/guards.md: guide:slash-commands',
+        'content/4.1-next/guards.md: guide:slash-commands#options',
+        'content/4.1-next/guards.md: guide:recipes/tickets',
+      ],
+    })
+    expect(checkGuide(files, { ...context, complete: true }).problems).toEqual([
+      'content/4.1-next/guards.md: requires "first-command", which is no page',
+      'content/4.1-next/guards.md: guide:slash-commands names no Guide page',
+      'content/4.1-next/guards.md: guide:slash-commands#options names no Guide page',
+      'content/4.1-next/guards.md: guide:recipes/tickets names no Guide page',
+    ])
+  })
+
+  it("holds every page to the Guide's plan", () => {
+    const extra = { ...guards, id: 'extras', title: 'Extras', order: 3 }
+    expect(check({ ...valid(), extras: page(extra, chapterBody()) })).toEqual([
+      "content/4.1-next/extras.md: extras is not a page of the Guide's plan",
+    ])
+  })
+
+  it('links the migration guide by guide:migrating, checking its heading, and never on GitHub', () => {
+    const github = 'https://github.com/meocord/meocord/blob/main/docs/MIGRATING.md'
+    const body = chapterBody(
+      `[a](guide:migrating#start) [b](guide:migrating#nope) [c](guide:changelog) [d](${github}#start)`,
+    )
+    expect(check({ ...valid(), guards: page(guards, body) }, { migratingAnchors: new Set(['start']) })).toEqual([
+      'content/4.1-next/guards.md: guide:migrating#nope names no heading of the migration guide',
+      `content/4.1-next/guards.md: ${github}#start links the migration guide on GitHub; write guide:migrating#start`,
+    ])
+  })
+
+  it('takes NOTE, TIP and WARNING callouts, one to a section', () => {
+    const body = chapterBody(
+      ['> [!NOTE]\n> One.', '> [!WARNING]\n> Two.', '> [!CAUTION]\n> Three.', '```text\n> [!IMPORTANT]\n```'].join(
+        '\n\n',
+      ),
+    )
+    expect(check({ ...valid(), guards: page(guards, body) })).toEqual([
+      'content/4.1-next/guards.md: "How it works" has more than one callout',
+      "content/4.1-next/guards.md: a [!CAUTION] callout; a page's callouts are NOTE, TIP and WARNING",
     ])
   })
 
@@ -218,7 +276,7 @@ describe('checkGuide', () => {
         '::example{file="missing.ts"}',
       ].join('\n\n'),
     )
-    expect(checkGuide({ ...valid(), guards: page(guards, body) }, context)).toEqual([
+    expect(check({ ...valid(), guards: page(guards, body) }, context)).toEqual([
       'content/4.1-next/guards.md: a code fence is marked "cobol"; a page\'s fences are bash, json, yaml, text',
       'content/4.1-next/guards.md: a code fence is marked "diff"; a page\'s fences are bash, json, yaml, text',
       'content/4.1-next/guards.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence',

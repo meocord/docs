@@ -21,6 +21,57 @@ export const CHAPTERS = [
 
 export type ChapterId = (typeof CHAPTERS)[number]['id']
 
+/**
+ * The Guide as approved: every page's path, by chapter. It is the one list of the Guide's slugs; a page
+ * must be on it, and a link to a page on it that is not written yet counts as planned, not broken.
+ */
+export const GUIDE_PLAN: Readonly<Record<ChapterId, readonly string[]>> = {
+  start: ['overview', 'getting-started', 'first-command', 'project-structure'],
+  interactions: [
+    'slash-commands',
+    'subcommands',
+    'components',
+    'autocomplete',
+    'context-menus',
+    'responses',
+    'defer',
+    'presenters',
+    'install-contexts',
+  ],
+  messages: ['message-commands', 'message-params', 'reactions', 'gateway-events', 'lifecycle-hooks'],
+  structure: ['services', 'configuration', 'theming', 'localisation', 'handler-discovery'],
+  pipeline: [
+    'how-a-call-runs',
+    'guards',
+    'validation',
+    'interceptors',
+    'cooldowns',
+    'exception-filters',
+    'observers',
+    'custom-decorators',
+  ],
+  testing: ['testing', 'invoke-and-dispatch', 'mocks', 'testing-recipes'],
+  shipping: ['cli', 'self-contained-builds', 'deployment', 'sharding', 'security', 'eslint'],
+  appendix: [
+    'recipes/pagination',
+    'recipes/database',
+    'recipes/moderation',
+    'recipes/tickets',
+    'recipes/scheduled',
+    'recipes/i18n-bot',
+    'recipes/select-menus',
+    'recipes/cooldown-stores',
+    'coming-from/discordjs',
+    'coming-from/sapphire',
+    'coming-from/discordx',
+    'coming-from/necord',
+    'troubleshooting',
+    'faq',
+    'glossary',
+    'whats-new',
+  ],
+}
+
 /** The appendices' groups; recipes and coming-from pages take their group in the URL. */
 export const APPENDIX_GROUPS = ['recipes', 'coming-from', 'help'] as const
 export type AppendixGroup = (typeof APPENDIX_GROUPS)[number]
@@ -71,6 +122,15 @@ export function parseGuidePage(text: string): { frontmatter: GuideFrontmatter; b
   return { frontmatter: (parseYaml(match[1]) ?? {}) as GuideFrontmatter, body: text.slice(match[0].length) }
 }
 
+/**
+ * A page file as the site reads it: its entry, or undefined when its front matter would fail the check,
+ * which `content:check` reports.
+ */
+export function readGuidePage(slug: string, text: string): { page?: GuidePage; body: string } {
+  const { frontmatter, body } = parseGuidePage(text)
+  return { page: readFrontmatter('', slug, frontmatter, []), body }
+}
+
 /** A page's path below `/docs/<line>/`: its id, under its group for recipes and coming-from pages. */
 export function guidePath(page: Pick<GuidePage, 'id' | 'group'>): string {
   return page.group === 'recipes' || page.group === 'coming-from' ? `${page.group}/${page.id}` : page.id
@@ -104,6 +164,7 @@ const SUMMARY_LIMIT = 160
 const FENCES = new Set(['bash', 'json', 'yaml', 'text'])
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
+const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md$/
 
 /** What the check reads besides the pages: the line's example files and the API's symbol names. */
 export interface GuideContext {
@@ -115,7 +176,22 @@ export interface GuideContext {
    * comes from its `@group` tag, which the API documents do not carry yet.
    */
   apiSymbols: Set<string>
+  /** The headings of the line's migration guide, which `guide:migrating#…` links. */
+  migratingAnchors?: Set<string>
+  /**
+   * Whether the Guide is complete, as it must be once it replaces the line's guides: a link to a
+   * planned page not yet written then fails instead of being counted.
+   */
+  complete?: boolean
 }
+
+/** What the check finds: the problems, and the links to planned pages not written yet. */
+export interface GuideReport {
+  problems: string[]
+  planned: string[]
+}
+
+const PLANNED = new Set(Object.values(GUIDE_PLAN).flat())
 
 function headingsOf(body: string): { level: number; text: string }[] {
   return withoutCode(body)
@@ -180,7 +256,8 @@ function checkSections(where: string, page: GuidePage, body: string, problems: s
     for (const heading of h2)
       if (!RECIPE_SECTIONS.includes(heading))
         problems.push(`${where}: "## ${heading}" is no recipe section; use ### under one of them`)
-    if (h2.join('\n') !== RECIPE_SECTIONS.filter(heading => h2.includes(heading)).join('\n'))
+    const found = h2.filter(heading => RECIPE_SECTIONS.includes(heading))
+    if (found.join('\n') !== RECIPE_SECTIONS.filter(heading => found.includes(heading)).join('\n'))
       problems.push(`${where}: a recipe's sections run ${RECIPE_SECTIONS.join(', ')}`)
     return
   }
@@ -200,6 +277,28 @@ function checkSections(where: string, page: GuidePage, body: string, problems: s
   if (at('Build it') >= 0 && at('Build it') !== at('Next steps') - 1)
     problems.push(`${where}: Build it comes right before Next steps`)
   if (new Set(h2).size !== h2.length) problems.push(`${where}: two sections share a heading`)
+}
+
+/** The callouts a page may carry. */
+const CALLOUTS = new Set(['NOTE', 'TIP', 'WARNING'])
+
+/** Checks the callouts: `> [!NOTE]`, `> [!TIP]` or `> [!WARNING]`, and at most one in a section. */
+function checkCallouts(where: string, body: string, problems: string[]): void {
+  let section = '(the lead)'
+  let count = 0
+  for (const line of withoutCode(body).split('\n')) {
+    const heading = /^## (.+?)\s*$/.exec(line)
+    if (heading) {
+      section = heading[1]
+      count = 0
+      continue
+    }
+    const callout = /^>\s*\[!(\w+)\]/.exec(line)
+    if (!callout) continue
+    if (!CALLOUTS.has(callout[1]))
+      problems.push(`${where}: a [!${callout[1]}] callout; a page's callouts are NOTE, TIP and WARNING`)
+    if (++count === 2) problems.push(`${where}: "${section}" has more than one callout`)
+  }
 }
 
 function checkExamples(where: string, body: string, context: GuideContext, problems: string[]): void {
@@ -234,6 +333,7 @@ function checkLinks(
   context: GuideContext,
   ownAnchors: Set<string>,
   problems: string[],
+  planned: string[],
 ): void {
   const byPath = new Map([...pages.values()].map(entry => [guidePath(entry.page), entry]))
   for (const target of markdownLinks(body)) {
@@ -241,14 +341,25 @@ function checkLinks(
     if (target.startsWith('#')) {
       if (!ownAnchors.has(target.slice(1))) problems.push(`${where}: no heading for ${target}`)
     } else if (base.startsWith('guide:')) {
-      const entry = byPath.get(base.slice('guide:'.length))
-      if (!entry) problems.push(`${where}: ${target} names no Guide page`)
-      else if (anchor && !entry.anchors.has(anchor)) problems.push(`${where}: ${target} names no heading of that page`)
+      const targetPath = base.slice('guide:'.length)
+      const entry = byPath.get(targetPath)
+      if (targetPath === 'changelog') continue
+      if (targetPath === 'migrating') {
+        if (anchor && context.migratingAnchors && !context.migratingAnchors.has(anchor))
+          problems.push(`${where}: ${target} names no heading of the migration guide`)
+      } else if (entry) {
+        if (anchor && !entry.anchors.has(anchor)) problems.push(`${where}: ${target} names no heading of that page`)
+      } else if (PLANNED.has(targetPath) && !context.complete) planned.push(`${where}: ${target}`)
+      else problems.push(`${where}: ${target} names no Guide page`)
     } else if (base.startsWith('api:')) {
       const [kind, symbol, ...rest] = base.slice('api:'.length).split('/')
       if (rest.length > 0 || !(API_KINDS as readonly string[]).includes(kind) || !symbol)
         problems.push(`${where}: ${target} is not api:<kind>/<Symbol>`)
       else if (!context.apiSymbols.has(symbol)) problems.push(`${where}: ${target} names no symbol of the API`)
+    } else if (GITHUB_MIGRATING.test(base)) {
+      problems.push(
+        `${where}: ${target} links the migration guide on GitHub; write guide:migrating${anchor ? `#${anchor}` : ''}`,
+      )
     } else if (
       !/^[a-z][\w+.-]*:/i.test(base) &&
       (base.startsWith('/') || /^\.\.?\//.test(base) || /\.md$/.test(base))
@@ -262,8 +373,9 @@ function checkLinks(
  * Checks a line's Guide against the template: front matter, sections, examples and links, plus each
  * chapter's orders and the prerequisites it names. Pages are keyed by their file's name.
  */
-export function checkGuide(files: Record<string, string>, context: GuideContext): string[] {
+export function checkGuide(files: Record<string, string>, context: GuideContext): GuideReport {
   const problems: string[] = []
+  const planned: string[] = []
   const folder = `content/${context.line}-next`
   const pages = new Map<string, { page: GuidePage; body: string; anchors: Set<string> }>()
   for (const [slug, text] of Object.entries(files)) {
@@ -280,7 +392,12 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     const place = `${page.chapter}/${page.group ?? ''}/${page.order}`
     if (orders.has(place)) problems.push(`${where}: order ${page.order} is also ${orders.get(place)}'s`)
     orders.set(place, slug)
-    for (const id of page.requires) if (!known.has(id)) problems.push(`${where}: requires "${id}", which is no page`)
+    if (!PLANNED.has(guidePath(page))) problems.push(`${where}: ${guidePath(page)} is not a page of the Guide's plan`)
+    for (const id of page.requires) {
+      if (known.has(id)) continue
+      if (PLANNED.has(id) && !context.complete) planned.push(`${where}: requires "${id}"`)
+      else problems.push(`${where}: requires "${id}", which is no page`)
+    }
     for (const entry of page.api)
       if (!context.apiSymbols.has(entry.split('/')[1].split('#')[0]))
         problems.push(`${where}: api entry "${entry}" names no symbol of the API`)
@@ -292,9 +409,10 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
       problems.push(
         `${where}: TypeScript belongs in examples/${context.line} and an ::example directive, not a code fence`,
       )
+    checkCallouts(where, body, problems)
     checkExamples(where, body, context, problems)
-    checkLinks(where, body, pages, context, anchors, problems)
+    checkLinks(where, body, pages, context, anchors, problems, planned)
   }
   // A link or region used more than once on a page is reported once.
-  return [...new Set(problems)]
+  return { problems: [...new Set(problems)], planned: [...new Set(planned)] }
 }
