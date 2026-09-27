@@ -12,8 +12,10 @@ import type { SearchLine } from '@/lib/search-manifest'
 
 export interface PaletteData {
   lines: SearchLine[]
-  /** What the reader typed while the palette was loading, taken once. */
-  typed: () => string
+  /** What the reader typed before the palette was ready, with its selection, taken once. */
+  typed: () => { text: string; start: number; end: number } | undefined
+  /** Where focus goes back when the palette closes, when not to what had it as the palette opened. */
+  returnTo?: Element | null
   /** Called when the palette closes, so the next shortcut opens it again. */
   closed: () => void
 }
@@ -176,7 +178,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
   const router = useRouter()
   const layer = useRef<HTMLDivElement>(null)
   const field = useRef<HTMLInputElement>(null)
-  useLayerFocus(layer, close)
+  useLayerFocus(layer, close, data.returnTo)
   const [scope, setScope] = useState<SearchLine | undefined>(() => lineOf(window.location.pathname, data.lines))
   const [query, setQuery] = useState('')
   const [groups, setGroups] = useState<HitGroup[]>([])
@@ -184,13 +186,15 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
   const [active, setActive] = useState(0)
 
   useEffect(() => data.closed, [data])
-  // After the field has focus, which useLayerFocus gives it first: keys typed until then were buffered.
-  // They go into the field at once, so a key that reaches it before React draws them adds to them.
+  // After the field has focus, which useLayerFocus gives it first: what was typed until then is in the
+  // stand-in. It goes into the field at once, so a key that reaches it before React draws it adds to it.
   useEffect(() => {
     const typed = data.typed()
     const input = field.current
-    if (!typed || !input) return
-    input.value = typed + input.value
+    if (!typed?.text || !input) return
+    const after = input.value
+    input.value = typed.text + after
+    if (!after) input.setSelectionRange(typed.start, typed.end)
     setQuery(input.value)
   }, [data])
   // Loaded as the palette opens, so the first query does not wait for the index.

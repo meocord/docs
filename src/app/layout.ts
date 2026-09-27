@@ -5,6 +5,7 @@ import { Body, Head, Html, Node, Script, themeScript } from '@meonode/ui'
 import { StyleRegistry } from '@meonode/ui/nextjs-registry'
 import { Wrapper } from '@/components/Wrapper'
 import { SearchIsland } from '@/components/search/SearchIsland'
+import { SearchStandIn } from '@/components/search/SearchStandIn'
 import { readSearchManifest } from '@/lib/search-manifest'
 import { themeModes } from '@/constants/themes/modes'
 import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
@@ -76,7 +77,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         key: 'body',
         children: StyleRegistry({
           // The palette's island rides along on every page; the palette itself loads at the first search.
-          children: Node(Wrapper, { children: [children, Node(SearchIsland, { key: 'search', lines: searchLines })] }),
+          children: Node(Wrapper, {
+            children: [
+              children,
+              Node(SearchStandIn, { key: 'stand-in' }),
+              Node(SearchIsland, { key: 'search', lines: searchLines }),
+            ],
+          }),
         }),
       }),
     ],

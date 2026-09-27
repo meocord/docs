@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { Component, usePortal } from '@meonode/ui'
 import type { SearchLine } from '@/lib/search-manifest'
-import { takeEarlySearch } from '@/components/search/search-keys'
+import { closeStandIn, openStandIn, standInOpen, standInReturnTo, takeStandIn } from '@/components/search/search-keys'
 
 export interface SearchIslandProps {
   /** Every line's search bundle and palette index, from the build's search manifest. */
@@ -33,9 +33,10 @@ function warm() {
 
 /**
  * Opens the command palette from the toolbar's search field, from ⌘K or Ctrl-K, and from `/` when
- * no field has focus, including a shortcut pressed before it listened (`search-keys.ts`). The palette's
- * code loads once the page is idle after load, or sooner when the reader points at or focuses the
- * search field; the line's search index loads at the first open.
+ * no field has focus. Until the palette is ready, what the reader types goes into its stand-in
+ * (`SearchStandIn`), which an inline script opens for a shortcut pressed before the island listens.
+ * The palette's code loads once the page is idle after load, or sooner when the reader points at or
+ * focuses the search field; the line's search index loads at the first open.
  */
 export const SearchIsland = Component<SearchIslandProps>(function SearchIsland({ lines }) {
   const portal = usePortal()
@@ -69,32 +70,23 @@ export const SearchIsland = Component<SearchIslandProps>(function SearchIsland({
   }, [lines])
 
   useEffect(() => {
-    // Keys typed while the palette is still loading, handed to its field so none is lost.
-    let typed: string[] | undefined
-    const buffer = (event: KeyboardEvent) => {
-      if (typed && event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        event.preventDefault()
-        typed.push(event.key)
-      }
-    }
-    const show = async (early: string[] = []) => {
+    const show = async () => {
       if (open.current || lines.length === 0) return
       open.current = true
-      typed = [...early]
+      // What the reader types while the palette loads goes into the stand-in, which the browser edits.
+      const holding = standInOpen() || openStandIn()
       const loaded = await loadPalette().catch(() => undefined)
-      if (!loaded) {
-        // Keys go back to the page, and the next open tries again.
+      // A failed load, or a stand-in the reader closed meanwhile: the keys are the page's, and the next open tries again.
+      if (!loaded || (holding && !standInOpen())) {
         open.current = false
-        typed = undefined
+        closeStandIn()
         return
       }
       portal.open(loaded.PaletteLayer, {
         lines,
-        typed: () => {
-          const text = typed?.join('') ?? ''
-          typed = undefined
-          return text
-        },
+        typed: takeStandIn,
+        // Focus goes back where it was before the stand-in took it, not to the stand-in.
+        returnTo: standInReturnTo(),
         closed: () => (open.current = false),
       })
     }
@@ -104,18 +96,19 @@ export const SearchIsland = Component<SearchIslandProps>(function SearchIsland({
       void show()
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      buffer(event)
       const shortcut = event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey
       const slash = event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !typing(event.target)
-      if (!shortcut && !(slash && !typed)) return
+      if (!shortcut && !slash) return
       event.preventDefault()
       void show()
     }
     document.addEventListener('click', onClick)
     document.addEventListener('keydown', onKeyDown)
-    // A shortcut pressed before the island listened opens the palette now, with the keys typed after it.
-    const early = takeEarlySearch()
-    if (early) void show(early)
+    // A shortcut pressed before the island listened left the stand-in open: the palette takes it over.
+    if (standInOpen()) {
+      if (lines.length === 0) closeStandIn()
+      else void show()
+    }
     return () => {
       document.removeEventListener('click', onClick)
       document.removeEventListener('keydown', onKeyDown)

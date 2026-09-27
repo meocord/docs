@@ -177,27 +177,120 @@ test('keys typed while the palette first loads reach its field', async ({ page }
   await expect(dialog(page).getByRole('option').first()).toContainText('Cooldown')
 })
 
+/** Holds the app's scripts until the returned function is called, for keys pressed before the page hydrates. */
+async function holdScripts(page: Page): Promise<() => void> {
+  let release!: () => void
+  const held = new Promise<void>(resolve => (release = resolve))
+  await page.route('**/_next/static/**/*.js', async route => {
+    await held
+    await route.continue()
+  })
+  return release
+}
+
+const standIn = (page: Page) => page.locator('[data-search-stand-in]')
+
 for (const shortcut of ['ControlOrMeta+k', '/']) {
-  test(`${shortcut} and the keys typed after it, before the page hydrates, open the palette with them`, async ({
+  test(`${shortcut} and what is typed after it, before the page hydrates, open the palette with it`, async ({
     page,
   }) => {
-    // The app's scripts are held until the shortcut and the keys after it are pressed.
-    let release!: () => void
-    const held = new Promise<void>(resolve => (release = resolve))
-    await page.route('**/_next/static/**/*.js', async route => {
-      await held
-      await route.continue()
-    })
+    const release = await holdScripts(page)
     await page.goto('/docs/4.1/defer', { waitUntil: 'domcontentloaded' })
     await page.keyboard.press(shortcut)
-    await page.keyboard.type('cool down')
+    await page.keyboard.type('cool dwn')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.type('own')
+    // The reader sees what they type, in a field the browser edits.
+    await expect(standIn(page)).toBeVisible()
+    await expect(standIn(page)).toHaveValue('cool down')
     release()
     await expect(field(page)).toBeFocused()
     await expect(field(page)).toHaveValue('cool down')
+    await expect(standIn(page)).toBeHidden()
     // The space went to the field, not to the page.
     expect(await page.locator('[data-sheet]:visible').evaluate(sheet => sheet.scrollTop)).toBe(0)
   })
 }
+
+test('Escape before the page hydrates closes the field, and the palette does not open', async ({ page }) => {
+  const release = await holdScripts(page)
+  await page.goto('/docs/4.1/defer', { waitUntil: 'domcontentloaded' })
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.keyboard.type('ab')
+  await page.keyboard.press('Escape')
+  await expect(standIn(page)).toBeHidden()
+  release()
+  // Hydrated: the theme control says which mode is chosen.
+  await expect(page.locator('[data-toolbar]:visible [aria-pressed="true"]')).toHaveCount(1)
+  await page.waitForLoadState('networkidle')
+  await expect(dialog(page)).toHaveCount(0)
+  await expect(standIn(page)).toHaveValue('')
+})
+
+test('a press outside the field before the page hydrates closes it', async ({ page }) => {
+  const release = await holdScripts(page)
+  await page.goto('/docs/4.1/defer', { waitUntil: 'domcontentloaded' })
+  await page.keyboard.press('/')
+  await page.keyboard.type('ab')
+  await page.mouse.click(8, 8)
+  await expect(standIn(page)).toBeHidden()
+  release()
+  await expect(page.locator('[data-toolbar]:visible [aria-pressed="true"]')).toHaveCount(1)
+  await page.waitForLoadState('networkidle')
+  await expect(dialog(page)).toHaveCount(0)
+})
+
+test('the shortcut pressed again before the page hydrates stays with the page, not the browser', async ({ page }) => {
+  // Whether each shortcut was taken, read once every listener has run.
+  await page.addInitScript(() => {
+    const taken: boolean[] = []
+    ;(window as unknown as { __taken: boolean[] }).__taken = taken
+    window.addEventListener(
+      'keydown',
+      event => {
+        if (event.key.toLowerCase() === 'k') setTimeout(() => taken.push(event.defaultPrevented))
+      },
+      true,
+    )
+  })
+  const release = await holdScripts(page)
+  await page.goto('/docs/4.1/defer', { waitUntil: 'domcontentloaded' })
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.keyboard.type('ab')
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __taken: boolean[] }).__taken))
+    .toEqual([true, true])
+  release()
+  await expect(field(page)).toHaveValue('ab')
+})
+
+test('Escape while the palette first loads closes the field, and the palette does not open', async ({ page }) => {
+  await neverIdle(page)
+  await page.goto('/docs/4.1/defer')
+  let release: () => void = () => {}
+  const held = new Promise<void>(resolve => (release = resolve))
+  let requested = false
+  await page.route('**/_next/static/chunks/**', async route => {
+    requested = true
+    await held
+    await route.continue()
+  })
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect.poll(() => requested).toBe(true)
+  await page.keyboard.type('ab')
+  await expect(standIn(page)).toHaveValue('ab')
+  await page.keyboard.press('Escape')
+  await expect(standIn(page)).toBeHidden()
+  release()
+  await page.waitForLoadState('networkidle')
+  await expect(dialog(page)).toHaveCount(0)
+  // The next open tries again, empty.
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(field(page)).toBeFocused()
+  await expect(field(page)).toHaveValue('')
+})
 
 test('a key that reaches the field as it takes the loading keys adds to them', async ({ page }) => {
   await neverIdle(page)
@@ -214,18 +307,16 @@ test('a key that reaches the field as it takes the loading keys adds to them', a
   // A keystroke in the field right after the palette takes the buffer, before React draws it: where a
   // key that reads the field's old, empty value would drop the loading keys.
   await page.evaluate(() => {
-    document.addEventListener(
-      'focusin',
-      event => {
-        const field = event.target
-        if (!(field instanceof HTMLInputElement) || field.getAttribute('role') !== 'combobox') return
-        queueMicrotask(() => {
-          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, `${field.value}o`)
-          field.dispatchEvent(new Event('input', { bubbles: true }))
-        })
-      },
-      { once: true, capture: true },
-    )
+    const onFocus = (event: FocusEvent) => {
+      const field = event.target
+      if (!(field instanceof HTMLInputElement) || field.getAttribute('role') !== 'combobox') return
+      document.removeEventListener('focusin', onFocus, true)
+      queueMicrotask(() => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, `${field.value}o`)
+        field.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    }
+    document.addEventListener('focusin', onFocus, true)
   })
   await page.keyboard.press('ControlOrMeta+k')
   await expect.poll(() => requested).toBe(true)
