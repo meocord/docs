@@ -73,7 +73,7 @@ Each stage sits where it does for a reason:
 1. **`@Defer` acknowledges first**, so slow stages never miss Discord's three seconds.
 2. **Parse** reads a [message command](guide:message-commands)'s words into typed params, with no request to Discord.
    It comes before the guards so they can read the params. A word of the wrong type ends the call with the command's
-   usage.
+   usage, which observers see as `'invalid'`.
 3. **Guards** decide whether the handler runs at all. They come before anything that costs a request or counts a
    call, so a caller they refuse costs nothing.
 4. **The cooldown check** runs only when a message command's params still need fetching. It checks the handler's

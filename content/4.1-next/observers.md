@@ -71,15 +71,15 @@ in.
 
 The [`outcome`](api:types/DispatchOutcome) is one of:
 
-| Outcome       | When                                                                                          |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| `'ran'`       | The call settled without an error, an interceptor that answered without the handler included. |
-| `'denied'`    | A guard returned `false` (no `error`) or threw `GuardDeniedError`.                            |
-| `'cooldown'`  | A [cooldown](guide:cooldowns) refused it with `CooldownError`.                                |
-| `'invalid'`   | [Validation](guide:validation) refused its input with `ValidationError`.                      |
-| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.               |
-| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard.                  |
-| `'not-found'` | No handler matches the interaction and nothing else answered it.                              |
+| Outcome       | When                                                                                                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'ran'`       | The call settled without an error, an interceptor that answered without the handler included.                                                   |
+| `'denied'`    | A guard returned `false` (no `error`) or threw `GuardDeniedError`.                                                                              |
+| `'cooldown'`  | A [cooldown](guide:cooldowns) refused it with `CooldownError`.                                                                                  |
+| `'invalid'`   | [Validation](guide:validation) refused its input with `ValidationError`, or a message named a command it doesn't fit, with `MessageUsageError`. |
+| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                 |
+| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard.                                                                    |
+| `'not-found'` | No handler matches the interaction and nothing else answered it.                                                                                |
 
 The context is the one the call's stages saw, so `getType()`, `getHandlerName()`, `getArgs()` and `getHandlerParams()`
 read the same values. For an interaction no handler matched, it has no controller or handler.
@@ -90,7 +90,9 @@ read the same values. For an interaction no handler matched, it has no controlle
   modal no route takes that another listener answers, such as a collector, is that listener's to report, and isn't
   told.
 - Every message and reaction a handler runs for, and every event handler call.
-- Not a message no handler matches: most of a server's traffic would reach the observers for nothing.
+- A message that names a command but doesn't fit it, such as a word of the wrong type, as `'invalid'`. A parent
+  command's words alone, answered with its subcommands, reach no handler, and are reported without one.
+- Not a message no handler matches otherwise: most of a server's traffic would reach the observers for nothing.
 
 `@Observer({ types: ['interaction'] })` limits an observer to those calls, as `ExecutionContext.getType()` reports
 them.
