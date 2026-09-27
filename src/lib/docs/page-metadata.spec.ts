@@ -117,7 +117,7 @@ describe('page metadata', () => {
     expect(await changelog.generateMetadata(params({ line: '4.1' }))).toEqual(
       expected(
         'Changelog · MeoCord 4.1',
-        'The newest MeoCord 4.1 release in full, and every earlier one with its day and what it holds.',
+        'Every MeoCord 4.1 release, newest first, with its day and what it holds, and the newest in summary.',
         '/docs/4.1/changelog',
       ),
     )

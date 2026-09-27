@@ -93,8 +93,41 @@ export function changelogSummary(changelog: Changelog): string {
   return breaking > 0 ? `${listed}, ${breaking} breaking` : listed
 }
 
-/** A release's sections, each a heading of `level` over its entries, breaking entries marked. */
-function releaseNodes(changelog: Changelog, level: 2 | 3, idPrefix: string): { nodes: Child[]; toc: TocEntry[] } {
+// Changesets opens each entry with its pull request, commit and author: `[#1](…) [`abc`](…) Thanks [@a](…)! - `.
+const CHANGESETS_PREFIX =
+  /^(?:\[#\d+\]\([^)]*\)\s*)?(?:\[`[0-9a-f]+`\]\([^)]*\)\s*)?(?:Thanks \[@[^\]]+\]\([^)]*\)!\s*)?-\s*/
+
+/**
+ * An entry in one sentence, for the changelog's summary: its markdown without the Changesets credit,
+ * cut at the end of the first sentence of its first paragraph. A period inside a code span, such as
+ * `CooldownStore.peekMany`, does not end it.
+ */
+export function changelogEntryLine(markdown: string): string {
+  const paragraph = markdown
+    .replace(CHANGESETS_PREFIX, '')
+    .split(/\n\s*\n/)[0]
+    .trim()
+  let code = false
+  for (let index = 0; index < paragraph.length; index++) {
+    const char = paragraph[index]
+    if (char === '`') code = !code
+    else if (!code && (char === '.' || char === '!' || char === '?') && /\s/.test(paragraph[index + 1] ?? ' ')) {
+      return paragraph.slice(0, index + 1)
+    }
+  }
+  return paragraph
+}
+
+/**
+ * A release's sections, each a heading of `level` over its entries, breaking entries marked. `entryText`
+ * shortens each entry, for a summary.
+ */
+function releaseNodes(
+  changelog: Changelog,
+  level: 2 | 3,
+  idPrefix: string,
+  entryText: (markdown: string) => string = markdown => markdown,
+): { nodes: Child[]; toc: TocEntry[] } {
   const Heading = level === 2 ? H2 : H3
   const nodes: Child[] = []
   const toc: TocEntry[] = []
@@ -114,7 +147,7 @@ function releaseNodes(changelog: Changelog, level: 2 | 3, idPrefix: string): { n
             'data-breaking': entry.breaking || undefined,
             children: [
               ...(entry.breaking ? [Span('Breaking', { key: 'badge', 'data-badge': 'deprecated' }), ' '] : []),
-              ...lower(entry.markdown).nodes,
+              ...lower(entryText(entry.markdown)).nodes,
             ],
           }),
         ),
@@ -128,28 +161,37 @@ const migratingLink = (line: string) =>
   A({ key: 'migrating', href: docsHref({ kind: 'migrating', line }, VERSIONS), children: 'migration guide' })
 
 /**
- * The changelog page's content: the newest release in full, then every earlier one as a line with
- * its day and what it holds, linking its own page, so the page stays one release long as the line
- * grows.
+ * The changelog page's content: every release of the line as a row with its day and what it holds,
+ * newest first, each linking its own page with the notes in full. The newest also shows its sections
+ * with each entry in one sentence, so the page weighs the same however large a release is.
  */
 export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[] } | undefined {
   const [newest, ...earlier] = lineChangelog(line)
   if (!newest) return undefined
   const newestId = slug(newest.version)
-  const release = releaseNodes(newest, 3, `${newestId}-`)
+  const release = releaseNodes(newest, 3, `${newestId}-`, changelogEntryLine)
   const nodes: Child[] = [
     H1(`Changelog for ${line}`, { key: 'title' }),
     P(
       [
-        'The newest release in full, and every earlier one on a page of its own. Entries marked Breaking change a working bot; the ',
+        'Every release, newest first, each on a page of its own with its notes in full. Entries marked Breaking change a working bot; the ',
         migratingLink(line),
         ' says what to do about them.',
       ],
       { key: 'lead' },
     ),
     H2(A({ href: releaseHref(line, newest.version), children: newest.version }), { key: newestId, id: newestId }),
-    ...publishedLine(newest, `${newestId}-published`),
+    P(releaseRow(newest), { key: `${newestId}-summary`, 'data-api-meta': true }),
     ...release.nodes,
+    P(
+      A({
+        key: 'full',
+        href: releaseHref(line, newest.version),
+        'data-release-notes': true,
+        children: `The ${newest.version} notes in full`,
+      }),
+      { key: `${newestId}-full` },
+    ),
   ]
   const toc: TocEntry[] = [{ id: newestId, title: newest.version, depth: 2 }]
   if (earlier.length > 0) {
@@ -163,11 +205,8 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
             key: changelog.version,
             children: [
               A({ key: 'version', href: releaseHref(line, changelog.version), children: changelog.version }),
-              ...(changelog.published
-                ? [' · ', Time(formatDay(changelog.published), { key: 'day', dateTime: changelog.published })]
-                : []),
               ' · ',
-              changelogSummary(changelog),
+              ...releaseRow(changelog),
             ],
           }),
         ),
@@ -176,6 +215,16 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
     toc.push({ id: 'earlier-releases', title: 'Earlier releases', depth: 2 })
   }
   return { nodes, toc }
+}
+
+/** A release's row after its version: its day, when the registry gave one, and what it holds. */
+function releaseRow(changelog: Changelog): Child[] {
+  return [
+    ...(changelog.published
+      ? [Time(formatDay(changelog.published), { key: 'day', dateTime: changelog.published }), ' · ']
+      : []),
+    changelogSummary(changelog),
+  ]
 }
 
 /** One release's page content: its day, then its sections, breaking entries marked. */

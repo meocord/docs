@@ -1,6 +1,9 @@
+import { Div } from '@meonode/ui'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import {
   changelogArticle,
+  changelogEntryLine,
   changelogParams,
   changelogSummary,
   lineChangelog,
@@ -22,7 +25,7 @@ describe('changelog', () => {
     expect(changelogs.every(changelog => /^\d{4}-\d{2}-\d{2}$/.test(changelog.published ?? ''))).toBe(true)
   })
 
-  it('gives the newest release in full and the earlier ones a line each, so the page stays one release long', () => {
+  it('gives the newest release in summary and the earlier ones a line each, each linking its notes in full', () => {
     const [newest, ...earlier] = lineChangelog('4.0')
     const article = changelogArticle('4.0')!
     expect(article.toc).toEqual([
@@ -39,6 +42,26 @@ describe('changelog', () => {
     const releases = article.nodes.find(node => props(node)['data-releases'])
     const items = props(releases).children as Raw[]
     expect(items.map(item => item.rawProps?.key)).toEqual(earlier.map(changelog => changelog.version))
+    // Each entry of the newest release in one sentence, and a link to its page for the rest.
+    const html = renderToStaticMarkup(Div({ children: article.nodes }).render())
+    const entries = newest.sections.flatMap(section => section.entries)
+    expect(html.match(/<li(?: data-breaking="true")?>/g)?.length).toBe(entries.length + earlier.length)
+    expect(html).toContain(`<a href="/docs/latest/changelog/${newest.version}" data-release-notes="true">`)
+  })
+
+  it('cuts an entry to its first sentence, without the Changesets credit', () => {
+    const credit =
+      '[#12](https://github.com/meocord/meocord/pull/12) [`abc1234`](https://github.com/meocord/meocord/commit/abc1234) Thanks [@a](https://github.com/a)! - '
+    expect(changelogEntryLine(`${credit}Adds \`route()\`. It builds customIds.`)).toBe('Adds `route()`.')
+    // A period inside code, or one ending a word inside it, does not end the sentence.
+    expect(changelogEntryLine('`CooldownStore.peekMany` checks a call. Then more.')).toBe(
+      '`CooldownStore.peekMany` checks a call.',
+    )
+    expect(changelogEntryLine('Warns once!\n\nThe rest.')).toBe('Warns once!')
+    expect(changelogEntryLine('A first paragraph without an end\n\nA second one.')).toBe(
+      'A first paragraph without an end',
+    )
+    expect(changelogEntryLine('Version 4.1 keeps 1.5 s. Next.')).toBe('Version 4.1 keeps 1.5 s.')
   })
 
   it('prerenders a page for every release of every line, each with its groups in the table of contents', () => {
