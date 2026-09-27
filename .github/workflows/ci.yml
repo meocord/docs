@@ -219,12 +219,24 @@ jobs:
           push: true
           sbom: true
           provenance: mode=max
-          tags: |
-            ${{ env.IMAGE }}:sha-${{ github.sha }}
-            ${{ env.IMAGE }}:main
+          # Only the commit's own tag: `main` moves below, once this digest is attested
+          tags: ${{ env.IMAGE }}:sha-${{ github.sha }}
           build-args: BUILD_VERSION=${{ github.sha }}
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+      # A deploy pulls `main` and refuses an image without provenance, so `main` never names an unattested
+      # digest. `--prefer-index=false` copies the attested index as it is, never as a new index with a
+      # digest of its own, and the job fails if the tag names any other digest.
+      - name: Point main at the attested image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker buildx imagetools create --prefer-index=false --tag "$IMAGE:main" "$IMAGE@$DIGEST"
+          tagged=$(docker buildx imagetools inspect "$IMAGE:main" --format '{{json .Manifest}}' | jq -r .digest)
+          if [ "$tagged" != "$DIGEST" ]; then
+            echo "::error::main names $tagged, not the attested $DIGEST"
+            exit 1
+          fi
