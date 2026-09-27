@@ -35,6 +35,36 @@ rejects with it, and `getResponse` shows what `@Defer` sent before the guard ran
 
 ::example{file="controllers/button/card.button.controller.spec.ts"}
 
+## Sending input with dispatch
+
+`invoke` tests the handler you name. `module.dispatch(input)` tests what the bot does with an input: it routes an
+interaction, a message or a reaction over the module's controllers, with its `app`'s message options, exactly as
+the bot does, and runs each handler it reaches through the same pipeline:
+
+::example{file="testing/dispatch.spec.ts" region="dispatch"}
+
+It resolves to `{ ran, handlers, error? }`, and `handlers` lists each handler reached, in the order it ran, with its
+own `ran` and `error`. A message reaches its command after the app's prefix, and can reach a patterned handler and
+every `@MessageHandler()` listener at once:
+
+::example{file="testing/dispatch.spec.ts" region="message"}
+
+A reaction takes the user who reacted and, optionally, the action; it's an add unless you say otherwise:
+
+::example{file="testing/dispatch.spec.ts" region="reaction"}
+
+Unlike `invoke`, `dispatch` answers errors as the bot does. An error no filter handles gets the built-in fallback's
+answer, then rejects. The user's own outcome, a usage reply, an unknown command, or the refusal of a guard, a
+cooldown, a validation or a `UserError`, is answered, and the call resolves with it as `error`. An input no route
+takes gets "Command not found!":
+
+::example{file="testing/dispatch.spec.ts" region="not-found"}
+
+Whatever the bot skips reaches nothing: a message from a bot, or a bot's reaction to a handler without `bots: true`,
+resolves to `{ ran: false, handlers: [] }`. A button, select menu or modal submission no route takes may belong to a
+collector: when the interaction's client has another `interactionCreate` listener, `dispatch` waits the same 1.5
+seconds the bot does before answering it. A mock's own client has none, so the answer is immediate.
+
 ## Global guards, interceptors and filters
 
 Pass the app class as `app` to include the ones `@MeoCord` declares. Only those are read from it; the

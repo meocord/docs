@@ -1,7 +1,13 @@
 import { ButtonInteraction } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
-import { createMockInteraction, getResponse, MeoCordTestingModule, resolveRoute } from 'meocord/testing'
+import {
+  createMockInteraction,
+  findRouteConflicts,
+  getResponse,
+  MeoCordTestingModule,
+  resolveRoute,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { ProfileButtonController } from '@src/controllers/button/profile.button.controller'
 
@@ -27,5 +33,9 @@ describe('ProfileButtonController', () => {
       params: { ownerId: '123', uid: '456' },
     })
     expect(route('profile/123/456')).toMatchObject({ method: 'showProfile' })
+  })
+
+  it('has no two patterns that can take one id', () => {
+    expect(findRouteConflicts(App)).toEqual([])
   })
 })
