@@ -127,12 +127,11 @@ describe('sync', () => {
     expect(JSON.parse(read('examples/9.0/package.json')).dependencies.meocord).toBe('9.0.0-beta.0')
   })
 
-  it('records since data, and says why no migration guide was imported', () => {
+  it('records since data, and writes no migration guide', () => {
     expect(JSON.parse(read('generated/since.json'))['meocord/core:ShardContext.call(method)']).toEqual({
       since: '9.0.0-beta.0',
     })
-    expect(existsSync(path.join(root, 'generated', 'migrating', '9.0.md'))).toBe(false)
-    expect(logs).toContain('9.0: 9.0.0-beta.0 has no provenance, so its migration guide is not imported')
+    expect(existsSync(path.join(root, 'content', 'migrating', '9.0.md'))).toBe(false)
   })
 
   it('makes the line current at its stable release, and has nothing left to add after', async () => {

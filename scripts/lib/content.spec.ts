@@ -223,7 +223,7 @@ describe('checkSite', () => {
     ])
   })
 
-  it('reports missing generated data', () => {
+  it('reports missing generated data, and needs no migration guide for a line', () => {
     expect(
       checkSite(
         site({
@@ -237,7 +237,6 @@ describe('checkSite', () => {
       // Without the anchors map, the imported page's headings are unknown too
       'content/4.1/guards.md: /docs/4.0/guards#params names no heading of that page',
       'line 4.0 imports its README but has no generated/readme-anchors/4.0.json',
-      'line 4.0 has no generated/migrating/4.0.md',
       '4.1.0-beta.0 has no generated/api/4.1.0-beta.0.json',
       '4.1.0-beta.0 has no generated/changelog/4.1.0-beta.0.json',
     ])
@@ -282,7 +281,6 @@ describe('checkSite', () => {
 
     expect(checkSite(site({ readme, migrating: { '4.1': '# Upgrading\n\n## Start\n' } }))).toEqual([
       'generated/readme/4.0/guards.md: /docs/4.0/migrating links a migration guide 4.0 does not have',
-      'line 4.0 has no generated/migrating/4.0.md',
     ])
   })
 })

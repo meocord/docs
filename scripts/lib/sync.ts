@@ -1,7 +1,8 @@
 /**
  * Brings the repository up to date with the registry: every published version from versions.json's
  * `since` on, verified, gets its API document and changelog, joins its line, and the lines it
- * touched get their guides, migration guide and example pin refreshed.
+ * touched get their guides and example pin refreshed. Migration guides are written for the site, in
+ * content/migrating/, and the sync never touches them.
  */
 
 import { readdirSync, readFileSync } from 'fs'
@@ -20,9 +21,7 @@ import {
   writeApi,
   writeChangelog,
   writeJson,
-  writeText,
 } from './layout.js'
-import { fetchMigrating, migratingFile } from './migrating.js'
 import type { Fetch, Packument } from './registry.js'
 import { apiKeys, computeSince, type SinceEntry } from './since.js'
 import { fetchVerified, type VerifiedPackage } from './verified-package.js'
@@ -92,32 +91,14 @@ export function refreshConfig(): void {
 }
 
 /**
- * Refreshes what a line takes from its newest version: its imported guides, example pin and
- * migration guide. Does nothing when `pkg` is not the line's newest version.
+ * Refreshes what a line takes from its newest version: its imported guides and example pin. Does
+ * nothing when `pkg` is not the line's newest version.
  */
-export async function refreshLine(
-  config: VersionsConfig,
-  pkg: VerifiedPackage,
-  deps: Pick<SyncDeps, 'fetch' | 'log'> = {},
-): Promise<void> {
+export function refreshLine(config: VersionsConfig, pkg: VerifiedPackage): void {
   const line = findLine(config, lineOf(pkg.version))!
   if (newestIn(line) !== pkg.version) return
   if (line.guides === 'readme') importLineReadme(line.line, pkg.version, pkg.readme(), pkg.provenance?.commit)
   pinExamples(line.line, pkg.version)
-  if (!pkg.provenance) {
-    ;(deps.log ?? console.log)(`${line.line}: ${pkg.version} has no provenance, so its migration guide is not imported`)
-    return
-  }
-  const migrating = await fetchMigrating(pkg.provenance.commit, deps.fetch)
-  writeText(
-    paths.migrating(line.line),
-    migratingFile(migrating, {
-      line: line.line,
-      version: pkg.version,
-      commit: pkg.provenance.commit,
-      anchors: linkAnchors(config, line.line),
-    }),
-  )
 }
 
 export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<SyncResult> {
@@ -153,7 +134,7 @@ export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<Sync
 
   for (const pkg of touched.values()) {
     try {
-      await refreshLine(config, pkg, deps)
+      refreshLine(config, pkg)
     } finally {
       pkg.remove()
     }
