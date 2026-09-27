@@ -98,6 +98,7 @@ So set what a mock returns in the test that relies on it, or in `beforeEach`, ra
 
 `createDiscordError(code)` builds the `DiscordAPIError` discord.js throws, for a mock to reject with: 10062
 when the three seconds to answer passed, 40060 when the interaction was already acknowledged, 50001 for
-missing access, and 50027 when the fifteen-minute token has expired.
+missing access, and 50027 when the fifteen-minute token has expired. `respond()` passes the error on to the handler,
+and `getResponse` keeps the refused call, with its `error`, without counting it as sent:
 
 ::example{file="testing/mocks.spec.ts" region="errors"}
