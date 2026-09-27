@@ -12,9 +12,11 @@ limits:
 
 ::example{file="controllers/slash/daily.slash.controller.ts" region="cooldown"}
 
-Stacked cooldowns are counted in the order they read, a controller's first, and a call one of them blocks has
-already spent those above it. With the short one first, as here, a call made a second after the last is
-refused by the three-second cooldown before it reaches the per-minute one.
+Stacked cooldowns are counted together, a controller's first: a call is counted against all of them only if all
+allow it, so a call one refuses spends none of the others, and it waits the longest wait among those that
+refuse it. Here, a call made a second after the last is refused by the three-second cooldown and keeps its
+per-minute uses. Every store MeoCord ships counts this way; a store of your own counts them one after another
+unless it [overrides `consumeMany`](#any-other-database).
 
 | Option    | Default  | What it does                                                                                                                            |
 | --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -117,6 +119,11 @@ you have. With node-redis:
 
 Extend `CooldownStore`. It is resolved like a [service](/docs/4.1/services), so it can inject its client, and
 its `consume` must check and record a call in one step, so two calls at the limit cannot both pass.
+
+`@Cooldown` calls `consumeMany(entries)` once per call, with every stacked cooldown. Its default calls `consume`
+for each in order and stops at the first refusal. Override it to check them all and record the call against
+all only if all allow it, in one round trip, as the built-in stores do; it is worth it for any store behind a
+network.
 [A cooldown store](/docs/4.1/recipe-cooldown-stores) builds one for PostgreSQL, SQLite and MongoDB.
 
 ## Checking a store
