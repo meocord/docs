@@ -273,6 +273,23 @@ describe('checkSite', () => {
     ])
   })
 
+  it("refuses a link to a section of meocord's README, which the site's pages cover", () => {
+    const readme = 'https://github.com/meocord/meocord/blob/main/README.md'
+    const problems = checkSite(
+      withAuthored({
+        theming: page(
+          'id: theming\ntitle: Theming',
+          `[a](${readme}#stack-traces), [b](${readme}), [c](https://github.com/meocord/meocord#theming) and [d](https://github.com/meocord/meocord)`,
+        ),
+      }),
+    )
+    expect(problems).toEqual([
+      `content/4.1/theming.md: ${readme}#stack-traces links a section of meocord's README; link the site's page for it`,
+      `content/4.1/theming.md: ${readme} links a section of meocord's README; link the site's page for it`,
+      "content/4.1/theming.md: https://github.com/meocord/meocord#theming links a section of meocord's README; link the site's page for it",
+    ])
+  })
+
   it('reports a link to a migration guide the line lacks', () => {
     const readme = {
       '4.1': {},

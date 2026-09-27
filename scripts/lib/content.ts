@@ -87,6 +87,9 @@ export function fenceLanguages(markdown: string): string[] {
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md(#.*)?$/
+// A section of the library's README, which the site's pages cover
+const GITHUB_README =
+  /^https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord(?:\/blob\/[^/]+\/README\.md(?:#.*)?|\/?#.+)$/
 /** The one examples folder an ::example may name with `from`, beside its own line's. */
 export const EXAMPLE_SOURCE = 'compare'
 
@@ -147,6 +150,10 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
         problems.push(
           `${where}: ${target} links the migration guide on GitHub; write /docs/${from.line}/migrating${migrating[1] ?? ''}`,
         )
+        continue
+      }
+      if (GITHUB_README.test(target)) {
+        problems.push(`${where}: ${target} links a section of meocord's README; link the site's page for it`)
         continue
       }
       if (target.startsWith('#')) {

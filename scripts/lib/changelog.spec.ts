@@ -58,6 +58,23 @@ describe('rewriteLibraryLinks', () => {
     ).toBe('[a](/docs/4.1/component-routing) [b](/docs/4.1/component-routing#modal-fields)')
   })
 
+  it('reads the README by its file on a branch or commit as by the repository', () => {
+    const anchors = {
+      theming: 'theming',
+      'where-calls-are-counted': { slug: 'cooldowns', anchor: 'where-calls-are-counted' },
+    }
+
+    expect(
+      rewriteLibraryLinks(
+        '[a](https://github.com/meocord/meocord/blob/main/README.md#theming) ' +
+          '[b](https://github.com/l7aromeo/meocord/blob/9b54a71/README.md#where-calls-are-counted) ' +
+          '[c](https://github.com/meocord/meocord/blob/main/README.md)',
+        '4.1',
+        anchors,
+      ),
+    ).toBe('[a](/docs/4.1/theming#theming) [b](/docs/4.1/cooldowns#where-calls-are-counted) [c](/docs/4.1)')
+  })
+
   it('leaves a README anchor no page holds, and points the bare README at the line', () => {
     expect(
       rewriteLibraryLinks(
