@@ -154,7 +154,7 @@ would:
 
 ::example{file="tutorial/feedback.controller.spec.ts" region="spec"}
 
-Run `npm test`. The form opens in Ada's language and refuses a second try within five minutes, and her submission
+Run `npm test`. The form opens in Ada's language and refuses a second try within five minutes, and their submission
 reaches the review channel with its buttons.
 
 ## Next steps
