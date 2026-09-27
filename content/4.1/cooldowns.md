@@ -132,6 +132,24 @@ for each in order and stops at the first refusal. Override it to check them all 
 all only if all allow it, in one round trip, as the built-in stores do; it is worth it for any store behind a
 network.
 
+## When the store fails
+
+A shared store can be down, restarting or cut off. When it throws, rejects or doesn't answer within
+`cooldownStoreTimeoutMs`, a second by default, `cooldownStoreFailure` decides what the call gets:
+
+::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
+
+- **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown that
+  can't be checked isn't known to allow it. The fallback answers only the caller, "Cooldowns can't be checked right
+  now: try again shortly.", through the presenter's error view. An exception filter catching `CooldownStoreError` can
+  say it another way, or in the user's language. [Observers](/docs/4.1/observers) see `outcome: 'error'` with that
+  error.
+- **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
+
+Either way, the failure is logged once per outage, with its cause, and again when the store answers. MeoCord never
+counts a call itself or asks twice, so a store that answers after the timeout records the call once, in the store;
+under `'deny'`, that call was refused and still spent a use there.
+
 ## Checking a store
 
 A shared store is easy to get subtly wrong. `testCooldownStore` from `meocord/testing` runs the behaviour
