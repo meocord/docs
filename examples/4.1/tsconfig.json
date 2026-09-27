@@ -22,5 +22,6 @@
     },
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "vitest.config.ts"],
+  "exclude": ["src/augmented"]
 }

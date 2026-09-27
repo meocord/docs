@@ -43,6 +43,19 @@ for (const line of lines) {
     console.log(`  FAIL  ${line}: against meocord ${installed}\n${(result.stdout + result.stderr).trim()}`)
     continue
   }
+  // Examples that augment meocord's types, such as an app's own theme tokens, are a program of their own, since an
+  // augmentation reaches every file compiled with it
+  const augmented = path.join(dir, 'src', 'augmented', 'tsconfig.json')
+  if (existsSync(augmented)) {
+    const typed = spawnSync(process.execPath, [tsc, '-p', augmented], { encoding: 'utf8' })
+    if (typed.status !== 0) {
+      failed++
+      console.log(
+        `  FAIL  ${line}: augmented examples against meocord ${installed}\n${(typed.stdout + typed.stderr).trim()}`,
+      )
+      continue
+    }
+  }
   // A line with a vitest config runs its specs too, on Bun, as a generated app of that version does
   const hasSpecs = existsSync(path.join(dir, 'vitest.config.ts'))
   if (hasSpecs) {
