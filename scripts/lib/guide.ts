@@ -6,7 +6,6 @@
 
 import { parse as parseYaml } from 'yaml'
 import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
-import { isKnownLanguage } from '../../src/lib/prose/languages'
 
 /** The Guide's chapters, in reading order, then the appendices. */
 export const CHAPTERS = [
@@ -101,6 +100,8 @@ const FIXED = new Set<string>(SECTIONS.map(section => section.heading))
 const RECIPE_SECTIONS = ['The code', 'How it works', 'Variations', 'Next steps']
 
 const SUMMARY_LIMIT = 160
+/** The fences a page may carry; code comes from examples/, so these are commands, data and output. */
+const FENCES = new Set(['bash', 'json', 'yaml', 'text'])
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 
@@ -109,7 +110,10 @@ export interface GuideContext {
   line: string
   /** Example files per folder, keyed by their path under examples/<folder>/. */
   examples: Record<string, Record<string, string>>
-  /** Every symbol the line's newest version exports, by name. */
+  /**
+   * Every symbol the line's newest version exports, by name. Only the name is checked: a symbol's kind
+   * comes from its `@group` tag, which the API documents do not carry yet.
+   */
   apiSymbols: Set<string>
 }
 
@@ -171,10 +175,12 @@ function checkSections(where: string, page: GuidePage, body: string, problems: s
   const h2 = headings.filter(heading => heading.level === 2).map(heading => heading.text)
   if (page.chapter === 'appendix') {
     if (page.group !== 'recipes') return
-    const found = h2.filter(text => RECIPE_SECTIONS.includes(text))
     for (const heading of RECIPE_SECTIONS)
-      if (!found.includes(heading)) problems.push(`${where}: a recipe has a "## ${heading}" section`)
-    if (found.join('\n') !== RECIPE_SECTIONS.filter(heading => found.includes(heading)).join('\n'))
+      if (!h2.includes(heading)) problems.push(`${where}: a recipe has a "## ${heading}" section`)
+    for (const heading of h2)
+      if (!RECIPE_SECTIONS.includes(heading))
+        problems.push(`${where}: "## ${heading}" is no recipe section; use ### under one of them`)
+    if (h2.join('\n') !== RECIPE_SECTIONS.filter(heading => h2.includes(heading)).join('\n'))
       problems.push(`${where}: a recipe's sections run ${RECIPE_SECTIONS.join(', ')}`)
     return
   }
@@ -185,11 +191,12 @@ function checkSections(where: string, page: GuidePage, body: string, problems: s
   const expected = SECTIONS.map(section => section.heading).filter(heading => fixed.includes(heading))
   if (fixed.join('\n') !== expected.join('\n'))
     problems.push(`${where}: the fixed sections run ${SECTIONS.map(section => section.heading).join(', ')}`)
-  // Topic sections sit between How it works and Gotchas; Build it comes right before Next steps.
+  // Topic sections sit after How it works and before the closing sections: Gotchas, Build it, Next steps.
   const at = (heading: string) => h2.indexOf(heading)
+  const closing = ['Gotchas', 'Build it', 'Next steps'].map(at).find(index => index >= 0) ?? h2.length
   const topics = h2.filter(text => !FIXED.has(text))
-  if (topics.some(text => at(text) < at('How it works') || (at('Gotchas') >= 0 && at(text) > at('Gotchas'))))
-    problems.push(`${where}: a topic section sits outside How it works … Gotchas`)
+  if (topics.some(text => at(text) < at('How it works') || at(text) > closing))
+    problems.push(`${where}: a topic section sits outside How it works … Gotchas, Build it and Next steps`)
   if (at('Build it') >= 0 && at('Build it') !== at('Next steps') - 1)
     problems.push(`${where}: Build it comes right before Next steps`)
   if (new Set(h2).size !== h2.length) problems.push(`${where}: two sections share a heading`)
@@ -274,10 +281,13 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     if (orders.has(place)) problems.push(`${where}: order ${page.order} is also ${orders.get(place)}'s`)
     orders.set(place, slug)
     for (const id of page.requires) if (!known.has(id)) problems.push(`${where}: requires "${id}", which is no page`)
+    for (const entry of page.api)
+      if (!context.apiSymbols.has(entry.split('/')[1].split('#')[0]))
+        problems.push(`${where}: api entry "${entry}" names no symbol of the API`)
     checkSections(where, page, body, problems)
     for (const language of fenceLanguages(body))
-      if (!isKnownLanguage(language))
-        problems.push(`${where}: a code fence is marked "${language}", which the site does not highlight`)
+      if (!FENCES.has(language) && !TYPESCRIPT_FENCE.test(`\`\`\`${language}`))
+        problems.push(`${where}: a code fence is marked "${language}"; a page's fences are ${[...FENCES].join(', ')}`)
     if (TYPESCRIPT_FENCE.test(body))
       problems.push(
         `${where}: TypeScript belongs in examples/${context.line} and an ::example directive, not a code fence`,
@@ -285,5 +295,6 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     checkExamples(where, body, context, problems)
     checkLinks(where, body, pages, context, anchors, problems)
   }
-  return problems
+  // A link or region used more than once on a page is reported once.
+  return [...new Set(problems)]
 }
