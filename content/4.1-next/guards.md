@@ -121,11 +121,12 @@ pipes, and the call's type, controller and handler. Only guards inject it; the o
 A [message command](guide:message-params) with a `member`, `user`, `role` or `channel` param fetches nothing from
 Discord before its guards. Each such param reaches the guard as an [`EntityRef`](api:types/EntityRef), typed by
 [`ParamRefsOf`](api:types/ParamRefsOf): its `id`, the entity as `cached` when discord.js already has it, and
-`resolve()` to fetch it. A guard that needs the entity fetches it; one that doesn't costs no request:
+`resolve()` to fetch it. A guard that needs the entity fetches it; one that doesn't costs no request. This one refuses
+a caller without the permission silently, before any request, and tells one who doesn't outrank the target why:
 
 ::example{file="guards/outranks-target.guard.ts" region="guard"}
 
-::example{file="controllers/message/ban.message.controller.ts" region="handler"}
+::example{file="controllers/message/economy.message.controller.ts" region="optionals"}
 
 Once the guards let the call through, whatever the cache lacks is fetched, and the handler receives the entities
 themselves.
@@ -167,7 +168,7 @@ A guard can also be tested alone, with `createExecutionContext` building the con
 ## Build it
 
 The staff channel shows each piece of feedback with Approve and Reject buttons, and anyone who can see the channel can
-press them. Only the staff should decide, so add a guard that checks for the staff role, from a button or a message:
+press them. Only the staff should decide, so add a guard that checks for the staff role:
 
 ::example{file="tutorial/staff.guard.ts" region="guard"}
 

@@ -122,8 +122,9 @@ Guards and interceptors run in that order, global first. Filters are tried the o
 then the controller's, then the global ones. Cooldowns go on a controller or a method.
 
 A controller's stages also apply to every class that extends it. A handler takes its own class's stages first, then
-each base class's in turn, so a guard on a base controller guards every subclass. `@Controller({ inheritStages: false })`
-keeps the handlers a subclass declares to its own stages; the ones it inherits keep their base's.
+each base class's in turn, so a guard on a base controller guards every subclass.
+`@Controller({ inheritStages: false })` keeps the handlers a subclass declares to its own stages; the ones it inherits
+keep their base's.
 
 MeoCord resolves this chain once per handler, so dispatch pays nothing for it.
 [`inspectHandler`](api:testing/inspectHandler) lists what a handler ends up with, in the order it runs.
