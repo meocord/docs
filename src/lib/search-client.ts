@@ -90,15 +90,31 @@ export function flatten(groups: readonly HitGroup[]): Hit[] {
 /** The words of a text, lowercased, as a search compares them. */
 const wordsOf = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? []
 
+/** How many leading characters two words share. */
+const shared = (a: string, b: string) => {
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  return i
+}
+
 /**
- * Whether a result's excerpt shows a real match for the query. Pagefind marks the words it matched, and besides a
- * word a term starts, or a stem of it, it also matches a word the term merely starts with: the `z` of
- * `import { z }` for `zqxjvw`. A mark that is such a word, more than two characters shorter than the term, is no
- * match, while `guard` for `guards` is. An excerpt with no marks, a match in the title alone, counts.
+ * Whether a marked word matches a query term: it is the term or extends it, or they share a stem, a common prefix
+ * of at least 3 characters that leaves at most 2 of the shorter word over. `test` for `testing` and `configure`
+ * for `configuration` match; the `z` Pagefind marks for `zero`, because `zero` starts with it, does not.
+ */
+const matches = (mark: string, term: string) =>
+  mark.startsWith(term) || shared(mark, term) >= Math.max(3, Math.min(mark.length, term.length) - 2)
+
+/**
+ * Whether a result's excerpt shows a real match for every term of the query, as Pagefind requires every term.
+ * Pagefind also marks a word a term merely starts with, such as the `z` of `import { z }` for `zqxjvw`; a term
+ * whose marked words are all such is not matched. A term with no marked word of its own, matched outside the
+ * excerpt, and an excerpt with no marks, a match in the title, count.
  */
 export function marksAMatch(query: string, excerptHtml: string): boolean {
   const marks = [...excerptHtml.matchAll(/<mark>([^<]*)<\/mark>/g)].flatMap(match => wordsOf(match[1]))
-  if (marks.length === 0) return true
-  const terms = wordsOf(query)
-  return marks.some(mark => terms.some(term => !(term.startsWith(mark) && term.length - mark.length > 2)))
+  return wordsOf(query).every(term => {
+    const related = marks.filter(mark => term.startsWith(mark) || matches(mark, term))
+    return related.length === 0 || related.some(mark => matches(mark, term))
+  })
 }

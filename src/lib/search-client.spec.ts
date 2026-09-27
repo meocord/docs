@@ -91,21 +91,41 @@ describe('groupHits', () => {
 
 describe('marksAMatch', () => {
   const excerpt = (...marks: string[]) => marks.map(mark => `before <mark>${mark}</mark> after`).join(' … ')
+  const cases: [query: string, marks: string[], kept: boolean][] = [
+    // A word the term starts, a stem, and a word the term extends by a character or two
+    ['guard', ['GuardInterface.'], true],
+    ['guards', ['guard'], true],
+    ['configuration', ['configure'], true],
+    ['testing', ['test'], true],
+    ['deployment', ['deploy'], true],
+    ['logging', ['log'], true],
+    ['interactions', ['interact'], true],
+    ['cooldown', ['cooldowns'], true],
+    ['cooldowns', ['cooldown'], true],
+    ['presenter', ['presenters'], true],
+    ['presenters', ['presenter'], true],
+    ['present', ['presenter'], true],
+    ['to', ['to'], true],
+    ['js', ['json'], true],
+    // A much shorter word the term only starts with, such as a one-letter code token
+    ['zqxjvw', ['z'], false],
+    ['zqxjvw', ['z', 'z'], false],
+    ['zero', ['z'], false],
+    ['timeout', ['t'], false],
+    ['id', ['i'], false],
+    // Every term needs its own match
+    ['zqxjvw guard', ['z'], false],
+    ['zero config', ['z'], false],
+    ['zqxjvw guard', ['z', 'Guard'], false],
+    ['guard config', ['Guard', 'configure'], true],
+  ]
 
-  it('keeps a word the term starts, a stem, and a word the term extends by a character or two', () => {
-    expect(marksAMatch('guard', excerpt('GuardInterface.'))).toBe(true)
-    expect(marksAMatch('guards', excerpt('guard'))).toBe(true)
-    expect(marksAMatch('configuration', excerpt('configure'))).toBe(true)
+  it.each(cases)('%s with %j marked: %s', (query, marks, kept) => {
+    expect(marksAMatch(query, excerpt(...marks))).toBe(kept)
   })
 
-  it('rejects a much shorter word the term only starts with, as a one-letter code token', () => {
-    expect(marksAMatch('zqxjvw', excerpt('z'))).toBe(false)
-    expect(marksAMatch('zqxjvw', excerpt('z', 'z'))).toBe(false)
-    expect(marksAMatch('timeout', excerpt('t'))).toBe(false)
-  })
-
-  it('keeps a result any term really matches, and one whose excerpt marks nothing', () => {
-    expect(marksAMatch('zqxjvw guard', excerpt('z', 'Guard'))).toBe(true)
+  it('counts a term matched outside the excerpt, and an excerpt that marks nothing', () => {
+    expect(marksAMatch('guard cooldown', excerpt('guard'))).toBe(true)
     expect(marksAMatch('zqxjvw', 'a title-only match, with no marks')).toBe(true)
   })
 })
