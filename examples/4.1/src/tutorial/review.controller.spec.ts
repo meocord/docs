@@ -81,8 +81,8 @@ describe('ReviewController', () => {
     expect(module.get(FeedbackService).get('1').status).toBe('rejected')
   })
   // #endregion closed-dms
-
   // #region step:guards
+
   it('refuses a member without the staff role, and changes nothing', async () => {
     const { module, feedback } = setup()
 
@@ -92,8 +92,8 @@ describe('ReviewController', () => {
     expect(feedback.status).toBe('open')
   })
   // #endregion step:guards
-
   // #region step:exception-filters
+
   it('answers a button whose feedback is gone privately, in the member’s words', async () => {
     const { module } = setup()
     const interaction = click('feedback/7/approve', STAFF)

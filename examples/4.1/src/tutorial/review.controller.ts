@@ -59,7 +59,9 @@ export class ReviewController {
     const staff = t.for(interaction, { public: true })
     // #endregion step:localisation
     const [post] = interaction.message.embeds
-    // before:localisation const verdict = (post ? EmbedBuilder.from(post) : new EmbedBuilder()).setFooter({ text: `${status === 'approved' ? 'Approved' : 'Rejected'} by ${interaction.user.username}.` })
+    // before:localisation const verdict = (post ? EmbedBuilder.from(post) : new EmbedBuilder()).setFooter({
+    // before:localisation   text: `${status === 'approved' ? 'Approved' : 'Rejected'} by ${interaction.user.username}.`,
+    // before:localisation })
     // #region step:localisation
     const verdict = (post ? EmbedBuilder.from(post) : new EmbedBuilder()).setFooter({
       text: staff(`feedback.review.${status}`, { user: interaction.user.username }),
@@ -70,9 +72,13 @@ export class ReviewController {
     // #endregion step:theming
     await respond(interaction).send({ embeds: [verdict], components: [] })
 
-    // The author hears back in their own language; closed DMs are not the reviewer's problem
-    // before:localisation const text = status === 'approved' ? `Your feedback “${feedback.about}” was approved. Thank you!` : `Your feedback “${feedback.about}” was not taken up this time.`
+    // before:localisation // The author hears back; closed DMs are not the reviewer's problem
+    // before:localisation const text =
+    // before:localisation   status === 'approved'
+    // before:localisation     ? `Your feedback “${feedback.about}” was approved. Thank you!`
+    // before:localisation     : `Your feedback “${feedback.about}” was not taken up this time.`
     // #region step:localisation
+    // The author hears back in their own language; closed DMs are not the reviewer's problem
     const text = t.locale(feedback.locale)(`feedback.verdict.${status}`, { about: feedback.about })
     // #endregion step:localisation
     await interaction.client.users.send(feedback.authorId, { content: text }).catch(() => undefined)

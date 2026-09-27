@@ -96,7 +96,9 @@ describe('the feedback bot, from form to verdict', () => {
       title: 'Feedback #1 from ada',
       footer: { text: 'Approved by grace.' },
     })
-    // before:localisation expect(client.users.send).toHaveBeenCalledWith('111', { content: 'Your feedback “Music bot” was approved. Thank you!' })
+    // before:localisation expect(client.users.send).toHaveBeenCalledWith('111', {
+    // before:localisation   content: 'Your feedback “Music bot” was approved. Thank you!',
+    // before:localisation })
     // #region step:localisation
     expect(client.users.send).toHaveBeenCalledWith('111', { content: 'Masukanmu “Music bot” disetujui. Terima kasih!' })
     // #endregion step:localisation
