@@ -1,7 +1,7 @@
 import type { JSONOutput } from 'typedoc'
 import type { DecoratorTarget } from '@/lib/docs/api-layout'
 import type { VersionsManifest } from '@/lib/urls'
-import { docsHref, entrySegment, memberAnchor } from '@/lib/urls'
+import { docsHref, entrySegment, memberAnchor, sectionSegment } from '@/lib/urls'
 
 type Declaration = JSONOutput.DeclarationReflection
 type Signature = JSONOutput.SignatureReflection
@@ -57,6 +57,12 @@ export interface ApiSymbol {
   kind: string
   /** The entry point, as imported: `meocord/decorator`. */
   entry: string
+  /** Every entry point it can be imported from, the one that declares it first. */
+  imports: string[]
+  /** Its section's URL segment: its entry point's, or its kind's where the API is arranged by kind. */
+  section: string
+  /** The sub-group its `@category` tag files it under within its kind, such as `Pipeline stages`. */
+  category?: string
   /** The declaration as code, one line per overload, as for a member. */
   code: Token[][]
   description: string
@@ -75,10 +81,57 @@ export interface SinceData {
   removed?: string
 }
 
+/** A symbol in a section's list: what an index, a kind's page and the sidebar show of it. */
+export interface ApiListing {
+  name: string
+  kind: string
+  href: string
+  deprecated: boolean
+  category?: string
+  /** The first paragraph of its doc comment, as Markdown. */
+  summary: string
+}
+
+/** One section of an API: an entry point's symbols, or a kind's. */
+export interface ApiSection {
+  /** Its URL segment: `core`, or `decorators`. */
+  slug: string
+  /** What it is called: `meocord/core`, or `Decorators`. */
+  title: string
+  symbols: ApiListing[]
+}
+
+/** The kinds a by-kind API files its symbols under: each one's `@group` tag, URL segment and title, in order. */
+export const API_KINDS = [
+  { group: 'Controllers', slug: 'controllers', title: 'Controllers' },
+  { group: 'Decorators', slug: 'decorators', title: 'Decorators' },
+  { group: 'Responses', slug: 'responses', title: 'Responses' },
+  { group: 'Utilities', slug: 'utilities', title: 'Utilities' },
+  { group: 'Testing', slug: 'testing', title: 'Testing' },
+  { group: 'Configuration', slug: 'configuration', title: 'Configuration' },
+  { group: 'CLI', slug: 'cli', title: 'CLI' },
+  { group: 'Types', slug: 'types', title: 'Types' },
+] as const
+
+/**
+ * How an API's pages are arranged: by entry point, `/api/core/MeoCordFactory`, or by kind,
+ * `/api/controllers/MeoCordFactory`, the kind named by each symbol's `@group` tag. `groupOf` names the
+ * group of a symbol that has no tag, such as one from a release before the tags; one with neither fails.
+ */
+export type ApiScheme = { by: 'entry' } | { by: 'kind'; groupOf?: (name: string) => string | undefined }
+
 interface Location {
-  entry: string
+  section: string
   symbol: string
   member?: string
+}
+
+interface Filed {
+  section: string
+  /** The entry points that export it, the declaring one first. */
+  entries: string[]
+  declaration: Declaration
+  category?: string
 }
 
 /** A reflection kind as a word: `class`, `function`, `type-alias`, from TypeDoc's numeric kinds. */
@@ -109,8 +162,9 @@ const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
  */
 export class ApiModel {
   readonly #byId = new Map<number, Location>()
-  readonly #declarations = new Map<string, { entry: string; declaration: Declaration }>()
+  readonly #declarations = new Map<string, Filed>()
   readonly #aliases = new Map<number, SomeType>()
+  readonly #titles = new Map<string, string>()
 
   constructor(
     readonly line: string,
@@ -118,46 +172,120 @@ export class ApiModel {
     readonly versions: VersionsManifest,
     readonly since: Record<string, SinceData> = {},
     readonly version?: string,
+    readonly scheme: ApiScheme = { by: 'entry' },
   ) {
+    const reexports: { entry: string; declaration: Declaration; target: number }[] = []
     for (const entryModule of project.children ?? []) {
       for (const declaration of entryModule.children ?? []) {
         if (!SAFE_NAME.test(declaration.name)) continue
-        this.#declarations.set(`${entrySegment(entryModule.name)}/${declaration.name}`, {
-          entry: entryModule.name,
-          declaration,
-        })
-        this.#byId.set(declaration.id, { entry: entryModule.name, symbol: declaration.name })
-        if (declaration.kind === 2097152 && declaration.type) this.#aliases.set(declaration.id, declaration.type)
-        for (const member of declaration.children ?? []) {
-          if (SAFE_NAME.test(member.name)) {
-            this.#byId.set(member.id, { entry: entryModule.name, symbol: declaration.name, member: member.name })
-          }
+        const target = (declaration as { target?: unknown }).target
+        // By kind, a re-export is the symbol it names, which gets one page listing both entry points
+        if (scheme.by === 'kind' && declaration.kind === 4194304 && typeof target === 'number') {
+          reexports.push({ entry: entryModule.name, declaration, target })
+          continue
         }
+        this.#file(entryModule.name, declaration)
       }
     }
+    for (const { entry, declaration, target } of reexports) {
+      const location = this.#byId.get(target)
+      const filed = location && this.#declarations.get(`${location.section}/${location.symbol}`)
+      if (!filed) this.#file(entry, declaration)
+      else if (!filed.entries.includes(entry)) filed.entries.push(entry)
+    }
   }
 
-  /** Every documented symbol, by entry point, in source order. */
-  entries(): { entry: string; symbols: { name: string; kind: string; href: string; deprecated: boolean }[] }[] {
-    const groups = new Map<string, { name: string; kind: string; href: string; deprecated: boolean }[]>()
-    for (const { entry, declaration } of this.#declarations.values()) {
-      if (!groups.has(entry)) groups.set(entry, [])
-      groups.get(entry)!.push({
+  #file(entry: string, declaration: Declaration) {
+    const section = this.scheme.by === 'entry' ? entrySegment(entry) : this.#kindOf(entry, declaration)
+    const key = `${section}/${declaration.name}`
+    const taken = this.#declarations.get(key)
+    if (taken) {
+      throw new Error(
+        `${this.#source()}: ${entry}'s ${declaration.name} and ${taken.entries[0]}'s would share /api/${key}.`,
+      )
+    }
+    this.#declarations.set(key, {
+      section,
+      entries: [entry],
+      declaration,
+      category: blockTag(declaration, '@category'),
+    })
+    this.#titles.set(section, this.scheme.by === 'entry' ? entry : API_KINDS.find(kind => kind.slug === section)!.title)
+    this.#byId.set(declaration.id, { section, symbol: declaration.name })
+    if (declaration.kind === 2097152 && declaration.type) this.#aliases.set(declaration.id, declaration.type)
+    for (const member of declaration.children ?? []) {
+      if (SAFE_NAME.test(member.name))
+        this.#byId.set(member.id, { section, symbol: declaration.name, member: member.name })
+    }
+  }
+
+  /** The kind a symbol is filed under, from its `@group` tag or, without one, the scheme's `groupOf`. */
+  #kindOf(entry: string, declaration: Declaration): string {
+    const tagged = blockTag(declaration, '@group')
+    const group = tagged ?? (this.scheme.by === 'kind' ? this.scheme.groupOf?.(declaration.name) : undefined)
+    const kind = API_KINDS.find(candidate => candidate.group === group)
+    if (kind) return kind.slug
+    const groups = API_KINDS.map(candidate => candidate.group).join(', ')
+    throw new Error(
+      group
+        ? `${this.#source()}: ${entry}'s ${declaration.name} has @group ${group}, which is not one of ${groups}.`
+        : `${this.#source()}: ${entry}'s ${declaration.name} has no @group tag, so it has no kind of API (${groups}).`,
+    )
+  }
+
+  #source() {
+    return this.version ?? `the ${this.line} line`
+  }
+
+  /**
+   * Every documented symbol, by section: by entry point in source order, or by kind in the kinds' order,
+   * each kind's symbols by category, those without one first, then by name.
+   */
+  sections(): ApiSection[] {
+    const sections = new Map<string, ApiListing[]>()
+    for (const { section, declaration, category } of this.#declarations.values()) {
+      if (!sections.has(section)) sections.set(section, [])
+      sections.get(section)!.push({
         name: declaration.name,
         kind: kindName(declaration.kind),
-        href: this.href({ entry, symbol: declaration.name }),
+        href: this.href({ section, symbol: declaration.name }),
         deprecated: deprecation(declaration) !== undefined,
+        category,
+        summary: this.#summary(declaration),
       })
     }
-    return [...groups].map(([entry, symbols]) => ({ entry, symbols }))
+    const listed = [...sections].map(([slug, symbols]) => ({ slug, title: this.#titles.get(slug)!, symbols }))
+    if (this.scheme.by === 'entry') return listed
+    const order = (slug: string) => API_KINDS.findIndex(kind => kind.slug === slug)
+    const byName = (a: string, b: string) => a.localeCompare(b, 'en')
+    for (const section of listed) {
+      section.symbols.sort((a, b) => byName(a.category ?? '', b.category ?? '') || byName(a.name, b.name))
+    }
+    return listed.sort((a, b) => order(a.slug) - order(b.slug))
   }
 
-  /** Every `{ entry, symbol }` this API has a page for, as URL segments. */
-  params(): { entry: string; symbol: string }[] {
+  /** Every `{ section, symbol }` this API has a page for, as URL segments. */
+  params(): { section: string; symbol: string }[] {
     return [...this.#declarations.keys()].map(key => {
-      const [entry, symbol] = key.split('/')
-      return { entry, symbol }
+      const [section, symbol] = key.split('/')
+      return { section, symbol }
     })
+  }
+
+  /** Where a symbol is, by its name alone, which a by-kind API keeps unique; undefined when it has none. */
+  find(name: string): Location | undefined {
+    const filed = [...this.#declarations.values()].find(candidate => candidate.declaration.name === name)
+    return filed && { section: filed.section, symbol: name }
+  }
+
+  /** Where the symbol an entry point exports under `name` is, in this API's arrangement. */
+  locate(entry: string, name: string): Location | undefined {
+    const segment = entrySegment(entry)
+    const filed = [...this.#declarations.values()].find(
+      candidate =>
+        candidate.declaration.name === name && candidate.entries.some(each => entrySegment(each) === segment),
+    )
+    return filed && { section: filed.section, symbol: name }
   }
 
   href(location: Location): string {
@@ -165,7 +293,7 @@ export class ApiModel {
       {
         kind: 'api',
         line: this.line,
-        entry: location.entry,
+        section: location.section,
         symbol: location.symbol,
         member: location.member,
         version: this.version,
@@ -174,12 +302,12 @@ export class ApiModel {
     )
   }
 
-  /** A symbol's page, or undefined when the entry has no such symbol. */
-  symbol(entry: string, name: string): ApiSymbol | undefined {
-    const found = this.#declarations.get(`${entrySegment(entry)}/${name}`)
+  /** A symbol's page, or undefined when the section has no such symbol. */
+  symbol(section: string, name: string): ApiSymbol | undefined {
+    const found = this.#declarations.get(`${sectionSegment(section)}/${name}`)
     if (!found) return undefined
-    const { entry: entryPoint, declaration } = found
-    const key = `${entryPoint}:${declaration.name}`
+    const { entries, declaration } = found
+    const key = `${entries[0]}:${declaration.name}`
     const signatures = (declaration.signatures ?? []).map(signature => this.#signature(signature, key))
     const members = (declaration.children ?? [])
       .filter(member => SAFE_NAME.test(member.name) && !member.flags?.isInherited && !member.flags?.isPrivate)
@@ -187,7 +315,10 @@ export class ApiModel {
     return {
       name: declaration.name,
       kind: kindName(declaration.kind),
-      entry: entryPoint,
+      entry: entries[0],
+      imports: entries,
+      section: found.section,
+      category: found.category,
       code: this.#declarationCode(declaration),
       description: this.#text(declaration.comment) || signatures[0]?.description || '',
       signatures: declaration.signatures ? signatures : [],
@@ -198,6 +329,12 @@ export class ApiModel {
       seeAlso: this.#seeAlso(declaration.comment),
       group: group(declaration),
     }
+  }
+
+  /** The first paragraph of a declaration's doc comment, or its first signature's. */
+  #summary(declaration: Declaration): string {
+    const text = this.#text(declaration.comment) || this.#text(declaration.signatures?.[0]?.comment)
+    return text.split(/\n\s*\n/)[0]
   }
 
   #member(parent: Declaration, member: Declaration, key: string): ApiMember {
@@ -574,14 +711,17 @@ function tagText(comment: Comment | undefined, tag: string): string | undefined 
     : undefined
 }
 
-/** A declaration's `@group`, from its own comment or, for a function, its signatures'. */
-function group(declaration: Declaration): string | undefined {
+/** A declaration's block tag, such as `@group`, from its own comment or, for a function, its signatures'. */
+function blockTag(declaration: Declaration, tag: string): string | undefined {
   for (const comment of [declaration.comment, ...(declaration.signatures ?? []).map(signature => signature.comment)]) {
-    const text = tagText(comment, '@group')
+    const text = tagText(comment, tag)
     if (text) return text
   }
   return undefined
 }
+
+/** A declaration's `@group`, from its own comment or, for a function, its signatures'. */
+const group = (declaration: Declaration) => blockTag(declaration, '@group')
 
 function deprecation(declaration: Declaration): string | undefined {
   for (const comment of [declaration.comment, ...(declaration.signatures ?? []).map(signature => signature.comment)]) {

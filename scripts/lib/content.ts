@@ -16,9 +16,9 @@ import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
 
-/** A line's API as the site renders it: a symbol's page by entry point and name, with its members' anchors. */
+/** A line's API as the site renders it: a symbol's page by section and name, with its members' anchors. */
 export interface ApiLookup {
-  symbol(entry: string, name: string): { members: { anchor: string }[] } | undefined
+  symbol(section: string, name: string): { members: { anchor: string }[] } | undefined
 }
 
 export interface SiteSnapshot {
@@ -236,13 +236,13 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
 
   // A symbol's page, and its member's anchor, as the site renders the API the link names
   const apiLinkProblem = (
-    link: { line: string; entry: string; symbol: string; member?: string; version?: string },
+    link: { line: string; section: string; symbol: string; member?: string; version?: string },
     versions: string[],
   ): string | undefined => {
     if (link.version !== undefined && !versions.includes(link.version)) return `names no version of ${link.line}`
     const api = site.api?.(link.line, link.version)
     if (!api) return undefined
-    const symbol = api.symbol(link.entry, link.symbol)
+    const symbol = api.symbol(link.section, link.symbol)
     if (!symbol) return `names no symbol of ${link.version ?? link.line}'s API`
     if (link.member && !symbol.members.some(member => member.anchor === link.member))
       return `names no member of ${link.symbol}`
@@ -306,7 +306,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       }
       const link = parsed.target
       const line = lines.get(link.line)!
-      if (link.kind === 'line' || link.kind === 'missing') continue
+      if (link.kind === 'line' || link.kind === 'missing' || link.kind === 'api-index') continue
       if (link.kind === 'api') {
         const problem = apiLinkProblem(link, line.versions)
         if (problem) problems.push(`${where}: ${target} ${problem}`)

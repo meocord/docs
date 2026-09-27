@@ -210,7 +210,7 @@ describe('ApiModel, on every declaration shape', () => {
     expect(text(model.symbol('core', 'Alias')!.code[0])).toBe('type Alias<K> = (x?: K) => void')
     expect(text(model.symbol('core', 'VALUE')!.code[0])).toBe('const VALUE: { readonly a?: string }')
     expect(text(model.symbol('core', 'Namespaced')!.code[0])).toBe('Namespaced')
-    expect(model.entries()[0].symbols.find(symbol => symbol.name === 'Old')?.deprecated).toBe(true)
+    expect(model.sections()[0].symbols.find(symbol => symbol.name === 'Old')?.deprecated).toBe(true)
   })
 
   it('renders each of them into an article with its sections', () => {
@@ -320,5 +320,43 @@ describe('ApiModel, on an interface that can be called', () => {
       'interface Handler extends Base {\n  (value: string): void\n  <T>(value: T, count: number): T\n}',
     ])
     expect(handler.signatures).toHaveLength(2)
+  })
+})
+
+describe('ApiModel by kind, where the tags are wrong', () => {
+  const tagged = (name: string, group?: string) =>
+    decl({
+      name,
+      kind: 256,
+      comment: { summary: parts(`${name}.`), blockTags: group ? [{ tag: '@group', content: parts(group) }] : [] },
+    })
+  const build = (...modules: [string, ReturnType<typeof decl>[]][]) =>
+    new ApiModel(
+      '4.1',
+      {
+        id: 0,
+        name: 'meocord',
+        variant: 'project',
+        kind: 1,
+        flags: {},
+        children: modules.map(([name, children]) => decl({ name, kind: 2, children })),
+      } as unknown as JSONOutput.ProjectReflection,
+      versions,
+      {},
+      undefined,
+      { by: 'kind' },
+    )
+
+  it('fails where a symbol has no @group, or one that is not a kind of API', () => {
+    expect(() => build(['meocord/core', [tagged('Bare')]])).toThrow("meocord/core's Bare has no @group tag")
+    expect(() => build(['meocord/core', [tagged('Odd', 'Widgets')]])).toThrow(
+      "meocord/core's Odd has @group Widgets, which is not one of Controllers, Decorators",
+    )
+  })
+
+  it('fails where two symbols would share a URL, rather than pick one', () => {
+    expect(() =>
+      build(['meocord/core', [tagged('Same', 'Types')]], ['meocord/interface', [tagged('Same', 'Types')]]),
+    ).toThrow("meocord/interface's Same and meocord/core's would share /api/types/Same.")
   })
 })

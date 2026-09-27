@@ -266,12 +266,32 @@ function symbols(api: ApiDocument): { entry: string; symbol: Declaration; member
 
 const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 
-/** One search document per API symbol, its members as sections at their anchors. */
-export function apiDocuments(line: string, api: ApiDocument, versions: VersionsConfig): SearchDocument[] {
+/** Where the page of a symbol an entry point exports is, as the site arranges the line's API. */
+export type ApiHref = (entry: string, name: string) => string | undefined
+
+/** A symbol's page by its entry point, as a line whose API is arranged by entry point has it. */
+export const entryHref =
+  (line: string, versions: VersionsConfig): ApiHref =>
+  (entry, name) =>
+    docsHref({ kind: 'api', line, section: entry, symbol: name }, versions)
+
+/**
+ * One search document per API symbol, its members as sections at their anchors. A symbol two entry
+ * points export is one page, where the API is arranged by kind, and one document.
+ */
+export function apiDocuments(
+  line: string,
+  api: ApiDocument,
+  versions: VersionsConfig,
+  hrefOf: ApiHref = entryHref(line, versions),
+): SearchDocument[] {
+  const seen = new Set<string>()
   return symbols(api)
     .filter(({ symbol }) => SAFE_NAME.test(symbol.name))
-    .map(({ entry, symbol, members }) => {
-      const url = docsHref({ kind: 'api', line, entry, symbol: symbol.name }, versions)
+    .flatMap(({ entry, symbol, members }) => {
+      const url = hrefOf(entry, symbol.name)
+      if (!url || seen.has(url)) return []
+      seen.add(url)
       return {
         url,
         title: symbol.name,
@@ -298,14 +318,18 @@ export function paletteIndex(
   api: ApiDocument | undefined,
   since: Record<string, SinceEntry>,
   versions: VersionsConfig,
+  hrefOf: ApiHref = entryHref(line, versions),
 ): PaletteEntry[] {
   const entries: PaletteEntry[] = guides.map(guide => ({ name: guide.title, kind: 'guide', url: guide.url }))
+  const seen = new Set<string>()
   for (const { entry, symbol } of api ? symbols(api) : []) {
-    if (!SAFE_NAME.test(symbol.name)) continue
+    const url = SAFE_NAME.test(symbol.name) ? hrefOf(entry, symbol.name) : undefined
+    if (!url || seen.has(url)) continue
+    seen.add(url)
     const record: PaletteEntry = {
       name: symbol.name,
       kind: kindName(symbol.kind),
-      url: docsHref({ kind: 'api', line, entry, symbol: symbol.name }, versions),
+      url,
       entry: entrySegment(entry),
     }
     const first = since[`${entry}:${symbol.name}`]?.since

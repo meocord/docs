@@ -6,11 +6,11 @@ import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { TocEntry } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
-import { lineVersions } from '@/lib/docs/api-site'
+import { lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
 import { REPOSITORY } from '@/lib/docs/render'
 import { lines, sidebar, versionChoices } from '@/lib/docs/site'
 import { lowerMarkdown } from '@/lib/prose/lower'
-import { changelogSectionAnchor, docsHref, resolveStoredHref } from '@/lib/urls'
+import { changelogSectionAnchor, docsHref } from '@/lib/urls'
 
 type Child = NodeInstance | string
 
@@ -27,7 +27,7 @@ interface Changelog {
 }
 
 const generated = (...parts: string[]) => path.join(process.cwd(), 'generated', ...parts)
-const lower = (markdown: string) => lowerMarkdown(markdown, { href: url => resolveStoredHref(url, VERSIONS) })
+const lower = (markdown: string) => lowerMarkdown(markdown, { href: resolveSiteHref })
 const slug = (text: string) =>
   text
     .toLowerCase()

@@ -49,7 +49,7 @@ describe('the Guide', () => {
     expect(resolveGuideLink('4.1', 'guide:slash-commands')).toBe('/docs/4.1/slash-commands')
     expect(resolveGuideLink('4.1', 'guide:migrating#start')).toBe('/docs/4.1/migrating#start')
     expect(resolveGuideLink('4.1', 'guide:changelog')).toBe('/docs/4.1/changelog')
-    expect(resolveGuideLink('4.1', 'api:decorators/UseGuard')).toBe('/docs/4.1/api/decorator/UseGuard')
+    expect(resolveGuideLink('4.1', 'api:decorators/UseGuard')).toBe('/docs/4.1/api/decorators/UseGuard')
     expect(resolveGuideLink('4.1', 'https://discord.com')).toBe('https://discord.com')
   })
 
@@ -90,7 +90,7 @@ describe('the Guide', () => {
     expect(html).toContain('You&#x27;ll learn')
     expect(html).toContain('Before this')
     expect(html).toContain('<a href="/docs/4.1/services">Services</a>')
-    expect(html).toContain('<a href="/docs/4.1/api/decorator/UseGuard">UseGuard</a>')
+    expect(html).toContain('<a href="/docs/4.1/api/decorators/UseGuard">UseGuard</a>')
     expect(html).toContain('<a href="/docs/4.1/how-a-call-runs" rel="prev">')
     expect(html).toContain('The request pipeline · page 3 of 3')
   })
@@ -98,7 +98,8 @@ describe('the Guide', () => {
   it("offers the Guide and the API as the sidebar's tabs, marking the one read", () => {
     expect(guideTabs('4.1', 'guide')).toEqual([
       { title: 'Guide', href: '/docs/4.1/services', current: true },
-      { title: 'API', href: expect.stringMatching(/^\/docs\/4\.1\/api\//), current: false },
+      // The API opens on its index, where it is arranged by kind
+      { title: 'API', href: '/docs/4.1/api', current: false },
     ])
     expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true])
   })

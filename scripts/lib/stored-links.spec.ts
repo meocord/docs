@@ -19,7 +19,7 @@ describe('parseStored', () => {
       target: { kind: 'guide', line: '4.1', slug: 'guards', anchor: 'params' },
     })
     expect(parseStored('/docs/4.1/api/decorator/Defer', lines)).toMatchObject({
-      target: { kind: 'api', entry: 'decorator', symbol: 'Defer' },
+      target: { kind: 'api', section: 'decorator', symbol: 'Defer' },
     })
     expect(parseStored('/docs/4.1/api/4.1.0-beta.0/core/ShardContext#call', lines)).toMatchObject({
       target: { kind: 'api', version: '4.1.0-beta.0', member: 'call' },

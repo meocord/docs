@@ -1,6 +1,12 @@
+import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import { notFound, redirect } from 'next/navigation'
-import { apiLandingHref } from '@/lib/docs/api-site'
+import { VERSIONS } from '@/config/versions'
+import { apiArrangement, apiLandingHref } from '@/lib/docs/api-site'
+import { renderApiIndex } from '@/lib/docs/api-render'
+import { pageMetadata } from '@/lib/docs/page-metadata'
 import { lines } from '@/lib/docs/site'
+import { docsHref } from '@/lib/urls'
 
 type Params = { params: Promise<{ line: string }> }
 
@@ -14,9 +20,29 @@ export function generateStaticParams() {
     .map(line => ({ line }))
 }
 
-// A line's API reference opens where the sidebar's API tab opens it
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { line } = await params
+  if (!lines().includes(line) || apiArrangement(line) !== 'kind') return {}
+  return pageMetadata({
+    title: 'API',
+    line,
+    description: `Every public symbol of MeoCord ${line}, by kind, with the entry point to import it from.`,
+    canonical: docsHref({ kind: 'api-index', line }, VERSIONS),
+  })
+}
+
+// Cached for the life of the build, as a symbol's page is.
+async function apiIndex(line: string) {
+  'use cache'
+  cacheLife('max')
+  return renderApiIndex(line)?.render()
+}
+
+// A line's API arranged by kind opens on its index; one by entry point opens where the sidebar's API tab does
 export default async function ApiPage({ params }: Params) {
   const { line } = await params
+  if (!lines().includes(line)) notFound()
+  if (apiArrangement(line) === 'kind') return (await apiIndex(line)) ?? notFound()
   const href = apiLandingHref(line)
   if (!href) notFound()
   redirect(href)

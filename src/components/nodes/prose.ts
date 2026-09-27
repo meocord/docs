@@ -205,6 +205,18 @@ export const Prose = createNode('article', {
       fontSize: 'theme.type.small.size',
       color: 'theme.ink.secondary',
     },
+    // An API's list of symbols: each name over its summary, rows divided by hairlines rather than bulleted.
+    '& [data-api-list]': { listStyle: 'none', padding: 0, margin: '0 0 theme.space.8' },
+    '& [data-api-list] > li': {
+      margin: 0,
+      padding: 'theme.space.3 0',
+      borderBottom: 'theme.line.width solid theme.line.hairline',
+    },
+    '& [data-api-list] > li > a': { textDecoration: 'none' },
+    '& [data-api-list] [data-doc] p': { margin: 'theme.space.1 0 0', color: 'theme.ink.secondary' },
+    // A kind's heading on the API index links to its page, but reads as a heading.
+    '& [data-kind-heading] a': { color: 'inherit', textDecoration: 'none' },
+    '& [data-kind-heading] a:hover': { color: 'theme.accent.default' },
     '& [data-badge]': {
       display: 'inline-block',
       fontSize: 'theme.type.caption.size',

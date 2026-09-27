@@ -25,14 +25,14 @@ import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
 import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
-import type { ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
-import { apiLayouts, apiModel } from '@/lib/docs/api-site'
+import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
+import { apiLayouts, apiModel, resolveSiteHref } from '@/lib/docs/api-site'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
 import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
-import { docsHref, entrySegment, resolveStoredHref } from '@/lib/urls'
+import { docsHref } from '@/lib/urls'
 
 type Child = NodeInstance | string
 
@@ -43,7 +43,7 @@ const markdown = (text: string, key: string): Child[] =>
         Div({
           key,
           'data-doc': true,
-          children: lowerMarkdown(text, { href: url => resolveStoredHref(url, VERSIONS) }).nodes,
+          children: lowerMarkdown(text, { href: resolveSiteHref }).nodes,
         }),
       ]
     : []
@@ -277,7 +277,11 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
       [
         Span(symbol.kind.replace('-', ' '), { key: 'kind' }),
         ' in ',
-        Code(symbol.entry, { key: 'entry' }),
+        // Every entry point it can be imported from, the declaring one first
+        ...symbol.imports.flatMap((entry, index) => [
+          ...(index > 0 ? [index === symbol.imports.length - 1 ? ' and ' : ', '] : []),
+          Code(entry, { key: `entry-${entry}` }),
+        ]),
         ...(symbol.since ? [' ', badge(`Since ${symbol.since}`, 'since', 'since')] : []),
         ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
       ],
@@ -332,55 +336,172 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
   return { nodes, toc }
 }
 
-/** The sidebar of an API page: the line's guides, then one group per entry point. */
+/**
+ * The sidebar of an API page: the line's guides where they share the sidebar, then a group per section,
+ * an entry point's symbols or a kind's, those under their categories.
+ */
 export function apiSidebar(line: string, model: ApiModel, current?: string): NavGroup[] {
   return [
     // Where the Guide is rendered, the Guide and the API are tabs of their own.
     ...(guideEnabled(line) ? [] : sidebar(line)),
-    ...model.entries().map(({ entry, symbols }) => ({
-      title: entry,
-      items: symbols.map(symbol => ({
+    ...model.sections().map(section => ({
+      title: section.title,
+      items: section.symbols.map(symbol => ({
         title: symbol.name,
         href: symbol.href,
         current: symbol.href === current,
         badge: symbol.deprecated ? 'Deprecated' : undefined,
+        // Headed only by kind, where a kind's symbols are listed by category; an entry point's are in source order
+        category: model.scheme.by === 'kind' ? symbol.category : undefined,
       })),
     })),
   ]
 }
 
 /** The switcher from an API page: each line opens the same symbol when its API has one. */
-function apiVersions(line: string, entry: string, name: string): { current: VersionOption; options: VersionOption[] } {
+function apiVersions(line: string, name: string): { current: VersionOption; options: VersionOption[] } {
   const { current, options } = versionChoices(line)
   return {
     current,
     options: options.map(option => {
       const other = apiModel(option.label)
-      return other?.symbol(entry, name) ? { ...option, href: other.href({ entry, symbol: name }) } : option
+      const location = other?.find(name)
+      return other && location ? { ...option, href: other.href(location) } : option
     }),
   }
 }
 
+/** The trail to an API page: its line, then its entry point, or the API index and its kind. */
+export function apiCrumbs(line: string, model: ApiModel, section: string, title?: string): Crumb[] {
+  const lineCrumb = { title: line, href: docsHref({ kind: 'line', line }, VERSIONS) }
+  if (model.scheme.by === 'entry') return [lineCrumb, ...(title ? [{ title }] : [])]
+  const kind = model.sections().find(candidate => candidate.slug === section)
+  return [
+    lineCrumb,
+    { title: 'API', href: docsHref({ kind: 'api-index', line }, VERSIONS) },
+    ...(kind ? [{ title: kind.title, href: docsHref({ kind: 'api-index', line, section }, VERSIONS) }] : []),
+  ]
+}
+
 /** A symbol's page in the docs window, or undefined when the API has no such symbol. */
-export function renderApiPage(line: string, entry: string, name: string, version?: string) {
+export function renderApiPage(line: string, section: string, name: string, version?: string) {
   const model = apiModel(line, version)
-  const symbol = model?.symbol(entry, name)
+  const symbol = model?.symbol(section, name)
   if (!model || !symbol) return undefined
-  const href = model.href({ entry: symbol.entry, symbol: symbol.name })
+  const href = model.href({ section: symbol.section, symbol: symbol.name })
   const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version))
+  const trail = apiCrumbs(line, model, symbol.section, symbol.entry)
   const crumbs: Crumb[] = [
-    { title: line, href: docsHref({ kind: 'line', line }, VERSIONS) },
+    trail[0],
     ...(version ? [{ title: version }] : []),
-    { title: symbol.entry },
+    ...trail.slice(1),
     { title: symbol.name },
   ]
   return Window({
     crumbs,
     groups: apiSidebar(line, model, href),
     tabs: guideEnabled(line) ? guideTabs(line, 'api') : undefined,
-    version: apiVersions(line, entrySegment(symbol.entry), symbol.name),
+    version: apiVersions(line, symbol.name),
     repository: REPOSITORY,
     toc,
     children: Prose({ children: nodes }),
+  })
+}
+
+/** An id for a heading from its text: `Pipeline stages` gives `pipeline-stages`. */
+const headingId = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+/** Symbols as a list: each one's name, linked to its page, and its summary. */
+function listing(symbols: ApiListing[], key: string) {
+  return Ul({
+    key,
+    'data-api-list': true,
+    children: symbols.map(symbol =>
+      Li({
+        key: symbol.name,
+        children: [
+          A({ key: 'name', href: symbol.href, children: Code(symbol.name) }),
+          ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
+          ...markdown(symbol.summary, 'summary'),
+        ],
+      }),
+    ),
+  })
+}
+
+/** A section's symbols, those without a category first, then each category under a heading of `level`. */
+function categorised(symbols: ApiListing[], level: 'h2' | 'h3', key: string, toc?: TocEntry[]): Child[] {
+  const categories = [...new Set(symbols.map(symbol => symbol.category))]
+  return categories.flatMap(category => {
+    const members = symbols.filter(symbol => symbol.category === category)
+    if (!category) return [listing(members, `${key}-list`)]
+    const id = `${key}-${headingId(category)}`
+    if (toc) toc.push({ id, title: category, depth: 2 })
+    return [Node(level, { key: id, id, children: category }), listing(members, `${id}-list`)]
+  })
+}
+
+/** The index's content: every symbol of the API with its summary, by kind, each kind linked to its page. */
+export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]; toc: TocEntry[] } {
+  const toc: TocEntry[] = []
+  const nodes: Child[] = [
+    H1('API', { key: 'title' }),
+    P(`Every public symbol of MeoCord ${line}, by kind. Each page names the entry point to import it from.`, {
+      key: 'intro',
+    }),
+    ...model.sections().flatMap(section => {
+      toc.push({ id: section.slug, title: section.title, depth: 2 })
+      const href = docsHref({ kind: 'api-index', line, section: section.slug }, VERSIONS)
+      return [
+        H2(A({ href, children: section.title }), { key: section.slug, id: section.slug, 'data-kind-heading': true }),
+        ...categorised(section.symbols, 'h3', section.slug),
+      ]
+    }),
+  ]
+  return { nodes, toc }
+}
+
+/** A kind's page content: its symbols with their summaries, by category; undefined for no such kind. */
+export function apiKindArticle(model: ApiModel, section: string): { nodes: Child[]; toc: TocEntry[] } | undefined {
+  const kind = model.sections().find(candidate => candidate.slug === section)
+  if (!kind) return undefined
+  const toc: TocEntry[] = []
+  return { nodes: [H1(kind.title, { key: 'title' }), ...categorised(kind.symbols, 'h2', section, toc)], toc }
+}
+
+/** A line's API index, where its API is arranged by kind: every symbol with its summary, by kind. */
+export function renderApiIndex(line: string) {
+  const model = apiModel(line)
+  if (!model || model.scheme.by !== 'kind') return undefined
+  const { nodes, toc } = apiIndexArticle(line, model)
+  return Window({
+    crumbs: [apiCrumbs(line, model, '')[0], { title: 'API' }],
+    groups: apiSidebar(line, model),
+    tabs: guideTabs(line, 'api'),
+    version: versionChoices(line),
+    repository: REPOSITORY,
+    toc,
+    children: Prose({ children: nodes }),
+  })
+}
+
+/** One kind's page of a line's API: its symbols with their summaries, by category. */
+export function renderApiKind(line: string, section: string) {
+  const model = apiModel(line)
+  const article = model?.scheme.by === 'kind' ? apiKindArticle(model, section) : undefined
+  if (!model || !article) return undefined
+  const trail = apiCrumbs(line, model, section)
+  return Window({
+    crumbs: [...trail.slice(0, 2), { title: trail[2]?.title ?? section }],
+    groups: apiSidebar(line, model),
+    tabs: guideTabs(line, 'api'),
+    version: versionChoices(line),
+    repository: REPOSITORY,
+    toc: article.toc,
+    children: Prose({ children: article.nodes }),
   })
 }
