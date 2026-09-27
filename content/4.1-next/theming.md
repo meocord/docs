@@ -74,7 +74,7 @@ A theme has three groups of roles:
 | Group     | Roles                                                        | A value is                                                                               |
 | --------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | `colors`  | `primary`, `neutral`, `success`, `warning`, `danger`, `info` | a colour discord.js accepts: `'#7680F4'`, `0x7680f4`, `[118, 128, 244]` or a colour name |
-| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>`                                    |
+| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>`, or `<a:name:id>` when animated    |
 | `buttons` | `primary`, `neutral`, `success`, `danger`                    | `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`                                |
 
 `warning` is for what the user can fix, such as a refused or invalid call. `danger` is a fault in the bot. MeoCord
@@ -93,8 +93,8 @@ an app has started.
 ### Collectors and listeners
 
 A collector's `collect` callback, or a `client.on(...)` listener, is called by its emitter, outside the call that
-set it up. `respond(click)` there still takes the app's theme and the server's, but not the handler's `@UseTheme`. To
-keep the handler's, wrap the callback in [`bindTheme`](api:responses/bindTheme):
+set it up. `respond(click)` there still takes the app's theme, with the server's and the user's over it, but not the
+handler's `@UseTheme`. To keep the handler's, wrap the callback in [`bindTheme`](api:responses/bindTheme):
 
 ::example{file="controllers/slash/vote.slash.controller.ts" region="bind"}
 

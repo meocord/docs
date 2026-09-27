@@ -112,8 +112,8 @@ Guards, interceptors and exception filters inject services the same way:
 ## Testing a service
 
 A service that takes plain values is tested with `new`. For one that injects others, `MeoCordTestingModule` builds a
-container from the classes you give it. Unlike the app, it binds only what you list, so a test decides each
-dependency: the real class, or a stand-in with `useValue`.
+container from the classes you give it, and binds every class they inject, as the app does. It binds no Discord
+`Client` and no token, so a test provides those, and it replaces a class only where the test asks, with `useValue`.
 
 ::example{file="services/status.service.spec.ts"}
 
