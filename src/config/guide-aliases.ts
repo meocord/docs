@@ -8,7 +8,6 @@ export const GUIDE_ALIASES: Readonly<Record<string, string>> = {
   'slash-commands': 'command-types',
   components: 'component-routing',
   'context-menus': 'command-types',
-  'message-params': 'message-commands',
   reactions: 'messages-and-reactions',
   'how-a-call-runs': 'how-a-handler-runs',
   'invoke-and-dispatch': 'invoke',
