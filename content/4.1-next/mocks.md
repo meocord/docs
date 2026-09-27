@@ -83,7 +83,8 @@ the real resolver finds them:
 
 - A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that
   reads only one of the two is caught.
-- A getter of the wrong type returns `null`, and a required option that is missing throws.
+- A getter of the wrong type returns `null`. Asked with `required: true`, an option that is missing or of the wrong
+  type throws.
 - `subcommandGroup`, `subcommand` and `focused` are reserved names: the last names the option an autocomplete is
   typing.
 
@@ -95,7 +96,7 @@ test build.
 - **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()` and
   the rest throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`, and builders or JSON for
   the last three. What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's
-  `users.cache`, and in a server in `guild.members.cache`.
+  `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
 - **`createMockClient()`** has real, empty caches, and one bot user, the same in every mock, as `client.user`.
@@ -161,8 +162,8 @@ with its `error`, without counting it as sent:
 
 - **A read-only property can't be assigned after creation.** TypeScript refuses `interaction.customId = …`, as
   discord.js declares it read-only. Set it in the overrides, where a misspelling is caught too.
-- **A mock you configure once is reset after the first test.** Set return values in the test that relies on them, or
-  in `beforeEach`.
+- **A MeoCord mock you configure once is reset after the first test.** Set return values in the test that relies on
+  them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
   assign `interaction.options = createChatInputOptions({ … })`.
 
