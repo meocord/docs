@@ -66,6 +66,8 @@ export interface ApiSymbol {
   deprecated?: string
   examples: string[]
   seeAlso: Token[]
+  /** The kind of API its `@group` tag files it under, such as `Decorators`; undefined where it has none. */
+  group?: string
 }
 
 export interface SinceData {
@@ -194,6 +196,7 @@ export class ApiModel {
       deprecated: deprecation(declaration),
       examples: examples(declaration.comment),
       seeAlso: this.#seeAlso(declaration.comment),
+      group: group(declaration),
     }
   }
 
@@ -569,6 +572,15 @@ function tagText(comment: Comment | undefined, tag: string): string | undefined 
         .join('')
         .trim()
     : undefined
+}
+
+/** A declaration's `@group`, from its own comment or, for a function, its signatures'. */
+function group(declaration: Declaration): string | undefined {
+  for (const comment of [declaration.comment, ...(declaration.signatures ?? []).map(signature => signature.comment)]) {
+    const text = tagText(comment, '@group')
+    if (text) return text
+  }
+  return undefined
 }
 
 function deprecation(declaration: Declaration): string | undefined {

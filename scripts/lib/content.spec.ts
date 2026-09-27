@@ -306,6 +306,21 @@ describe('checkSite', () => {
     ])
   })
 
+  it('refuses a link to the site by its address, naming the path to write', () => {
+    const problems = checkSite(
+      withAuthored({
+        theming: page(
+          'id: theming\ntitle: Theming',
+          '[a](https://meocord.dev/docs/4.1/guards#options), [b](https://meocord.dev/docs/4.1/api/common/translateErrorz) and [c](https://meocord.dev)',
+        ),
+      }),
+    )
+    expect(problems).toEqual([
+      'content/4.1/theming.md: https://meocord.dev/docs/4.1/guards#options links the site by its address; write /docs/4.1/guards#options',
+      'content/4.1/theming.md: https://meocord.dev/docs/4.1/api/common/translateErrorz links the site by its address; write /docs/4.1/api/common/translateErrorz',
+    ])
+  })
+
   it("refuses a link to a section of meocord's README, which the site's pages cover", () => {
     const readme = 'https://github.com/meocord/meocord/blob/main/README.md'
     const problems = checkSite(

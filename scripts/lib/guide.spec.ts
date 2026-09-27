@@ -10,7 +10,10 @@ const context: GuideContext = {
     },
     compare: { 'src/discordjs/ping.ts': 'export {}\n' },
   },
-  apiSymbols: new Set(['UseGuard', 'Guard']),
+  apiSymbols: new Map([
+    ['UseGuard', { kinds: ['decorators'], members: ['guards'] }],
+    ['Guard', { kinds: [], members: [] }],
+  ]),
 }
 
 const check = (files: Record<string, string>, with_: Partial<GuideContext> = {}) =>
@@ -91,11 +94,13 @@ describe('checkGuide', () => {
   })
 
   it('asks for two to four things to learn, and an api entry as <kind>/<Symbol> of the API', () => {
-    const named = check(
-      { ...valid(), guards: page({ ...guards, api: ['decorators/UseGuard#guards', 'utilities/Nope'] }, chapterBody()) },
-      context,
-    )
-    expect(named).toEqual(['content/4.1-next/guards.md: api entry "utilities/Nope" names no symbol of the API'])
+    const api = ['decorators/UseGuard#guards', 'utilities/Nope', 'utilities/UseGuard', 'decorators/UseGuard#nope']
+    const named = check({ ...valid(), guards: page({ ...guards, api }, chapterBody()) }, context)
+    expect(named).toEqual([
+      'content/4.1-next/guards.md: api entry "utilities/Nope" names no symbol of the API',
+      'content/4.1-next/guards.md: api entry "utilities/UseGuard" names a symbol filed under decorators, not utilities',
+      'content/4.1-next/guards.md: api entry "decorators/UseGuard#nope" names no member of UseGuard',
+    ])
     const problems = check(
       { ...valid(), guards: page({ ...guards, learn: ['a'], api: ['decorator/UseGuard', 'UseGuard'] }, chapterBody()) },
       context,
@@ -199,6 +204,11 @@ describe('checkGuide', () => {
       '[i](#when-to-use-it)',
       '[j](#nowhere)',
       '[k](https://discord.com/developers/docs/interactions/receiving-and-responding#responding-to-an-interaction)',
+      '[l](api:decorators/UseGuard#guards)',
+      '[m](api:decorators/UseGuard#nope)',
+      '[n](api:types/UseGuard)',
+      '[o](api:types/Guard)',
+      '[p](https://meocord.dev/docs/4.1/guards)',
     ].join(' ')
     expect(check({ ...valid(), guards: page(guards, chapterBody(links)) }, context)).toEqual([
       'content/4.1-next/guards.md: guide:services#no-such names no heading of that page',
@@ -207,6 +217,9 @@ describe('checkGuide', () => {
       'content/4.1-next/guards.md: api:decorator/UseGuard is not api:<kind>/<Symbol>',
       'content/4.1-next/guards.md: /docs/4.1/guards links a page by path; write guide:<id> or api:<kind>/<Symbol>',
       'content/4.1-next/guards.md: no heading for #nowhere',
+      'content/4.1-next/guards.md: api:decorators/UseGuard#nope names no member of UseGuard',
+      'content/4.1-next/guards.md: api:types/UseGuard names a symbol filed under decorators, not types',
+      'content/4.1-next/guards.md: https://meocord.dev/docs/4.1/guards links the site by its address; write guide:<id> or api:<kind>/<Symbol>',
     ])
   })
 

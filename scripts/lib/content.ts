@@ -94,6 +94,8 @@ export function fenceLanguages(markdown: string): string[] {
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md(#.*)?$/
+// A link to the site's docs by its address, which content stores as the path its checks read
+const SELF_LINK = /^https?:\/\/(?:www\.)?meocord\.dev(\/docs(?:[/#].*)?)$/
 // A section of the library's README, which the site's pages cover
 const GITHUB_README =
   /^https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord(?:\/blob\/[^/]+\/README\.md(?:#.*)?|\/?#.+)$/
@@ -172,6 +174,11 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
         problems.push(
           `${where}: ${target} links the migration guide on GitHub; write /docs/${from.line}/migrating${migrating[1] ?? ''}`,
         )
+        continue
+      }
+      const self = SELF_LINK.exec(target)
+      if (self) {
+        problems.push(`${where}: ${target} links the site by its address; write ${self[1]}`)
         continue
       }
       if (GITHUB_README.test(target)) {
