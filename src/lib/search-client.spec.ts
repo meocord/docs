@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { flatten, groupHits, jumps, lineOf, type Hit, type PaletteEntry } from '@/lib/search-client'
+import { flatten, groupHits, jumps, lineOf, marksAMatch, type Hit, type PaletteEntry } from '@/lib/search-client'
 import type { SearchLine } from '@/lib/search-manifest'
 
 const line = (name: string, status: SearchLine['status']): SearchLine => ({
@@ -86,5 +86,26 @@ describe('groupHits', () => {
   it('leaves out empty groups', () => {
     expect(groupHits('x', [hit('A', 'guide', 1)]).map(group => group.kind)).toEqual(['guide'])
     expect(groupHits('x', [])).toEqual([])
+  })
+})
+
+describe('marksAMatch', () => {
+  const excerpt = (...marks: string[]) => marks.map(mark => `before <mark>${mark}</mark> after`).join(' … ')
+
+  it('keeps a word the term starts, a stem, and a word the term extends by a character or two', () => {
+    expect(marksAMatch('guard', excerpt('GuardInterface.'))).toBe(true)
+    expect(marksAMatch('guards', excerpt('guard'))).toBe(true)
+    expect(marksAMatch('configuration', excerpt('configure'))).toBe(true)
+  })
+
+  it('rejects a much shorter word the term only starts with, as a one-letter code token', () => {
+    expect(marksAMatch('zqxjvw', excerpt('z'))).toBe(false)
+    expect(marksAMatch('zqxjvw', excerpt('z', 'z'))).toBe(false)
+    expect(marksAMatch('timeout', excerpt('t'))).toBe(false)
+  })
+
+  it('keeps a result any term really matches, and one whose excerpt marks nothing', () => {
+    expect(marksAMatch('zqxjvw guard', excerpt('z', 'Guard'))).toBe(true)
+    expect(marksAMatch('zqxjvw', 'a title-only match, with no marks')).toBe(true)
   })
 })

@@ -86,3 +86,19 @@ export function groupHits(query: string, hits: readonly Hit[], jumpHits: readonl
 export function flatten(groups: readonly HitGroup[]): Hit[] {
   return groups.flatMap(group => group.hits)
 }
+
+/** The words of a text, lowercased, as a search compares them. */
+const wordsOf = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? []
+
+/**
+ * Whether a result's excerpt shows a real match for the query. Pagefind marks the words it matched, and besides a
+ * word a term starts, or a stem of it, it also matches a word the term merely starts with: the `z` of
+ * `import { z }` for `zqxjvw`. A mark that is such a word, more than two characters shorter than the term, is no
+ * match, while `guard` for `guards` is. An excerpt with no marks, a match in the title alone, counts.
+ */
+export function marksAMatch(query: string, excerptHtml: string): boolean {
+  const marks = [...excerptHtml.matchAll(/<mark>([^<]*)<\/mark>/g)].flatMap(match => wordsOf(match[1]))
+  if (marks.length === 0) return true
+  const terms = wordsOf(query)
+  return marks.some(mark => terms.some(term => !(term.startsWith(mark) && term.length - mark.length > 2)))
+}

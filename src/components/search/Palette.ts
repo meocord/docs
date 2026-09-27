@@ -7,7 +7,7 @@ import { focusCss, hitAreaCss, safe } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
 import { PopoverSurface } from '@/components/shell/panes'
-import { groupHits, jumps, lineOf, type Hit, type HitGroup, type PaletteEntry } from '@/lib/search-client'
+import { groupHits, jumps, lineOf, marksAMatch, type Hit, type HitGroup, type PaletteEntry } from '@/lib/search-client'
 import type { SearchLine } from '@/lib/search-manifest'
 
 export interface PaletteData {
@@ -69,9 +69,10 @@ const plain = (html: string) =>
 async function find(line: SearchLine, query: string): Promise<HitGroup[]> {
   const [pagefind, entries] = await Promise.all([engine(line), paletteIndex(line)])
   const search = await pagefind.search(query)
-  const hits: Hit[] = await Promise.all(
+  const found = await Promise.all(
     (search?.results ?? []).slice(0, 20).map(async result => {
       const data = await result.data()
+      if (!marksAMatch(query, data.excerpt)) return []
       return {
         url: data.url,
         title: data.meta.title ?? data.url,
@@ -85,6 +86,7 @@ async function find(line: SearchLine, query: string): Promise<HitGroup[]> {
       }
     }),
   )
+  const hits: Hit[] = found.flat()
   return groupHits(query, hits, jumps(entries, query))
 }
 
