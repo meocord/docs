@@ -69,7 +69,7 @@ describe('the feedback bot, from form to verdict', () => {
       params: { id: '1' },
     })
 
-    // Grace, on the staff, approves it; she reads Discord in Indonesian too
+    // Grace, on the staff, approves it; they read Discord in Indonesian too
     const staffMember = createMockInteraction(GuildMember, {
       roles: { cache: new Collection([[STAFF, { id: STAFF }]]) } as never,
     })
@@ -83,7 +83,7 @@ describe('the feedback bot, from form to verdict', () => {
     })
     await module.invoke(ReviewController, 'approve', approve)
 
-    // While it worked, the post showed the presenter's loading view in her language; then the
+    // While it worked, the post showed the presenter's loading view in their language; then the
     // verdict, in the server's
     const { calls } = getResponse(approve)
     // #region step:presenters
