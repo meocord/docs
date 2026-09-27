@@ -66,14 +66,16 @@ resolver shows each lookup:
 ::example{file="testing/themes.spec.ts" region="theme-for"}
 
 A service or presenter tested without a module runs in a theme with
-[`withTheme(theme, fn)`](api:testing/withTheme). [`createMockTheme(overrides?)`](api:testing/createMockTheme) builds
-the whole theme it takes, frozen, with the overrides merged over the defaults:
+[`withTheme(theme, fn)`](api:testing/withTheme). It takes a whole theme that
+[`createMockTheme(overrides?)`](api:testing/createMockTheme) builds, frozen, with the overrides merged over the
+defaults, or just the roles to change, which it merges the same way:
 
 ::example{file="testing/themes.spec.ts" region="mock-theme"}
 
 When an app adds tokens of its own, `createMockTheme` requires them, as the app's root theme does, since they have no
 default. Once `init({ ready: true })` has run, the module's app theme is also the one `useTheme()` reads outside any
-call, until `close()`. [Theming](guide:theming) covers the theme itself.
+call, until `close()`, unless another module or app in the same process was ready first, which keeps it: close each
+module in `afterEach`. [Theming](guide:theming) covers the theme itself.
 
 ## Guards
 

@@ -79,7 +79,8 @@ the stages around a handler the same way, wherever they apply: globally, on the 
 - **Failures.** Every hook runs even when one throws, and `init` or `close` then rejects with that error, or with an
   `AggregateError` naming each hook that threw.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
-  until `close()`. See [Testing recipes](guide:testing-recipes#themes).
+  until `close()`, unless another module or app in the same process was ready first, which keeps it. See
+  [Testing recipes](guide:testing-recipes#themes).
 
 ## Running tests
 
@@ -139,8 +140,9 @@ jobs:
 
 ## Gotchas
 
-- **State set once for a whole `describe` is gone after the first test.** `vitest.setup.ts` resets every mock after
-  each test. Set what a mock returns in the test that relies on it, or in `beforeEach`.
+- **State set once for a whole `describe` is gone after the first test.** `vitest.setup.ts` resets every MeoCord mock
+  after each test, through `resetAllMocks()`; a `vi.fn()` only has its calls cleared. Set what a mock returns in the
+  test that relies on it, or in `beforeEach`.
 - **A module shared across tests shares its state.** Cooldown counts and service fields carry over. Build one module
   per test, or per `describe` when the tests change nothing in it.
 - **Calling a controller method directly skips the pipeline.** `module.get(Controller).method(interaction)` runs its

@@ -121,7 +121,8 @@ reactions, read the mock's own methods, such as `message.reply`.
 ## Events and handler setup
 
 To send a gateway event to the module's `@On` and `@Once` handlers, use `module.emit(event, ...args)`. It resolves to
-how many handlers ran.
+`{ ran }`, how many handlers ran, and once every handler has settled, rejects if any threw: with that error, or an
+`AggregateError` naming each.
 
 To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It
 lists the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata
