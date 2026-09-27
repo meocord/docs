@@ -476,6 +476,9 @@
   "meocord/common:ResponseCall": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:ResponseCall.error": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/common:ResponseCall.method": {
     "since": "4.1.0-beta.0"
   },
@@ -694,6 +697,18 @@
   },
   "meocord/common:Translate": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/common:translateError": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/common:translateError(error)": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/common:translateError(t)": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/common:translateError(target)": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/common:Translator": {
     "since": "4.1.0-beta.0"
@@ -977,14 +992,32 @@
   "meocord/core:HandlerRegistry.constructor(messages)": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/core:HandlerRegistry.constructor(translator)": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/core:HandlerRegistry.list": {
     "since": "4.1.0-beta.0"
   },
   "meocord/core:HandlerRegistry.list(filter)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/core:HandlerRegistry.messageHelp": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/core:HandlerRegistry.messageHelp(message)": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/core:HandlerRegistry.messageHelp(query)": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/core:MeoCordApplication": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/core:MeoCordApplication.registerCommands": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/core:MeoCordApplication.start": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/core:MeoCordFactory": {
     "since": "4.0.0-beta.0"
@@ -1030,6 +1063,9 @@
   },
   "meocord/core:MessageHandlerEntry.getAll(metadata)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/core:MessageHandlerEntry.hidden": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/core:MessageHandlerEntry.kind": {
     "since": "4.1.0-beta.0"
@@ -1436,25 +1472,32 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/enum:MetadataKey": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.AppOptions": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.CommandType": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.Container": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.Guards": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.Injectable": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:MetadataKey.ParamTypes": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/enum:ReactionHandlerAction": {
     "since": "4.0.0-beta.0"
@@ -1472,16 +1515,20 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/interface:AutocompleteMetadata": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:AutocompleteMetadata.commandPath": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:AutocompleteMetadata.methodName": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:AutocompleteMetadata.optionName": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:BuildableCommandType": {
     "since": "4.0.0-beta.0"
@@ -1526,28 +1573,36 @@
     "since": "4.0.0-beta.0"
   },
   "meocord/interface:CommandMetadata": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.builder": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.dynamicParams": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.guilds": {
-    "since": "4.1.0-beta.0"
+    "since": "4.1.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.methodName": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.regex": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.specificity": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandMetadata.type": {
-    "since": "4.0.0-beta.0"
+    "since": "4.0.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:CommandRegistrationConfig": {
     "since": "4.1.0-beta.0"
@@ -1715,10 +1770,12 @@
     "since": "4.1.0-beta.0"
   },
   "meocord/interface:MeoCordApplication.registerCommands": {
-    "since": "4.1.0-beta.0"
+    "since": "4.1.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:MeoCordApplication.start": {
-    "since": "4.1.0-beta.0"
+    "since": "4.1.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:MeoCordConfig": {
     "since": "4.0.0-beta.0"
@@ -1756,6 +1813,9 @@
   "meocord/interface:MeoCordConfig.sourceMappedStacks": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:MeoCordMessages": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/interface:MeoCordTheme": {
     "since": "4.1.0-beta.5"
   },
@@ -1776,6 +1836,9 @@
   },
   "meocord/interface:MessageCommandOptions.deleteUsageRepliesAfter": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/interface:MessageCommandOptions.help": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/interface:MessageCommandOptions.mention": {
     "since": "4.1.0-beta.4"
@@ -1801,17 +1864,74 @@
   "meocord/interface:MessageHandlerOptions.description": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:MessageHandlerOptions.hidden": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHandlerOptions.mention": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/interface:MessageHandlerOptions.prefix": {
     "since": "4.1.0-beta.4"
   },
   "meocord/interface:MessageHandlerOptions.scope": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:MessageHelp": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.aliases": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.command": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.description": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.handler": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.params": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.scope": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpEntry.usage": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpOptions": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpOptions.aliases": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpOptions.command": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpParam": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpParam.label": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpParam.name": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:MessageHelpParam.optional": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/interface:MessageParamType": {
     "since": "4.1.0-beta.5"
   },
   "meocord/interface:MessageParamType.label": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/interface:MessageParamType.labelKey": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/interface:MessageParamType.parse": {
     "since": "4.1.0-beta.5"
@@ -1886,7 +2006,8 @@
     "since": "4.1.0-beta.0"
   },
   "meocord/interface:PIPED_BRAND": {
-    "since": "4.1.0-beta.0"
+    "since": "4.1.0-beta.0",
+    "removed": "4.1.0-beta.6"
   },
   "meocord/interface:PipeInterface": {
     "since": "4.1.0-beta.0"
@@ -1974,6 +2095,15 @@
   },
   "meocord/interface:ResponsePresenter.loading(context)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/interface:ResponsePresenter.messageHelp": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:ResponsePresenter.messageHelp(help)": {
+    "since": "4.1.0-beta.6"
+  },
+  "meocord/interface:ResponsePresenter.messageHelp(message)": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/interface:ResponseView": {
     "since": "4.1.0-beta.0"
@@ -2313,6 +2443,9 @@
   "meocord/testing:expectCompleteCatalog": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:expectCompleteCatalog(options)": {
+    "since": "4.1.0-beta.6"
+  },
   "meocord/testing:expectCompleteCatalog(translator)": {
     "since": "4.1.0-beta.0"
   },
@@ -2459,6 +2592,9 @@
   },
   "meocord/testing:MessageToResolve.content": {
     "since": "4.1.0-beta.4"
+  },
+  "meocord/testing:MessageToResolve.dm": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/testing:MessageToResolve.prefix": {
     "since": "4.1.0-beta.4"
@@ -2636,6 +2772,9 @@
   },
   "meocord/testing:ResolvedRoute.params": {
     "since": "4.0.0-beta.5"
+  },
+  "meocord/testing:ResolvedRoute.values": {
+    "since": "4.1.0-beta.6"
   },
   "meocord/testing:resolveRoute": {
     "since": "4.0.0-beta.5"

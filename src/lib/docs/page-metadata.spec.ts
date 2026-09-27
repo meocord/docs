@@ -96,7 +96,7 @@ describe('page metadata', () => {
     expect(await api.generateMetadata(params({ line: '4.1', path: ['decorator', 'Command'] }))).toEqual(
       expected(
         'Command · meocord/decorator · MeoCord 4.1',
-        'Decorator to register command methods in a controller.',
+        'Routes a command, a component or a modal submission to the method it decorates.',
         '/docs/4.1/api/decorator/Command',
       ),
     )

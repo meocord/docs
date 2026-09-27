@@ -31,7 +31,7 @@ describe('EconomyMessageController', () => {
   it("answers a message that names the command but does not fit it with the command's usage", async () => {
     const message = inServer(`!pay <@${ANA}> lots`)
     await module.dispatch(message)
-    expect(replyTo(message)).toBe('Usage: !pay <to> <amount> [note…]\namount: "lots" is not a whole number')
+    expect(replyTo(message)).toBe('Usage: !pay <to> <amount> [note…]\namount: "lots" is not a valid whole number')
   })
 
   it('answers a member param sent in a DM that the command works in a server only', async () => {
