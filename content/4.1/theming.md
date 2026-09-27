@@ -55,12 +55,47 @@ A theme has three groups of roles:
 | Group     | Roles                                                        | A value is                                                                               |
 | --------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | `colors`  | `primary`, `neutral`, `success`, `warning`, `danger`, `info` | a colour discord.js accepts: `'#7680F4'`, `0x7680f4`, `[118, 128, 244]` or a colour name |
-| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>`                                    |
+| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>` or `<a:name:id>`                   |
 | `buttons` | `primary`, `neutral`, `success`, `danger`                    | `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`                                |
 
 `warning` is for what the user can fix, such as a refused or invalid call. `danger` is a fault in the bot. MeoCord
-checks every token where it's set: a bad colour in `@MeoCord({ theme })` or `@UseTheme` stops the bot before it logs
-in, naming the decorator and the key.
+checks every token where it's set; see [Valid tokens](#valid-tokens).
+
+## Defaults
+
+| Role      | Colour    | Emoji | Button style            |
+| --------- | --------- | ----- | ----------------------- |
+| `primary` | `#7680F4` | —     | `ButtonStyle.Primary`   |
+| `neutral` | `#888B95` | —     | `ButtonStyle.Secondary` |
+| `success` | `#26A042` | ✅    | `ButtonStyle.Success`   |
+| `warning` | `#B08400` | ⚠️    | —                       |
+| `danger`  | `#E3606D` | ⛔    | `ButtonStyle.Danger`    |
+| `info`    | `#1699AE` | ℹ️    | —                       |
+| `loading` | —         | ⏳    | —                       |
+
+The colours keep the hues of 4.0's `Theme`, with their lightness moved until each gives at least 3:1 against every
+surface an embed's stripe or a container's accent sits on in Discord's light, dark, darker and midnight themes: the
+contrast WCAG 2.1 asks of a graphic that carries meaning. A test holds every default to it, so a default that changes
+still reads on light and dark alike.
+
+## Valid tokens
+
+- **A colour** is a 6-digit hex string such as `'#7680F4'`, with or without `#`; a whole number from `0` to
+  `0xFFFFFF`; an `[r, g, b]` tuple of whole numbers from 0 to 255; or a discord.js colour name such as `'Blurple'`. A
+  3-digit hex string such as `'#FFF'` isn't one.
+- **An emoji** is one unicode emoji, flags, keycaps, skin tones and joined sequences such as `'👨‍👩‍👧'` included, or a
+  custom one written `<:name:id>` or `<a:name:id>`. A shortcode such as `':smile:'` isn't one. A custom emoji must also
+  be one the bot may use, such as an emoji the application owns.
+- **A button style** is `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`.
+- **A role MeoCord reserves** is refused in any group, in JavaScript as in TypeScript.
+
+Each problem is named with its key path and what to give instead, such as
+`theme.colors.primary: '#GGG' is not a colour: give a 6-digit hex string such as '#7680F4', …`. MeoCord's groups are
+checked whatever roles an app added to them; a group of the app's own is the app's to check.
+
+A theme set in code is checked where it's declared. A bad token in `@MeoCord({ theme })` or `@UseTheme` stops the bot
+before it logs in, and the message names the decorator, as in
+`@UseTheme on ShopController.refund: theme.emojis.loading: …`.
 
 ## Reading the theme
 
@@ -89,6 +124,20 @@ the error's tone.
 To send one message as written, pass `{ fill: false }` as the second argument to `send()`, `edit()` or
 `followUp()`, as `/banner` does above. The next message is filled again. What you send around `respond()`, with
 `interaction.reply()`, is never touched.
+
+## Replies to messages
+
+MeoCord answers a message in plain text: a command's usage, a guard's or validation's reason, and a `UserError`'s
+message, whether a command threw it or an `@On` listener of a message event. A theme leaves that text as it is, so a
+test that checks it keeps passing when the colours change.
+
+`@MeoCord({ messages: { replyEmoji: true } })` begins every one of these text replies to a message, `@On` listeners'
+included, with the call's `emojis.warning`, from the app's theme or a handler's `@UseTheme`:
+
+```text
+⚠️ Usage: !roll <sides>
+sides: "lots" is not a whole number
+```
 
 ## Per server and per user
 
