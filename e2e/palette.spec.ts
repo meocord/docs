@@ -177,6 +177,28 @@ test('keys typed while the palette first loads reach its field', async ({ page }
   await expect(dialog(page).getByRole('option').first()).toContainText('Cooldown')
 })
 
+for (const shortcut of ['ControlOrMeta+k', '/']) {
+  test(`${shortcut} and the keys typed after it, before the page hydrates, open the palette with them`, async ({
+    page,
+  }) => {
+    // The app's scripts are held until the shortcut and the keys after it are pressed.
+    let release!: () => void
+    const held = new Promise<void>(resolve => (release = resolve))
+    await page.route('**/_next/static/**/*.js', async route => {
+      await held
+      await route.continue()
+    })
+    await page.goto('/docs/4.1/defer', { waitUntil: 'domcontentloaded' })
+    await page.keyboard.press(shortcut)
+    await page.keyboard.type('cool down')
+    release()
+    await expect(field(page)).toBeFocused()
+    await expect(field(page)).toHaveValue('cool down')
+    // The space went to the field, not to the page.
+    expect(await page.locator('[data-sheet]:visible').evaluate(sheet => sheet.scrollTop)).toBe(0)
+  })
+}
+
 test('a key that reaches the field as it takes the loading keys adds to them', async ({ page }) => {
   await neverIdle(page)
   await page.goto('/docs/4.1/defer')

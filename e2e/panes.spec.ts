@@ -204,12 +204,9 @@ test('a page key held with a modifier, or taken by the page, leaves the sheet al
 
 test('in the search field, Space and the page keys stay with the field', async ({ page }) => {
   await page.goto('/docs/4.1/guards')
+  await page.keyboard.press('ControlOrMeta+k')
   const field = page.getByRole('dialog').getByRole('combobox')
-  // The palette's shortcut is heard once the app's scripts run, so it is pressed until the field answers.
-  await expect(async () => {
-    await page.keyboard.press('ControlOrMeta+k')
-    await expect(field).toBeFocused({ timeout: 1000 })
-  }).toPass()
+  await expect(field).toBeFocused()
   await page.keyboard.type('guard ')
   await page.keyboard.press('PageDown')
   await page.keyboard.press('End')
