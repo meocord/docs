@@ -7,7 +7,7 @@
       "dependencies": {
         "@emotion/cache": "^11.14.0",
         "@emotion/react": "^11.14.0",
-        "@meonode/ui": "^3.1.2",
+        "@meonode/ui": "^3.1.3",
         "mdast-util-from-markdown": "^2.0.3",
         "mdast-util-gfm": "^3.1.0",
         "meo-canvas": "^10.0.4",
@@ -341,7 +341,7 @@
 
     "@meonode/compiler": ["@meonode/compiler@0.9.0", "", {}, "sha512-7EWfCwCF5NR8Nn0L96zIsHnPuSCLPazy0os5SNJrBPTWAIUD3js99rXUx5b30ycFE98EMIa2IRqCW0p6GLEaMQ=="],
 
-    "@meonode/ui": ["@meonode/ui@3.1.2", "", { "dependencies": { "@emotion/react": "^11.14.0", "@emotion/serialize": "^1.3.3", "@emotion/unitless": "^0.10.0", "@emotion/utils": "^1.4.2", "stylis": "^4.2.0" }, "peerDependencies": { "@emotion/cache": ">=11.14.0", "react": ">=19.2.0", "react-dom": ">=19.2.0" } }, "sha512-4ZHTSSETjxP+U8lyyu3wfRO/rncO8skuTmJw06CXj4uwKkS9dfCEC+EJWKUIoMqmmpO6+3gBkPykor5cGQXTwA=="],
+    "@meonode/ui": ["@meonode/ui@3.1.3", "", { "dependencies": { "@emotion/react": "^11.14.0", "@emotion/serialize": "^1.3.3", "@emotion/unitless": "^0.10.0", "@emotion/utils": "^1.4.2", "stylis": "^4.2.0" }, "peerDependencies": { "@emotion/cache": ">=11.14.0", "react": ">=19.2.0", "react-dom": ">=19.2.0" } }, "sha512-7KQrrkfmvioX/El67qRh0AkmuE9V2WpeHnZ2eIUsd17hkoGqcoM9sgosMkWLQhvL53q7+ed/YZ2A7jyYe7HOAA=="],
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.5.4", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-05UC0jQsjKAOuXQ0H9Ud9vUTJpZIg+n/FinpR30tI5I8pY2inTfPOZ5OF/cg3Ce/N9MoD1xhRCeOsJtuTbFYlw=="],
 
