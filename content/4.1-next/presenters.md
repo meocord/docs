@@ -13,8 +13,9 @@ api: [responses/ResponsePresenter, responses/ResponseContext, responses/Presente
 since: 4.1.0
 ---
 
-MeoCord answers for you in two places: the loading view [`@Defer`](guide:defer) adds while a handler runs, and the
-error answer the built-in fallback sends when a call fails. A presenter decides how those look. What they say is
+MeoCord answers for you in three places: the loading view [`@Defer`](guide:defer) adds while a handler runs, the
+error answer the built-in fallback sends when a call fails, and the reply of the built-in `!help`. A presenter decides
+how those look. What they say is
 decided elsewhere, by exception filters and the fallback.
 
 ## When to use it
@@ -41,9 +42,9 @@ danger colour.
 
 ## How it works
 
-A presenter returns a view, `{ text, title?, color?, emoji?, components? }`, for each of its two methods. MeoCord
-renders it as an embed, or as a Components V2 container on a message that uses Components V2. A view with no
-`color` takes the theme's primary colour.
+`loading()` and `error()` each return a view, `{ text, title?, color?, emoji?, components? }`. MeoCord renders it
+as an embed, or as a Components V2 container on a message that uses Components V2. A view with no `color` takes the
+theme's primary colour.
 
 Each method gets a [`ResponseContext`](api:responses/ResponseContext):
 
@@ -55,13 +56,21 @@ Each method gets a [`ResponseContext`](api:responses/ResponseContext):
 | `theme`       | The call's resolved [theme](guide:theming), `@UseTheme` and per-server themes included. |
 
 `error()` also gets a [`PresentedError`](api:responses/PresentedError): the `message` to show, the `error` itself, and
-its `tone`. `tone` is `'warning'` when the call ended by the user's own doing, such as a denied guard, a cooldown,
-invalid input or a `UserError`, and `'danger'` for a fault in the bot. So `theme.colors[tone]` colours an error by
-kind.
+its `tone`. `tone` is `'warning'` for an answer that is no fault of the bot's code: the user's own doing, such as a
+denied guard, a cooldown, invalid input or a `UserError`, and also a command nothing handles and a cooldown store
+that is down. It's `'danger'` for anything else thrown. So `theme.colors[tone]` colours an error by kind.
 
 Without a presenter, the loading view is "Working on it…" with the theme's loading emoji in its primary colour, and
 errors are titled "Oops!" in the colour of their tone, both in the user's language where the app
 [translates MeoCord's texts](guide:localisation).
+
+## The help reply
+
+The built-in [`!help`](guide:message-commands) writes plain text. A presenter with a third, optional method,
+`messageHelp(help, message)`, writes it instead: `help` is the [`MessageHelp`](api:types/MessageHelp) the built-in
+found, a list of commands, one command, a parent's subcommands, or that nothing matched, and the method returns the
+text or the options `message.reply` takes, such as an embed. [Message commands](guide:message-commands) shows one.
+A help command of your own reads the same model from [`HandlerRegistry`](guide:handler-discovery).
 
 ## Testing a presenter
 
