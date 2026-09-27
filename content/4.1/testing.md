@@ -37,6 +37,14 @@ app binds them:
 `module.get(Class)` returns an instance for a direct test, and `overrideGuard`, `overrideInterceptor` and
 `overrideFilter` swap the stages around a handler the same way.
 
+To test the whole app as the bot builds it, `MeoCordTestingModule.fromApp(App)` takes every controller, service and
+provider `@MeoCord` lists, and a test replaces what it must by token. A factory it replaces never runs:
+
+::example{file="recipes/database/app.spec.ts" region="spec"}
+
+The module makes no Discord `Client`; a class that injects one needs `{ provide: Client, useValue: createMockClient() }`
+in `providers`.
+
 ## What to test with what
 
 - [`invoke`](/docs/4.1/invoke) runs a handler through everything dispatch runs around it, and `getResponse`

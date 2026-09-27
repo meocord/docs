@@ -41,7 +41,8 @@ interaction whose options say `Ada`, and [`getResponse`](api:testing/getResponse
 test needs, and returns a builder. `compile()` binds them into a fresh container and returns the module:
 
 - **Only what you list is built**, plus what those classes inject. Nothing else from the app is loaded, so a test
-  never starts a service it didn't ask for.
+  never starts a service it didn't ask for. To build the whole app instead, see
+  [Testing the whole app](#testing-the-whole-app).
 - **Each `compile()` is a new module**, with its own services, its own cooldown counts and its own theme cache.
 - **Handlers run through the pipeline**: `@Defer`, guards, interceptors, validation, pipes, cooldowns and exception
   filters, in the bot's order. [Invoke and dispatch](guide:invoke-and-dispatch) covers the two ways to run one.
@@ -63,6 +64,21 @@ token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInte
 the stages around a handler the same way, wherever they apply: globally, on the controller or on the method.
 
 `module.get(Class)` returns an instance, for a direct test of a service as the container built it.
+
+## Testing the whole app
+
+[`MeoCordTestingModule.fromApp(App)`](api:testing/MeoCordTestingModule) builds the module as the bot builds itself:
+every controller, service and provider `@MeoCord` lists, its cooldown store, and everything `app` adds. A test lists
+nothing again, and replaces what it must by token in `providers`, before anything is made:
+
+::example{file="recipes/database/app.spec.ts" region="spec"}
+
+A factory runs only when what it provides is first resolved, so the database factory the test replaces never
+connects. The app's `services` are made at `init()`, as the bot makes them before it logs in. `controllers` and
+`observers` add a test's own, and the `override*` methods still apply.
+
+The module makes no Discord `Client`: a class that injects one is refused where it is resolved, naming the class,
+until the test provides one, such as `{ provide: Client, useValue: createMockClient() }`.
 
 ## Lifecycle hooks in a test
 
