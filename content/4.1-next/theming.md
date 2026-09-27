@@ -57,7 +57,7 @@ A theme is resolved for each call before anything runs, and it stays the same fo
 only what it changes, over the one beneath it:
 
 1. MeoCord's defaults;
-2. [`@MeoCord({ theme })`](api:decorators/MeoCord), the app's theme;
+2. [`@MeoCord({ theme })`](api:decorators/MeoCord#theme), the app's theme;
 3. [`@UseTheme`](api:decorators/UseTheme) on each class, from a base class down to the controller;
 4. `@UseTheme` on the handler;
 5. the server's theme, then the user's, from [`themeFor`](#per-server-and-per-user).

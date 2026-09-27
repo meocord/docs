@@ -360,3 +360,63 @@ describe('ApiModel by kind, where the tags are wrong', () => {
     ).toThrow("meocord/interface's Same and meocord/core's would share /api/types/Same.")
   })
 })
+
+describe('options typed inline', () => {
+  const property = (name: string, summary: string, optional = true) =>
+    decl({
+      name,
+      kind: 1024,
+      flags: { isOptional: optional },
+      type: str('string'),
+      comment: { summary: parts(summary) },
+    })
+  const configure = decl({
+    name: 'configure',
+    kind: 64,
+    signatures: [
+      sig({
+        name: 'configure',
+        comment: { summary: parts('Configures.'), blockTags: [{ tag: '@example', content: parts('configure({})') }] },
+        parameters: [
+          {
+            id: id++,
+            name: 'options',
+            variant: 'param',
+            kind: 32768,
+            flags: {},
+            type: {
+              type: 'reflection',
+              declaration: decl({
+                name: '__type',
+                kind: 65536,
+                children: [property('examples', 'Shown first.'), property('size', 'How many.', false)],
+              }),
+            },
+          },
+        ],
+        type: str('void'),
+      }),
+    ],
+  })
+  const own = new ApiModel(
+    '4.1',
+    { ...project, children: [decl({ name: 'meocord/core', kind: 2, children: [configure] })] } as never,
+    versions,
+  )
+
+  it('gives each property a row and an anchor, and moves a section clear of an option named like it', () => {
+    const symbol = own.symbol('core', 'configure')!
+    expect(symbol.signatures[0].params.map(param => [param.name, param.anchor, param.optional])).toEqual([
+      ['options', undefined, false],
+      ['options.examples', 'examples', true],
+      ['options.size', 'size', false],
+    ])
+    const { toc } = apiArticle(symbol)
+    expect(toc.map(entry => `${entry.depth}:${entry.id}`)).toEqual([
+      '2:parameters',
+      '3:examples',
+      '3:size',
+      '2:examples-section',
+    ])
+  })
+})

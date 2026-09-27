@@ -190,7 +190,7 @@ describe('checkSite', () => {
         ? {
             symbol: (entry: string, name: string) => {
               const members = symbols[`${entry}/${name}`]
-              return members && { members: members.map(anchor => ({ anchor })) }
+              return members && { anchors: members }
             },
           }
         : undefined

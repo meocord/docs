@@ -113,7 +113,7 @@ for (const line of config.lines) {
     const symbol = model!.symbol(section, name)!
     const known = apiSymbols.get(name) ?? { kinds: [], members: [] }
     if (symbol.group) known.kinds.push(symbol.group.toLowerCase())
-    known.members.push(...symbol.members.map(member => member.anchor))
+    known.members.push(...symbol.anchors)
     apiSymbols.set(name, known)
   }
   const migrating = site.migrating[line.line]

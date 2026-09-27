@@ -161,8 +161,8 @@ MeoCord's own texts fall back to English by design, so it reports only a `meocor
 - **Discord limits command names to 32 lowercase characters, and descriptions to 100.** A builder handed a longer
   one fails when its class is decorated, naming the builder and the command. A raw command body that breaks them is
   caught at registration instead: nothing is registered, the error lists each field, and the bot stays up.
-- **Injecting `Translator` needs `@MeoCord({ i18n })`.** Without it, the bot stops at startup with a message saying
-  what to pass.
+- **Injecting `Translator` needs [`@MeoCord({ i18n })`](api:decorators/MeoCord#i18n).** Without it, the bot stops at
+  startup with a message saying what to pass.
 - **`labelKey` needs `@MeoCord({ i18n })`, and a message in the default catalog.** `@MeoCord` refuses one
   without either, where the app is declared.
 

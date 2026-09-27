@@ -105,7 +105,7 @@ language, and [`cooldownMessage(retryAfterMs)`](api:utilities/cooldownMessage) t
 ## Where calls are counted
 
 By default, in the bot's memory. To keep counts across restarts, or share them between processes, bind another store
-with `@MeoCord({ cooldownStore })`:
+with [`@MeoCord({ cooldownStore })`](api:decorators/MeoCord#cooldownStore):
 
 | Store                               | Counts                                            | Survives a restart               | Across hosts         |
 | ----------------------------------- | ------------------------------------------------- | -------------------------------- | -------------------- |
@@ -120,7 +120,8 @@ MongoDB.
 ## When the store fails
 
 A shared store can be down, restarting or cut off. When it throws, rejects or doesn't answer within
-`cooldownStoreTimeoutMs`, a second by default, `cooldownStoreFailure` decides what the call gets:
+`cooldownStoreTimeoutMs`, a second by default,
+[`cooldownStoreFailure`](api:decorators/MeoCord#cooldownStoreFailure) decides what the call gets:
 
 ::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
 

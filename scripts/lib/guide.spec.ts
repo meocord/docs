@@ -205,6 +205,8 @@ describe('checkGuide', () => {
       '[j](#nowhere)',
       '[k](https://discord.com/developers/docs/interactions/receiving-and-responding#responding-to-an-interaction)',
       '[l](api:decorators/UseGuard#guards)',
+      // A member as it is named, as an option is: its anchor is lowercase
+      '[l2](api:decorators/UseGuard#Guards)',
       '[m](api:decorators/UseGuard#nope)',
       '[n](api:types/UseGuard)',
       '[o](api:types/Guard)',
