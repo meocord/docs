@@ -55,7 +55,7 @@ Before each call, it reads where the answer stands from the interaction itself, 
 
 | Call                                    | What it does                                                                                                                                                 |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `acknowledge({ ephemeral })`            | Buys time: a deferred reply for a command, shown as "thinking…", or an invisible deferred update for a component. Once only.                                 |
+| `acknowledge({ ephemeral })`            | Buys time: a deferred reply for a command, shown as "thinking…", or an invisible deferred update for a component. A second call does nothing.                |
 | `send(payload, options?)`               | Replies to an unanswered command, updates an unanswered component's message, and edits the answer once it's deferred or sent. A second `send()` edits again. |
 | `edit(payload, options?)`               | Edits the answer, as `send()` does once answered.                                                                                                            |
 | `followUp(payload, options?)`           | Another message after the answer.                                                                                                                            |

@@ -38,9 +38,9 @@ and replaces the loading view with the answer.
 
 1. **Before any guard runs,** `@Defer` acknowledges: a deferred reply for a command, shown as "thinking…", or an
    invisible deferred update for a button, a select menu or a modal from a message.
-2. **Once guards, validation and pipes have allowed the call,** it locks a component's message: its controls are
-   disabled, the clicked button shows the theme's loading emoji, and the [presenter's](guide:presenters) loading
-   view is added.
+2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks a component's message: its
+   controls are disabled, the clicked button shows the theme's loading emoji, and the
+   [presenter's](guide:presenters) loading view is added.
 3. **When the handler answers,** `send()` without `components` puts the message's controls back as they were before
    the lock, a button disabled on purpose included, and removes the loading view. `components: []` clears them.
 

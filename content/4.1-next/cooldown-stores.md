@@ -136,6 +136,10 @@ calls `consume` for each cooldown in order and stops at the first refusal, so a 
 those before it. Override `consumeMany` to check them all and record the call only if all allow it, in one round
 trip, as the built-in stores do. It's worth it for any store behind a network.
 
+Override `peekMany(entries)` too, to check the entries and record nothing. MeoCord calls it before a message command
+fetches the members, users and channels it names, so a caller on cooldown costs no request. The default allows every
+call, so a store without its own `peekMany` refuses only at `consumeMany`, after the fetch.
+
 ### Checking a store
 
 `testCooldownStore` from `meocord/testing` runs the behaviour `MemoryCooldownStore` defines against yours, under
@@ -150,7 +154,9 @@ It checks that:
 - each key counts on its own, and calls in the same millisecond stay distinct;
 - of several concurrent calls at the limit, exactly one passes;
 - a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
-- for a store that overrides `consumeMany`, a refused batch records nothing.
+- for a store that overrides `consumeMany`, a refused batch records nothing;
+- for a store that overrides `peekMany`, a peek records nothing, answers a refusal with the wait `consume` gives,
+  and names a batch's longest wait.
 
 It uses real time with short windows, so it takes a few seconds. Each case counts under keys of its own, so it can
 run against a database that outlives the test. It can't see whether every key expires; check that yourself.
