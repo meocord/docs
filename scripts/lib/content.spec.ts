@@ -263,6 +263,17 @@ describe('checkSite', () => {
     ])
   })
 
+  it("refuses an authored page's link to the migration guide on GitHub, naming the site's", () => {
+    const github = 'https://github.com/meocord/meocord/blob/main/docs/MIGRATING.md'
+    const problems = checkSite(
+      withAuthored({ theming: page('id: theming\ntitle: Theming', `[a](${github}#start) and [b](${github})`) }),
+    )
+    expect(problems).toEqual([
+      `content/4.1/theming.md: ${github}#start links the migration guide on GitHub; write /docs/4.1/migrating#start`,
+      `content/4.1/theming.md: ${github} links the migration guide on GitHub; write /docs/4.1/migrating`,
+    ])
+  })
+
   it('reports a link to a migration guide the line lacks', () => {
     const readme = {
       '4.1': {},

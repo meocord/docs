@@ -31,7 +31,8 @@
     "brand:check": "bun scripts/brand-sync.ts --check",
     "content:backport": "bun scripts/backport.ts",
     "examples:check": "bun scripts/check-examples.ts",
-    "home:trace": "bun scripts/home-trace.ts"
+    "home:trace": "bun scripts/home-trace.ts",
+    "links:meocord": "bun scripts/check-meocord-links.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

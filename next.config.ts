@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next'
+import { listPages } from './scripts/lib/pages'
 import { DOC_ALIASES } from './src/config/aliases'
+import { guideAliasRedirects } from './src/config/guide-aliases'
+import manifest from './versions.json'
 
 /** Inlined at build: the header, robots.txt and the sitemap read one value and cannot disagree. */
 const SITE_INDEXABLE = process.env.SITE_INDEXABLE === 'true' ? 'true' : 'false'
@@ -28,6 +31,11 @@ const nextConfig: NextConfig = {
     // Where each line's search indexes are, and the reference's formatted code, for pages rendered at
     // request time.
     '/**': ['./.search/manifest.json', './.api-layout/*.json'],
+  },
+  // Guide slugs meocord's JSDoc links ahead of their pages, sent to the page that holds the topic now.
+  async redirects() {
+    const lines = manifest.lines.map(({ line }) => ({ line, ids: listPages(line).map(page => page.slug) }))
+    return guideAliasRedirects(lines, DOC_ALIASES.latest)
   },
   async rewrites() {
     return [
