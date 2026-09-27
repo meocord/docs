@@ -5,7 +5,8 @@ import {
   ChatInputCommandInteraction,
   DiscordAPIError,
 } from 'discord.js'
-import { createChatInputOptions, createDiscordError, createMockInteraction } from 'meocord/testing'
+import { respond } from 'meocord/common'
+import { createChatInputOptions, createDiscordError, createMockInteraction, getResponse } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 
 describe('mock interactions', () => {
@@ -52,13 +53,18 @@ describe('mock interactions', () => {
   // #endregion options
 
   // #region errors
-  it('reject with the errors discord.js throws', async () => {
+  it('reject with the errors discord.js throws, which getResponse records', async () => {
     const interaction = createMockInteraction(ButtonInteraction, { customId: 'late' })
     // 10062: the three seconds to answer passed
-    interaction.deferUpdate.mockRejectedValue(createDiscordError(10062))
+    interaction.update.mockRejectedValueOnce(createDiscordError(10062))
 
-    await expect(interaction.deferUpdate()).rejects.toBeInstanceOf(DiscordAPIError)
-    await expect(interaction.deferUpdate()).rejects.toMatchObject({ code: 10062 })
+    await expect(respond(interaction).send('Refreshed.')).rejects.toBeInstanceOf(DiscordAPIError)
+
+    // The refused call stays in calls, with its error, and nothing counts as sent
+    expect(getResponse(interaction)).toMatchObject({
+      sent: false,
+      calls: [{ method: 'update', error: { code: 10062 } }],
+    })
   })
   // #endregion errors
 })

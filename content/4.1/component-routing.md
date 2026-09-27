@@ -6,7 +6,8 @@ order: 13
 ---
 
 Buttons, select menus and modals route on their `customId`, and a `@Command` pattern can capture parts of
-it. The captured values arrive as the handler's second argument:
+it. The captured values arrive as the handler's second argument, as text unless a param names its type; see
+[Typed params](#typed-params):
 
 ::example{file="controllers/button/profile.button.controller.ts" region="params"}
 
@@ -48,6 +49,28 @@ and the handler receives it decoded, so a value never spills into the next segme
 than Discord's 100 characters, throws. A route is ranked, and checked for duplicates, exactly as its pattern's text
 would be, and plain string patterns keep working beside routes.
 
+## Typed params
+
+A param can name its type, `{name:type}`, and the handler receives the value rather than its text:
+
+::example{file="controllers/button/counter.button.controller.ts" region="typed"}
+
+| Type                          | The handler receives | A segment such as    |
+| ----------------------------- | -------------------- | -------------------- |
+| none, or `string`             | the text             | `abc`                |
+| `int`, `number`               | a `number`           | `42`, `-3`; `2.5`    |
+| `bool`                        | a `boolean`          | `true`, `off`, `yes` |
+| words, such as `open\|closed` | one of the words     | `open`, as written   |
+
+- **A segment of the wrong type matches no route**, so the next pattern is tried: `counter/lots` reaches no handler
+  here.
+- **`build` takes a value of each typed param's type**, and throws for one that wouldn't read back, such as `1.5` for
+  an `int`.
+- **The handler's typed params are checked when the code compiles**: `{ count: string }` for `{count:int}` is an
+  error.
+- **A customId holds text the bot wrote**, so there is no `member` or `channel` type, as a message command has. Capture
+  the ID, `{userId}`, and fetch it in the handler; `{target:member}` stops the bot where it's declared.
+
 ## Overlapping patterns
 
 Patterns with different segment counts never compete. When two with the same count both match, the one
@@ -55,9 +78,12 @@ spelling out more literal text wins, whatever order they were declared in:
 
 ::example{file="controllers/button/profile.button.controller.ts" region="overlap"}
 
-Between equally literal patterns, the one with fewer parameters wins. The ranking is computed once, when the
-bot starts. Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and `a/b/{y}`,
-both take `a/b/c` with neither more literal, and MeoCord warns about the pair at startup.
+Between equally literal patterns, the one with fewer parameters wins, then the one whose typed parameters take fewer
+values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}`
+takes `page/5` and leaves `page/last` to the other, whatever order they're declared in. The ranking is computed
+once, when the bot starts. Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and
+`a/b/{y}`, both take `a/b/c` with neither more literal, and MeoCord warns about the pair at startup, as it does for
+two typed parameters that share a value, such as `r/{w:on|off}` and `r/{f:bool}`.
 
 `resolveRoute` from `meocord/testing` answers which handler an id reaches, in a plain unit test, and
 `findRouteConflicts` lists the pairs MeoCord would warn about, so a test can keep them out:

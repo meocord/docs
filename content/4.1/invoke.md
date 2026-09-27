@@ -11,9 +11,11 @@ interceptors around validation, pipes and cooldowns, and the handler, all inside
 method name and arguments are type-checked against the handler.
 
 Pass the interaction alone, and `invoke` builds the handler's params as dispatch does: a command's options,
-or a component's `customId` params and a modal's fields. The interaction must be one dispatch could route to
-the handler, a `customId` its pattern matches or the command it handles; one that could not rejects, naming
-both, so a typo in a test does not pass silently. A message passed alone to a patterned `@MessageHandler` is
+or a component's `customId` params and a modal's fields. The interaction must be one dispatch routes to the
+handler, ranking every handler of the module as the bot does. A `customId` another handler's pattern takes first
+rejects, naming the handler that runs, and so does one no pattern takes or a command the handler doesn't handle, so a
+typo in a test does not pass silently. A handler declared under two patterns gets the params of the one dispatch
+picks. A message passed alone to a patterned `@MessageHandler` is
 checked the same way, after the prefix of the module's `app`, and the handler gets the params its pattern
 captures; see [Message commands](/docs/4.1/message-commands#testing).
 
@@ -25,7 +27,8 @@ captures; see [Message commands](/docs/4.1/message-commands#testing).
 built-in fallback, which would answer the user, does not run in tests, so the test sees the error.
 
 `getResponse(interaction)` reports what `respond()` did: where the answer stands, whether anything visible was
-sent, and each Discord call it made, with its payload. A guard that returns `false` stops the call without an
+sent, counting only the calls Discord accepted, and each Discord call it made, with its payload and, for one Discord
+refused, the `error` it rejected with. A guard that returns `false` stops the call without an
 answer:
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="invoke"}
