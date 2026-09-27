@@ -6,6 +6,7 @@ import {
   inspectHandler,
   MeoCordTestingModule,
 } from 'meocord/testing'
+import { UseGuard } from 'meocord/decorator'
 import { describe, expect, it } from 'vitest'
 import { ModerationSlashController } from '@src/controllers/slash/moderation.slash.controller'
 import { ChannelGuard } from '@src/guards/channel.guard'
@@ -24,6 +25,13 @@ describe('ModerationSlashController', () => {
     expect(getResponse(elsewhere).sent).toBe(false)
   })
   // #endregion invoke
+
+  // #region typed
+  it('checks the params given to a guard against the ones it declares', () => {
+    // @ts-expect-error channelId is not one of ChannelGuard's params
+    expect(() => UseGuard({ provide: ChannelGuard, params: { channelId: '111111111111111111' } })).not.toThrow()
+  })
+  // #endregion typed
 
   // #region unit
   it('reads the roles from the handler, in a unit test of the guard', () => {
