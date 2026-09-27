@@ -116,10 +116,10 @@ Between equally literal patterns, the one with fewer parameters wins, then the o
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
 `page/5` and leaves `page/last` to the other, in whatever order they're declared.
 
-Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and `a/b/{y}`, both take `a/b/c`, and
-MeoCord warns about the pair at startup, as it does for two typed parameters that share a value, such as
-`r/{w:on|off}` and `r/{f:bool}`. Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop
-the bot at startup, naming both, since only one of them could ever run.
+Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and `a/b/{y}`, both take `a/b/c`,
+and MeoCord warns about the pair at startup, as it does for two typed parameters that share a value, such as
+`r/{w:on|off}` and `r/{f:bool}`. Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and
+`profile/{id}`, stop the bot at startup, naming both, since only one of them could ever run.
 
 ## Select menus
 
