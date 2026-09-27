@@ -15,8 +15,9 @@ limits:
 Stacked cooldowns are counted together, a controller's first: a call is counted against all of them only if all
 allow it, so a call one refuses spends none of the others, and it waits the longest wait among those that
 refuse it. Here, a call made a second after the last is refused by the three-second cooldown and keeps its
-per-minute uses. Every store MeoCord ships counts this way; a store of your own counts them one after another
-unless it [overrides `consumeMany`](#any-other-database).
+per-minute uses. Every store MeoCord ships counts this way, `RedisCooldownStore` on Redis Cluster only with
+[`hashTag: 'handler'`](#redis); a store of your own counts them one after another unless it
+[overrides `consumeMany`](#any-other-database).
 
 | Option    | Default  | What it does                                                                                                                            |
 | --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,6 +112,11 @@ you have. With node-redis:
 - With ioredis, run the script as `(script, keys, args) => redis.eval(script, keys.length, ...keys, ...args)`.
 - `evalsha` is optional. With it, the script is sent by its SHA1, and in full only when the server answers
   `NOSCRIPT`; without it, every call sends the whole script.
+- One script counts all of a handler's stacked cooldowns, so a call costs one round trip however many it has.
+- On Redis Cluster, a handler's keys usually sit in different slots, which one script cannot reach. The store
+  then counts each key with a script of its own, in order, so a call one cooldown refuses has counted against
+  those before it. `{ hashTag: 'handler' }` keeps each handler's keys in one slot, and its cooldowns one step;
+  every call to that handler then lands on that slot.
 - Keys start with `meocord:cooldown:`. Pass `{ prefix }` for your own, to keep two bots on one server apart.
 - The same script runs on Redis 5 and later, Valkey, KeyDB, Dragonfly and Upstash, which runs `EVAL`. Garnet
   runs Lua only in part, so [check it](#checking-a-store) before relying on it.
@@ -119,12 +125,12 @@ you have. With node-redis:
 
 Extend `CooldownStore`. It is resolved like a [service](/docs/4.1/services), so it can inject its client, and
 its `consume` must check and record a call in one step, so two calls at the limit cannot both pass.
+[A cooldown store](/docs/4.1/recipe-cooldown-stores) builds one for PostgreSQL, SQLite and MongoDB.
 
 `@Cooldown` calls `consumeMany(entries)` once per call, with every stacked cooldown. Its default calls `consume`
 for each in order and stops at the first refusal. Override it to check them all and record the call against
 all only if all allow it, in one round trip, as the built-in stores do; it is worth it for any store behind a
 network.
-[A cooldown store](/docs/4.1/recipe-cooldown-stores) builds one for PostgreSQL, SQLite and MongoDB.
 
 ## Checking a store
 
