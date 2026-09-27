@@ -137,8 +137,8 @@ those before it. Override `consumeMany` to check them all and record the call on
 trip, as the built-in stores do. It's worth it for any store behind a network.
 
 Override `peekMany(entries)` too, to check the entries and record nothing. MeoCord calls it before a message command
-fetches the members, users and channels it names, so a caller on cooldown costs no request. The default allows every
-call, so a store without its own `peekMany` refuses only at `consumeMany`, after the fetch.
+fetches the members, users, roles or channels it names, so a caller on cooldown costs no request. The default allows
+every call, so a store without its own `peekMany` refuses only at `consumeMany`, after the fetch.
 
 ### Checking a store
 

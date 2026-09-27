@@ -15,8 +15,7 @@ since: 4.1.0
 
 MeoCord answers for you in three places: the loading view [`@Defer`](guide:defer) adds while a handler runs, the
 error answer the built-in fallback sends when a call fails, and the reply of the built-in `!help`. A presenter decides
-how those look. What they say is
-decided elsewhere, by exception filters and the fallback.
+how those look. What they say is decided elsewhere, by exception filters and the fallback.
 
 ## When to use it
 
