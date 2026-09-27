@@ -184,7 +184,7 @@ Colour each verdict by what it means, and give the review buttons a loading emoj
 ::example{file="tutorial/review.controller.ts" region="step:theming"}
 
 Submit a report, then approve one and reject another: the post arrives in the bot's colour, an approval turns it
-green and a rejection red, and 📝 shows while each is saved.
+green and a rejection grey, and 📝 shows while each is saved.
 
 ## Next steps
 
