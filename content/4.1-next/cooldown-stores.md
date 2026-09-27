@@ -1,0 +1,162 @@
+---
+id: cooldown-stores
+title: Cooldown stores
+chapter: appendix
+group: recipes
+order: 8
+summary: Keep cooldown counts in Redis, across shards, or in PostgreSQL, SQLite or MongoDB, and check a store of your own.
+requires: [cooldowns, services]
+api:
+  [
+    utilities/CooldownStore,
+    utilities/RedisCooldownStore,
+    utilities/ShardedCooldownStore,
+    utilities/MemoryCooldownStore,
+    testing/testCooldownStore,
+  ]
+since: 4.1.0
+formerly: [recipe-cooldown-stores]
+---
+
+By default, [`@Cooldown`](guide:cooldowns) counts calls in the bot's memory: they're gone on a restart, and with
+process sharding each shard counts on its own. A store keeps them elsewhere. Pick one by where the bot runs:
+
+| The bot runs                               | Store                                              |
+| ------------------------------------------ | -------------------------------------------------- |
+| In one process, restarts are fine          | `MemoryCooldownStore`, the default                 |
+| As process shards on one host              | `ShardedCooldownStore`, with no database           |
+| On several hosts, or must survive restarts | `RedisCooldownStore`, or a store for your database |
+
+## The code
+
+`RedisCooldownStore` depends on no Redis client. Give `RedisCooldownStore.using` a function that runs a script with
+the one you have. With node-redis:
+
+::example{file="recipes/cooldown-stores/redis.ts" region="store"}
+
+`using` returns a class, which the app binds as its store:
+
+::example{file="recipes/cooldown-stores/app-redis.ts" region="app"}
+
+## How it works
+
+A store is a [service](guide:services) that extends `CooldownStore`. `@Cooldown` calls its `consumeMany(entries)`
+once per call, with every stacked cooldown. Three things make a store correct:
+
+- **One step.** The check and the record happen together, so two calls at the limit can't both pass.
+- **One clock.** Processes on several hosts count by the database's clock, not each host's own.
+- **Every key expires.** A key whose calls have all left their window is removed, so the store doesn't grow
+  forever.
+
+`RedisCooldownStore` counts each key in a sorted set. One Lua script trims, counts and adds to every key of the
+call, timed by the server's `TIME`, and sets each key to expire. So a call costs one round trip however many
+cooldowns it has, and a call one of them refuses counts against none.
+
+- **`evalsha`** is optional. With it, the script is sent by its SHA1, and in full only when the server answers
+  `NOSCRIPT`. Without it, every call sends the whole script.
+- **Keys** start with `meocord:cooldown:`. Pass `{ prefix }` for your own, to keep two bots on one server apart.
+- **Servers:** the same script runs on Redis 5 and later, Valkey, KeyDB, Dragonfly and Upstash. Garnet runs Lua
+  only in part, so [check it](#checking-a-store) before relying on it.
+
+## Variations
+
+### ioredis
+
+Run the script as `(script, keys, args) => redis.eval(script, keys.length, ...keys, ...args)`.
+
+### Redis Cluster
+
+A handler's keys usually sit in different slots, which one script can't reach. The store then counts each key with
+a script of its own, in order, so a call one cooldown refuses has counted against those before it. Pass
+`{ hashTag: 'handler' }` to keep each handler's keys in one slot, and its cooldowns in one step. Every call to that
+handler then lands on that slot.
+
+### Process sharding on one host
+
+`ShardedCooldownStore` needs no database. Each shard asks the shard manager, which counts every shard's calls in its
+memory, over the IPC the shards already use:
+
+::example{file="recipes/cooldown-stores/app-sharded.ts" region="app"}
+
+The counts last while the manager runs: a shard that restarts keeps them, but they start again when the whole bot
+restarts. A manager that doesn't answer in time is a [store failure](guide:cooldowns#when-the-store-fails). Without
+process sharding, it counts in the one process.
+
+### PostgreSQL
+
+A row per call:
+
+::example{file="recipes/cooldown-stores/postgres.store.ts" region="schema"}
+
+The store counts a key's calls in a transaction that first takes an advisory lock on the key, so even its first
+call, which has no row yet to lock, runs one at a time. `clock_timestamp()` times each row by the database's clock:
+
+::example{file="recipes/cooldown-stores/postgres.store.ts" region="store"}
+
+It injects the pool from the [database recipe](guide:recipes/database):
+
+::example{file="recipes/cooldown-stores/app-postgres.ts" region="app"}
+
+A key's rows go when it's next used. Clear the rest from a [scheduled task](guide:recipes/scheduled), with
+`DELETE FROM cooldown_calls WHERE at < now() - interval '1 day'` or your longest window.
+
+### SQLite
+
+`node:sqlite` is built into Node 22.13 and later, and Bun. The same rows:
+
+::example{file="recipes/cooldown-stores/sqlite.store.ts" region="schema"}
+
+The store counts in an `IMMEDIATE` transaction, which takes the write lock before it reads, so two processes on one
+file can't both take the last use:
+
+::example{file="recipes/cooldown-stores/sqlite.store.ts" region="store"}
+
+`busy_timeout` makes a call wait while another process holds the lock, rather than fail. `node:sqlite` is
+synchronous, so that wait blocks the process. SQLite suits processes on one host, which is why `Date.now()` serves
+as its clock:
+
+::example{file="recipes/cooldown-stores/sqlite.store.ts" region="provider"}
+
+### MongoDB
+
+One document per key. A single `findOneAndUpdate` with an update pipeline trims the key's calls, counts them and
+appends this one, timed by the server's `$$NOW`. Each call carries an id of its own, so the store can tell whether
+the write recorded it:
+
+::example{file="recipes/cooldown-stores/mongo.store.ts" region="store"}
+
+A TTL index removes a key once its window has passed:
+
+::example{file="recipes/cooldown-stores/mongo.store.ts" region="provider"}
+
+### A store of your own
+
+Extend `CooldownStore` and implement `consume(key, { uses, windowMs })` in one step. The default `consumeMany`
+calls `consume` for each cooldown in order and stops at the first refusal, so a call one refuses has counted against
+those before it. Override `consumeMany` to check them all and record the call only if all allow it, in one round
+trip, as the built-in stores do. It's worth it for any store behind a network.
+
+### Checking a store
+
+`testCooldownStore` from `meocord/testing` runs the behaviour `MemoryCooldownStore` defines against yours, under
+Vitest, Jest or any runner with `describe`, `it` and `expect`:
+
+::example{file="recipes/cooldown-stores/sharded.spec.ts" region="spec"}
+
+It checks that:
+
+- a key allows `uses` calls within the window, and the window slides;
+- `retryAfterMs` counts from the oldest call still in the window;
+- each key counts on its own, and calls in the same millisecond stay distinct;
+- of several concurrent calls at the limit, exactly one passes;
+- a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
+- for a store that overrides `consumeMany`, a refused batch records nothing.
+
+It uses real time with short windows, so it takes a few seconds. Each case counts under keys of its own, so it can
+run against a database that outlives the test. It can't see whether every key expires; check that yourself.
+
+## Next steps
+
+- [Cooldowns](guide:cooldowns): the limits a store counts, and what a call gets when the store fails.
+- [A database](guide:recipes/database): the pool the PostgreSQL store injects.
+- [Sharding](guide:sharding): when process sharding needs a shared store.

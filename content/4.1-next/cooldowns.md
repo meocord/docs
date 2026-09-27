@@ -1,0 +1,168 @@
+---
+id: cooldowns
+title: Cooldowns
+chapter: pipeline
+order: 5
+summary: Limit how often a handler runs, per user, server, channel or resource, and choose where the calls are counted.
+learn:
+  - Limit a handler with one cooldown or several stacked
+  - Count per user, server or channel, or per resource with by
+  - Answer a refused call your own way
+  - Keep counts in a shared store, and decide what happens when it fails
+requires: [guards, validation]
+api:
+  [
+    decorators/Cooldown,
+    types/CooldownOptions,
+    responses/CooldownError,
+    utilities/cooldownMessage,
+    utilities/CooldownStore,
+    utilities/MemoryCooldownStore,
+    decorators/MeoCord,
+  ]
+since: 4.1.0
+---
+
+[`@Cooldown`](api:decorators/Cooldown) limits how often a handler runs: at most `uses` calls within `seconds`,
+counted per user unless you say otherwise. A call over the limit doesn't run, and only the caller is told how long
+to wait.
+
+## When to use it
+
+Use a cooldown for any limit on how often: a daily reward, a command that calls a paid API, a button that spams a
+channel, a message command someone could repeat in a loop.
+
+A limit that isn't about frequency, such as who may run a command or where, is a [guard](guide:guards). A limit
+Discord already applies, such as a channel's slowmode, needs no cooldown.
+
+## Example
+
+::example{file="controllers/slash/daily.slash.controller.ts" region="cooldown"}
+
+Each user can claim `/daily` five times a minute, and never twice within three seconds. A call the three-second
+limit refuses doesn't spend one of the five.
+
+## How it works
+
+The window slides: each use comes back `seconds` after it was spent, rather than every use at once at the top of a
+minute.
+
+A call is counted last, after its [guards](guide:guards), [validation](guide:validation) and pipes, just before
+the handler. A denied call or bad input spends nothing.
+
+Stacked cooldowns are checked together, a controller's first. A call is counted against all of them only if all
+allow it. When some refuse, it's told the longest wait among them. On Redis Cluster, that takes one
+[option](guide:recipes/cooldown-stores#redis-cluster).
+
+A refused call throws [`CooldownError`](api:responses/CooldownError), which the built-in fallback answers only to the
+caller: "Slow down: try again in 12s."
+
+`@Cooldown` works on interaction and message handlers. On a controller, it applies to each of its handlers apart, so
+a controller's `uses: 3` gives every handler three.
+
+A message command whose params name members, users, roles or channels is checked sooner too. Before they're fetched
+from Discord, the call is checked against its cooldowns without being counted, so a call on cooldown costs no
+requests.
+
+## Options
+
+| Option    | Default  | What it does                                                                                     |
+| --------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `seconds` | none     | The window's length.                                                                             |
+| `uses`    | `1`      | Calls allowed within the window.                                                                 |
+| `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`.                      |
+| `bypass`  | none     | `(context) => boolean`: exempts a call without counting it, one from an owner for instance.      |
+| `by`      | none     | `(context, params) => string \| number \| undefined`: counts calls apart by a value of the call. |
+
+Outside a server, `'guild'` and `'channel'` count per user.
+
+## Counting per resource
+
+`per` decides whose calls count together, and `by` splits that count by a value of the call, such as the account a
+button acts on. A user with three game accounts can check each of them in once an hour:
+
+::example{file="controllers/button/check-in.button.controller.ts" region="by"}
+
+`by` gets the call's `ExecutionContext` and the handler's params as the handler gets them, after validation and
+pipes. Declare the params it reads, and a handler that doesn't receive them doesn't compile.
+
+- With `per: 'global'`, the limit is per resource across every user.
+- Returning `undefined` counts the call as though there were no `by`.
+- An error `by` throws goes to the [exception filters](guide:exception-filters), and the call isn't counted.
+
+The guard runs first, so a stranger pressing someone else's button is refused without spending the owner's
+check-in:
+
+::example{file="controllers/button/check-in.button.controller.spec.ts" region="spec"}
+
+## Answering a refused call
+
+The built-in answer is in the user's language where the app [translates MeoCord's texts](guide:localisation). To
+word it yourself, catch `CooldownError` in an [exception filter](guide:exception-filters). It carries `retryAfterMs`;
+[`translateError(error, t, interaction)`](api:utilities/translateError) gives MeoCord's own text in the user's
+language, and [`cooldownMessage(retryAfterMs)`](api:utilities/cooldownMessage) the English one.
+
+## Where calls are counted
+
+By default, in the bot's memory. To keep counts across restarts, or share them between processes, bind another store
+with `@MeoCord({ cooldownStore })`:
+
+| Store                               | Counts                                            | Survives a restart               | Across hosts         |
+| ----------------------------------- | ------------------------------------------------- | -------------------------------- | -------------------- |
+| `MemoryCooldownStore` (the default) | In this process; per shard with process sharding  | No                               | No                   |
+| `ShardedCooldownStore`              | In the shard manager, for every shard on the host | A shard's restart, not the bot's | No                   |
+| `RedisCooldownStore`                | On the Redis server                               | Yes                              | Yes                  |
+| Your own `CooldownStore`            | Where it keeps them                               | As its database does             | As its database does |
+
+[Cooldown stores](guide:recipes/cooldown-stores) sets up each one, and builds a store for PostgreSQL, SQLite and
+MongoDB.
+
+## When the store fails
+
+A shared store can be down, restarting or cut off. When it throws, rejects or doesn't answer within
+`cooldownStoreTimeoutMs`, a second by default, `cooldownStoreFailure` decides what the call gets:
+
+::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
+
+- **`'deny'`**, the default, refuses the call with `CooldownStoreError`, since a cooldown that can't be checked
+  isn't known to allow it. The fallback answers only the caller: "Cooldowns can't be checked right now: try again
+  shortly."
+- **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
+
+Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many
+calls failed.
+
+## Testing
+
+Each testing module counts in a fresh in-memory store, so a test starts with every cooldown unused:
+
+::example{file="controllers/slash/daily.slash.controller.spec.ts" region="spec"}
+
+To test against another store, provide it: `{ provide: CooldownStore, useValue: store }`.
+
+## Gotchas
+
+> [!WARNING]
+> With [process sharding](guide:sharding), the default store counts per shard, so `'user'` and `'global'`
+> cooldowns allow a multiple of what they say. The bot warns at startup; bind `ShardedCooldownStore` or a shared
+> store. `'guild'` and `'channel'` stay exact, since a server lives on one shard.
+
+- **Two classes with one name can't share counts.** Calls are counted under the class name, so when either of two
+  same-named classes has a cooldown, the bot refuses to start. Rename one.
+- **A `bypass` call isn't counted.** An owner who tests a command doesn't use up anyone's limit, nor their own.
+
+## Build it
+
+The feedback bot takes a report from anyone, as often as they like. Limit each member to one report every five
+minutes:
+
+::example{file="tutorial/feedback.controller.ts" region="step:cooldowns"}
+
+Run `/feedback`, send the form, and run `/feedback` again: the form doesn't open, and the bot tells only you how long
+to wait, such as "Slow down: try again in 4m 52s."
+
+## Next steps
+
+- [Exception filters](guide:exception-filters): answer `CooldownError` in your own words.
+- [Cooldown stores](guide:recipes/cooldown-stores): count in Redis, across shards, or in your own database.
+- [Observers](guide:observers): count refused calls, which report the outcome `'cooldown'`, in your metrics.
