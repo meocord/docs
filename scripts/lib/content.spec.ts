@@ -173,6 +173,39 @@ describe('checkSite', () => {
     ])
   })
 
+  it("checks an API link against the line's API: its symbol's page, and the member it names", () => {
+    // Defer, and MeoCordConfig, which the generated configuration reference links
+    const symbols: Record<string, string[]> = { 'decorator/Defer': ['ephemeral'], 'interface/MeoCordConfig': [] }
+    const api = (_line: string, version?: string) =>
+      version === undefined || version === '4.1.0-beta.0'
+        ? {
+            symbol: (entry: string, name: string) => {
+              const members = symbols[`${entry}/${name}`]
+              return members && { members: members.map(anchor => ({ anchor })) }
+            },
+          }
+        : undefined
+    const links = [
+      '[a](/docs/4.1/api/decorator/Defer)',
+      '[b](/docs/4.1/api/decorator/Defer#ephemeral)',
+      '[c](/docs/4.1/api/4.1.0-beta.0/decorator/Defer)',
+      '[d](/docs/4.1/api/common/translateErrorz)',
+      '[e](/docs/4.1/api/decorator/Defer#nope)',
+      '[f](/docs/4.1/api/4.1.0-beta.9/decorator/Defer)',
+    ]
+    const snapshot = withAuthored({ a: page('id: a\ntitle: A', links.join('\n')) })
+
+    expect(checkSite({ ...snapshot, api })).toEqual([
+      "content/4.1/a.md: /docs/4.1/api/common/translateErrorz names no symbol of 4.1's API",
+      'content/4.1/a.md: /docs/4.1/api/decorator/Defer#nope names no member of Defer',
+      'content/4.1/a.md: /docs/4.1/api/4.1.0-beta.9/decorator/Defer names no version of 4.1',
+    ])
+    // Without the API, as in a snapshot that leaves it out, API links go unchecked
+    expect(checkSite(snapshot)).toEqual([
+      'content/4.1/a.md: /docs/4.1/api/4.1.0-beta.9/decorator/Defer names no version of 4.1',
+    ])
+  })
+
   it('reports links to pages, headings, versions and guides that do not exist', () => {
     const links = [
       '[a](/docs/3.2/guards)',

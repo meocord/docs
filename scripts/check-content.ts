@@ -9,6 +9,7 @@ import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths } from './lib/layout.js'
 import { newestIn, readVersions } from './lib/versions.js'
+import { apiModel } from '../src/lib/docs/api-site.js'
 
 const readIf = (file: string) => (existsSync(file) ? readFileSync(file, 'utf8') : undefined)
 
@@ -35,6 +36,8 @@ const site: SiteSnapshot = {
   apis: new Set(),
   configs: {},
   examples: {},
+  // The site's own model of each API, so a link is checked against the pages the site renders
+  api: (line, version) => apiModel(line, version),
 }
 for (const { line, versions } of config.lines) {
   const pagesIn = (dir: string) =>

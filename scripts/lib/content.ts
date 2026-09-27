@@ -13,6 +13,11 @@ import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
 
+/** A line's API as the site renders it: a symbol's page by entry point and name, with its members' anchors. */
+export interface ApiLookup {
+  symbol(entry: string, name: string): { members: { anchor: string }[] } | undefined
+}
+
 export interface SiteSnapshot {
   config: VersionsConfig
   /** Authored pages per line, from content/<line>/, keyed by slug, as written on disk. */
@@ -27,6 +32,8 @@ export interface SiteSnapshot {
   configs: Record<string, ConfigDocument | undefined>
   /** Example files per line, and for `compare`, keyed by their path under examples/<name>/. */
   examples: Record<string, Record<string, string>>
+  /** A line's API, or an exact version's; undefined where there is none, or when API links go unchecked. */
+  api?: (line: string, version?: string) => ApiLookup | undefined
 }
 
 export interface Frontmatter {
@@ -121,6 +128,21 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     authored[line.line] = { ...authored[line.line], [CONFIG_REFERENCE_SLUG]: configReferencePage(line.line, doc) }
   }
   const site = { ...snapshot, authored }
+
+  // A symbol's page, and its member's anchor, as the site renders the API the link names
+  const apiLinkProblem = (
+    link: { line: string; entry: string; symbol: string; member?: string; version?: string },
+    versions: string[],
+  ): string | undefined => {
+    if (link.version !== undefined && !versions.includes(link.version)) return `names no version of ${link.line}`
+    const api = site.api?.(link.line, link.version)
+    if (!api) return undefined
+    const symbol = api.symbol(link.entry, link.symbol)
+    if (!symbol) return `names no symbol of ${link.version ?? link.line}'s API`
+    if (link.member && !symbol.members.some(member => member.anchor === link.member))
+      return `names no member of ${link.symbol}`
+    return undefined
+  }
   // The set the site shows for a line: its imported pages until its guides are authored
   const shown = (line: string): PageSet => (lines.get(line)?.guides === 'authored' ? 'authored' : 'readme')
 
@@ -174,7 +196,12 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       }
       const link = parsed.target
       const line = lines.get(link.line)!
-      if (link.kind === 'line' || link.kind === 'api' || link.kind === 'missing') continue
+      if (link.kind === 'line' || link.kind === 'missing') continue
+      if (link.kind === 'api') {
+        const problem = apiLinkProblem(link, line.versions)
+        if (problem) problems.push(`${where}: ${target} ${problem}`)
+        continue
+      }
       if (link.kind === 'changelog') {
         if (link.version !== undefined && !line.versions.includes(link.version))
           problems.push(`${where}: ${target} names no version of ${link.line}`)
