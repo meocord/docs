@@ -37,9 +37,9 @@ Commands are in the [README](README.md#development). Before writing Next.js code
   their own.
 - **`generated/` is written only by the content pipeline** (`scripts/`); never edit it by hand. A change there comes
   from re-running the pipeline.
-- **Never pass `css` at the call site of a prestyled factory.** `createNode` merges shallowly, so a call-site `css`
-  replaces the factory's, fallbacks included ([meonode#31](https://github.com/l7aromeo/meonode/issues/31)). Override
-  with CSS props, or make the piece a function that composes `Div()` and merges `css`.
+- **A call-site `css` merges over a prestyled factory's**, key by key, and the call site wins
+  ([meonode#31](https://github.com/l7aromeo/meonode/issues/31)). Use it for one-off tweaks; a piece reused with the
+  same overrides gets a factory or a function of its own.
 - **Pages are identical for every reader.** No cookies, no per-request reads, no nonce. Client state (theme and
   similar) is stamped by the pre-paint script, and page content has no Suspense holes.
 - **`SITE_INDEXABLE` is the only indexing switch**, read at build. Every new surface honours it; the smoke tests assert
