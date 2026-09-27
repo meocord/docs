@@ -5,6 +5,8 @@ ARG BUN_SLIM_IMAGE=oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5ef
 FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
+# The examples workspaces too: the build runs the home page's demo in examples/4.1
+COPY --parents examples/*/package.json ./
 RUN bun install --frozen-lockfile
 
 FROM ${BUN_IMAGE} AS builder
@@ -12,6 +14,8 @@ WORKDIR /app
 # meo-canvas reads /etc/fonts/fonts.conf at startup, even though it registers its fonts by path.
 RUN apt-get update && apt-get install -y --no-install-recommends fontconfig-config && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
+# Each workspace's node_modules links into the store above
+COPY --from=deps /app/examples ./examples
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build

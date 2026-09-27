@@ -24,7 +24,7 @@ export interface Stage {
   blocked: string
 }
 
-/** What the example's recording captured: generated/home/trace.json, written by `bun run home:trace`. */
+/** What the example's recording captured: .home-trace/trace.json, written by `bun run home:trace`. */
 interface Recording {
   command: string
   option: { name: string }
@@ -94,7 +94,7 @@ const DECLARED_BY: Partial<Record<StageId, RegExp>> = {
 }
 
 function recording(): Recording {
-  return JSON.parse(readFileSync(path.join(process.cwd(), 'generated', 'home', 'trace.json'), 'utf8')) as Recording
+  return JSON.parse(readFileSync(path.join(process.cwd(), '.home-trace', 'trace.json'), 'utf8')) as Recording
 }
 
 /** The pipeline panel's data: the example's source, and what its recorded runs did at each stage. */
@@ -220,7 +220,7 @@ export interface Feature {
 export function features(): Feature[] {
   const { routing, cooldown, validation, presenter } = recording().features
   const missing = (what: string): never => {
-    throw new Error(`generated/home/trace.json has no ${what}; run bun run home:trace`)
+    throw new Error(`.home-trace/trace.json has no ${what}; run bun run home:trace`)
   }
   const embed = presenter.answer?.embeds?.[0] ?? missing('presenter answer')
   const feature = (title: string, body: string, file: string, region: string, href: string, result: FeatureResult) => ({

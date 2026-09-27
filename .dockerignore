@@ -2,6 +2,7 @@
 .github
 .next
 node_modules
+**/node_modules
 coverage
 playwright-report
 test-results
@@ -19,5 +20,6 @@ Dockerfile
 .dockerignore
 .search
 .api-layout
+.home-trace
 public/_pagefind
 public/palette
