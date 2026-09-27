@@ -109,9 +109,9 @@ instead.
 
 It says "An error occurred while executing the command." for a fault, and "Command not found!" for
 `CommandNotFoundError`, both in the user's language when the app's translator has them; see
-[Localisation](guide:localisation). A `UserError`, a guard's `GuardDeniedError`, a `CooldownError` and a
-`ValidationError` show their own message, only to the caller: on a public deferred command, the deferral is deleted
-and the message follows up privately.
+[MeoCord's own texts](guide:localisation#meocords-own-texts). A `UserError`, a guard's `GuardDeniedError`, a
+`CooldownError` and a `ValidationError` show their own message, only to the caller: on a public deferred command, the
+deferral is deleted and the message follows up privately.
 
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's
 or validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
