@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkSite,
   fenceLanguages,
+  gendered,
   genderedInMarkdown,
   markdownLinks,
   overlongLines,
@@ -489,5 +490,31 @@ describe('genderedInMarkdown', () => {
       { line: 2, word: 'Her' },
       { line: 15, word: 'her' },
     ])
+  })
+
+  it("reads an image's alt text and a link's or image's title, which readers see", () => {
+    const text = [
+      '![She waves from the dashboard](./wave.png)',
+      '',
+      'See [the page](https://example.com "his notes") and ![a chart][chart].',
+      '',
+      '[chart]: ./chart.png "A chart of her votes"',
+      '',
+      '![a reference image][photo]',
+      '',
+      '[photo]: ./photo.png',
+    ].join('\n')
+    expect(genderedInMarkdown(text)).toEqual([
+      { line: 1, word: 'She' },
+      { line: 3, word: 'his' },
+      { line: 5, word: 'her' },
+    ])
+  })
+})
+
+describe('gendered', () => {
+  it('reads no URL, whatever its scheme, and still reads the words around one', () => {
+    const text = 'see https://example.com/his, www.example.com/her or ftp://host/she; then his own'
+    expect(gendered(text, () => 1)).toEqual([{ line: 1, word: 'his' }])
   })
 })

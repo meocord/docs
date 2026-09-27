@@ -137,14 +137,19 @@ export function overlongLines(markdown: string, width = PROSE_WIDTH): { line: nu
 /** A gendered third-person pronoun, as a whole word in any case; content says they, them and their. */
 const GENDERED = /\b(she|her|hers|herself|he|him|his|himself)\b/gi
 
-/** Each gendered pronoun in a text, by its 1-based line, with the word as written. */
+/** A URL, with a scheme or from `www.`: an address, not prose. */
+const ADDRESS = /\b(?:[a-z][a-z\d+.-]*:\/\/|www\.)[^\s<>"'`]+/gi
+
+/** Each gendered pronoun in a text, by its 1-based line, with the word as written; URLs are not read. */
 export function gendered(text: string, lineOf: (offset: number) => number): { line: number; word: string }[] {
-  return [...text.matchAll(GENDERED)].map(match => ({ line: lineOf(match.index), word: match[0] }))
+  // Blanked rather than removed, so each match keeps its offset
+  const prose = text.replace(ADDRESS, address => ' '.repeat(address.length))
+  return [...prose.matchAll(GENDERED)].map(match => ({ line: lineOf(match.index), word: match[0] }))
 }
 
 /**
- * The gendered pronouns of a Markdown file, by line: in its front matter, and in the text of its prose as the site
- * parses it, so code, URLs, link definitions and HTML are not read.
+ * The gendered pronouns of a Markdown file, by line: in its front matter, in the text of its prose as the site
+ * parses it, and in the alt text and titles readers see. Code, URLs, link labels and HTML are not read.
  */
 export function genderedInMarkdown(markdown: string): { line: number; word: string }[] {
   const { tree, frontMatterLines } = markdownTree(markdown)
@@ -164,6 +169,10 @@ export function genderedInMarkdown(markdown: string): { line: number; word: stri
       const first = node.position.start.line
       found.push(...gendered(node.value, index => first + node.value.slice(0, index).split('\n').length - 1))
     }
+    // An image's alt text, and a link's, image's or definition's title, reported at the node's first line
+    const { alt, title } = node as { alt?: unknown; title?: unknown }
+    for (const value of [alt, title])
+      if (typeof value === 'string' && node.position) found.push(...gendered(value, () => node.position!.start.line))
     if ('children' in node) for (const child of node.children) visit(child)
   }
   visit(tree)
