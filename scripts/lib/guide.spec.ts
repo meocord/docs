@@ -87,7 +87,12 @@ describe('checkGuide', () => {
     ])
   })
 
-  it('asks for two to four things to learn, and an api entry as <kind>/<Symbol>', () => {
+  it('asks for two to four things to learn, and an api entry as <kind>/<Symbol> of the API', () => {
+    const named = checkGuide(
+      { ...valid(), guards: page({ ...guards, api: ['decorators/UseGuard#guards', 'utilities/Nope'] }, chapterBody()) },
+      context,
+    )
+    expect(named).toEqual(['content/4.1-next/guards.md: api entry "utilities/Nope" names no symbol of the API'])
     const problems = checkGuide(
       { ...valid(), guards: page({ ...guards, learn: ['a'], api: ['decorator/UseGuard', 'UseGuard'] }, chapterBody()) },
       context,
@@ -131,8 +136,14 @@ describe('checkGuide', () => {
       'content/4.1-next/guards.md: the body has an H1; the title is the H1',
       'content/4.1-next/guards.md: a heading is deeper than ###',
       'content/4.1-next/guards.md: the fixed sections run When to use it, Example, How it works, Gotchas, Build it, Next steps',
-      'content/4.1-next/guards.md: a topic section sits outside How it works … Gotchas',
+      'content/4.1-next/guards.md: a topic section sits outside How it works … Gotchas, Build it and Next steps',
       'content/4.1-next/guards.md: Build it comes right before Next steps',
+    ])
+    // Without Gotchas, a topic section after Next steps is still out of place.
+    const trailing =
+      chapterBody().replace('## Next steps', '## Build it\n\nGrow the bot.\n\n## Next steps') + '\n\n## Extra'
+    expect(checkGuide({ ...valid(), guards: page(guards, trailing) }, context)).toEqual([
+      'content/4.1-next/guards.md: a topic section sits outside How it works … Gotchas, Build it and Next steps',
     ])
     const missing = checkGuide({ ...valid(), guards: page(guards, 'Lead only.\n\n## Example') }, context)
     expect(missing).toContain('content/4.1-next/guards.md: the page has no "## When to use it" section')
@@ -148,9 +159,10 @@ describe('checkGuide', () => {
       order: 1,
       summary: 'A ticket system.',
     }
-    const body = ['Lead.', '## How it works', '## The code', '## Next steps'].join('\n\n')
+    const body = ['Lead.', '## How it works', '## The code', '## Setup', '## Next steps'].join('\n\n')
     expect(checkGuide({ ...valid(), tickets: page(recipe, body) }, context)).toEqual([
       'content/4.1-next/tickets.md: a recipe has a "## Variations" section',
+      'content/4.1-next/tickets.md: "## Setup" is no recipe section; use ### under one of them',
       "content/4.1-next/tickets.md: a recipe's sections run The code, How it works, Variations, Next steps",
     ])
   })
@@ -201,10 +213,14 @@ describe('checkGuide', () => {
         '::example{region="guard"}',
         '```ts\nconst a = 1\n```',
         '```cobol\nX\n```',
+        '```diff\n+ a\n```',
+        '```bash\nbun run dev\n```',
+        '::example{file="missing.ts"}',
       ].join('\n\n'),
     )
     expect(checkGuide({ ...valid(), guards: page(guards, body) }, context)).toEqual([
-      'content/4.1-next/guards.md: a code fence is marked "cobol", which the site does not highlight',
+      'content/4.1-next/guards.md: a code fence is marked "cobol"; a page\'s fences are bash, json, yaml, text',
+      'content/4.1-next/guards.md: a code fence is marked "diff"; a page\'s fences are bash, json, yaml, text',
       'content/4.1-next/guards.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence',
       'content/4.1-next/guards.md: examples/4.1/src/missing.ts does not exist',
       'content/4.1-next/guards.md: examples/4.1/src/guards/owner.guard.ts has no region "nope"',
