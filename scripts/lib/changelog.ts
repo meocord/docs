@@ -35,7 +35,9 @@ export function sliceChangelog(changelog: string, version: string): string {
 }
 
 const MIGRATING = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/blob\/[^/\s)]+\/docs\/MIGRATING\.md(#[\w-]+)?/g
-const README = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/?(?:#([\w-]+))?(?=[)\s])/g
+// The README by the repository's address or its file on a branch or commit, with or without an anchor
+const README =
+  /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord(?:\/blob\/[^/\s)]+\/README\.md|\/)?(?:#([\w-]+))?(?=[)\s])/g
 
 /**
  * Where a README anchor lands on a line's pages: the slug of the page holding it, keeping the anchor,

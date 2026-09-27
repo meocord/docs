@@ -10,6 +10,7 @@ import type { AnchorTarget, ChangelogDocument } from './changelog.js'
 import { pageAnchors, parsePage } from './content.js'
 import { importReadme, pageFile } from './readme.js'
 import type { VersionsConfig } from './versions.js'
+import { README_SECTIONS } from '../../src/config/readme-sections.js'
 
 /** The repository root; the pipeline's tests point it at a scratch directory. */
 export const ROOT = process.env.MEOCORD_DOCS_ROOT ?? path.resolve(import.meta.dirname, '..', '..')
@@ -94,10 +95,13 @@ export function authoredAnchors(line: string): Record<string, AnchorTarget> {
   return anchors
 }
 
-/** The anchor map a line's changelogs and migration guide resolve README links through. */
+/**
+ * The anchor map a line's changelogs resolve README links through: for an authored line, its pages' ids
+ * and headings, with the sections README_SECTIONS places over them.
+ */
 export function linkAnchors(config: VersionsConfig, line: string): Record<string, AnchorTarget> {
   const entry = config.lines.find(candidate => candidate.line === line)
-  return entry?.guides === 'authored' ? authoredAnchors(line) : lineAnchors(line)
+  return entry?.guides === 'authored' ? { ...authoredAnchors(line), ...README_SECTIONS[line] } : lineAnchors(line)
 }
 
 /** Starts a new line's authored guides from another line's; an existing line's folder is never touched. */

@@ -28,6 +28,10 @@ shows them once a pull request switches the line to `authored` and deletes its `
 The pipeline never changes a file under `content/`; it only starts a new line's folder from the newest
 line's authored guides.
 
+A changelog's links to meocord's migration guide and to sections of its README are pointed at the line's
+pages when the changelog is generated. `content:check` checks each against the heading it names, and fails
+a link to a README section that no page holds, since it is left on GitHub.
+
 Content stores links by line, `/docs/4.1/guards`, never through `latest` or `next`, in the form
 `src/lib/urls.ts` builds; the site maps them to the URLs it emits. `scripts/lib/pages.ts` is how the site
 reads a line's pages and the code an `::example` embeds. An authored line also shows `config-reference`, a
