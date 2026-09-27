@@ -5,7 +5,7 @@ import manifest from '../versions.json'
 const releases = manifest.lines.find(entry => entry.line === '4.1')?.versions ?? []
 const [previous, newest] = releases.slice(-2)
 
-test('the changelog gives the newest release in full and links each earlier one, marking itself in the sidebar', async ({
+test('the changelog sums up the newest release and links every release to its notes, marking itself in the sidebar', async ({
   page,
 }) => {
   const response = await page.goto('/docs/4.1/changelog')
@@ -18,6 +18,11 @@ test('the changelog gives the newest release in full and links each earlier one,
     new RegExp(`${previous.replaceAll('.', '\\.')} · \\d+ \\w+ \\d{4} · \\d+ \\w+ changes?`),
   )
   await expect(page.getByRole('link', { name: 'Changelog', exact: true })).toHaveAttribute('aria-current', 'page')
+
+  // The newest release's notes in full are on its own page, not on the index.
+  const notes = page.locator('a[data-release-notes]')
+  await expect(notes).toHaveText(`The ${newest} notes in full`)
+  await expect(notes).toHaveAttribute('href', new RegExp(`/changelog/${newest.replaceAll('.', '\\.')}$`))
 
   // An earlier release opens on its own page, its groups at their anchors, under the changelog in the crumbs.
   await page.getByRole('link', { name: '4.1.0-beta.0', exact: true }).click()
