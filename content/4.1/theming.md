@@ -134,9 +134,8 @@ To run a service in a theme without a module, use
 
 `Theme` from `meocord/common` still works, and it's deprecated. Each of its colours reads the matching role of the
 call's theme, and `errorColor` is `danger`. Read the theme with `useTheme()` in new code, and set colours in
-`@MeoCord({ theme })`. The
-[migration guide](https://github.com/meocord/meocord/blob/main/docs/MIGRATING.md#theme-is-deprecated-and-its-colours-changed)
-lists the old values if you want to keep them.
+`@MeoCord({ theme })`. The [migration guide](/docs/4.1/migrating#theme-is-deprecated-and-its-colours-changed) lists
+the old values if you want to keep them.
 
 ## Gotchas
 
