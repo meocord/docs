@@ -192,7 +192,8 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
 ## Build it
 
 Submitted feedback needs a place to live. A service keeps it in memory, and settings say where the review post goes,
-read from `FEEDBACK_CHANNEL_ID`, which you add to `.env`:
+read from `FEEDBACK_CHANNEL_ID`, which you add to `.env`. `staffRoleId`, who reviews it, is for
+[Guards](guide:guards), later:
 
 ::example{file="tutorial/feedback.service.ts" region="service"}
 
