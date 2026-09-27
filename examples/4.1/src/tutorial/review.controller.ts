@@ -68,7 +68,7 @@ export class ReviewController {
     })
     // #endregion step:localisation
     // #region step:theming
-    verdict.setColor(useTheme().colors[status === 'approved' ? 'success' : 'danger'])
+    verdict.setColor(useTheme().colors[status === 'approved' ? 'success' : 'neutral'])
     // #endregion step:theming
     await respond(interaction).send({ embeds: [verdict], components: [] })
 
