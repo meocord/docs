@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
+import { type ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, CommandBuilder, Controller } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
@@ -17,6 +17,9 @@ export class ReportController {
 
   @Command('report', ReportCommandBuilder)
   async where(interaction: ChatInputCommandInteraction) {
-    await respond(interaction).send({ content: `Reports go to <#${this.reports.channelId()}>.`, ephemeral: true })
+    await respond(interaction).send({
+      content: `Reports go to <#${this.reports.channelId()}>.`,
+      flags: MessageFlags.Ephemeral,
+    })
   }
 }
