@@ -35,7 +35,9 @@ for a builder that sets `ApplicationCommandType.User`, and `MessageContextMenuCo
 ::example{file="controllers/context-menu/report.context-menu.controller.ts" region="user"}
 
 - **The kind is checked as the bot starts.** A builder's kind is a value the compiler can't read, so a handler that
-  declares the other kind stops the bot, naming the handler and the builder.
+  declares the other kind stops the bot, naming the handler and the builder. The check reads the parameter's type
+  from decorator metadata, so it needs the interaction class imported as a value, as above and in the generated
+  controller: with `import { type … }` the class is erased, and a handler of the wrong kind loads without an error.
 - **A handler for both kinds** takes their union, and narrows it with `isUserContextMenuCommand()` or
   `isMessageContextMenuCommand()`.
 - **A user command and a message command may share a name,** as Discord allows, and each reaches its own handler.
