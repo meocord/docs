@@ -44,7 +44,8 @@ A context menu command is registered and routed like a slash command:
   `@CommandBuilder(CommandType.CONTEXT_MENU)`. [Registering commands](guide:slash-commands#registering-commands)
   applies as it does to slash commands.
 - **The name is what the menu shows.** Unlike a slash command's, it may hold capitals and spaces, and `@Command`
-  takes it as it is: `@Command('Report user', ReportUserBuilder)`.
+  takes it as it is: `@Command('Report user', ReportUserBuilder)`. A user command and a message command may share a
+  name, since Discord keeps them apart by type, and each reaches its own handler.
 - **The handler receives** a `UserContextMenuCommandInteraction` or a `MessageContextMenuCommandInteraction`, and no
   options. It runs through the full [pipeline](guide:how-a-call-runs) and answers with `respond()`.
 
@@ -61,6 +62,11 @@ sets `ApplicationCommandType.User`, and `MessageContextMenuCommandInteraction` f
 builder's kind is a value the compiler can't read, so MeoCord checks it as the bot starts: a handler that declares the
 other kind stops the bot, naming the handler and the builder.
 
+The check reads the handler's parameter type from the decorator metadata the compiler emits, so it needs the
+interaction class imported as a value, as the example and the generated controller do. With
+`import { type MessageContextMenuCommandInteraction }` the class is erased, and a handler of the wrong kind loads
+without an error.
+
 A handler that serves both kinds takes their union, and narrows it with `isUserContextMenuCommand()` or
 `isMessageContextMenuCommand()`. `meocord g co context-menu Report` generates a user command with its handler typed to
 match, and `--message` a message one.
@@ -76,7 +82,8 @@ Give the mock its target in the overrides, since discord.js makes `targetUser` a
 - **A menu the member can't find.** Context menu commands appear under **Apps** when right-clicking, not in the `/`
   list. Say so in your bot's help.
 - **A handler typed for the other kind.** A handler declaring `MessageContextMenuCommandInteraction` on a builder that
-  sets `User` stops the bot at startup. Match the handler to the builder's `setType()`.
+  sets `User` stops the bot at startup, when the class is imported as a value; a `type` import hides it from the
+  check. Match the handler to the builder's `setType()`.
 - **A name mismatch.** The name in `@Command` is the one the builder receives. Build with `setName(commandName)`, so
   the menu and the handler can't disagree.
 - **Replying in public by accident.** A report or a bookmark is usually for the member alone; send it with
