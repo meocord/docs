@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     include: ['src/**/*.spec.ts', 'scripts/**/*.spec.ts', 'tests/**/*.spec.ts', 'e2e/port.spec.ts'],
     environment: 'node',
+    globalSetup: ['tests/home-trace.setup.ts'],
     coverage: {
       provider: 'istanbul',
       include: [

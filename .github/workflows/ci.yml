@@ -86,8 +86,6 @@ jobs:
           TEST_POSTGRES_URL: postgres://postgres:examples@localhost:5432/postgres
           TEST_REDIS_URL: redis://localhost:6379
           TEST_MONGODB_URL: mongodb://localhost:27017/examples
-      # The home page's pipeline demo, recorded from the example it shows
-      - run: bun run home:trace --check
 
   e2e:
     name: E2E

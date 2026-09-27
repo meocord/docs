@@ -22,4 +22,6 @@ CLAUDE.md
 /.search/
 # The reference's formatted code, by `bun run api:layout`
 /.api-layout/
+# The home page's recorded demo, by `bun run home:trace`
+/.home-trace/
 build.log

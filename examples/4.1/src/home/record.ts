@@ -1,7 +1,7 @@
 /**
  * Runs the home page's example call twice, as a member and as a blocked user, then the calls behind
  * its feature rows, and prints what each did as JSON. The docs site's `bun run home:trace` writes it
- * to generated/home/trace.json.
+ * to .home-trace/trace.json.
  */
 import 'reflect-metadata'
 import { ChatInputCommandInteraction, User } from 'discord.js'
