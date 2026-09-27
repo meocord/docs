@@ -14,7 +14,9 @@ export class HelpMessageController {
     if (help.kind === 'list') {
       await message.reply(['```', ...help.commands.map(entry => entry.usage), '```'].join('\n'))
     } else if (help.kind === 'command') {
-      await message.reply(help.commands.map(entry => [entry.usage, entry.description].filter(Boolean).join(': ')).join('\n'))
+      await message.reply(
+        help.commands.map(entry => [entry.usage, entry.description].filter(Boolean).join(': ')).join('\n'),
+      )
     } else if (help.kind === 'parent') {
       await message.reply(help.subcommands.map(entry => entry.usage).join('\n'))
     } else {

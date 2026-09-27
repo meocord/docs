@@ -15,7 +15,8 @@ export class HelpPresenter implements ResponsePresenter {
   }
 
   messageHelp(help: MessageHelp) {
-    if (help.kind !== 'list') return help.kind === 'unknown' ? `No command is called ${help.query}.` : 'Nothing to show here.'
+    if (help.kind !== 'list')
+      return help.kind === 'unknown' ? `No command is called ${help.query}.` : 'Nothing to show here.'
     const embed = new EmbedBuilder()
       .setTitle('Commands')
       .setDescription(help.commands.map(entry => `\`${entry.usage}\`\n${entry.description ?? ''}`).join('\n\n'))

@@ -64,7 +64,9 @@ describe('ModerationMessageController and the built-in help', () => {
 
     const one = createMockMessage({ content: '!help m' })
     await module.dispatch(one)
-    expect(replyTo(one)).toContain('Usage: !mute <target> [duration] [reason…]\nTimes a member out, for 10 minutes unless told otherwise.')
+    expect(replyTo(one)).toContain(
+      'Usage: !mute <target> [duration] [reason…]\nTimes a member out, for 10 minutes unless told otherwise.',
+    )
   })
   // #endregion help-spec
 })

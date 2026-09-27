@@ -5,14 +5,21 @@ import { HelpMessageController } from '@src/controllers/message/help.message.con
 import { ModerationMessageController } from '@src/controllers/message/moderation.message.controller'
 
 // The app's own help, with the built-in left off
-@MeoCord({ controllers: [ModerationMessageController, HelpMessageController], clientOptions: { intents: [] }, messages: { prefix: '!' } })
+@MeoCord({
+  controllers: [ModerationMessageController, HelpMessageController],
+  clientOptions: { intents: [] },
+  messages: { prefix: '!' },
+})
 class OwnHelpApp {}
 
 const replyTo = (message: ReturnType<typeof createMockMessage>) => message.reply.mock.calls[0]?.[0]
 
 // #region spec
 describe('HelpMessageController', () => {
-  const module = MeoCordTestingModule.create({ app: OwnHelpApp, controllers: [ModerationMessageController, HelpMessageController] }).compile()
+  const module = MeoCordTestingModule.create({
+    app: OwnHelpApp,
+    controllers: [ModerationMessageController, HelpMessageController],
+  }).compile()
 
   it('lists the commands from the model the built-in help uses, and shows one', async () => {
     const list = createMockMessage({ content: '!help' })
