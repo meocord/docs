@@ -6,6 +6,7 @@ import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
 import { checkSite, EXAMPLE_SOURCE, type SiteSnapshot } from './lib/content.js'
 import { checkGuide } from './lib/guide.js'
+import { markdownAnchors } from './lib/migrating.js'
 import { paths } from './lib/layout.js'
 import { newestIn, readVersions } from './lib/versions.js'
 
@@ -63,6 +64,7 @@ const problems = checkSite(site)
 
 // A line's Guide in the overhauled template, where one is being written: content/<line>-next/.
 let guidePages = 0
+let plannedLinks = 0
 for (const line of config.lines) {
   const dir = paths.guide(line.line)
   if (!existsSync(dir)) continue
@@ -76,7 +78,15 @@ for (const line of config.lines) {
     project: { children?: { children?: { name: string }[] }[] }
   }
   const apiSymbols = new Set(api.project.children?.flatMap(entry => entry.children?.map(symbol => symbol.name) ?? []))
-  problems.push(...checkGuide(files, { line: line.line, examples: site.examples, apiSymbols }))
+  const migrating = site.migrating[line.line]
+  const report = checkGuide(files, {
+    line: line.line,
+    examples: site.examples,
+    apiSymbols,
+    migratingAnchors: migrating ? new Set(markdownAnchors(migrating)) : undefined,
+  })
+  problems.push(...report.problems)
+  plannedLinks += report.planned.length
 }
 if (problems.length > 0) {
   console.error(`${problems.length} content problem(s):\n  ${problems.join('\n  ')}`)
@@ -85,5 +95,5 @@ if (problems.length > 0) {
 const count = (sets: Record<string, Record<string, string>>) =>
   Object.values(sets).reduce((sum, pages) => sum + Object.keys(pages).length, 0)
 console.log(
-  `Content is consistent: ${config.lines.length} lines, ${count(site.readme)} imported and ${count(site.authored)} authored pages${guidePages ? `, and ${guidePages} Guide pages` : ''}.`,
+  `Content is consistent: ${config.lines.length} lines, ${count(site.readme)} imported and ${count(site.authored)} authored pages${guidePages ? `, and ${guidePages} Guide pages, with ${plannedLinks} link(s) to planned pages not written yet` : ''}.`,
 )
