@@ -41,12 +41,12 @@ so the button you send and the handler that receives it share one definition:
 
 ::example{file="controllers/button/ticket.button.controller.ts" region="route"}
 
-`build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a handler whose
-params name something the route doesn't capture. A value may be a string, a number or a bigint, and its type isn't
-checked, since `@Validate` and pipes change it. A `/` or `%` inside a value is encoded, and the handler receives it
-decoded, so a value never spills into the next segment. An empty value, or an id longer than Discord's 100
-characters, throws. A route is ranked, and checked for duplicates, exactly as its pattern's text would be, and plain
-string patterns keep working beside routes.
+`build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a button or
+select-menu handler whose params name something the route doesn't capture. A value may be a string, a number or a
+bigint, and its type isn't checked, since `@Validate` and pipes change it. A `/` or `%` inside a value is encoded,
+and the handler receives it decoded, so a value never spills into the next segment. An empty value, or an id longer
+than Discord's 100 characters, throws. A route is ranked, and checked for duplicates, exactly as its pattern's text
+would be, and plain string patterns keep working beside routes.
 
 ## Overlapping patterns
 
