@@ -10,6 +10,7 @@ import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { isKnownLanguage } from '../../src/lib/prose/languages'
 import { markdownLinkNodes } from './markdown-links'
+import { markdownTree, nodesOf } from './markdown-tree'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
@@ -80,40 +81,56 @@ export function markdownLinks(markdown: string): string[] {
 /** The width content wraps prose at; a line may run past it only where nothing in it could break sooner. */
 export const PROSE_WIDTH = 120
 
-// A line's length as a reader counts it: one for each character they see, an emoji sequence included
 const graphemes = new Intl.Segmenter('en', { granularity: 'grapheme' })
+// Characters a terminal, and Prettier, give two columns: East Asian wide and fullwidth ones, and emoji
+const WIDE =
+  /[\u1100-\u115F\u2E80-\u303E\u3041-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6\u{20000}-\u{3FFFD}]|\p{Extended_Pictographic}/u
+
+/** How many columns a text takes, as Prettier counts them: two for a wide character or an emoji, one for any other. */
+export function textWidth(text: string): number {
+  let width = 0
+  for (const { segment } of graphemes.segment(text)) width += WIDE.test(segment) ? 2 : 1
+  return width
+}
 
 /**
- * The lines of a Markdown file that run past PROSE_WIDTH though they could have wrapped: prose with a space
- * within the width to break at. Front matter, fenced code and tables are left alone, and a space inside a code
- * span or a link is no place to break, so a line that is one long URL, link or code span passes.
+ * The lines of a Markdown file that run past PROSE_WIDTH though they could have wrapped: a paragraph's line with a
+ * space within the width to break at. Only paragraphs are prose, so headings, code, tables, HTML and link
+ * definitions are left alone; a code span, a link, an image or inline HTML is no place to break, so a line that is
+ * one long URL, link or code span passes; and a line's quote markers and indent are not its text.
  */
 export function overlongLines(markdown: string, width = PROSE_WIDTH): { line: number; length: number }[] {
-  const lines = markdown.split('\n')
-  const found: { line: number; length: number }[] = []
-  let fence: string | undefined
-  let frontmatter = lines[0] === '---'
-  lines.forEach((text, index) => {
-    if (frontmatter) {
-      if (index > 0 && text === '---') frontmatter = false
-      return
+  const { tree, body } = markdownTree(markdown)
+  const unbreakable: [number, number][] = []
+  const paragraphs: { start: number; end: number; startLine: number; endLine: number }[] = []
+  for (const node of nodesOf(tree)) {
+    if (!node.position) continue
+    const { start, end } = node.position
+    if (node.type === 'paragraph')
+      paragraphs.push({ start: start.offset!, end: end.offset!, startLine: start.line, endLine: end.line })
+    else if (['inlineCode', 'link', 'linkReference', 'image', 'imageReference', 'html'].includes(node.type))
+      unbreakable.push([start.offset!, end.offset!])
+  }
+  const lines = body.split('\n')
+  const lineStart: number[] = []
+  lines.reduce((offset, text, index) => ((lineStart[index] = offset), offset + text.length + 1), 0)
+  const found = new Map<number, number>()
+  for (const paragraph of paragraphs)
+    for (let line = paragraph.startLine; line <= paragraph.endLine; line++) {
+      const text = lines[line - 1]
+      const length = textWidth(text)
+      if (length <= width || found.has(line)) continue
+      const base = lineStart[line - 1]
+      // The paragraph's own text on the line: after its first line's start, or a later line's quote markers and indent
+      const from = line === paragraph.startLine ? paragraph.start - base : /^[\s>]*/.exec(text)![0].length
+      for (let column = from; column < text.length; column++) {
+        const offset = base + column
+        if (text[column] !== ' ' || unbreakable.some(([a, b]) => offset >= a && offset < b)) continue
+        if (textWidth(text.slice(0, column)) <= width) found.set(line, length)
+        break
+      }
     }
-    const marker = /^\s*(`{3,}|~{3,})/.exec(text)?.[1]
-    if (marker && (!fence || marker.startsWith(fence))) {
-      fence = fence ? undefined : marker
-      return
-    }
-    const length = [...graphemes.segment(text)].length
-    if (fence || length <= width || /^\s*\|/.test(text)) return
-    // Where the line could break: a space outside code spans and links, after the line's own indent
-    const breakable = text
-      .replace(/`[^`]*`/g, span => 'x'.repeat(span.length))
-      .replace(/\[[^\]]*\]\([^)]*\)/g, link => 'x'.repeat(link.length))
-    const indent = /^\s*(?:[-*+] |\d+\. )?/.exec(breakable)![0].length
-    const firstBreak = breakable.indexOf(' ', indent)
-    if (firstBreak !== -1 && firstBreak <= width) found.push({ line: index + 1, length })
-  })
-  return found
+  return [...found].sort(([a], [b]) => a - b).map(([line, length]) => ({ line, length }))
 }
 
 /** The language each opening code fence names, in order; an unmarked fence names none. */

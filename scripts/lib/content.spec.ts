@@ -413,7 +413,10 @@ describe('overlongLines', () => {
       '```text',
       long,
       '```',
+      '| Column |',
+      '| --- |',
       `| ${long} |`,
+      '',
       url,
       `\`${long}\``,
       `- [a link](${url})`,
@@ -421,8 +424,19 @@ describe('overlongLines', () => {
     expect(overlongLines(text, 60)).toEqual([])
   })
 
-  it('counts a line by the characters a reader sees, an emoji sequence as one', () => {
+  it('leaves a heading, a quoted URL, a link definition, a double-backtick span and indented code alone', () => {
+    const long = words(30)
+    const url = `https://example.com/${'a'.repeat(80)}`
+    const text = [`## ${long}`, '', `> ${url}`, '', `[ref]: ${url}`, '', `\`\` ${long} \`\``, '', `    ${long}`].join(
+      '\n',
+    )
+    expect(overlongLines(text, 60)).toEqual([])
+  })
+
+  it('counts columns as Prettier does: two for an emoji or a wide character', () => {
     const family = '👨‍👩‍👧'
     expect(overlongLines(`${'a '.repeat(29)}${family}`, 60)).toEqual([])
+    const cjk = '界'.repeat(31)
+    expect(overlongLines(`说 ${cjk}`, 60)).toEqual([{ line: 1, length: 65 }])
   })
 })
