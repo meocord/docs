@@ -10,6 +10,7 @@ import { themeModes } from '@/constants/themes/modes'
 import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
 import { mono, sans } from '@/app/fonts'
+import { SHEET_KEYS_SCRIPT } from '@/components/shell/sheet-keys'
 
 export const viewport: Viewport = {
   // Drawn to the screen's edges; the window keeps its content clear of the safe area itself.
@@ -63,7 +64,11 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       // First in <head>: an inline script after a stylesheet waits for that sheet to load.
       Head({
         key: 'head',
-        children: [themeScript(themeModes), Script({ key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } })],
+        children: [
+          themeScript(themeModes),
+          Script({ key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } }),
+          Script({ key: 'keys', dangerouslySetInnerHTML: { __html: SHEET_KEYS_SCRIPT } }),
+        ],
       }),
       Body({
         key: 'body',
