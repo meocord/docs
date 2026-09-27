@@ -48,8 +48,8 @@ const site: SiteSnapshot = {
   apis: new Set(),
   configs: {},
   examples: {},
-  // The site's own model of each API, so a link is checked against the pages the site renders
-  api: (line, version) => apiModel(line, version),
+  // The site's own model of each API, by entry point as links store it, so a link is checked against its pages
+  api: (line, version) => apiModel(line, version, 'entry'),
 }
 for (const { line, versions } of config.lines) {
   const pagesIn = (dir: string) =>
@@ -109,8 +109,8 @@ for (const line of config.lines) {
   // Each symbol by name, as the site renders it: the kinds its @group files it under, and its members
   const model = apiModel(line.line)
   const apiSymbols = new Map<string, { kinds: string[]; members: string[] }>()
-  for (const { entry, symbol: name } of model?.params() ?? []) {
-    const symbol = model!.symbol(entry, name)!
+  for (const { section, symbol: name } of model?.params() ?? []) {
+    const symbol = model!.symbol(section, name)!
     const known = apiSymbols.get(name) ?? { kinds: [], members: [] }
     if (symbol.group) known.kinds.push(symbol.group.toLowerCase())
     known.members.push(...symbol.members.map(member => member.anchor))

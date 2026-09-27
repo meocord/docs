@@ -19,17 +19,18 @@ const model = new ApiModel('4.1', project, versions, since)
 const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
 
 describe('ApiModel', () => {
-  it('lists every symbol by entry point with its page', () => {
-    const entries = model.entries()
-    expect(entries.map(group => group.entry)).toContain('meocord/decorator')
-    const cooldown = entries.flatMap(group => group.symbols).find(symbol => symbol.name === 'Cooldown')
-    expect(cooldown).toEqual({
+  it('lists every symbol by entry point with its page and summary', () => {
+    const sections = model.sections()
+    expect(sections.map(section => section.title)).toContain('meocord/decorator')
+    const cooldown = sections.flatMap(section => section.symbols).find(symbol => symbol.name === 'Cooldown')
+    expect(cooldown).toMatchObject({
       name: 'Cooldown',
       kind: 'function',
       href: '/docs/4.1/api/decorator/Cooldown',
       deprecated: false,
     })
-    expect(model.params()).toContainEqual({ entry: 'decorator', symbol: 'Cooldown' })
+    expect(cooldown!.summary).not.toMatch(/\n\n/)
+    expect(model.params()).toContainEqual({ section: 'decorator', symbol: 'Cooldown' })
   })
 
   it('describes a function: signature with linked types, params with their properties, returns and examples', () => {
@@ -70,7 +71,7 @@ describe('ApiModel', () => {
 
   it('links an exact version to its own pages', () => {
     const exact = new ApiModel('4.1', project, versions, since, '4.1.0-beta.0')
-    expect(exact.href({ entry: 'meocord/decorator', symbol: 'Cooldown' })).toBe(
+    expect(exact.href({ section: 'decorator', symbol: 'Cooldown' })).toBe(
       '/docs/4.1/api/4.1.0-beta.0/decorator/Cooldown',
     )
     expect(exact.symbol('decorator', 'Cooldown')!.code[0].find(token => token.href)?.href).toBe(
@@ -192,5 +193,65 @@ describe('ApiModel', () => {
     ])
     expect(metadata.signatures[0].params.map(param => param.name)).toEqual(['value'])
     expect(text(model.symbol('interface', 'GuardInterface')!.code[0])).toBe('interface GuardInterface')
+  })
+})
+
+describe('ApiModel by kind', () => {
+  // beta.6 is the first release whose every symbol carries its @group
+  const beta6 = (
+    JSON.parse(readFileSync('generated/api/4.1.0-beta.6.json', 'utf8')) as { project: JSONOutput.ProjectReflection }
+  ).project
+  const byKind = new ApiModel('4.1', beta6, versions, since, undefined, { by: 'kind' })
+
+  it('files each symbol under the kind its @group names, the kinds in order, each by category then name', () => {
+    const sections = byKind.sections()
+    expect(sections.map(section => section.slug)).toEqual([
+      'controllers',
+      'decorators',
+      'responses',
+      'utilities',
+      'testing',
+      'configuration',
+      'types',
+    ])
+    const decorators = sections.find(section => section.slug === 'decorators')!
+    expect(decorators.title).toBe('Decorators')
+    const order = decorators.symbols.map(symbol => `${symbol.category ?? ''}/${symbol.name}`)
+    expect(order).toEqual([...order].sort((a, b) => a.localeCompare(b, 'en')))
+    expect(decorators.symbols.find(symbol => symbol.name === 'Cooldown')).toMatchObject({
+      href: '/docs/4.1/api/decorators/Cooldown',
+      category: 'Pipeline stages',
+    })
+    expect(byKind.symbol('decorators', 'Cooldown')).toMatchObject({ section: 'decorators', entry: 'meocord/decorator' })
+  })
+
+  it('gives a re-exported symbol one page, which lists every entry point that exports it', () => {
+    const names = byKind.params().map(param => param.symbol)
+    expect(names.filter(name => name === 'MeoCordApplication')).toHaveLength(1)
+    const app = byKind.find('MeoCordApplication')!
+    expect(byKind.symbol(app.section, 'MeoCordApplication')!.imports).toEqual(['meocord/core', 'meocord/interface'])
+    // Either entry point finds the one page
+    expect(byKind.locate('meocord/interface', 'MeoCordApplication')).toEqual(app)
+    expect(byKind.locate('core', 'MeoCordApplication')).toEqual(app)
+    expect(byKind.locate('decorator', 'MeoCordApplication')).toBeUndefined()
+  })
+
+  it("files an older release's symbols by the groups groupOf gives, and names one it cannot file", () => {
+    const groups = new Map(
+      byKind.sections().flatMap(section => section.symbols.map(symbol => [symbol.name, section.title] as const)),
+    )
+    const older = new ApiModel('4.1', project, versions, since, '4.1.0-beta.0', {
+      by: 'kind',
+      // The symbols beta.0 had and beta.6 does not, as the site files them
+      groupOf: name =>
+        groups.get(name) ??
+        (['AutocompleteMetadata', 'CommandMetadata', 'MetadataKey', 'PIPED_BRAND'].includes(name)
+          ? 'Types'
+          : undefined),
+    })
+    expect(older.href(older.find('Cooldown')!)).toBe('/docs/4.1/api/4.1.0-beta.0/decorators/Cooldown')
+    expect(() => new ApiModel('4.1', project, versions, since, '4.1.0-beta.0', { by: 'kind' })).toThrow(
+      /^4\.1\.0-beta\.0: meocord\/\w+'s \w+ has no @group tag/,
+    )
   })
 })

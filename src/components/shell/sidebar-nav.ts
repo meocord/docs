@@ -7,6 +7,8 @@ import type { NavGroup, NavItem, NavTab } from '@/components/shell/types'
 /** One link row, with no styles of its own: `SidebarNav` styles every row. */
 function NavRow(item: NavItem) {
   return Li({
+    key: item.href,
+    'data-category': item.category,
     children: Link({
       href: item.href,
       'aria-current': item.current ? 'page' : undefined,
@@ -38,7 +40,13 @@ function NavSection(group: NavGroup) {
         margin: 0,
         padding: 0,
         listStyle: 'none',
-        children: For(group.items, NavRow, item => item.href),
+        children: group.items.flatMap((item, index) => [
+          // A sub-group's heading, where its first item starts it
+          ...(item.category && item.category !== group.items[index - 1]?.category
+            ? [Li({ key: `category-${item.category}`, 'data-nav-category': true, children: item.category })]
+            : []),
+          NavRow(item),
+        ]),
       }),
     ],
   })
@@ -101,6 +109,13 @@ export function SidebarNav({
       },
       '& details[open] > summary [data-chevron]': { transform: 'rotate(90deg)' },
       '& [data-group-icon]': { display: 'inline-flex', color: 'theme.accent.default' },
+      // A sub-group's heading: quieter than the group's, aligned with the rows' text.
+      '& [data-nav-category]': {
+        padding: 'theme.space.2 theme.space.2 theme.space.1 theme.space.8',
+        fontSize: 'theme.type.caption.size',
+        fontWeight: 'theme.font.weight.medium',
+        color: 'theme.ink.secondary',
+      },
       // The rows' styles, here rather than on each row: on the server a styled element is a client element
       // carrying its css object into the page's data, once per row (l7aromeo/meonode#34). Once meonode styles
       // server-rendered tags without that, rows can style themselves again. `:where` keeps each rule at the
@@ -219,6 +234,7 @@ export function readNavGroups(nav: Element): NavGroup[] {
       href: link.getAttribute('href') ?? '',
       current: link.getAttribute('aria-current') === 'page' || undefined,
       badge: link.querySelector('[data-badge]')?.textContent || undefined,
+      category: link.parentElement?.dataset.category || undefined,
     })),
   }))
 }

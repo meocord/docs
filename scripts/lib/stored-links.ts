@@ -35,7 +35,7 @@ export function parseStored(href: string, lines: readonly string[]): { target: D
     const version = /^\d+\.\d+\.\d+/.test(rest[0] ?? '') ? rest.shift() : undefined
     const [entry = '', symbol = '', ...extra] = rest
     if (extra.length > 0) return { problem: 'has more path than an API link takes' }
-    target = { kind: 'api', line, entry, symbol, member: anchor, version }
+    target = { kind: 'api', line, section: entry, symbol, member: anchor, version }
   } else if (parts[0] === 'changelog' && parts.length <= 2) {
     target = { kind: 'changelog', line, version: parts[1] }
   } else if (parts[0] === 'migrating' && parts.length === 1) {

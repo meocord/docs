@@ -19,8 +19,13 @@ export type DocsTarget =
   | { kind: 'line'; line: string }
   /** A guide page; `group` places a recipe or coming-from page of the Guide's appendix under its own path. */
   | { kind: 'guide'; line: string; slug: string; anchor?: string; group?: 'recipes' | 'coming-from' }
-  /** A symbol in a line's API; with `version`, in that exact version's API instead. */
-  | { kind: 'api'; line: string; entry: string; symbol: string; member?: string; version?: string }
+  /**
+   * A symbol in a line's API; with `version`, in that exact version's API instead. `section` is the
+   * entry point that exports it, or its kind where the line's API is arranged by kind.
+   */
+  | { kind: 'api'; line: string; section: string; symbol: string; member?: string; version?: string }
+  /** A line's API index, or with `section` one kind's page of it. */
+  | { kind: 'api-index'; line: string; section?: string }
   /** A line's changelog; with `version`, that version's own page. */
   | { kind: 'changelog'; line: string; version?: string }
   | { kind: 'migrating'; line: string; anchor?: string }
@@ -54,6 +59,9 @@ export function entrySegment(entry: string): string {
   return match[1]
 }
 
+/** The URL segment for an API section: an entry point's, as `entrySegment` gives it, or a kind's own slug. */
+export const sectionSegment = entrySegment
+
 /** The id a member's heading carries on its symbol's page, and so its anchor. */
 export function memberAnchor(member: string): string {
   return member.toLowerCase()
@@ -79,12 +87,12 @@ const withAnchor = (path: string, anchor?: string) => (anchor ? `${path}#${encod
  *
  * @param target - What to link to.
  * @param versions - The versions manifest, which decides whether a line is addressed as `latest`.
- * @returns A path such as `/docs/latest/guards` or `/docs/4.1/api/decorator/Defer#options`.
+ * @returns A path such as `/docs/latest/guards` or `/docs/4.1/api/decorators/Defer#options`.
  * @throws When the line is unknown, a version is outside its line, or a name is not valid in a URL.
  *
  * @example
- * docsHref({ kind: 'api', line: '4.1', entry: 'meocord/decorator', symbol: 'Defer' }, versions)
- * // '/docs/4.1/api/decorator/Defer' while 4.1 is in prerelease, '/docs/latest/api/decorator/Defer' once current
+ * docsHref({ kind: 'api', line: '4.1', section: 'decorators', symbol: 'Defer' }, versions)
+ * // '/docs/4.1/api/decorators/Defer' while 4.1 is in prerelease, '/docs/latest/api/decorators/Defer' once current
  */
 export function docsHref(target: DocsTarget, versions: VersionsManifest): string {
   check(target.line, LINE, 'line')
@@ -101,7 +109,7 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
       )
 
     case 'api': {
-      const path = [entrySegment(target.entry), check(target.symbol, SYMBOL, 'symbol name')].join('/')
+      const path = [sectionSegment(target.section), check(target.symbol, SYMBOL, 'symbol name')].join('/')
       const anchor = target.member === undefined ? undefined : memberAnchor(check(target.member, SYMBOL, 'member name'))
       if (target.version === undefined) return withAnchor(`/docs/${segment}/api/${path}`, anchor)
       if (lineOf(target.version) !== target.line) {
@@ -110,6 +118,9 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
       // Exact versions are addressed by their own line: `latest` names a line, not a version.
       return withAnchor(`/docs/${target.line}/api/${target.version}/${path}`, anchor)
     }
+
+    case 'api-index':
+      return `/docs/${segment}/api${target.section === undefined ? '' : `/${sectionSegment(target.section)}`}`
 
     case 'changelog': {
       if (target.version !== undefined && lineOf(target.version) !== target.line) {

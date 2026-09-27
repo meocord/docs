@@ -47,8 +47,8 @@ function displays(model: ApiModel): [LayoutForm, string][] {
     if (each.returns) out.push(['returns', text(each.returns.type)])
     for (const param of each.params) if (param.type.length > 0) out.push(['param', text(param.type)])
   }
-  for (const { entry, symbol: name } of model.params()) {
-    const symbol = model.symbol(entry, name)
+  for (const { section, symbol: name } of model.params()) {
+    const symbol = model.symbol(section, name)
     if (!symbol) continue
     for (const line of symbol.code) out.push(['declaration', text(line)])
     symbol.signatures.forEach(signature)

@@ -29,6 +29,7 @@ import {
 } from './lib/search.js'
 import type { SinceEntry } from './lib/since.js'
 import { readVersions } from './lib/versions.js'
+import { apiModel } from '../src/lib/docs/api-site.js'
 import type { SearchManifest } from '../src/lib/search-manifest.js'
 
 const PAGEFIND_DIR = path.join(ROOT, 'public', '_pagefind')
@@ -93,7 +94,13 @@ for (const line of config.lines) {
 
   // The line's API is its newest version's; exact versions stay out of search.
   const api = newestFirst.length > 0 ? readJson<ApiDocument>(paths.api(newestFirst[0])) : undefined
-  if (api) documents.push(...apiDocuments(line.line, api, config))
+  // Each symbol's page as the site arranges the line's API: by entry point, or by kind
+  const model = apiModel(line.line)
+  const hrefOf = (entry: string, name: string) => {
+    const location = model?.locate(entry, name)
+    return location && model!.href(location)
+  }
+  if (api) documents.push(...apiDocuments(line.line, api, config, hrefOf))
 
   const pages = documents
     .map(document => ({ url: document.url, html: searchHtml(document, config) }))
@@ -111,7 +118,7 @@ for (const line of config.lines) {
   const searchPath = `/_pagefind/${line.line}.${hashTree(staging)}/`
   renameSync(staging, path.join(ROOT, 'public', searchPath))
 
-  const palette = JSON.stringify(paletteIndex(line.line, guides, api, since, config))
+  const palette = JSON.stringify(paletteIndex(line.line, guides, api, since, config, hrefOf))
   const palettePath = `/palette/${line.line}.${hash(palette)}.json`
   writeFileSync(path.join(ROOT, 'public', palettePath), `${palette}\n`)
 

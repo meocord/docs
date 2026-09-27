@@ -8,6 +8,8 @@ export interface NavItem {
   current?: boolean
   /** A short chip after the title, such as "New". */
   badge?: string
+  /** The sub-group it belongs to within its group, such as a kind's category; a heading marks where one starts. */
+  category?: string
 }
 
 /** One of the sidebar's top-level tabs, such as the Guide or the API; the current one is marked. */

@@ -51,18 +51,26 @@ describe('docsHref', () => {
   })
 
   it('builds line API URLs from the entry subpath, with lowercase member anchors', () => {
-    expect(docsHref({ kind: 'api', line: '4.1', entry: 'meocord/decorator', symbol: 'Defer' }, BETA)).toBe(
+    expect(docsHref({ kind: 'api', line: '4.1', section: 'meocord/decorator', symbol: 'Defer' }, BETA)).toBe(
       '/docs/4.1/api/decorator/Defer',
     )
     expect(
-      docsHref({ kind: 'api', line: '4.1', entry: 'core', symbol: 'MeoCordApp', member: 'startShards' }, STABLE),
+      docsHref({ kind: 'api', line: '4.1', section: 'core', symbol: 'MeoCordApp', member: 'startShards' }, STABLE),
     ).toBe('/docs/latest/api/core/MeoCordApp#startshards')
+  })
+
+  it("builds a by-kind API's URLs from the kind, and its index and kind pages", () => {
+    expect(docsHref({ kind: 'api', line: '4.1', section: 'decorators', symbol: 'Defer' }, BETA)).toBe(
+      '/docs/4.1/api/decorators/Defer',
+    )
+    expect(docsHref({ kind: 'api-index', line: '4.1' }, BETA)).toBe('/docs/4.1/api')
+    expect(docsHref({ kind: 'api-index', line: '4.1', section: 'testing' }, STABLE)).toBe('/docs/latest/api/testing')
   })
 
   it('builds exact-version API URLs under the line, never latest', () => {
     expect(
       docsHref(
-        { kind: 'api', line: '4.0', entry: 'meocord/core', symbol: 'MeoCordApp', version: '4.0.0-beta.3' },
+        { kind: 'api', line: '4.0', section: 'meocord/core', symbol: 'MeoCordApp', version: '4.0.0-beta.3' },
         BETA,
       ),
     ).toBe('/docs/4.0/api/4.0.0-beta.3/core/MeoCordApp')
@@ -70,7 +78,7 @@ describe('docsHref', () => {
 
   it('refuses an exact version outside its line', () => {
     expect(() =>
-      docsHref({ kind: 'api', line: '4.0', entry: 'core', symbol: 'MeoCordApp', version: '4.1.0-beta.0' }, BETA),
+      docsHref({ kind: 'api', line: '4.0', section: 'core', symbol: 'MeoCordApp', version: '4.1.0-beta.0' }, BETA),
     ).toThrow('4.1.0-beta.0 is not a version of line 4.0.')
     expect(() => docsHref({ kind: 'changelog', line: '4.0', version: '4.1.0' }, BETA)).toThrow(
       '4.1.0 is not a version of line 4.0.',
@@ -104,13 +112,13 @@ describe('docsHref', () => {
   it('rejects names that are not valid in a URL', () => {
     expect(() => docsHref({ kind: 'guide', line: '4', slug: 'guards' }, BETA)).toThrow('"4" is not a valid line.')
     expect(() => docsHref({ kind: 'guide', line: '4.1', slug: '../x' }, BETA)).toThrow('not a valid page slug')
-    expect(() => docsHref({ kind: 'api', line: '4.1', entry: 'other/core', symbol: 'X' }, BETA)).toThrow(
+    expect(() => docsHref({ kind: 'api', line: '4.1', section: 'other/core', symbol: 'X' }, BETA)).toThrow(
       '"other/core" is not a meocord entry point.',
     )
-    expect(() => docsHref({ kind: 'api', line: '4.1', entry: 'core', symbol: 'a/b' }, BETA)).toThrow(
+    expect(() => docsHref({ kind: 'api', line: '4.1', section: 'core', symbol: 'a/b' }, BETA)).toThrow(
       'not a valid symbol name',
     )
-    expect(() => docsHref({ kind: 'api', line: '4.1', entry: 'core', symbol: 'X', member: 'x y' }, BETA)).toThrow(
+    expect(() => docsHref({ kind: 'api', line: '4.1', section: 'core', symbol: 'X', member: 'x y' }, BETA)).toThrow(
       'not a valid member name',
     )
     expect(() => docsHref({ kind: 'missing', line: '4.1', id: 'A' }, BETA)).toThrow('not a valid page id')

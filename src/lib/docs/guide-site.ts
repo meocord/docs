@@ -3,9 +3,9 @@ import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
 import { VERSIONS } from '@/config/versions'
-import { apiLandingHref, apiModel } from '@/lib/docs/api-site'
+import { apiLandingHref, apiModel, resolveSiteHref } from '@/lib/docs/api-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
-import { docsHref, resolveStoredHref } from '@/lib/urls'
+import { docsHref } from '@/lib/urls'
 
 /** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
 export const guideEnabled = guideRendered
@@ -32,7 +32,7 @@ export function guidePageHref(line: string, page: Pick<GuidePage, 'id' | 'group'
 /**
  * The href a Guide page's link renders with. `guide:<path>[#anchor]` names a Guide page by its path,
  * or the line's `migrating` and `changelog` pages; `api:<kind>/<Symbol>[#member]` names an API symbol,
- * found in the entry point that exports it. Anything else is a stored link or a URL outside the docs.
+ * found by its name wherever the line's API files it. Anything else is a stored link or a URL outside the docs.
  */
 export function resolveGuideLink(line: string, url: string): string {
   const [base, anchor] = url.split('#', 2)
@@ -49,10 +49,10 @@ export function resolveGuideLink(line: string, url: string): string {
   if (base.startsWith('api:')) {
     const symbol = base.slice('api:'.length).split('/')[1]
     const model = apiModel(line)
-    const found = model?.entries().find(({ symbols }) => symbols.some(candidate => candidate.name === symbol))
-    return found && model ? model.href({ entry: found.entry, symbol, member: anchor }) : url
+    const found = model?.find(symbol)
+    return found && model ? model.href({ ...found, member: anchor }) : url
   }
-  return resolveStoredHref(url, VERSIONS)
+  return resolveSiteHref(url)
 }
 
 /** The glyph beside each chapter in the sidebar. */

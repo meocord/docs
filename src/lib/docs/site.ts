@@ -3,7 +3,8 @@ import type { GlyphName } from '@/components/shell/icons'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
-import { docsHref, resolveStoredHref } from '@/lib/urls'
+import { docsHref } from '@/lib/urls'
+import { resolveSiteHref } from '@/lib/docs/api-site'
 import { versionOption, versionOptions } from '@/lib/version-options'
 import { firstParagraph } from '@/lib/docs/page-metadata'
 import { guideEnabled, guideEntries, guidePageHref, guideSidebar } from '@/lib/docs/guide-site'
@@ -121,7 +122,7 @@ export function guidePage(line: string, slug: string): GuidePage | undefined {
   if (!entry || !page) return undefined
 
   const lowered = lowerMarkdown(page.body, {
-    href: url => resolveStoredHref(url, VERSIONS),
+    href: resolveSiteHref,
     example: (file, region, from) => resolveExample(from ?? line, file, region),
   })
   const toc = lowered.headings
