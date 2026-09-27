@@ -11,6 +11,7 @@ import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
 import { mono, sans } from '@/app/fonts'
 import { SHEET_KEYS_SCRIPT } from '@/components/shell/sheet-keys'
+import { SEARCH_KEYS_SCRIPT } from '@/components/search/search-keys'
 
 export const viewport: Viewport = {
   // Drawn to the screen's edges; the window keeps its content clear of the safe area itself.
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         children: [
           themeScript(themeModes),
           Script({ key: 'pm', dangerouslySetInnerHTML: { __html: PM_SCRIPT } }),
+          Script({ key: 'search', dangerouslySetInnerHTML: { __html: SEARCH_KEYS_SCRIPT } }),
           Script({ key: 'keys', dangerouslySetInnerHTML: { __html: SHEET_KEYS_SCRIPT } }),
         ],
       }),
