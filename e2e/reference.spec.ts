@@ -41,6 +41,19 @@ test('a release no line has answers 404, and a line reaches its releases through
   expect((await request.get('/docs/latest/changelog/4.0.0')).status()).toBe(200)
 })
 
+test("a line's API reference opens on MeoCordFactory", async ({ request }) => {
+  for (const [path, landing] of [
+    ['/docs/4.1/api', '/docs/4.1/api/core/MeoCordFactory'],
+    ['/docs/4.0/api', '/docs/latest/api/core/MeoCordFactory'],
+    ['/docs/latest/api', '/docs/latest/api/core/MeoCordFactory'],
+  ]) {
+    const response = await request.get(path, { maxRedirects: 0 })
+    expect(response.status(), path).toBe(307)
+    expect(response.headers().location, path).toBe(landing)
+  }
+  expect((await request.get('/docs/9.9/api')).status()).toBe(404)
+})
+
 test('the migration guide renders for each line that has one', async ({ request }) => {
   for (const path of ['/docs/4.1/migrating', '/docs/latest/migrating']) {
     expect((await request.get(path)).status(), path).toBe(200)
