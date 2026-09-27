@@ -160,6 +160,39 @@ test('Space scrolls the sheet from the page', async ({ page }) => {
   await expect.poll(() => top(sheet(page))).toBeGreaterThan(400)
 })
 
+test('the page keys scroll the sheet before any of the app’s scripts load', async ({ page }) => {
+  await page.route('**/_next/static/**/*.js', route => route.abort())
+  await page.goto('/docs/4.1/guards')
+  await page.keyboard.press('PageDown')
+  await expect.poll(() => top(sheet(page))).toBeGreaterThan(400)
+  const after = await top(sheet(page))
+  await page.keyboard.press(' ')
+  await expect.poll(() => top(sheet(page))).toBeGreaterThan(after)
+})
+
+test('a page key held with a modifier, or taken by the page, leaves the sheet alone', async ({ page }) => {
+  await page.goto('/docs/4.1/guards')
+  await page.keyboard.press('Alt+PageDown')
+  await page.keyboard.press('Control+End')
+  await page.evaluate(() => document.addEventListener('keydown', event => event.preventDefault(), { once: true }))
+  await page.keyboard.press('PageDown')
+  // The key after them is taken, so each of them had its chance to scroll.
+  await page.keyboard.press('ArrowDown')
+  await expect.poll(() => top(sheet(page))).toBe(40)
+})
+
+test('in the search field, Space and the page keys stay with the field', async ({ page }) => {
+  await page.goto('/docs/4.1/guards')
+  await page.keyboard.press('/')
+  const field = page.getByRole('dialog').getByRole('combobox')
+  await expect(field).toBeFocused()
+  await page.keyboard.type('guard ')
+  await page.keyboard.press('PageDown')
+  await page.keyboard.press('End')
+  await expect(field).toHaveValue('guard ')
+  expect(await top(sheet(page))).toBe(0)
+})
+
 // A reader's find-in-page cannot be driven from a test, and a headless window.find selects the match
 // without scrolling to it; so this finds the text, then reveals the match as find-in-page does, by
 // scrolling its nearest scroller, and checks it lands in the sheet's body, clear of the toolbar.
