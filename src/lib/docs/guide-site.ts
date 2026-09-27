@@ -136,7 +136,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
 
   const lowered = lowerMarkdown(body, {
     href: url => resolveGuideLink(line, url),
-    example: (file, region, from) => resolveExample(from ?? line, file, region),
+    example: (file, region, from) => resolveExample(from ?? line, file, region, { page: pagePath }),
   })
   const toc = lowered.headings
     .filter(heading => heading.depth === 2 || heading.depth === 3)
