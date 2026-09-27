@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { apiLayouts, apiModel, apiParams, exactApiParams, lineVersions, newestFirst } from '@/lib/docs/api-site'
+import {
+  apiLandingHref,
+  apiLayouts,
+  apiModel,
+  apiParams,
+  exactApiParams,
+  lineVersions,
+  newestFirst,
+} from '@/lib/docs/api-site'
 
 describe('newestFirst', () => {
   it('orders releases ahead of their prereleases, and prereleases numerically', () => {
@@ -22,6 +30,12 @@ describe('the site API', () => {
       '/docs/4.0/api/4.0.0-beta.2/core/MeoCordFactory',
     )
     expect(apiModel('4.0')).toBe(apiModel('4.0'))
+  })
+
+  it("opens a line's API where every app starts, MeoCordFactory", () => {
+    expect(apiLandingHref('4.1')).toBe('/docs/4.1/api/core/MeoCordFactory')
+    expect(apiLandingHref('4.0')).toBe('/docs/latest/api/core/MeoCordFactory')
+    expect(apiLandingHref('9.9')).toBeUndefined()
   })
 
   it('has no API for a version outside the line or not documented', () => {

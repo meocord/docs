@@ -3,7 +3,7 @@ import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
 import { VERSIONS } from '@/config/versions'
-import { apiModel } from '@/lib/docs/api-site'
+import { apiLandingHref, apiModel } from '@/lib/docs/api-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref, resolveStoredHref } from '@/lib/urls'
 
@@ -153,9 +153,9 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
 /** The sidebar's tabs where the Guide is rendered: the Guide's first page, and the line's API reference. */
 export function guideTabs(line: string, current: 'guide' | 'api'): NavTab[] {
   const [first] = guideEntries(line)
-  const symbol = apiModel(line)?.entries()[0]?.symbols[0]
+  const api = apiLandingHref(line)
   return [
     ...(first ? [{ title: 'Guide', href: guidePageHref(line, first.page), current: current === 'guide' }] : []),
-    ...(symbol ? [{ title: 'API', href: symbol.href, current: current === 'api' }] : []),
+    ...(api ? [{ title: 'API', href: api, current: current === 'api' }] : []),
   ]
 }

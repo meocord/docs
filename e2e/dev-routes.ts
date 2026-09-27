@@ -13,6 +13,7 @@ import { e2ePort } from './port'
 import { CURRENT_LINE } from '../src/config/versions'
 import * as guide from '../src/app/docs/[line]/[...slug]/page'
 import * as landing from '../src/app/docs/[line]/page'
+import * as apiLanding from '../src/app/docs/[line]/api/page'
 import * as api from '../src/app/docs/[line]/api/[...path]/page'
 import * as changelog from '../src/app/docs/[line]/changelog/page'
 import * as release from '../src/app/docs/[line]/changelog/[version]/page'
@@ -25,6 +26,7 @@ type Params = Record<string, string | string[]>
 const ROUTES: [pattern: string, params: () => Params[] | Promise<Params[]>][] = [
   ['/docs/[line]', landing.generateStaticParams],
   ['/docs/[line]/[...slug]', guide.generateStaticParams],
+  ['/docs/[line]/api', apiLanding.generateStaticParams],
   ['/docs/[line]/api/[...path]', api.generateStaticParams],
   ['/docs/[line]/changelog', changelog.generateStaticParams],
   ['/docs/[line]/changelog/[version]', release.generateStaticParams],

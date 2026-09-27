@@ -60,6 +60,18 @@ export function apiModel(line: string, version?: string): ApiModel | undefined {
   return models.get(key)
 }
 
+/**
+ * Where a line's API reference opens: `MeoCordFactory` in meocord/core, where every app starts, or the first
+ * entry point's first symbol for a line without it; undefined for a line without an API.
+ */
+export function apiLandingHref(line: string): string | undefined {
+  const entries = apiModel(line)?.entries() ?? []
+  const factory = entries
+    .find(({ entry }) => entry === 'meocord/core')
+    ?.symbols.find(symbol => symbol.name === 'MeoCordFactory')
+  return (factory ?? entries[0]?.symbols[0])?.href
+}
+
 const layouts = new Map<string, Layouts>()
 
 /**
