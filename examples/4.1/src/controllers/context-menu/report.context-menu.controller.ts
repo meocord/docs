@@ -1,5 +1,8 @@
-// The interactions are imported as values, so the startup check can read each handler's kind
-import { MessageContextMenuCommandInteraction, MessageFlags, UserContextMenuCommandInteraction } from 'discord.js'
+import {
+  MessageFlags,
+  type MessageContextMenuCommandInteraction,
+  type UserContextMenuCommandInteraction,
+} from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, Controller } from 'meocord/decorator'
 import { BookmarkBuilder, ReportUserBuilder } from '@src/controllers/context-menu/builders/report.builder'
