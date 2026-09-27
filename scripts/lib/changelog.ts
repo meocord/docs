@@ -3,6 +3,7 @@
  * ships, split into its entries, with links into the library's docs pointed at the site.
  */
 
+import { markdownLinkNodes } from './markdown-links'
 import { storedHref } from './stored-links'
 
 export interface ChangelogEntry {
@@ -35,8 +36,31 @@ export function sliceChangelog(changelog: string, version: string): string {
 }
 
 const MIGRATING = /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord\/blob\/[^/\s)]+\/docs\/MIGRATING\.md(#[\w-]+)?/g
-// A link to the site's docs by its address, stored as its path so content:check reads it like any other
-const SITE = /\]\(https:\/\/meocord\.dev(\/docs(?:[/#][^\s)]*)?)\)/g
+// The site's docs by their address, which a changelog stores as the path so content:check reads it like any other
+const SITE = /^https?:\/\/(?:www\.)?meocord\.dev(\/docs(?:[/#].*)?)$/
+
+/**
+ * Stores each link to the site's docs as its path, found as the site renders links: a written link keeps
+ * its text, and an address, `<…>` or bare, becomes a link whose text is the address as it was written.
+ */
+function storeSiteLinks(markdown: string): string {
+  let stored = markdown
+  for (const link of markdownLinkNodes(markdown).reverse()) {
+    const path = SITE.exec(link.url)?.[1]
+    if (!path) continue
+    const written = markdown.slice(link.start, link.end)
+    // A written link's URL follows its text, which may itself be the address
+    const at = written.lastIndexOf(link.url)
+    const replaced =
+      link.form === 'address'
+        ? `[${written.replace(/^<|>$/g, '')}](${path})`
+        : at < 0
+          ? written
+          : written.slice(0, at) + path + written.slice(at + link.url.length)
+    stored = stored.slice(0, link.start) + replaced + stored.slice(link.end)
+  }
+  return stored
+}
 // The README by the repository's address or its file on a branch or commit, with or without an anchor
 const README =
   /https:\/\/github\.com\/(?:l7aromeo|meocord)\/meocord(?:\/blob\/[^/\s)]+\/README\.md|\/)?(?:#([\w-]+))?(?=[)\s])/g
@@ -66,8 +90,7 @@ export function rewriteLibraryLinks(
   line: string,
   anchors: Record<string, AnchorTarget> = {},
 ): string {
-  return markdown
-    .replace(SITE, ']($1)')
+  return storeSiteLinks(markdown)
     .replace(MIGRATING, (_match, anchor: string | undefined) =>
       storedHref({ kind: 'migrating', line, anchor: anchor?.slice(1) }),
     )

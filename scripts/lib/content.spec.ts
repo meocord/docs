@@ -306,18 +306,23 @@ describe('checkSite', () => {
     ])
   })
 
-  it('refuses a link to the site by its address, naming the path to write', () => {
+  it('refuses a link to the site by its address, bare or autolinked too, naming the path to write', () => {
     const problems = checkSite(
       withAuthored({
         theming: page(
           'id: theming\ntitle: Theming',
-          '[a](https://meocord.dev/docs/4.1/guards#options), [b](https://meocord.dev/docs/4.1/api/common/translateErrorz) and [c](https://meocord.dev)',
+          '[a](https://meocord.dev/docs/4.1/guards#options), [b](https://meocord.dev/docs/4.1/api/common/translateErrorz), [c](https://meocord.dev),\n' +
+            'a bare https://meocord.dev/docs/4.1/nopepage, an <https://meocord.dev/docs/4.1/theming> autolink, and `https://meocord.dev/docs/4.1/in-code`.',
         ),
       }),
     )
+    const refused = (link: string, path: string) =>
+      `content/4.1/theming.md: ${link} links the site by its address; write ${path}`
     expect(problems).toEqual([
-      'content/4.1/theming.md: https://meocord.dev/docs/4.1/guards#options links the site by its address; write /docs/4.1/guards#options',
-      'content/4.1/theming.md: https://meocord.dev/docs/4.1/api/common/translateErrorz links the site by its address; write /docs/4.1/api/common/translateErrorz',
+      refused('https://meocord.dev/docs/4.1/guards#options', '/docs/4.1/guards#options'),
+      refused('https://meocord.dev/docs/4.1/api/common/translateErrorz', '/docs/4.1/api/common/translateErrorz'),
+      refused('https://meocord.dev/docs/4.1/nopepage', '/docs/4.1/nopepage'),
+      refused('https://meocord.dev/docs/4.1/theming', '/docs/4.1/theming'),
     ])
   })
 
@@ -361,6 +366,22 @@ describe('parsePage and markdownLinks', () => {
 
   it('ignores links inside code', () => {
     expect(markdownLinks('[a](/x "t")\n```\n[b](/y)\n```\n`[c](/z)`')).toEqual(['/x'])
+  })
+
+  it('finds every link the site renders, in order: autolinks, bare URLs, images and definitions', () => {
+    const text = [
+      '[a](/docs/4.1/a) <https://example.com/b> then https://example.com/c.',
+      '![d](/img/d.png) and [e][ref], with `https://example.com/in-code`.',
+      '',
+      '[ref]: /docs/4.1/e',
+    ].join('\n')
+    expect(markdownLinks(text)).toEqual([
+      '/docs/4.1/a',
+      'https://example.com/b',
+      'https://example.com/c',
+      '/img/d.png',
+      '/docs/4.1/e',
+    ])
   })
 })
 

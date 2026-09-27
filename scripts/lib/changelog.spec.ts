@@ -58,17 +58,24 @@ describe('rewriteLibraryLinks', () => {
     ).toBe('[a](/docs/4.1/component-routing) [b](/docs/4.1/component-routing#modal-fields)')
   })
 
-  it('stores a link to the site by its address as its path, and leaves the address in text', () => {
-    expect(
-      rewriteLibraryLinks(
-        'See [Guards](https://meocord.dev/docs/4.1/guards#options) and [API](https://meocord.dev/docs/4.1/api/core/MeoCordFactory). ' +
-          'Docs live at https://meocord.dev/docs/4.1/guards.',
-        '4.1',
-      ),
-    ).toBe(
-      'See [Guards](/docs/4.1/guards#options) and [API](/docs/4.1/api/core/MeoCordFactory). ' +
-        'Docs live at https://meocord.dev/docs/4.1/guards.',
-    )
+  it('stores every link to the site by its address as its path, however it is written', () => {
+    const written = [
+      'See [Guards](https://meocord.dev/docs/4.1/guards#options),',
+      '[https://meocord.dev/docs/4.1/theming](https://meocord.dev/docs/4.1/theming),',
+      '<https://meocord.dev/docs/4.1/cooldowns> and https://meocord.dev/docs/4.1/testing.',
+      '`https://meocord.dev/docs/4.1/in-code` and https://meocord.dev stay as they are.',
+      '',
+      '[ref]: https://meocord.dev/docs/4.1/services',
+    ].join('\n')
+
+    expect(rewriteLibraryLinks(written, '4.1').split('\n')).toEqual([
+      'See [Guards](/docs/4.1/guards#options),',
+      '[https://meocord.dev/docs/4.1/theming](/docs/4.1/theming),',
+      '[https://meocord.dev/docs/4.1/cooldowns](/docs/4.1/cooldowns) and [https://meocord.dev/docs/4.1/testing](/docs/4.1/testing).',
+      '`https://meocord.dev/docs/4.1/in-code` and https://meocord.dev stay as they are.',
+      '',
+      '[ref]: /docs/4.1/services',
+    ])
   })
 
   it('reads the README by its file on a branch or commit as by the repository', () => {

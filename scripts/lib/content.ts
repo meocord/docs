@@ -9,6 +9,7 @@ import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { isKnownLanguage } from '../../src/lib/prose/languages'
+import { markdownLinkNodes } from './markdown-links'
 import { markdownAnchors } from './migrating'
 import { parseStored } from './stored-links'
 import { newestIn, type VersionsConfig } from './versions'
@@ -73,7 +74,7 @@ export function withoutCode(markdown: string): string {
 }
 
 export function markdownLinks(markdown: string): string[] {
-  return [...withoutCode(markdown).matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)].map(match => match[1])
+  return markdownLinkNodes(markdown).map(link => link.url)
 }
 
 /** The language each opening code fence names, in order; an unmarked fence names none. */
