@@ -3,7 +3,6 @@ import { createMockGuild, createMockMessage, MeoCordTestingModule, resolveRoute 
 import { describe, expect, it } from 'vitest'
 import App from '@src/app-message-commands'
 import { EconomyMessageController } from '@src/controllers/message/economy.message.controller'
-import { HelpMessageController } from '@src/controllers/message/help.message.controller'
 import { ModerationMessageController } from '@src/controllers/message/moderation.message.controller'
 
 const ANA = '123456789012345678'
@@ -16,7 +15,7 @@ const replyTo = (message: ReturnType<typeof createMockMessage>) => {
 describe('EconomyMessageController', () => {
   const module = MeoCordTestingModule.create({
     app: App,
-    controllers: [EconomyMessageController, ModerationMessageController, HelpMessageController],
+    controllers: [EconomyMessageController, ModerationMessageController],
   }).compile()
   // A server whose member cache holds Ana, so her mention or ID resolves without a request
   const ana = { id: ANA, displayName: 'Ana', user: { id: ANA } } as unknown as GuildMember
@@ -42,10 +41,10 @@ describe('EconomyMessageController', () => {
 })
 // #endregion spec
 
-describe('ModerationMessageController and HelpMessageController', () => {
+describe('ModerationMessageController and the built-in help', () => {
   const module = MeoCordTestingModule.create({
     app: App,
-    controllers: [EconomyMessageController, ModerationMessageController, HelpMessageController],
+    controllers: [EconomyMessageController, ModerationMessageController],
   }).compile()
 
   it('routes an alias to its command, and refuses a flag the command does not have', async () => {
@@ -57,11 +56,15 @@ describe('ModerationMessageController and HelpMessageController', () => {
     )
   })
 
-  it('shows one command, found by an alias, with its usage, description and aliases', async () => {
-    const message = createMockMessage({ content: '!help m' })
-    await module.dispatch(message)
-    expect(replyTo(message)).toBe(
-      '!mute <target> [duration] [reason…]\nTimes a member out, for 10 minutes unless told otherwise.\nAlso: m, shush',
-    )
+  // #region help-spec
+  it('answers !help with the commands, and !help m with the one it names', async () => {
+    const list = createMockMessage({ content: '!help' })
+    await module.dispatch(list)
+    expect(replyTo(list)).toMatch(/^Commands:\n.*!mute <target> \[duration\] \[reason…\] — Times a member out/s)
+
+    const one = createMockMessage({ content: '!help m' })
+    await module.dispatch(one)
+    expect(replyTo(one)).toContain('Usage: !mute <target> [duration] [reason…]\nTimes a member out, for 10 minutes unless told otherwise.')
   })
+  // #endregion help-spec
 })

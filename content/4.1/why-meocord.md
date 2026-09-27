@@ -67,9 +67,6 @@ community package may add one.
 - It is young, with a small community and no plugin ecosystem; what a plugin would add, you write as a
   service.
 - It is TypeScript only.
-- Message commands take typed params, flags and lists from a pattern, and answer a misuse with the command's
-  usage. A subcommand is a pattern of its own, such as `config set {key} {value...}`, so a message naming only
-  `!config` gets no reply, and a help command is yours to write from `HandlerRegistry`.
 - A process runs one bot: it logs in with the one token its `meocord.config.ts` gives, so two bots take a
   process each. One bot can span processes, a shard in each; see [Sharding](/docs/4.1/sharding).
 

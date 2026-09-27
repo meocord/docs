@@ -43,7 +43,7 @@ command's usage in reply, and the handler does not run:
 
 ```text
 !pay @ana lots   ->  Usage: !pay <to> <amount> [note…]
-                     amount: "lots" is not a whole number
+                     amount: "lots" is not a valid whole number
 !pay @ana        ->  Usage: !pay <to> <amount> [note…]
                      amount is missing
 ```
@@ -57,7 +57,8 @@ command's usage in reply, and the handler does not run:
 
 The error is a `MessageUsageError` from `meocord/common`, carrying `usage` and `issues`. It goes through the
 handler's [exception filters](/docs/4.1/exception-filters) first, so a filter can answer it in the app's own
-words or language.
+words. Its texts, the `Usage:` heading and each line of what is wrong, follow the app's translations in the
+server's language, and are English otherwise; see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts).
 
 ## Aliases, descriptions and scope
 
@@ -76,14 +77,61 @@ A handler's options say more about its command:
 
 ## A help command
 
-MeoCord does not answer `!help` itself, since help is where bots differ most. `HandlerRegistry` gives what
-one needs: each message command, listed once, with its `command` words, `aliases`, `description`, `scope`,
-`usage(prefix)` and `matches(words)`:
+`help: true` in `@MeoCord({ messages })` turns on a built-in `!help`. It lists the message commands the
+caller can use where they asked, one line each with the `description` its handler gives, and
+`!help <command>` shows one, by its words or an alias:
+
+::example{file="app-message-commands.ts" region="app"}
+
+```text
+!help      ->  Commands:
+               !kick <targets…>
+               !mute <target> [duration] [reason…] — Times a member out, for 10 minutes unless told otherwise.
+               !pay <to> <amount> [note…]
+               !poll <question> <options…>
+               !purge <count> [--bots] [--from=<from>]
+               Type !help <command> for one command's usage.
+!help m    ->  Usage: !mute <target> [duration] [reason…]
+               Times a member out, for 10 minutes unless told otherwise.
+               target: member · duration (optional): length of time, such as 10m · reason (optional): text
+               Also: !m, !shush
+               Works in servers only.
+```
+
+`!ban` is not listed: its `OutranksTargetGuard` decides who may use it, and help runs no guards.
+
+- It is off unless asked for, and answers only after a prefix or a mention, as a usage error does.
+  `help: { command: 'commands', aliases: ['h'] }` names other words.
+- The list leaves out a command with a [guard](/docs/4.1/guards), on its method or its controller, since it
+  runs no guards and must not name what a caller may be refused, and one whose options say `hidden: true`.
+  Named, either is shown. A command that works only in servers is left out of the list in a DM.
+- `!help config`, for words with no handler of their own, lists their subcommands. A name no command has,
+  and nothing to list, get a line saying so.
+- An app's own handler for the word, `@MessageHandler('help …')`, always runs instead, and the bot warns at
+  startup that the built-in never answers it.
+- With `replyEmoji`, the reply begins with the theme's `emojis.info`. It is not deleted, since the caller
+  asked for it, and a reply over 2,000 characters is sent as several.
+
+### Writing the help your own way
+
+The reply is in the server's language wherever the app's catalog translates MeoCord's help texts, and in
+English otherwise; see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). To write it another
+way, such as in an embed, give the app's [presenter](/docs/4.1/presenters) a `messageHelp(help, message)` method. `help` is a `MessageHelp`,
+what the built-in found: a `list` of commands, one `command`, a `parent`'s subcommands, an `unknown` name, or
+`empty`. The method returns text, or the options `message.reply` takes:
+
+::example{file="presenters/help.presenter.ts" region="presenter"}
+
+### Your own `!help`
+
+A help command of the app's own gets the same model from `HandlerRegistry.messageHelp(message, query?)`,
+whether `messages.help` is on or off, so which commands a caller can reach, and which guards hide, are not
+worked out again:
 
 ::example{file="controllers/message/help.message.controller.ts" region="help"}
 
-`usage('!')` gives `!mute <target> [duration] [reason…]`, the text a usage error shows. `matches` compares
-in any case unless the handler or the app is case-sensitive. See
+`HandlerRegistry.list({ kind: 'message' })` also gives each message command's `command` words, `aliases`,
+`description`, `scope`, `hidden`, `usage(prefix)` and `matches(words)`. See
 [Handler discovery](/docs/4.1/handler-discovery) for the rest of the registry.
 
 ## Prefixes
@@ -157,7 +205,7 @@ app's theme, a handler's `@UseTheme`, or the server's or user's theme from `them
 
 ```text
 ⚠️ Usage: !roll <sides>
-sides: "lots" is not a whole number
+sides: "lots" is not a valid whole number
 ```
 
 ## Errors at startup
