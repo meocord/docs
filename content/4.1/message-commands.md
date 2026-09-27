@@ -134,11 +134,11 @@ caller can use where they asked, one line each with the `description` its handle
 
 ### Writing the help your own way
 
-The reply is in the server's language wherever the app's catalog translates MeoCord's help texts, and in
-English otherwise; see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). To write it another
-way, such as in an embed, give the app's [presenter](/docs/4.1/presenters) a `messageHelp(help, message)` method. `help` is a `MessageHelp`,
-what the built-in found: a `list` of commands, one `command`, a `parent`'s subcommands, an `unknown` name, or
-`empty`. The method returns text, or the options `message.reply` takes:
+The reply is in the server's language wherever the app's catalog translates MeoCord's help texts, and in English
+otherwise; see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). To write it another way, such as in an
+embed, give the app's [presenter](/docs/4.1/presenters) a `messageHelp(help, message)` method. `help` is a
+`MessageHelp`, what the built-in found: a `list` of commands, one `command`, a `parent`'s subcommands, an `unknown`
+name, or `empty`. The method returns text, or the options `message.reply` takes:
 
 ::example{file="presenters/help.presenter.ts" region="presenter"}
 
