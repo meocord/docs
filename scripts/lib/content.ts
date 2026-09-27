@@ -86,6 +86,7 @@ export function fenceLanguages(markdown: string): string[] {
 
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
+const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md(#.*)?$/
 /** The one examples folder an ::example may name with `from`, beside its own line's. */
 export const EXAMPLE_SOURCE = 'compare'
 
@@ -140,6 +141,14 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     ownAnchors: () => Set<string>,
   ) => {
     for (const target of markdownLinks(markdown)) {
+      // The site serves each line's migration guide; linking its copy lets the anchor be checked.
+      const migrating = GITHUB_MIGRATING.exec(target)
+      if (migrating && from?.set === 'authored') {
+        problems.push(
+          `${where}: ${target} links the migration guide on GitHub; write /docs/${from.line}/migrating${migrating[1] ?? ''}`,
+        )
+        continue
+      }
       if (target.startsWith('#')) {
         if (!ownAnchors().has(target.slice(1))) problems.push(`${where}: no heading for ${target}`)
         continue
