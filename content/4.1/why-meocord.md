@@ -10,7 +10,7 @@ MeoCord is for bots that grow: many commands and components, rules about who may
 wants to test. It gives a bot the structure a web framework gives a server.
 
 - **Decorators and injection.** A controller declares what it handles, and its services arrive through its
-  constructor. Nothing is registered by hand.
+  constructor. Listing the controller in `@MeoCord` is all it takes: nothing is wired to discord.js by hand.
 - **One pipeline for every call.** Guards, interceptors, validation, pipes, cooldowns and exception filters
   run in a fixed order around every handler, and `@Defer` and `respond()` take care of Discord's answer
   rules. See [How a call runs](/docs/4.1/how-a-handler-runs).
@@ -55,7 +55,7 @@ community package may add one.
 | Before a handler     | guards, interceptors, validation, pipes | preconditions                | NestJS's guards, interceptors and pipes | guard functions                            |
 | Around errors        | exception filters                       | error events, with listeners | NestJS's exception filters              | none in its docs                           |
 | Cooldowns            | `@Cooldown`                             | `cooldownDelay`, built in    | none in its docs                        | a `RateLimit` guard, `@discordx/utilities` |
-| Prefix commands      | patterns with params and prefixes       | yes, with argument parsing   | `@TextCommand`, with arguments          | `@SimpleCommand`, with options             |
+| Prefix commands      | typed patterns, flags and prefixes      | yes, with argument parsing   | `@TextCommand`, with arguments          | `@SimpleCommand`, with options             |
 | Testing toolkit      | `meocord/testing`: `invoke`, mocks      | none in its docs             | NestJS's testing module                 | none in its docs                           |
 | Translations         | typed catalogs, built in                | `@sapphire/plugin-i18next`   | `@necord/localization`                  | none in its docs                           |
 | Language             | TypeScript                              | TypeScript or JavaScript     | TypeScript                              | TypeScript                                 |
@@ -67,10 +67,11 @@ community package may add one.
 - It is young, with a small community and no plugin ecosystem; what a plugin would add, you write as a
   service.
 - It is TypeScript only.
-- Message commands take params by pattern, as strings to validate, but have no typed options, generated
-  help or subcommand groups of their own.
-- A process runs one bot: two bots, each with its own token, take a process each. One bot can span processes,
-  a shard in each; see [Sharding](/docs/4.1/sharding).
+- Message commands take typed params, flags and lists from a pattern, and answer a misuse with the command's
+  usage. A subcommand is a pattern of its own, such as `config set {key} {value...}`, so a message naming only
+  `!config` gets no reply, and a help command is yours to write from `HandlerRegistry`.
+- A process runs one bot: it logs in with the one token its `meocord.config.ts` gives, so two bots take a
+  process each. One bot can span processes, a shard in each; see [Sharding](/docs/4.1/sharding).
 
 ## Try it
 
