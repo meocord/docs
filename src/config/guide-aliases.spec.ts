@@ -44,6 +44,18 @@ describe('guideAliasRedirects', () => {
     ])
   })
 
+  it('leaves a line whose Guide is rendered without aliases, since the Guide serves those slugs', () => {
+    const guided = lines.map(entry => ({ ...entry, guide: entry.line === '4.1' }))
+    const redirects = guideAliasRedirects(guided, '4.0', '4.1', aliases)
+    expect(redirects.some(redirect => redirect.source.startsWith('/docs/4.1/'))).toBe(false)
+    // Another line keeps its own: 4.0 still finds its page for the topic.
+    expect(redirects).toContainEqual({
+      source: '/docs/4.0/components',
+      destination: '/docs/4.0/command-parameters',
+      permanent: false,
+    })
+  })
+
   it("leaves a line's own page at the slug alone, and a target the line the aliases name lacks", () => {
     const redirects = guideAliasRedirects(lines, '4.0', '4.1', aliases)
     expect(redirects.some(redirect => redirect.source === '/docs/4.1/reactions')).toBe(false)

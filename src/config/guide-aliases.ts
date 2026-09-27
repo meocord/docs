@@ -47,27 +47,30 @@ export interface AliasPage {
  * that already has a page at the slug keeps it. The current line is reached through `latest` as well.
  */
 export function guideAliasRedirects(
-  lines: { line: string; pages: readonly AliasPage[] }[],
+  lines: { line: string; pages: readonly AliasPage[]; guide?: boolean }[],
   latest: string,
   from: string,
   aliases: Readonly<Record<string, string>> = GUIDE_ALIASES,
 ): AliasRedirect[] {
   const source = lines.find(entry => entry.line === from)?.pages ?? []
   const anywhere = new Set(lines.flatMap(({ pages }) => pages.map(page => page.id)))
-  return lines.flatMap(({ line, pages }) =>
-    Object.entries(aliases).flatMap(([slug, target]) => {
-      if (pages.some(page => page.slug === slug)) return []
-      const id = source.find(page => page.slug === target)?.id
-      if (id === undefined) return []
-      const own = pages.find(page => page.id === id || page.formerly.includes(id))
-      const destination = own
-        ? `/docs/${line}/${own.slug}`
-        : anywhere.has(id)
-          ? `/docs/${line}/missing/${id}`
-          : undefined
-      if (!destination) return []
-      const sources = [`/docs/${line}/${slug}`, ...(line === latest ? [`/docs/latest/${slug}`] : [])]
-      return sources.map(from => ({ source: from, destination, permanent: false as const }))
-    }),
-  )
+  // A line whose Guide is rendered serves the Guide's own pages at these slugs, or will: no aliases.
+  return lines
+    .filter(entry => !entry.guide)
+    .flatMap(({ line, pages }) =>
+      Object.entries(aliases).flatMap(([slug, target]) => {
+        if (pages.some(page => page.slug === slug)) return []
+        const id = source.find(page => page.slug === target)?.id
+        if (id === undefined) return []
+        const own = pages.find(page => page.id === id || page.formerly.includes(id))
+        const destination = own
+          ? `/docs/${line}/${own.slug}`
+          : anywhere.has(id)
+            ? `/docs/${line}/missing/${id}`
+            : undefined
+        if (!destination) return []
+        const sources = [`/docs/${line}/${slug}`, ...(line === latest ? [`/docs/latest/${slug}`] : [])]
+        return sources.map(from => ({ source: from, destination, permanent: false as const }))
+      }),
+    )
 }

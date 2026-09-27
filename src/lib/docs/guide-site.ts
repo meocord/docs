@@ -1,6 +1,14 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { CHAPTERS, guidePath, readGuidePage, readingOrder, type GuidePage } from '../../../scripts/lib/guide'
+import {
+  CHAPTERS,
+  guideFolder,
+  guidePath,
+  guideRendered,
+  readGuidePage,
+  readingOrder,
+  type GuidePage,
+} from '../../../scripts/lib/guide'
 import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
@@ -9,13 +17,8 @@ import { apiModel } from '@/lib/docs/api-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref, resolveStoredHref } from '@/lib/urls'
 
-// The repository root; the tests point it at a scratch directory, as the pipeline's do.
-const folder = (line: string) => path.join(process.env.MEOCORD_DOCS_ROOT ?? process.cwd(), 'content', `${line}-next`)
-
 /** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
-export function guideEnabled(line: string): boolean {
-  return process.env.DOCS_NEXT === '1' && existsSync(folder(line))
-}
+export const guideEnabled = guideRendered
 
 interface Entry {
   page: GuidePage
@@ -27,7 +30,7 @@ const entries = new Map<string, Entry[]>()
 /** A line's Guide in reading order; a page whose front matter fails content:check is left out. */
 export function guideEntries(line: string): Entry[] {
   if (!entries.has(line)) {
-    const dir = folder(line)
+    const dir = guideFolder(line)
     const read = existsSync(dir)
       ? readdirSync(dir)
           .filter(file => file.endsWith('.md'))
