@@ -11,6 +11,7 @@ import { changelogSectionAnchor, docsHref, entrySegment, memberAnchor, resolveSt
 import type { ApiDocument } from './api.js'
 import type { ChangelogDocument } from './changelog.js'
 import { parsePage } from './content.js'
+import { guidePath, type GuidePage } from './guide.js'
 import type { Page } from './pages.js'
 import type { SinceEntry } from './since.js'
 import type { VersionsConfig } from './versions.js'
@@ -150,6 +151,33 @@ export function guideDocument(
     line,
     sections: splitSections(body, examples),
   }
+}
+
+/**
+ * A line's Guide pages as search documents, at the paths the site renders them, each with its examples
+ * as they stand at that page (`examples` is given the page's path).
+ */
+export function guidePageDocuments(
+  line: string,
+  pages: { page: GuidePage; body: string }[],
+  versions: VersionsConfig,
+  examples: (page: string) => ExampleSource = () => () => undefined,
+): SearchDocument[] {
+  return pages.map(({ page, body }) => ({
+    url: docsHref(
+      {
+        kind: 'guide',
+        line,
+        slug: page.id,
+        group: page.group === 'recipes' || page.group === 'coming-from' ? page.group : undefined,
+      },
+      versions,
+    ),
+    title: page.title,
+    kind: 'guide',
+    line,
+    sections: splitSections(body, examples(guidePath(page))),
+  }))
 }
 
 /** The migration guide's search document. */

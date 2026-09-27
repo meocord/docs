@@ -29,9 +29,10 @@ function tsFiles(dir: string, base = dir): string[] {
 }
 
 /**
- * Typechecks each tutorial step's version of the folders that hold step marks: the files as they stand
- * at every page that adds a step, and before the first, so no page shows code that does not compile.
- * Each version is written to examples/<line>/.steps/, beside src/ so it resolves the line's packages.
+ * Typechecks each tutorial step's version of the folders that hold step marks, and runs their specs: the
+ * files as they stand at every page that adds a step, and before the first, so no page shows code that
+ * does not compile or pass. Each version is written to examples/<line>/.steps/, beside src/ so it
+ * resolves the line's packages.
  */
 function checkSteps(line: string, dir: string): string[] {
   const src = path.join(dir, 'src')
@@ -44,7 +45,9 @@ function checkSteps(line: string, dir: string): string[] {
   if (failures.length > 0) return failures
 
   const folders = [...new Set(marked.map(file => path.dirname(file)))]
-  const steps = [...new Set(marked.flatMap(file => stepsIn(readFileSync(path.join(src, file), 'utf8'))))]
+  const steps = [...new Set(marked.flatMap(file => stepsIn(readFileSync(path.join(src, file), 'utf8'))))].sort(
+    (a, b) => stepIndex(a)! - stepIndex(b)!,
+  )
   const first = Math.min(...steps.map(step => stepIndex(step)!))
   const pages = [...(first > 0 ? [READING_ORDER[first - 1]] : []), ...steps]
   const root = path.join(dir, '.steps')
@@ -64,8 +67,30 @@ function checkSteps(line: string, dir: string): string[] {
         }),
       )
       const result = spawnSync(process.execPath, [tsc, '-p', at], { encoding: 'utf8' })
-      if (result.status !== 0)
+      if (result.status !== 0) {
         failures.push(`the tutorial as it stands at ${page}:\n${(result.stdout + result.stderr).trim()}`)
+        continue
+      }
+      if (!existsSync(path.join(dir, 'vitest.config.ts'))) continue
+      // The line's vitest config, with @src pointed at this version, runs the marked folders' specs
+      writeFileSync(
+        path.join(at, 'vitest.config.ts'),
+        [
+          "import { fileURLToPath } from 'node:url'",
+          "import { mergeConfig } from 'vitest/config'",
+          "import line from '../../vitest.config'",
+          "const src = fileURLToPath(new URL('./src', import.meta.url))",
+          "export default mergeConfig(line, { resolve: { alias: { '@src': src } } })",
+          '',
+        ].join('\n'),
+      )
+      const specs = spawnSync(
+        process.execPath,
+        ['--bun', 'vitest', 'run', '--root', at, ...folders.map(folder => `src/${folder}/`)],
+        { cwd: dir, encoding: 'utf8' },
+      )
+      if (specs.status !== 0)
+        failures.push(`the tutorial's specs as it stands at ${page}:\n${(specs.stdout + specs.stderr).trim()}`)
     }
   } finally {
     rmSync(root, { recursive: true, force: true })

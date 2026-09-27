@@ -5,7 +5,7 @@
  * - `// #region step:<page>` … `// #endregion step:<page>` wraps lines a page's step adds: they appear
  *   from that page on in reading order, and are left out before it.
  * - `// before:<page> <code>` is a line the page's step replaces: shown, uncommented, before that page,
- *   and left out from it on. Only a replacement step the Guide allows uses it.
+ *   and left out from it on. Only the pages in REPLACING_STEPS may replace a line.
  *
  * Reading order is the Guide's plan, so a file's steps are fixed however many pages are written yet.
  */
@@ -14,6 +14,9 @@ import { GUIDE_PLAN } from './guide'
 
 /** Every planned Guide path in reading order. */
 export const READING_ORDER: readonly string[] = Object.values(GUIDE_PLAN).flat()
+
+/** The pages whose step may replace an earlier line with `before:`, as the Guide's template allows. */
+export const REPLACING_STEPS: readonly string[] = ['localisation']
 
 const STEP_START = /^\s*\/\/ #region step:(\S+)\s*$/
 const STEP_END = /^\s*\/\/ #endregion step:(\S+)\s*$/
@@ -35,7 +38,10 @@ export function stepsIn(source: string): string[] {
   return [...named].sort((a, b) => (stepIndex(a) ?? Infinity) - (stepIndex(b) ?? Infinity))
 }
 
-/** What is wrong with a file's step marks: a page off the plan, or a region left open or closed twice. */
+/**
+ * What is wrong with a file's step marks: a page off the plan, a `before:` line for a page that may not
+ * replace one, or a region opened inside another, left open or closed twice.
+ */
 export function stepProblems(source: string): string[] {
   const problems: string[] = []
   let open: string | undefined
@@ -48,6 +54,8 @@ export function stepProblems(source: string): string[] {
       if (page && stepIndex(page) === undefined)
         problems.push(`${at}: step "${page}" is not a page of the Guide's plan`)
     }
+    if (before && stepIndex(before) !== undefined && !REPLACING_STEPS.includes(before))
+      problems.push(`${at}: before:${before} replaces a line, which only ${REPLACING_STEPS.join(', ')} may do`)
     if (start) {
       if (open) problems.push(`${at}: step:${start} opens inside step:${open}`)
       open = start

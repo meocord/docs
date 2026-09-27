@@ -1,14 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import path from 'node:path'
-import {
-  CHAPTERS,
-  guideFolder,
-  guidePath,
-  guideRendered,
-  readGuidePage,
-  readingOrder,
-  type GuidePage,
-} from '../../../scripts/lib/guide'
+import { CHAPTERS, guidePath, guideRendered, readGuide, type GuidePage } from '../../../scripts/lib/guide'
 import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
@@ -29,22 +19,7 @@ const entries = new Map<string, Entry[]>()
 
 /** A line's Guide in reading order; a page whose front matter fails content:check is left out. */
 export function guideEntries(line: string): Entry[] {
-  if (!entries.has(line)) {
-    const dir = guideFolder(line)
-    const read = existsSync(dir)
-      ? readdirSync(dir)
-          .filter(file => file.endsWith('.md'))
-          .flatMap(file => {
-            const { page, body } = readGuidePage(file.replace(/\.md$/, ''), readFileSync(path.join(dir, file), 'utf8'))
-            return page ? [{ page, body }] : []
-          })
-      : []
-    const order = readingOrder(read.map(entry => entry.page))
-    entries.set(
-      line,
-      order.map(page => read.find(entry => entry.page === page)!),
-    )
-  }
+  if (!entries.has(line)) entries.set(line, readGuide(line))
   return entries.get(line)!
 }
 

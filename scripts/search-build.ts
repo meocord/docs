@@ -14,12 +14,14 @@ import * as pagefind from 'pagefind'
 import semver from 'semver'
 import type { ApiDocument } from './lib/api.js'
 import type { ChangelogDocument } from './lib/changelog.js'
+import { guideRendered, readGuide } from './lib/guide.js'
 import { paths, ROOT } from './lib/layout.js'
 import { listPages, loadPage, resolveExample } from './lib/pages.js'
 import {
   apiDocuments,
   changelogDocuments,
   guideDocument,
+  guidePageDocuments,
   migratingDocument,
   paletteIndex,
   searchHtml,
@@ -61,17 +63,23 @@ mkdirSync(PALETTE_DIR, { recursive: true })
 const manifest: SearchManifest = { lines: [] }
 
 for (const line of config.lines) {
-  const examples = (file: string, region?: string) => {
-    try {
-      return resolveExample(line.line, file, region, { root: ROOT })
-    } catch {
-      return undefined
+  // A Guide page's examples as they stand at that page; a live page's as the finished files
+  const examples =
+    (page?: string) =>
+    (file: string, region?: string): string | undefined => {
+      try {
+        return resolveExample(line.line, file, region, { root: ROOT, page })
+      } catch {
+        return undefined
+      }
     }
-  }
-  const guides = listPages(line.line, { root: ROOT }).flatMap(entry => {
-    const page = loadPage(line.line, entry.slug, { root: ROOT })
-    return page ? [guideDocument(line.line, entry.slug, page, config, examples)] : []
-  })
+  // A line whose Guide the site renders is searched by the Guide's pages, at their paths
+  const guides = guideRendered(line.line)
+    ? guidePageDocuments(line.line, readGuide(line.line, ROOT), config, examples)
+    : listPages(line.line, { root: ROOT }).flatMap(entry => {
+        const page = loadPage(line.line, entry.slug, { root: ROOT })
+        return page ? [guideDocument(line.line, entry.slug, page, config, examples())] : []
+      })
 
   const documents: SearchDocument[] = [...guides]
   const migrating = existsSync(paths.migrating(line.line))
