@@ -62,11 +62,11 @@ An app adds types in `@MeoCord({ messages: { types } })`, and declares what each
 
 ::example{file="app-message-commands.ts" region="app"}
 
-`parse` returns the value, or `undefined` when the word is not one, which gets the usage reply built from
-the type's `label`: `accent: "blue" is not a valid hex colour`. For a label in each server's language, give
-the type a `labelKey` instead: see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). It
-runs before the guards, so it must not call Discord. A type for something that has to be fetched returns an `EntityRef`, as the built-in entity types
-do, and is resolved once the guards let the call through.
+`parse` returns the value, or `undefined` when the word is not one, which gets the usage reply built from the type's
+`label`: `accent: "blue" is not a valid hex colour`. For a label in each server's language, give the type a `labelKey`
+instead: see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). It runs before the guards, so it must not
+call Discord. A type for something that has to be fetched returns an `EntityRef`, as the built-in entity types do, and
+is resolved once the guards let the call through.
 
 ## Flags
 
