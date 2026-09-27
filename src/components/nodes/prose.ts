@@ -95,10 +95,6 @@ export const Prose = createNode('article', {
       backgroundColor: 'theme.surface.canvas',
       overflow: 'hidden',
     },
-    '@media (width >= theme.breakpoint.wide)': {
-      // Code and tables may run a little past the prose measure, into the sheet's margin.
-      '& [data-code], & [data-table], & [data-signature]': { marginInline: 'calc(-1 * theme.space.4)' },
-    },
     '& [data-code] figcaption': {
       display: 'flex',
       alignItems: 'center',
@@ -249,6 +245,10 @@ export const Prose = createNode('article', {
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
+    '@media (width >= theme.breakpoint.wide)': {
+      // Code and tables may run a little past the prose measure, into the sheet's margin.
+      '& [data-code], & [data-table], & [data-signature]': { marginInline: 'calc(-1 * theme.space.4)' },
+    },
     '& [data-doc] > :last-child': { marginBottom: 0 },
     '& td [data-doc] p': { margin: 0 },
     '& [data-since]': { whiteSpace: 'nowrap' },
