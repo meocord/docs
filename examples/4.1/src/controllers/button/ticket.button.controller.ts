@@ -28,8 +28,9 @@ export class TicketButtonController {
   }
 
   @Command(ticketAction, CommandType.BUTTON)
-  async act(interaction: ButtonInteraction, { id, action }: { id: string; action: string }) {
-    await respond(interaction).send({ content: `Ticket #${id}: ${action}d.`, components: [] })
+  async act(interaction: ButtonInteraction, { id, action }: { id: string; action: 'close' | 'reopen' }) {
+    const done = action === 'close' ? 'closed' : 'reopened'
+    await respond(interaction).send({ content: `Ticket #${id}: ${done}.`, components: [] })
   }
 }
 // #endregion route
