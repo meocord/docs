@@ -1,0 +1,184 @@
+---
+id: configuration
+title: Configuration
+chapter: structure
+order: 2
+summary: Configure how your bot is built and started, what it logs, and the settings your own code reads.
+learn:
+  - Set the token, logging and build options in meocord.config.ts
+  - Load .env files, one per environment
+  - Read and check your own settings once, before the bot logs in
+  - Tell the build's options from the app's
+requires: [services]
+api: [configuration/MeoCordConfig, decorators/MeoCord]
+since: 4.0.0
+---
+
+A MeoCord bot has two kinds of settings. `meocord.config.ts`, at the project's root, holds how the bot is built and
+started: its token, what it logs, how it's bundled, where its commands are registered.
+[`@MeoCord({...})`](api:decorators/MeoCord) holds what the app is made of: its controllers, its theme, its guards.
+
+## When to use it
+
+Put a setting in `meocord.config.ts` when the CLI or the process needs it before your code runs: the token, the log
+level, a build rule, sharding. Everything about how the bot behaves once it runs goes in `@MeoCord`, and each of
+those options is taught on its own page, [listed below](#the-apps-options).
+
+Your own values, such as a channel ID or an API key, belong in neither. Read them from the environment into a
+[provider](#your-own-settings), so they're checked once and injected where they're used.
+
+## Example
+
+::example{file="config/logging.meocord.config.ts" region="config"}
+
+The bot reads its token from `.env`, starts each log line with "Feedback", and prints only warnings and errors.
+
+## How it works
+
+`meocord build` compiles the config with the bot, into `dist/meocord.config.mjs`. When the bot starts, it loads
+that compiled copy, however it's started: `meocord start`, `node dist/main.js`, bun, pm2 or Docker. Nothing in the
+built bot reads `meocord.config.ts` itself.
+
+`build`, `start` and `register` check the config first. An option of the wrong type stops them with a list of every
+problem; an option MeoCord doesn't know, often a typo, is reported as a warning.
+
+`meocord start --dev` watches `meocord.config.ts` and reloads it on every change. A production bot keeps the config
+it was built with, until the next `meocord build --prod`.
+
+## Options
+
+| Option               | Default | What it does                                                                                                          |
+| -------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `discordToken`       | none    | The bot token. Read it from the environment rather than writing it here.                                              |
+| `appName`            | none    | Starts every log line.                                                                                                |
+| `logLevel`           | `'log'` | The least severe line the bot prints; `'debug'` in development. See [Logging](#logging).                              |
+| `sourceMappedStacks` | `true`  | Stack traces name your source files and lines, not the bundle's.                                                      |
+| `shutdownTimeout`    | `10000` | Milliseconds shutdown waits for the `onShutdown` hooks, all of them together.                                         |
+| `commands`           | global  | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                    |
+| `sharding`           | none    | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                            |
+| `rsbuild`            | none    | `(config) => config`: adjusts the Rsbuild configuration the bot is built with. See [the build hook](#the-build-hook). |
+| `bundleDependencies` | `false` | Puts everything the bot needs inside `dist/`, so it runs without `node_modules`.                                      |
+| `externals`          | `[]`    | Modules to keep out of the bundle.                                                                                    |
+| `optionalExternals`  | `[]`    | Packages a dependency tries to load and runs without, such as `supports-color`.                                       |
+
+The last two matter mostly for a bundled bot: see [Self-contained builds](guide:self-contained-builds).
+
+## Logging
+
+`logLevel` is the least severe line [`Logger`](api:utilities/Logger) prints, MeoCord's own lines included:
+
+| Level      | Prints                         |
+| ---------- | ------------------------------ |
+| `'debug'`  | everything                     |
+| `'log'`    | everything but `[DEBUG]` lines |
+| `'warn'`   | warnings and errors            |
+| `'error'`  | errors only                    |
+| `'silent'` | nothing                        |
+
+Without it, the bot prints `'debug'` in development, as under `meocord start --dev`, and `'log'` otherwise.
+
+To change the level for one run, without a rebuild, set `MEOCORD_LOG_LEVEL`. It wins over `logLevel`, ignores letter
+case, so `DEBUG` works, and can be set in `.env`. An unknown value is ignored, with a warning. `logLevel` applies to
+the built bot; the CLI's own output and your tests read only the variable.
+
+```bash
+MEOCORD_LOG_LEVEL=debug node dist/main.js
+```
+
+`sourceMappedStacks` maps each stack trace through the source map the build writes, so an error points into
+`src/`. Set it to `false` when an error tracker, such as one you upload source maps to, does the mapping itself.
+
+## Environment variables
+
+Load `.env` in `meocord.config.ts`, as the generated one does with `import 'dotenv/config'`, not in `main.ts`. The
+bot loads its config before `main.ts`, so every value `.env` sets is there by the time `@MeoCord({...})` and the rest
+of your modules read `process.env`.
+
+To keep a file per environment, put the choice in a module the config imports:
+
+::example{file="config/load-env.ts" region="load-env"}
+
+::example{file="config/env.meocord.config.ts" region="config"}
+
+```bash
+APP_ENV=staging node dist/main.js
+```
+
+Start the bot from the project root: the `.env` files and `dist/meocord.config.mjs` are both found from the working
+directory, so set `cwd` in pm2 and `WORKDIR` in a Dockerfile.
+
+## Your own settings
+
+A value read from `process.env` wherever it's needed is checked nowhere: a missing channel ID shows up as a failed
+call, long after the bot started. Read the environment once, in a factory, and check it there:
+
+::example{file="services/settings/settings.ts" region="settings"}
+
+Provide it on the app, and inject it by its token:
+
+::example{file="app-with-settings.ts" region="app"}
+
+::example{file="services/settings/settings.ts" region="inject"}
+
+MeoCord runs every factory before the bot logs in. When a value is missing, the bot logs the factory's error, naming
+`Settings` and each value, and stops. A test gives the loader an environment of its own:
+
+::example{file="services/settings/settings.spec.ts" region="spec"}
+
+A test of `ReportService` provides `SETTINGS` with `useValue` instead, as [Services](guide:services#providers) shows.
+
+## The app's options
+
+`@MeoCord({...})` takes `controllers` and `clientOptions`, which every bot needs, and these, each taught on its own
+page:
+
+| Options                                                           | Taught in                                    |
+| ----------------------------------------------------------------- | -------------------------------------------- |
+| `services`, `providers`                                           | [Services and injection](guide:services)     |
+| `theme`, `themeFor`, `themeCache`, `themeForTimeoutMs`            | [Theming](guide:theming)                     |
+| `i18n`                                                            | [Localisation](guide:localisation)           |
+| `presenter`                                                       | [Presenters](guide:presenters)               |
+| `warnUnanswered`                                                  | [Answering with respond()](guide:responses)  |
+| `messages`                                                        | [Message commands](guide:message-commands)   |
+| `guards`                                                          | [Guards](guide:guards)                       |
+| `interceptors`                                                    | [Interceptors](guide:interceptors)           |
+| `filters`                                                         | [Exception filters](guide:exception-filters) |
+| `cooldownStore`, `cooldownStoreFailure`, `cooldownStoreTimeoutMs` | [Cooldowns](guide:cooldowns)                 |
+| `observers`                                                       | [Observers](guide:observers)                 |
+
+`activities` lists the bot's statuses. Once it's ready, it shows one of them, picked at random, and picks again every
+10 seconds.
+
+## The build hook
+
+MeoCord builds with [Rsbuild](https://rsbuild.rs). The `rsbuild` hook receives its configuration and returns it,
+modified:
+
+::example{file="config/basic.meocord.config.ts" region="config"}
+
+Some things need no rule of your own:
+
+- **Images, fonts, SVG and media** are emitted to `dist/assets/`, and importing one gives its absolute path on disk,
+  ready for `fs`, a canvas or a Discord attachment. Nothing is inlined as a data URI.
+- **Asset file names:** `output.filename.image`, and `svg`, `font` and `media`, accept a function, for two files
+  that share a name in different folders.
+- **Raw bundler rules** go through `tools.rspack`, as above.
+- **Source maps:** `source-map` in production and `cheap-module-source-map` in development. Change them with
+  `output.sourceMap.js`. An `eval` devtool is built as the same map without the eval, with a warning: the bundle
+  reads `import.meta`, which a module evaluated from a string can't.
+
+## Gotchas
+
+- **`.env` loaded in `main.ts` is too late** for the config and for `@MeoCord({...})`, which read `process.env`
+  first. Load it in `meocord.config.ts`.
+- **A production bot doesn't see a config change** until it's built again: run `meocord build --prod`, or
+  `meocord start --build --prod`.
+- **`logLevel` hides your own lines too.** `Logger` prints through it, so `'warn'` also hides your `logger.log()`
+  calls.
+- **The token doesn't belong in the file.** `meocord.config.ts` is committed; `.env` isn't.
+
+## Next steps
+
+- [Services and injection](guide:services): provide values and inject them by token.
+- [Self-contained builds](guide:self-contained-builds): ship `dist/` without `node_modules`.
+- [Deployment](guide:deployment): run the built bot under pm2, Docker or a host's process manager.
