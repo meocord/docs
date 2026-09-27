@@ -92,7 +92,7 @@ describe('the Guide', () => {
     expect(html).toContain('<a href="/docs/4.1/services">Services</a>')
     expect(html).toContain('<a href="/docs/4.1/api/decorator/UseGuard">UseGuard</a>')
     expect(html).toContain('<a href="/docs/4.1/how-a-call-runs" rel="prev">')
-    expect(html).toContain('The request pipeline · 3 of 3')
+    expect(html).toContain('The request pipeline · page 3 of 3')
   })
 
   it("offers the Guide and the API as the sidebar's tabs, marking the one read", () => {
