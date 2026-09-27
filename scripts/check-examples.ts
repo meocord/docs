@@ -6,9 +6,10 @@
  */
 
 import { spawnSync } from 'child_process'
-import { existsSync, readFileSync, realpathSync } from 'fs'
+import { cpSync, existsSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'fs'
 import path from 'path'
 import { paths, ROOT } from './lib/layout.js'
+import { asOf, READING_ORDER, stepIndex, stepProblems, stepsIn } from './lib/steps.js'
 import { readVersions } from './lib/versions.js'
 
 const config = readVersions(paths.versions)
@@ -16,6 +17,61 @@ const requested = process.argv.slice(2)
 const lines = config.lines.map(line => line.line).filter(line => requested.length === 0 || requested.includes(line))
 // tsc's own entry point, run by this Bun process rather than through the bin's node shebang
 const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc')
+
+/** Every .ts file under a folder, by its path relative to it, node_modules aside. */
+function tsFiles(dir: string, base = dir): string[] {
+  return readdirSync(dir).flatMap(name => {
+    const full = path.join(dir, name)
+    if (name === 'node_modules') return []
+    if (statSync(full).isDirectory()) return tsFiles(full, base)
+    return name.endsWith('.ts') ? [path.relative(base, full)] : []
+  })
+}
+
+/**
+ * Typechecks each tutorial step's version of the folders that hold step marks: the files as they stand
+ * at every page that adds a step, and before the first, so no page shows code that does not compile.
+ * Each version is written to examples/<line>/.steps/, beside src/ so it resolves the line's packages.
+ */
+function checkSteps(line: string, dir: string): string[] {
+  const src = path.join(dir, 'src')
+  const marked = tsFiles(src).filter(file => stepsIn(readFileSync(path.join(src, file), 'utf8')).length > 0)
+  if (marked.length === 0) return []
+  const failures: string[] = []
+  for (const file of marked)
+    for (const problem of stepProblems(readFileSync(path.join(src, file), 'utf8')))
+      failures.push(`examples/${line}/src/${file}: ${problem}`)
+  if (failures.length > 0) return failures
+
+  const folders = [...new Set(marked.map(file => path.dirname(file)))]
+  const steps = [...new Set(marked.flatMap(file => stepsIn(readFileSync(path.join(src, file), 'utf8'))))]
+  const first = Math.min(...steps.map(step => stepIndex(step)!))
+  const pages = [...(first > 0 ? [READING_ORDER[first - 1]] : []), ...steps]
+  const root = path.join(dir, '.steps')
+  try {
+    for (const page of pages) {
+      const at = path.join(root, page.replace(/\//g, '-'))
+      cpSync(src, path.join(at, 'src'), { recursive: true, filter: from => !from.includes('node_modules') })
+      for (const folder of folders)
+        for (const file of tsFiles(path.join(src, folder)).map(name => path.join(folder, name)))
+          writeFileSync(path.join(at, 'src', file), asOf(readFileSync(path.join(src, file), 'utf8'), page))
+      writeFileSync(
+        path.join(at, 'tsconfig.json'),
+        JSON.stringify({
+          extends: '../../tsconfig.json',
+          compilerOptions: { rootDir: '.', paths: { '@src/*': ['./src/*'] } },
+          include: folders.map(folder => `src/${folder}/**/*.ts`),
+        }),
+      )
+      const result = spawnSync(process.execPath, [tsc, '-p', at], { encoding: 'utf8' })
+      if (result.status !== 0)
+        failures.push(`the tutorial as it stands at ${page}:\n${(result.stdout + result.stderr).trim()}`)
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+  return failures
+}
 
 let failed = 0
 for (const line of lines) {
@@ -55,6 +111,12 @@ for (const line of lines) {
       )
       continue
     }
+  }
+  const stepFailures = checkSteps(line, dir)
+  if (stepFailures.length > 0) {
+    failed++
+    console.log(`  FAIL  ${line}: tutorial steps against meocord ${installed}\n${stepFailures.join('\n')}`)
+    continue
   }
   // A line with a vitest config runs its specs too, on Bun, as a generated app of that version does
   const hasSpecs = existsSync(path.join(dir, 'vitest.config.ts'))

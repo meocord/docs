@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { parsePage, type Frontmatter } from './content'
+import { asOf } from './steps'
 import { newestIn, type VersionsConfig } from './versions'
 
 export interface PageEntry {
@@ -29,6 +30,11 @@ export interface Page {
 interface Options {
   /** The repository root; the site reads it at build time, from the working directory. */
   root?: string
+}
+
+interface ExampleOptions extends Options {
+  /** The Guide page it is shown on, which decides the tutorial steps it shows; the finished file without one. */
+  page?: string
 }
 
 function versions(root: string): VersionsConfig {
@@ -94,19 +100,20 @@ export function loadPage(line: string, slug: string, options: Options = {}): Pag
 
 /**
  * The code an ::example embeds: a file under examples/<line>/src/, or the lines between its
- * `// #region <name>` and `// #endregion <name>`, dedented, with any other region markers dropped.
+ * `// #region <name>` and `// #endregion <name>`, dedented, with any other region markers dropped. A
+ * tutorial file is taken as it stands at the page shown on (see steps.ts).
  */
 export function resolveExample(
   line: string,
   file: string,
   region?: string,
-  { root = process.cwd() }: Options = {},
+  { root = process.cwd(), page }: ExampleOptions = {},
 ): string {
   const base = path.join(root, 'examples', line, 'src')
   const full = path.resolve(base, file)
   if (!full.startsWith(base + path.sep)) throw new Error(`Example "${file}" is outside examples/${line}/src.`)
   if (!existsSync(full)) throw new Error(`examples/${line}/src/${file} does not exist.`)
-  let lines = readFileSync(full, 'utf8').split('\n')
+  let lines = asOf(readFileSync(full, 'utf8'), page).split('\n')
   if (region) {
     const start = lines.findIndex(text => text.trim() === `// #region ${region}`)
     const end = lines.findIndex(text => text.trim() === `// #endregion ${region}`)
