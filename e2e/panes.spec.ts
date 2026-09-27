@@ -170,6 +170,27 @@ test('the page keys scroll the sheet before any of the app’s scripts load', as
   await expect.poll(() => top(sheet(page))).toBeGreaterThan(after)
 })
 
+test('a page key pressed before the page hydrates keeps its place once it has', async ({ page }) => {
+  // The app's scripts are held until the key has moved the sheet.
+  let release!: () => void
+  const held = new Promise<void>(resolve => (release = resolve))
+  await page.route('**/_next/static/**/*.js', async route => {
+    await held
+    await route.continue()
+  })
+  await page.goto('/docs/4.1/guards', { waitUntil: 'domcontentloaded' })
+  await page.keyboard.press('PageDown')
+  await expect.poll(() => top(sheet(page))).toBeGreaterThan(400)
+  const moved = await top(sheet(page))
+
+  release()
+  // Hydrated: the theme control says which mode is chosen, and the page's effects have run.
+  await expect(page.locator('[data-toolbar]:visible [aria-pressed="true"]')).toHaveCount(1)
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  expect(await top(sheet(page))).toBe(moved)
+})
+
 test('a page key held with a modifier, or taken by the page, leaves the sheet alone', async ({ page }) => {
   await page.goto('/docs/4.1/guards')
   await page.keyboard.press('Alt+PageDown')
@@ -183,9 +204,12 @@ test('a page key held with a modifier, or taken by the page, leaves the sheet al
 
 test('in the search field, Space and the page keys stay with the field', async ({ page }) => {
   await page.goto('/docs/4.1/guards')
-  await page.keyboard.press('/')
   const field = page.getByRole('dialog').getByRole('combobox')
-  await expect(field).toBeFocused()
+  // The palette's shortcut is heard once the app's scripts run, so it is pressed until the field answers.
+  await expect(async () => {
+    await page.keyboard.press('ControlOrMeta+k')
+    await expect(field).toBeFocused({ timeout: 1000 })
+  }).toPass()
   await page.keyboard.type('guard ')
   await page.keyboard.press('PageDown')
   await page.keyboard.press('End')
