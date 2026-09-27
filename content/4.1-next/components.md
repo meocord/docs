@@ -107,8 +107,8 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 
 ### Overlapping patterns
 
-Patterns with different segment counts never compete. When two with the same count both match, the one that spells
-out more literal text wins, whatever order they were declared in:
+Patterns with different segment counts never compete. When two with the same count can both match an id, the one that
+spells out more literal text wins, whatever order they were declared in:
 
 ::example{file="controllers/button/profile.button.controller.ts" region="overlap"}
 
@@ -116,9 +116,12 @@ Between equally literal patterns, the one with fewer parameters wins, then the o
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
 `page/5` and leaves `page/last` to the other, in whatever order they're declared.
 
-Two patterns that trade a literal for a parameter in opposite places, `a/{x}/c` and `a/b/{y}`, both take `a/b/c`,
-and MeoCord warns about the pair at startup, as it does for two typed parameters that share a value, such as
-`r/{w:on|off}` and `r/{f:bool}`. Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and
+MeoCord warns at startup about every pair of patterns of one component type that can both take an id: the two above,
+`page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`. The bot still starts, and the
+ranking decides which handler runs; [`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns
+with different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
+
+Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and
 `profile/{id}`, stop the bot at startup, naming both, since only one of them could ever run.
 
 ## Select menus
@@ -188,6 +191,22 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
 
 ## Build it
 
+Submitted feedback needs a place to live. A service keeps it in memory, and settings say where the review post goes,
+read from `FEEDBACK_CHANNEL_ID`, which you add to `.env`:
+
+::example{file="tutorial/feedback.service.ts" region="service"}
+
+::example{file="tutorial/feedback.settings.ts" region="settings"}
+
+`get` throws a `FeedbackNotFoundError` for an id it doesn't know:
+
+::example{file="tutorial/feedback.errors.ts" region="error"}
+
+The feedback controller receives both through its constructor, and MeoCord creates them for it;
+[Services](guide:services) explains how:
+
+::example{file="tutorial/feedback.controller.ts" region="constructor"}
+
 The `/feedback` form's `customId` is `feedback/submit`. Handle its submission: the member's fields arrive as params,
 and the bot posts them for the staff with two review buttons whose ids carry the feedback's id:
 
@@ -199,7 +218,13 @@ A message the bot posts with `channel.send` isn't one of MeoCord's answers, so i
 
 ::example{file="tutorial/review.controller.ts" region="controller"}
 
-The verdict goes through `respond()`, so its embed takes the theme's primary colour. Run `/feedback`, submit the form,
+`@Defer()` acknowledges each click before the handler runs, since saving the verdict, editing the post and sending a
+DM can take longer than the three seconds Discord allows; [@Defer](guide:defer) covers it. The verdict goes through
+`respond()`, so its embed takes the theme's primary colour. Add `ReviewController` to the app:
+
+::example{file="tutorial/app.ts" region="app"}
+
+Run `/feedback`, submit the form,
 and click **Approve** in the review channel: the post gains the verdict, and the author gets a DM.
 
 ## Next steps

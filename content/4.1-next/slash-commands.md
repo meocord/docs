@@ -73,10 +73,13 @@ whether at startup:
 
 | Option             | Default | What it does                                                                                                                         |
 | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `guilds`           | none    | Registers every command to these servers instead of globally. Unset or empty means global.                                           |
+| `guilds`           | none    | Registers every command to these servers instead of globally. Unset or `[]` means global.                                            |
 | `developmentGuild` | none    | Under `meocord start --dev`, every command goes to this server and nowhere else. Server commands show up at once.                    |
 | `register`         | `true`  | Registers at startup. `false` leaves it to `meocord register`, run from CI for instance.                                             |
 | `clearOther`       | `false` | Removes this application's commands from the scopes named here but not in use. Without it, such leftovers are reported as a warning. |
+
+A `guilds` list whose ids are all blank, such as `[process.env.GUILD_ID]` with the variable unset, registers nothing
+and warns, rather than publishing the commands globally.
 
 Each scope gets one bulk update, which replaces what the application has there, so a command you remove disappears on
 the next registration. A failed registration is logged, and the bot stays online.
@@ -116,8 +119,9 @@ itself, and its handler receives a `PrimaryEntryPointCommandInteraction`:
   behind, and Discord shows both. MeoCord warns about them; set `clearOther: true` to remove them. While
   `developmentGuild` receives every command they're only warned about, since development and production often share
   one application.
-- **A deleted command comes back in development.** Under `start --dev`, commands that haven't changed since the last
-  start aren't sent again. After deleting commands in the Developer Portal, start with `--force-register`.
+- **A command deleted outside the bot stays gone in development.** Under `start --dev`, a set of commands that hasn't
+  changed since the last start isn't sent again, so one deleted through the API or another tool isn't restored. Start
+  with `--force-register` to send the set again.
 - **A handler without a matching command never runs.** The name in `@Command` is the name the builder receives, so
   build it with `setName(commandName)` rather than a second copy of the name.
 
@@ -130,6 +134,10 @@ The feedback bot starts with one command, `/feedback`. Describe it with a builde
 Handle it in the feedback controller, where it opens the form a member fills in:
 
 ::example{file="tutorial/feedback.controller.ts" region="open"}
+
+`respond(interaction).modal()` shows a form built with discord.js's `ModalBuilder`. Its `customId`, `feedback/submit`,
+is how the submission finds its handler, which you'll write in [Components](guide:components#build-it). Add
+`FeedbackController` to the app's `controllers`, as in [Your first command](guide:first-command).
 
 Start the bot with `npx meocord start --dev` and run `/feedback` in your test server: the form opens.
 

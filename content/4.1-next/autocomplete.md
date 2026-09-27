@@ -45,8 +45,9 @@ any slash command is.
    change.
 2. **MeoCord finds the handler** by the command's path and the focused option's name. A handler for one option wins
    over one for the whole command, so the two can live side by side.
-3. **The handler runs** with its guards and exception filters, but no interceptors, validation or `@Defer`: it has
-   three seconds and answers only once.
+3. **The handler runs** with its guards and exception filters, but no interceptors, validation, cooldowns or `@Defer`:
+   it has three seconds and answers only once. A controller's `@Cooldown` skips it, and `@Validate`, `@UsePipe`,
+   `@Cooldown` or `@Defer` on the handler itself stops the bot at startup.
 4. **It answers** with discord.js's `interaction.respond(choices)`, not `respond()`, since an autocomplete can't be
    replied to.
 

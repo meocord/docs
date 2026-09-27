@@ -5,10 +5,10 @@ import { CommandType } from 'meocord/enum'
 // #region builder
 @CommandBuilder(CommandType.PRIMARY_ENTRY_POINT)
 export class LaunchCommandBuilder {
-  build() {
+  build(commandName: string) {
     return {
       type: ApplicationCommandType.PrimaryEntryPoint as const,
-      name: 'launch',
+      name: commandName,
       description: 'Launch the activity',
       // What makes Discord send the interaction to the bot at all
       handler: EntryPointCommandHandlerType.AppHandler,
