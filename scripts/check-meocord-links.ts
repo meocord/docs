@@ -1,14 +1,14 @@
 /**
- * Checks the docs links in a meocord checkout against a docs site: every
- * `https://meocord.dev/docs/…` URL in its src/ and, when built, dist/types/ must answer 200, have the
- * heading it names, and not land on a line's page for a topic it lacks. Run before a release, against
- * the live site, which serves docs main. For docs changes not merged yet, serve their build locally.
+ * Checks the docs links a meocord checkout publishes against a docs site: every `https://meocord.dev/docs/…`
+ * URL in the places PUBLISHED lists (its source, built declarations, README, changelog, changesets, docs/ and
+ * GitHub templates) must answer 200, have the heading it names, and not land on a line's page for a topic it
+ * lacks. Run before a release, against the live site, which serves docs main. For docs changes not merged
+ * yet, serve their build locally.
  *
  *   bun run links:meocord -- <meocord checkout>
  *   bun run build && PORT=3140 bun run serve   # then add --site http://127.0.0.1:3140
  */
-import path from 'path'
-import { docsLinks, linkProblem, textsUnder } from './lib/meocord-links.js'
+import { linkProblem, publishedLinks } from './lib/meocord-links.js'
 
 const args = process.argv.slice(2)
 const siteAt = args.indexOf('--site')
@@ -19,20 +19,16 @@ if (!checkout) {
   process.exit(2)
 }
 
-const texts = [
-  ...textsUnder(path.join(checkout, 'src'), ['.ts']),
-  ...textsUnder(path.join(checkout, 'dist', 'types'), ['.d.ts', '.d.cts']),
-]
-const links = docsLinks(texts)
+const links = publishedLinks(checkout)
 const problems: string[] = []
-for (const link of links) {
+for (const [link, files] of links) {
   const response = await fetch(new URL(link.split('#')[0], site))
   const problem = linkProblem(link, response.status, await response.text(), response.url)
-  if (problem) problems.push(problem)
+  if (problem) problems.push(`${problem} (in ${files.join(', ')})`)
 }
 if (problems.length > 0) {
-  console.error(`${problems.length} of ${links.length} docs link(s) in ${checkout} do not resolve on ${site}:`)
+  console.error(`${problems.length} of ${links.size} docs link(s) in ${checkout} do not resolve on ${site}:`)
   for (const problem of problems) console.error(`  ${problem}`)
   process.exit(1)
 }
-console.log(`All ${links.length} docs link(s) in ${checkout} resolve on ${site}.`)
+console.log(`All ${links.size} docs link(s) in ${checkout} resolve on ${site}.`)
