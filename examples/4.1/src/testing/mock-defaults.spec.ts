@@ -5,6 +5,7 @@ import {
   GuildMember,
   Locale,
   Message,
+  SnowflakeUtil,
   TextChannel,
   User,
 } from 'discord.js'
@@ -38,4 +39,17 @@ describe('mock defaults', () => {
     await expect(channel.setName('general')).resolves.toBe(channel)
   })
   // #endregion promises
+
+  // #region created
+  it('reads an interaction’s creation time from its id, as discord.js does', () => {
+    const before = Date.now()
+    const made = createMockInteraction(ButtonInteraction, { customId: 'x' })
+    const given = createMockInteraction(ButtonInteraction, { customId: 'x', id: '1200000000000000000' })
+
+    // A generated id: the time the mock was made
+    expect(made.createdTimestamp).toBeGreaterThanOrEqual(before)
+    // An id you give: the time it encodes
+    expect(given.createdAt).toEqual(new Date(SnowflakeUtil.timestampFrom('1200000000000000000')))
+  })
+  // #endregion created
 })
