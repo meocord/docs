@@ -8,6 +8,7 @@
 import { spawnSync } from 'child_process'
 import { cpSync, existsSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'fs'
 import path from 'path'
+import prettier from 'prettier'
 import { paths, ROOT } from './lib/layout.js'
 import { asOf, READING_ORDER, stepIndex, stepProblems, stepsIn } from './lib/steps.js'
 import { readVersions } from './lib/versions.js'
@@ -29,12 +30,12 @@ function tsFiles(dir: string, base = dir): string[] {
 }
 
 /**
- * Typechecks each tutorial step's version of the folders that hold step marks, and runs their specs: the
- * files as they stand at every page that adds a step, and before the first, so no page shows code that
- * does not compile or pass. Each version is written to examples/<line>/.steps/, beside src/ so it
- * resolves the line's packages.
+ * Checks each tutorial step's version of the folders that hold step marks: the files as they stand at
+ * every page that adds a step, and before the first, so no page shows code that is unformatted, does not
+ * compile or does not pass its specs. Each version is written to examples/<line>/.steps/, beside src/ so
+ * it resolves the line's packages.
  */
-function checkSteps(line: string, dir: string): string[] {
+async function checkSteps(line: string, dir: string): Promise<string[]> {
   const src = path.join(dir, 'src')
   const marked = tsFiles(src).filter(file => stepsIn(readFileSync(path.join(src, file), 'utf8')).length > 0)
   if (marked.length === 0) return []
@@ -58,6 +59,13 @@ function checkSteps(line: string, dir: string): string[] {
       for (const folder of folders)
         for (const file of tsFiles(path.join(src, folder)).map(name => path.join(folder, name)))
           writeFileSync(path.join(at, 'src', file), asOf(readFileSync(path.join(src, file), 'utf8'), page))
+      // A `before:` line is shown as written, so a step's version is held to the formatting its page shows
+      for (const file of marked) {
+        const shown = asOf(readFileSync(path.join(src, file), 'utf8'), page)
+        const options = await prettier.resolveConfig(path.join(src, file))
+        if (!(await prettier.check(shown, { ...options, filepath: path.join(src, file) })))
+          failures.push(`the tutorial as it stands at ${page}: src/${file} is not formatted as prettier would`)
+      }
       writeFileSync(
         path.join(at, 'tsconfig.json'),
         JSON.stringify({
@@ -137,7 +145,7 @@ for (const line of lines) {
       continue
     }
   }
-  const stepFailures = checkSteps(line, dir)
+  const stepFailures = await checkSteps(line, dir)
   if (stepFailures.length > 0) {
     failed++
     console.log(`  FAIL  ${line}: tutorial steps against meocord ${installed}\n${stepFailures.join('\n')}`)

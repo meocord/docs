@@ -43,8 +43,8 @@ describe('FeedbackController', () => {
       // #endregion step:localisation
     })
   })
-
   // #region step:cooldowns
+
   it('opens the form once every five minutes for each member', async () => {
     const module = compile()
     const open = () => createMockInteraction(ChatInputCommandInteraction, { user: ada })
