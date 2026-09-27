@@ -1,9 +1,19 @@
 // #region presenter
 import { EmbedBuilder } from 'discord.js'
 import { Service } from 'meocord/decorator'
-import { type MessageHelp, type PresentedError, type ResponseContext, type ResponsePresenter } from 'meocord/interface'
+import {
+  type MessageHelp,
+  type MessageHelpEntry,
+  type PresentedError,
+  type ResponseContext,
+  type ResponsePresenter,
+} from 'meocord/interface'
 
-/** Styles the bot's views, and writes the built-in help as an embed. */
+/** Each command's usage, then what it does. */
+const usages = (entries: MessageHelpEntry[]) =>
+  entries.map(entry => `\`${entry.usage}\`\n${entry.description ?? ''}`).join('\n\n')
+
+/** Styles the bot's views, and writes the built-in help as embeds. */
 @Service()
 export class HelpPresenter implements ResponsePresenter {
   loading({ theme }: ResponseContext) {
@@ -15,13 +25,40 @@ export class HelpPresenter implements ResponsePresenter {
   }
 
   messageHelp(help: MessageHelp) {
-    if (help.kind !== 'list')
-      return help.kind === 'unknown' ? `No command is called ${help.query}.` : 'Nothing to show here.'
-    const embed = new EmbedBuilder()
-      .setTitle('Commands')
-      .setDescription(help.commands.map(entry => `\`${entry.usage}\`\n${entry.description ?? ''}`).join('\n\n'))
-      .setFooter({ text: `${help.invocation} <command> shows one` })
-    return { embeds: [embed] }
+    switch (help.kind) {
+      case 'list':
+        return {
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('Commands')
+              .setDescription(usages(help.commands))
+              .setFooter({ text: `${help.invocation} <command> shows one` }),
+          ],
+        }
+      case 'command':
+        // One embed for each handler the name reaches, with its params and aliases
+        return {
+          embeds: help.commands.map(entry =>
+            new EmbedBuilder()
+              .setTitle(entry.usage)
+              .setDescription(entry.description ?? null)
+              .addFields(
+                entry.params.map(({ name, label, optional }) => ({
+                  name: optional ? `${name} (optional)` : name,
+                  value: label,
+                  inline: true,
+                })),
+              )
+              .setFooter(entry.aliases.length > 0 ? { text: `Also: ${entry.aliases.join(', ')}` } : null),
+          ),
+        }
+      case 'parent':
+        return { embeds: [new EmbedBuilder().setTitle('Subcommands').setDescription(usages(help.subcommands))] }
+      case 'unknown':
+        return `No command is called ${help.query}. ${help.invocation} lists them.`
+      case 'empty':
+        return help.reason === 'server-only' ? 'The commands work in servers only.' : 'No commands to show here.'
+    }
   }
 }
 // #endregion presenter
