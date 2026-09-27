@@ -86,7 +86,9 @@ read the same values. For an interaction no handler matched, it has no controlle
 
 ## What is reported
 
-- Every interaction, the ones no handler matches included; those get `onSettled` only.
+- Every interaction, the ones no handler matches included; those get `onSettled` only. A button, select menu or
+  modal no route takes that another listener answers, such as a collector, is that listener's to report, and isn't
+  told.
 - Every message and reaction a handler runs for, and every event handler call.
 - Not a message no handler matches: most of a server's traffic would reach the observers for nothing.
 

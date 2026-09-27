@@ -121,8 +121,9 @@ Guards, interceptors and filters apply at three levels:
 Guards and interceptors run in that order, global first. Filters are tried the other way round: the method's first,
 then the controller's, then the global ones. Cooldowns go on a controller or a method.
 
-A controller's stages also apply to every class that extends it. A handler takes its own class's stages first, then
-each base class's in turn, so a guard on a base controller guards every subclass.
+A controller's stages also apply to every class that extends it. A handler runs its own class's guards and
+interceptors first, then each base class's in turn, so a guard on a base controller guards every subclass. Filters are
+tried, and cooldowns counted, the other way round, from the base class out.
 `@Controller({ inheritStages: false })` keeps the handlers a subclass declares to its own stages; the ones it inherits
 keep their base's.
 
