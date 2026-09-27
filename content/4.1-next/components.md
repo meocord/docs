@@ -121,8 +121,8 @@ MeoCord warns at startup about every pair of patterns of one component type that
 ranking decides which handler runs; [`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns
 with different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
-Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and
-`profile/{id}`, stop the bot at startup, naming both, since only one of them could ever run.
+Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
+startup, naming both, since only one of them could ever run.
 
 ## Select menus
 
