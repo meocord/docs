@@ -98,8 +98,8 @@ issues, and a `UserError`'s own message. The last four stay private even on a pu
 After a message command, the fallback replies to the message, without a ping: with the command's usage when the
 message does not fit it, or a guard's or validation's reason, each deleted after
 `@MeoCord({ messages: { deleteUsageRepliesAfter } })` seconds. A `UserError`'s message is a reply that stays. A
-`UserError` from an event handler replies to the message the event carries, if it carries one. Other errors of message, reaction and
-event handlers are only logged. The fallback never throws.
+`UserError` from an event handler replies to the message the event carries, if it carries one. Other errors of
+message, reaction and event handlers are only logged. The fallback never throws.
 
 ## Testing
 
