@@ -60,6 +60,26 @@ handler's [exception filters](/docs/4.1/exception-filters) first, so a filter ca
 words. Its texts, the `Usage:` heading and each line of what is wrong, follow the app's translations in the
 server's language, and are English otherwise; see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts).
 
+### Naming only a command's first words
+
+A message that names only a command's leading words, such as `!config` when `config set …` and
+`config get …` exist, or an unknown subcommand, such as `!config reset`, gets the usage of each
+subcommand, one line per handler:
+
+```text
+!config    ->  Usage:
+               !config get <key>
+               !config set <key> <value…>
+```
+
+- A handler of its own, `config` or `config {key}`, still takes such a message.
+- A subcommand with a [guard](/docs/4.1/guards), on its method or its controller, is left out of the list on
+  purpose, since the list runs no guards and must not name what a caller may be refused, and so is one
+  whose options say `hidden: true`. Named, it still gets its own usage. A parent with nothing left to list
+  gets no reply.
+- The reply is a `MessageUsageError` whose `usage` holds the lines. It goes to the app's global filters,
+  then the fallback, as a usage reply does.
+
 ## Aliases, descriptions and scope
 
 A handler's options say more about its command:
@@ -144,12 +164,17 @@ Set the prefix once, for the whole app, with `@MeoCord({ messages })`:
   is. The longest prefix that fits is used, and a space after it is allowed, so `! roll 20` works too.
 - `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix, including in
   an app whose handlers all set their own prefix.
+- `mention: 'only'` starts every command in a server with a mention of the bot and nothing else, neither a
+  prefix nor the message as it is. A direct message, addressed to the bot already, starts as usual, after
+  the prefix or as it is. Discord sends a message's text without the privileged `MessageContent` intent when
+  it mentions the bot, and in direct messages, so a mention-only bot needs no such intent.
 - `caseSensitive: true` matches the prefix and a pattern's literal words in the case written. It is off by
   default. Param values always keep the case they were typed in.
 
-A handler can set its own `prefix` and `caseSensitive`. Its prefix replaces the app's, though a mention
-still counts. `prefix: ''` matches the message without a prefix, and `prefix: false` matches the message
-as it is, never after a mention:
+A handler can set its own `prefix`, `caseSensitive` and `mention: 'only'`. Its prefix replaces the app's,
+though a mention still counts, and `mention: 'only'` starts that one command in a server with a mention
+alone, beside the app's prefix for the rest. `prefix: ''` matches the message without a prefix, and
+`prefix: false` matches the message as it is, never after a mention:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="prefixes"}
 
