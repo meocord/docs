@@ -212,17 +212,22 @@ test('the home page marks Overview in the sidebar', async ({ page }) => {
   await expect(current).toHaveText('Overview')
 })
 
-test('a sidebar label too long for its row ends in an ellipsis and keeps its full title', async ({ page }) => {
+test('a sidebar label too long for its row wraps, whole, beside its badge', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/docs/4.1/guards')
   const label = page.getByRole('navigation').locator('a span[title="Where the interaction happened"]')
-  await expect(label).toHaveCSS('text-overflow', 'ellipsis')
-  // The label gives way, so the row's badge stays inside the row.
-  const fits = await label.evaluate(el => {
+  // No ellipsis: the whole title shows, over two lines, and the row's badge stays inside the row.
+  const shown = await label.evaluate(el => {
     const row = el.closest('a')!
-    return { clipped: el.scrollWidth > el.clientWidth, spill: row.scrollWidth - row.clientWidth }
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
+    return {
+      clipped: el.scrollWidth > el.clientWidth,
+      lines: Math.round(el.getBoundingClientRect().height / lineHeight) > 1,
+      spill: row.scrollWidth - row.clientWidth,
+      text: el.textContent,
+    }
   })
-  expect(fits).toEqual({ clipped: true, spill: 0 })
+  expect(shown).toEqual({ clipped: false, lines: true, spill: 0, text: 'Where the interaction happened' })
 })
 
 test('the mark’s ears flick, on their own and when the brand is hovered', async ({ page }) => {

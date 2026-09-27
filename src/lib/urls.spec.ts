@@ -45,6 +45,9 @@ describe('docsHref', () => {
     expect(docsHref({ kind: 'guide', line: '4.1', slug: 'guards', anchor: 'global-guards' }, BETA)).toBe(
       '/docs/4.1/guards#global-guards',
     )
+    expect(docsHref({ kind: 'guide', line: '4.1', slug: 'tickets', group: 'recipes' }, BETA)).toBe(
+      '/docs/4.1/recipes/tickets',
+    )
   })
 
   it('builds line API URLs from the entry subpath, with lowercase member anchors', () => {
