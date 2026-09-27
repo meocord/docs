@@ -133,6 +133,21 @@ export function overlongLines(markdown: string, width = PROSE_WIDTH): { line: nu
   return [...found].sort(([a], [b]) => a - b).map(([line, length]) => ({ line, length }))
 }
 
+/** A gendered third-person pronoun, as a whole word in any case; content says they, them and their. */
+const GENDERED = /\b(she|her|hers|herself|he|him|his|himself)\b/gi
+
+/** Each gendered pronoun in a text, by its 1-based line, with the word as written. */
+export function gendered(text: string, lineOf: (offset: number) => number): { line: number; word: string }[] {
+  return [...text.matchAll(GENDERED)].map(match => ({ line: lineOf(match.index), word: match[0] }))
+}
+
+/** The gendered pronouns of a Markdown file's prose, leaving code alone. */
+export function genderedInMarkdown(markdown: string): { line: number; word: string }[] {
+  return withoutCode(markdown)
+    .split('\n')
+    .flatMap((text, index) => gendered(text, () => index + 1))
+}
+
 /** The language each opening code fence names, in order; an unmarked fence names none. */
 export function fenceLanguages(markdown: string): string[] {
   const languages: string[] = []

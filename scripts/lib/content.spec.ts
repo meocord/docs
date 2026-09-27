@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { checkSite, fenceLanguages, markdownLinks, overlongLines, parsePage, type SiteSnapshot } from './content.js'
+import {
+  checkSite,
+  fenceLanguages,
+  genderedInMarkdown,
+  markdownLinks,
+  overlongLines,
+  parsePage,
+  type SiteSnapshot,
+} from './content.js'
 import type { ConfigDocument } from './config-reference.js'
 import type { VersionsConfig } from './versions.js'
 
@@ -438,5 +446,24 @@ describe('overlongLines', () => {
     expect(overlongLines(`${'a '.repeat(29)}${family}`, 60)).toEqual([])
     const cjk = '界'.repeat(31)
     expect(overlongLines(`说 ${cjk}`, 60)).toEqual([{ line: 1, length: 65 }])
+  })
+})
+
+describe('genderedInMarkdown', () => {
+  it('names each gendered pronoun in prose by its line, as written, and none in code or inside other words', () => {
+    const text = [
+      'Ada opens the form, and her feedback reaches the staff.',
+      'He reviews it; this is theirs, and the other one his.',
+      '`const her = 1` and',
+      '```ts',
+      'const he = 2',
+      '```',
+      'Nothing here: there, then, the, this, whose.',
+    ].join('\n')
+    expect(genderedInMarkdown(text)).toEqual([
+      { line: 1, word: 'her' },
+      { line: 2, word: 'He' },
+      { line: 2, word: 'his' },
+    ])
   })
 })

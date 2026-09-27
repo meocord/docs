@@ -4,7 +4,16 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
-import { checkSite, EXAMPLE_SOURCE, overlongLines, PROSE_WIDTH, type SiteSnapshot } from './lib/content.js'
+import { commentsOf } from './lib/comments.js'
+import {
+  checkSite,
+  EXAMPLE_SOURCE,
+  gendered,
+  genderedInMarkdown,
+  overlongLines,
+  PROSE_WIDTH,
+  type SiteSnapshot,
+} from './lib/content.js'
 import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
@@ -24,6 +33,9 @@ function filesUnder(dir: string, root = dir): Record<string, string> {
   }
   return files
 }
+
+/** The 1-based line of an offset in a text. */
+const lineAt = (text: string, offset: number) => text.slice(0, offset).split('\n').length
 
 const config = readVersions(paths.versions)
 const site: SiteSnapshot = {
@@ -64,6 +76,17 @@ for (const { line, versions } of config.lines) {
 site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
 const problems = checkSite(site)
+
+// Content says they, them and their: in every Markdown file's prose, and in the examples' comments
+for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
+  if (file.endsWith('.md'))
+    for (const { line, word } of genderedInMarkdown(text))
+      problems.push(`content/${file}:${line}: "${word}" is a gendered pronoun; write they, them or their`)
+for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'examples'))))
+  if (file.endsWith('.ts'))
+    for (const comment of commentsOf(text))
+      for (const { line, word } of gendered(comment.text, index => lineAt(text, comment.offset + index)))
+        problems.push(`examples/${file}:${line}: "${word}" is a gendered pronoun; write they, them or their`)
 
 // Prose wraps at PROSE_WIDTH in every Markdown file of content/, the Guide and migration guides included
 for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))

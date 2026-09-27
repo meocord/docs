@@ -17,7 +17,7 @@ describe('EconomyMessageController', () => {
     app: App,
     controllers: [EconomyMessageController, ModerationMessageController],
   }).compile()
-  // A server whose member cache holds Ana, so her mention or ID resolves without a request
+  // A server whose member cache holds Ana, so their mention or ID resolves without a request
   const ana = { id: ANA, displayName: 'Ana', user: { id: ANA } } as unknown as GuildMember
   const inServer = (content: string) => createMockMessage({ content, guild: createMockGuild({ members: [ana] }) })
 
