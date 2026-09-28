@@ -1,6 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 import { guideRendered } from '../scripts/lib/guide'
+import { axe } from './axe'
 
 // The Guide page that embeds a playground: components.md's typed route params, the counter button
 const PAGE = '/docs/4.1/components'
@@ -132,10 +132,9 @@ for (const scheme of ['light', 'dark'] as const) {
       .locator('details')
       .first()
       .evaluate(details => ((details as HTMLDetailsElement).open = true))
-    const { violations } = await new AxeBuilder({ page })
-      .include('[data-playground-embed]')
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-      .analyze()
+    const { violations } = await axe(page, builder =>
+      builder.include('[data-playground-embed]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']),
+    )
     expect(
       violations.map(violation => `${violation.id}: ${violation.nodes.map(node => node.target).join(', ')}`),
     ).toEqual([])
