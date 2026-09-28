@@ -1,10 +1,11 @@
 /**
  * The inputs a `::playground` directive dispatches, written as a reader would send them, one step per
  * `;`: `/settings notify email enabled:true note:'hi there'; button counter/1; select pick a,b;
- * modal feedback about='bugs'; message !ping`. A first step `as dm` or `as user:13 name:ada` sets who
+ * userselect assign/7 13,14; modal feedback about='bugs'; message !ping; reaction ⭐ on 'nice';
+ * event guildMemberAdd`. A first step `as dm` or `as user:13 name:ada` sets who
  * they come from. Quotes are single, since the list sits in a double-quoted attribute.
  */
-import { type Caller, type Dispatch, MAX_STEPS, parseRunRequest } from './runtime/protocol'
+import { type Caller, type Dispatch, MAX_STEPS, parseRunRequest, PLAYGROUND_EVENTS } from './runtime/protocol'
 
 export interface DispatchList {
   steps: Dispatch[]
@@ -91,6 +92,33 @@ function parseStep(step: string): Dispatch | Caller | string {
       if (!content) return 'a message step is `message <content>`'
       return { kind: 'message', content: unquote(content) }
     }
+    case 'userselect': {
+      if (rest.length === 0) return 'userselect needs a customId'
+      if (rest.length !== 2) return 'a userselect step is `userselect <customId> <userId>,<userId>`'
+      return { kind: 'userselect', customId: unquote(rest[0]), users: split(rest[1], /,/)!.filter(Boolean) }
+    }
+    case 'reaction': {
+      // `reaction [remove] <emoji> [on <message content>]`
+      const removing = rest[0] === 'remove' || rest[0] === 'add'
+      const action = rest[0] === 'remove' ? 'remove' : 'add'
+      const [emoji, on, ...content] = removing ? rest.slice(1) : rest
+      if (!emoji) return 'a reaction step is `reaction <emoji> on <message>`'
+      if (on !== undefined && on !== 'on')
+        return `"${on}" follows the emoji; a reaction step is \`reaction <emoji> on <message>\``
+      if (on === 'on' && content.length === 0) return 'a reaction step names its message after `on`'
+      return {
+        kind: 'reaction',
+        emoji: unquote(emoji),
+        content: content.length > 0 ? unquote(content.join(' ')) : 'A message to react to.',
+        action,
+      }
+    }
+    case 'event': {
+      if (rest.length !== 1) return `an event step is \`event <name>\`, one of ${PLAYGROUND_EVENTS.join(', ')}`
+      if (!(PLAYGROUND_EVENTS as readonly string[]).includes(rest[0]))
+        return `"${rest[0]}" is no event a run emits; it emits ${PLAYGROUND_EVENTS.join(', ')}`
+      return { kind: 'event', event: rest[0] as (typeof PLAYGROUND_EVENTS)[number] }
+    }
     case 'as': {
       const caller: Caller = {}
       for (const word of rest) {
@@ -103,7 +131,7 @@ function parseStep(step: string): Dispatch | Caller | string {
       return rest.length > 0 ? caller : 'an `as` step names the caller: `as dm`, `as user:13 name:ada`'
     }
     default:
-      return `"${keyword ?? ''}" starts no step; a step is /command, button, select, modal or message`
+      return `"${keyword ?? ''}" starts no step; a step is /command, button, select, userselect, modal, message, reaction or event`
   }
 }
 

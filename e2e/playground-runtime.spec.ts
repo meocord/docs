@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 
@@ -236,6 +237,32 @@ test.describe('the playground runtime', () => {
     expect(unrouted.logs.every(line => !line.text.includes('\u001b['))).toBe(true)
   })
 
+  test('runs a reaction, a gateway event and a user select from the Guide as the bot does', async ({
+    page,
+    baseURL,
+  }) => {
+    await startRuntime(page, baseURL!)
+    const example = (file: string) => readFileSync(path.join('examples/4.1/src', file), 'utf8')
+    const reaction = await run(page, {
+      source: example('controllers/reaction/star.reaction.controller.ts'),
+      dispatch: [{ kind: 'reaction', emoji: '⭐', content: 'A good post', action: 'add' }],
+      caller: { username: 'mika' },
+    })
+    expect(reaction.steps[0]).toMatchObject({ ran: true, handlers: ['StarReactionController.star'] })
+    expect(reaction.steps[0].calls).toEqual([{ method: 'reply', payload: 'mika starred this.' }])
+    const event = await run(page, {
+      source: example('controllers/event/welcome.controller.ts'),
+      dispatch: [{ kind: 'event', event: 'guildMemberAdd' }],
+    })
+    expect(event.steps[0]).toMatchObject({ ran: true, handlers: ['WelcomeController.greet'] })
+    expect(event.steps[0].calls).toEqual([{ method: 'send', payload: 'Welcome to MeoCord Playground!' }])
+    const select = await run(page, {
+      source: example('controllers/select-menu/assign.select-menu.controller.ts'),
+      dispatch: [{ kind: 'userselect', customId: 'assign/7', users: ['100000000000000001', '14'] }],
+    })
+    expect(select.steps[0].calls[0]).toMatchObject({ payload: { content: 'Task 7 is assigned to reader, user-14.' } })
+  })
+
   test('answers a malformed request without running anything', async ({ page, baseURL }) => {
     await startRuntime(page, baseURL!)
     const answer = await page.evaluate(async () => {
@@ -252,7 +279,7 @@ test.describe('the playground runtime', () => {
       id: 999,
       ok: false,
       stage: 'request',
-      message: 'a dispatch is slash, button, select, modal or message',
+      message: 'a dispatch is slash, button, select, userselect, modal, message, reaction or event',
       logs: [],
     })
   })

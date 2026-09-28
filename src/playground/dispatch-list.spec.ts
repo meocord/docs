@@ -24,6 +24,22 @@ describe('parseDispatchList', () => {
     expect(parseDispatchList("message 'hello there'")).toEqual({ steps: [{ kind: 'message', content: 'hello there' }] })
   })
 
+  it('reads a user select, a reaction and a gateway event', () => {
+    expect(
+      parseDispatchList(
+        "userselect assign/7 13,14; reaction ⭐ on 'nice post'; reaction remove 👍; reaction add ⭐ on hi there; event guildMemberAdd",
+      ),
+    ).toEqual({
+      steps: [
+        { kind: 'userselect', customId: 'assign/7', users: ['13', '14'] },
+        { kind: 'reaction', emoji: '⭐', content: 'nice post', action: 'add' },
+        { kind: 'reaction', emoji: '👍', content: 'A message to react to.', action: 'remove' },
+        { kind: 'reaction', emoji: '⭐', content: 'hi there', action: 'add' },
+        { kind: 'event', event: 'guildMemberAdd' },
+      ],
+    })
+  })
+
   it('sets the caller from a first `as` step', () => {
     expect(parseDispatchList("as dm user:13 name:'Ada L'; /ping")).toEqual({
       caller: { inGuild: false, userId: '13', username: 'Ada L' },
@@ -49,7 +65,24 @@ describe('parseDispatchList', () => {
         'dispatch step 1: "about" is not a field; a modal step is `modal <customId> <field>=\'<text>\'`',
       ],
       ['message', 'dispatch step 1: a message step is `message <content>`'],
-      ['click x', 'dispatch step 1: "click" starts no step; a step is /command, button, select, modal or message'],
+      [
+        'click x',
+        'dispatch step 1: "click" starts no step; a step is /command, button, select, userselect, modal, message, reaction or event',
+      ],
+      ['userselect', 'dispatch step 1: userselect needs a customId'],
+      ['userselect assign/7', 'dispatch step 1: a userselect step is `userselect <customId> <userId>,<userId>`'],
+      ['userselect assign/7 me', "dispatch: a user select menu's users are 1 to 25 snowflakes"],
+      ['reaction', 'dispatch step 1: a reaction step is `reaction <emoji> on <message>`'],
+      [
+        'reaction ⭐ to hi',
+        'dispatch step 1: "to" follows the emoji; a reaction step is `reaction <emoji> on <message>`',
+      ],
+      ['reaction ⭐ on', 'dispatch step 1: a reaction step names its message after `on`'],
+      ['event', 'dispatch step 1: an event step is `event <name>`, one of guildMemberAdd, guildMemberRemove'],
+      [
+        'event clientReady',
+        'dispatch step 1: "clientReady" is no event a run emits; it emits guildMemberAdd, guildMemberRemove',
+      ],
       ['/ping; as dm', 'dispatch step 2: `as` sets the caller for the whole run, so it comes first'],
       ['as', 'dispatch step 1: an `as` step names the caller: `as dm`, `as user:13 name:ada`'],
       [

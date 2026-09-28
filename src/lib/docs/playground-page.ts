@@ -93,7 +93,7 @@ export function renderPlaygroundPage(line: string): NodeInstance | undefined {
       'Inputs',
       `<input${attributes({ id: 'playground-inputs', type: 'text', ...typing, 'aria-describedby': 'playground-inputs-hint', value: first?.dispatch ?? '' })}>`,
       `<p id="playground-inputs-hint" data-playground-quiet>${escapeHtml(
-        "Steps separated by ;, such as /ping, /settings notify email enabled:true, button counter/1, select pick a,b, modal feedback about='bugs' or message !ping. Ctrl+Enter or ⌘+Enter runs.",
+        "Steps separated by ;, such as /ping, /settings notify email enabled:true, button counter/1, select pick a,b, userselect assign/7 13,14, modal feedback about='bugs', message !ping, reaction ⭐ on 'nice post' or event guildMemberAdd. Ctrl+Enter or ⌘+Enter runs.",
       )}</p>`,
     ),
   ].join('')

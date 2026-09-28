@@ -35,6 +35,7 @@ interface Testing {
   createMockMessage(overrides?: Record<string, unknown>): Record<string, unknown>
   createChatInputOptions(options: Record<string, unknown>): unknown
   createModalFields(fields: Record<string, string>): unknown
+  createMockGuild(overrides?: Record<string, unknown>): Record<string, unknown>
   getResponse(interaction: unknown): { calls: { method: string; payload?: unknown; error?: unknown }[] }
 }
 interface Builder {
@@ -43,9 +44,20 @@ interface Builder {
 interface TestingModule {
   init(): Promise<unknown>
   close(): Promise<void>
-  dispatch(
-    input: unknown,
-  ): Promise<{ ran: boolean; handlers: { controller: { name: string }; method: string }[]; error?: unknown }>
+  dispatch(input: unknown, options?: { user: unknown; action: unknown }): Promise<DispatchedCall>
+  emit(event: string, ...args: unknown[]): Promise<{ ran: number }>
+}
+interface DispatchedCall {
+  ran: boolean
+  handlers: { controller: { name: string }; method: string }[]
+  error?: unknown
+}
+
+/** What a dispatched input did, before its calls are read. */
+interface Outcome {
+  ran: boolean
+  handlers: string[]
+  error?: unknown
 }
 
 /** The specifiers a reader may import, which every run names when it refuses another. */
@@ -120,15 +132,63 @@ function handlerRecorder(observer: () => (target: Class) => void, reached: strin
   return HandlerRecorder
 }
 
-/** The mock interaction or message a dispatch describes, from the caller it comes from. */
-function inputFor(
-  dispatch: Dispatch,
-  testing: Testing,
-  discord: Record<string, unknown>,
-  from: Record<string, unknown>,
-) {
-  const interaction = (type: string, overrides: Record<string, unknown>) =>
-    testing.createMockInteraction(discord[type], { ...from, ...overrides })
+/** What a run needs to turn one dispatch into a call: the modules, the module under test and the caller. */
+interface Context {
+  testing: Testing
+  discord: Record<string, unknown>
+  enums: { ReactionHandlerAction: { ADD: unknown; REMOVE: unknown } }
+  module: TestingModule
+  caller: { user: Record<string, unknown>; userId: string; username: string; inGuild: boolean }
+  /** The handlers the recorder heard start for the current input. */
+  reached: string[]
+}
+
+/** An input ready to send: how MeoCord receives it, and where what the handler answered is read from. */
+interface Prepared {
+  send(): Promise<Outcome>
+  calls(): RecordedCall[]
+}
+
+const fromCall = (call: DispatchedCall): Outcome => ({
+  ran: call.ran,
+  handlers: call.handlers.map(each => `${each.controller.name}.${each.method}`),
+  ...(call.error !== undefined && { error: call.error }),
+})
+
+/** An interaction's calls, as `getResponse` records them. */
+const interactionCalls = (testing: Testing, interaction: unknown) => () =>
+  testing.getResponse(interaction).calls.map(call => ({
+    method: call.method,
+    ...(call.payload !== undefined && { payload: toJson(call.payload) }),
+    ...(call.error !== undefined && { error: describeError(call.error).message }),
+  }))
+
+/** The calls a mock's `method` received, such as a message's replies or a member's direct messages. */
+const mockCalls = (target: Record<string, unknown>, method: string) => () =>
+  ((target[method] as MockFn | undefined)?.mock.calls ?? []).map(args => ({ method, payload: toJson(args[0]) }))
+
+/**
+ * A user as MeoCord's own tests make one, a person and not a bot, with every default its mocks carry, named
+ * as the run asks.
+ */
+function mockUser(testing: Testing, id: string, username: string): Record<string, unknown> {
+  return testing.createMockUser({ id, username })
+}
+
+/** The playground's server, where a call comes from unless the caller is in a DM. */
+const SERVER_NAME = 'MeoCord Playground'
+
+/** A dispatch as MeoCord receives it, from the caller it comes from. */
+function prepare(dispatch: Dispatch, context: Context): Prepared {
+  const { testing, discord, module, caller } = context
+  const { user } = caller
+  const from = caller.inGuild
+    ? { user, author: user }
+    : { user, author: user, guild: null, guildId: null, member: null }
+  const interaction = (type: string, overrides: Record<string, unknown>): Prepared => {
+    const input = testing.createMockInteraction(discord[type], { ...from, ...overrides })
+    return { send: async () => fromCall(await module.dispatch(input)), calls: interactionCalls(testing, input) }
+  }
   switch (dispatch.kind) {
     case 'slash': {
       // `settings notify email` is the command, then a subcommand group and a subcommand, as Discord sends it
@@ -139,34 +199,65 @@ function inputFor(
           : path.length === 1
             ? { subcommand: path[0] }
             : {}
-      const input = interaction('ChatInputCommandInteraction', { commandName: command })
-      input.options = testing.createChatInputOptions({ ...nesting, ...dispatch.options })
-      return input
+      return interaction('ChatInputCommandInteraction', {
+        commandName: command,
+        options: testing.createChatInputOptions({ ...nesting, ...dispatch.options }),
+      })
     }
     case 'button':
       return interaction('ButtonInteraction', { customId: dispatch.customId })
     case 'select':
       return interaction('StringSelectMenuInteraction', { customId: dispatch.customId, values: dispatch.values })
+    case 'userselect': {
+      const Collection = discord.Collection as new (entries: [string, unknown][]) => unknown
+      const users = new Collection(
+        dispatch.users.map(id => [id, id === caller.userId ? user : mockUser(testing, id, `user-${id}`)]),
+      )
+      return interaction('UserSelectMenuInteraction', { customId: dispatch.customId, values: dispatch.users, users })
+    }
     case 'modal':
       return interaction('ModalSubmitInteraction', {
         customId: dispatch.customId,
         fields: testing.createModalFields(dispatch.fields),
       })
-    case 'message':
-      return testing.createMockMessage({ ...from, content: dispatch.content })
+    case 'message': {
+      const message = testing.createMockMessage({ ...from, content: dispatch.content })
+      return { send: async () => fromCall(await module.dispatch(message)), calls: mockCalls(message, 'reply') }
+    }
+    case 'reaction': {
+      const message = testing.createMockMessage({ ...from, content: dispatch.content })
+      const { emoji } = dispatch
+      const reaction = testing.createMockInteraction(discord.MessageReaction, {
+        message,
+        emoji: { name: emoji, id: null, identifier: encodeURIComponent(emoji), toString: () => emoji },
+        count: 1,
+      })
+      const { ADD, REMOVE } = context.enums.ReactionHandlerAction
+      const action = dispatch.action === 'add' ? ADD : REMOVE
+      return {
+        send: async () => fromCall(await module.dispatch(reaction, { user, action })),
+        calls: mockCalls(message, 'reply'),
+      }
+    }
+    case 'event': {
+      const guild = testing.createMockGuild()
+      guild.name = SERVER_NAME
+      const member = testing.createMockInteraction(discord.GuildMember, {
+        guild,
+        user,
+        id: caller.userId,
+        displayName: caller.username,
+      })
+      return {
+        // An event names no handler; the recorder heard which ran
+        send: async () => {
+          const { ran } = await module.emit(dispatch.event, member)
+          return { ran: ran > 0, handlers: [...context.reached] }
+        },
+        calls: mockCalls(member, 'send'),
+      }
+    }
   }
-}
-
-/** What an input was answered with: an interaction's recorded calls, or a message's replies. */
-function callsOf(dispatch: Dispatch, input: Record<string, unknown>, testing: Testing): RecordedCall[] {
-  if (dispatch.kind !== 'message')
-    return testing.getResponse(input).calls.map(call => ({
-      method: call.method,
-      ...(call.payload !== undefined && { payload: toJson(call.payload) }),
-      ...(call.error !== undefined && { error: describeError(call.error).message }),
-    }))
-  const reply = input.reply as MockFn | undefined
-  return (reply?.mock.calls ?? []).map(args => ({ method: 'reply', payload: toJson(args[0]) }))
 }
 
 /**
@@ -259,28 +350,35 @@ export async function runPlayground(
   }
 
   const { userId = '100000000000000001', username = 'reader', inGuild = true } = request.caller ?? {}
+  const enums = modules['meocord/enum'] as Context['enums']
   const steps: Step[] = []
   try {
     for (const dispatch of request.dispatch) {
-      // A person, not a bot: MeoCord answers no bot's message
-      const user = testing.createMockUser({ id: userId, username })
-      const from = inGuild ? { user, author: user } : { user, author: user, guild: null, guildId: null, member: null }
-      let input: Record<string, unknown>
+      const user = mockUser(testing, userId, username)
+      const context: Context = {
+        testing,
+        discord,
+        enums,
+        module: testingModule,
+        caller: { user, userId, username, inGuild },
+        reached,
+      }
+      let prepared: Prepared
       try {
-        input = inputFor(dispatch, testing, discord, from)
+        prepared = prepare(dispatch, context)
       } catch (error) {
         steps.push({ input: dispatch, ran: false, handlers: [], error: describeError(error), calls: [] })
         continue
       }
       reached.length = 0
       try {
-        const outcome = await testingModule.dispatch(input)
+        const outcome = await prepared.send()
         steps.push({
           input: dispatch,
           ran: outcome.ran,
-          handlers: outcome.handlers.map(each => `${each.controller.name}.${each.method}`),
+          handlers: outcome.handlers,
           ...(outcome.error !== undefined && { error: describeError(outcome.error) }),
-          calls: callsOf(dispatch, input, testing),
+          calls: prepared.calls(),
         })
       } catch (error) {
         // An error no filter handled: the fallback has answered it, and dispatch rethrows it; the handler
@@ -290,7 +388,7 @@ export async function runPlayground(
           ran: reached.length > 0,
           handlers: [...reached],
           error: describeError(error),
-          calls: callsOf(dispatch, input, testing),
+          calls: prepared.calls(),
         })
       }
     }

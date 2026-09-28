@@ -6,7 +6,7 @@ import type { Dispatch, RecordedCall } from '../runtime/protocol'
 
 const quoted = (text: string) => (/[\s,;=:]/.test(text) ? `'${text}'` : text)
 
-/** An input as a `dispatch` step writes it: `/settings notify email enabled:true`, `button counter/1`. */
+/** An input as a `dispatch` step writes it: `/settings notify email enabled:true`, `reaction ⭐ on 'hello'`. */
 export function describeInput(input: Dispatch): string {
   switch (input.kind) {
     case 'slash': {
@@ -24,8 +24,14 @@ export function describeInput(input: Dispatch): string {
         `modal ${input.customId}`,
         ...Object.entries(input.fields).map(([name, value]) => `${name}=${quoted(value)}`),
       ].join(' ')
+    case 'userselect':
+      return `userselect ${input.customId} ${input.users.join(',')}`
     case 'message':
       return `message ${input.content}`
+    case 'reaction':
+      return `reaction ${input.action === 'remove' ? 'remove ' : ''}${input.emoji} on ${quoted(input.content)}`
+    case 'event':
+      return `event ${input.event}`
   }
 }
 
