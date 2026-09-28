@@ -35,6 +35,7 @@ import { apiArrangement, apiModel } from '../src/lib/docs/api-site.js'
 import { cliHref, cliManifest } from '../src/lib/docs/cli-site.js'
 import { GLANCE_TOPICS, glanceHref } from '../src/lib/docs/glance.js'
 import type { SearchManifest } from '../src/lib/search-manifest.js'
+import { docsHref } from '../src/lib/urls.js'
 
 const PAGEFIND_DIR = path.join(ROOT, 'public', '_pagefind')
 const PALETTE_DIR = path.join(ROOT, 'public', 'palette')
@@ -133,10 +134,15 @@ for (const line of config.lines) {
           url: glanceHref(line.line, topic.slug),
         }))
       : []
+  // The playground, where the Guide is rendered: every line it renders for gets a runtime
+  const playground = guideRendered(line.line)
+    ? [{ name: 'Playground', kind: 'guide', url: docsHref({ kind: 'playground', line: line.line }, config) }]
+    : []
   const palette = JSON.stringify(
     paletteIndex(line.line, guides, api, since, config, hrefOf, [
       ...(cli ? cliPaletteEntries(cli, cliHrefOf) : []),
       ...glance,
+      ...playground,
     ]),
   )
   const palettePath = `/palette/${line.line}.${hash(palette)}.json`

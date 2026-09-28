@@ -310,7 +310,8 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       }
       const link = parsed.target
       const line = lines.get(link.line)!
-      if (link.kind === 'line' || link.kind === 'missing' || link.kind === 'api-index') continue
+      if (link.kind === 'line' || link.kind === 'missing' || link.kind === 'api-index' || link.kind === 'playground')
+        continue
       if (link.kind === 'api') {
         const problem = apiLinkProblem(link, line.versions)
         if (problem) problems.push(`${where}: ${target} ${problem}`)

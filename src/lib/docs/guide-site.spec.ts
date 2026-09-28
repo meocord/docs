@@ -25,6 +25,10 @@ write('how-a-call-runs', `title: How a call runs\nchapter: pipeline\norder: 1\ns
 write('tickets', 'title: A ticket system\nchapter: appendix\ngroup: recipes\norder: 1\nsummary: Tickets.', 'Text.')
 write('broken', 'title: Broken\nchapter: nowhere', 'Text.')
 
+// The lines with a playground runtime, as the build's manifest would name them
+const frames: Record<string, string> = { '4.1': '/playground/4.1.0-beta.7.0123456789.html' }
+vi.mock('@/lib/docs/playground-site', () => ({ playgroundFrame: (line: string) => frames[line] }))
+
 vi.stubEnv('MEOCORD_DOCS_ROOT', root)
 vi.stubEnv('DOCS_NEXT', '1')
 const { guideEnabled, guideEntries, guidePagesTeaching, guideSidebar, guideTabs, guideView, resolveGuideLink } =
@@ -117,7 +121,13 @@ describe('the Guide', () => {
       { title: 'Guide', href: '/docs/4.1/services', current: true },
       // The API opens on its index, where it is arranged by kind
       { title: 'API', href: '/docs/4.1/api', current: false },
+      { title: 'Playground', href: '/docs/4.1/playground', current: false },
     ])
-    expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true])
+    expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true, false])
+    expect(guideTabs('4.1', 'playground').map(tab => tab.current)).toEqual([false, false, true])
+    // A line with no playground runtime has no Playground tab
+    delete frames['4.1']
+    expect(guideTabs('4.1', 'guide').map(tab => tab.title)).toEqual(['Guide', 'API'])
+    frames['4.1'] = '/playground/4.1.0-beta.7.0123456789.html'
   })
 })

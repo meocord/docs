@@ -25,6 +25,10 @@ describe('playgroundProblems', () => {
     expect(playgroundProblems('a.html', `<main>${embed(FRAME)}${embed(FRAME)}</main>`, dir)).toEqual([])
     expect(playgroundProblems('b.html', '<li data-frame="true"></li>', dir)).toEqual([])
     expect(playgroundCount(`${embed(FRAME)}${embed(FRAME)}`)).toBe(2)
+    // The playground page names the frame on its own root
+    const page = `<div data-playground-page="true" data-playground-src="${FRAME}"><textarea></textarea></div>`
+    expect(playgroundProblems('c.html', page, dir)).toEqual([])
+    expect(playgroundCount(page)).toBe(1)
   })
 
   it('refuses a playground rendered without its runtime, one with no frame, and a frame that is missing or not one', () => {

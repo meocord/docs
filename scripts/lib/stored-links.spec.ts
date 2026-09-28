@@ -32,6 +32,10 @@ describe('parseStored', () => {
       target: { kind: 'migrating', anchor: 'start' },
     })
     expect(parseStored('/docs/4.0/missing/defer', lines)).toMatchObject({ target: { kind: 'missing', id: 'defer' } })
+    expect(parseStored('/docs/4.1/playground', lines)).toMatchObject({ target: { kind: 'playground', line: '4.1' } })
+    expect(parseStored('/docs/4.1/playground#v1.abc', lines)).toMatchObject({
+      target: { kind: 'playground', code: 'v1.abc' },
+    })
   })
 
   it('says why a link is not a stored one', () => {

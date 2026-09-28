@@ -7,6 +7,7 @@ import { apiLandingHref, apiModel, lineVersions, resolveSiteHref } from '@/lib/d
 import { CLI_SECTION, cliCommand, cliHref, cliManifest } from '@/lib/docs/cli-site'
 import { FIGURES } from '@/lib/docs/figures'
 import { playgroundEmbed } from '@/lib/docs/playground-embed'
+import { playgroundFrame } from '@/lib/docs/playground-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
@@ -179,12 +180,24 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
   }
 }
 
-/** The sidebar's tabs where the Guide is rendered: the Guide's first page, and the line's API reference. */
-export function guideTabs(line: string, current: 'guide' | 'api'): NavTab[] {
+/**
+ * The sidebar's tabs where the Guide is rendered: the Guide's first page, the line's API reference, and
+ * its playground where the line has one.
+ */
+export function guideTabs(line: string, current: 'guide' | 'api' | 'playground'): NavTab[] {
   const [first] = guideEntries(line)
   const api = apiLandingHref(line)
   return [
     ...(first ? [{ title: 'Guide', href: guidePageHref(line, first.page), current: current === 'guide' }] : []),
     ...(api ? [{ title: 'API', href: api, current: current === 'api' }] : []),
+    ...(playgroundFrame(line)
+      ? [
+          {
+            title: 'Playground',
+            href: docsHref({ kind: 'playground', line }, VERSIONS),
+            current: current === 'playground',
+          },
+        ]
+      : []),
   ]
 }
