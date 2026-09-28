@@ -7,7 +7,7 @@ import { pageAnchors } from '../../../scripts/lib/content'
 import { apiModel } from '@/lib/docs/api-site'
 import { FIGURES } from '@/lib/docs/figures'
 import { Prose } from '@/components/nodes'
-import { everyStage, HANDLER_KINDS, PIPELINE, pipelineFigure } from '@/lib/docs/pipeline'
+import { everyStage, HANDLER_KINDS, LEGACY_STAGES, PIPELINE, pipelineFigure, stagesNamed } from '@/lib/docs/pipeline'
 
 const figure = () => renderToStaticMarkup(Div({ children: pipelineFigure(url => url) }).render())
 
@@ -66,7 +66,7 @@ describe('the pipeline figure', () => {
     const markup = figure()
     expect(markup.match(/<input type="radio" name="pipeline-kind"/g)).toHaveLength(HANDLER_KINDS.length + 1)
     expect(markup).toContain('<input type="radio" name="pipeline-kind" checked="" value="all"/>')
-    expect(markup.match(/<li data-kinds=/g)).toHaveLength(everyStage().length)
+    expect(markup.match(/<li id="stage-[a-z-]+" data-kinds=/g)).toHaveLength(everyStage().length)
     const names = [...markup.matchAll(/<div data-stage="true"><a href="[^"]*">([^<]+)<\/a>/g)].map(match => match[1])
     expect(names).toEqual(everyStage().map(stage => stage.name.replace(/'/g, '&#x27;')))
     // Interceptors wrap validation, pipes, cooldowns, the lock and the handler
@@ -86,6 +86,27 @@ describe('the pipeline figure', () => {
     const named = rules.filter(rule => rule.includes('data-pipeline'))
     expect(named.length).toBeGreaterThan(10)
     expect(named.filter(rule => !rule.startsWith('& [data-pipeline-figure]'))).toEqual([])
+  })
+
+  it("anchors each stage for an API page's link, apart from the page's own headings", () => {
+    const markup = figure()
+    const ids = everyStage().map(stage => `stage-${stage.id}`)
+    for (const id of ids) expect(markup).toContain(`<li id="${id}"`)
+    const page = readFileSync('content/4.1-next/how-a-call-runs.md', 'utf8')
+    expect(ids.filter(id => pageAnchors(page).has(id))).toEqual([])
+  })
+
+  it('finds the stages a tag names, by its id or the name released tags used before it', () => {
+    expect(stagesNamed('guards').map(stage => stage.id)).toEqual(['guards'])
+    expect(stagesNamed('observers').map(stage => stage.id)).toEqual(['observers-start', 'observers-settled'])
+    expect(stagesNamed('lock').map(stage => stage.id)).toEqual(['defer-lock'])
+    expect(stagesNamed('prelude')).toEqual([])
+    // An older name stands for stages the figure has, never for one of its own ids
+    const known = new Set(everyStage().map(stage => stage.id))
+    for (const [name, ids] of Object.entries(LEGACY_STAGES)) {
+      expect(known.has(name)).toBe(false)
+      expect(ids.every(id => known.has(id))).toBe(true)
+    }
   })
 
   it('is the one figure a Guide page can name, and content:check knows it', () => {

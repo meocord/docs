@@ -11,6 +11,7 @@ import {
   apiSidebar,
   glanceArticle,
   renderApiIndex,
+  runsAt,
 } from '@/lib/docs/api-render'
 import { apiModel, apiSections } from '@/lib/docs/api-site'
 import { glanceTopic } from '@/lib/docs/glance'
@@ -231,6 +232,33 @@ describe('the API by kind', () => {
     // The index and kinds exist only where the API is arranged by kind
     vi.stubEnv('DOCS_NEXT', '')
     expect(renderApiIndex('4.1')).toBeUndefined()
+    vi.stubEnv('DOCS_NEXT', '1')
+  })
+
+  it('says where an entry runs, after its description, each stage linked to its place in the figure', () => {
+    const model = apiModel('4.1')!
+    const defer = model.symbol('decorators', 'Defer')!
+    const stages = runsAt('4.1', defer)
+    expect(stages.map(stage => stage.href)).toEqual([
+      '/docs/4.1/how-a-call-runs#stage-defer',
+      '/docs/4.1/how-a-call-runs#stage-defer-lock',
+    ])
+    const { nodes, toc } = apiArticle(defer, {}, [], stages)
+    expect(toc[0]).toEqual({ id: 'where-it-runs', title: 'Where it runs', depth: 2 })
+    const markup = html(nodes)
+    expect(markup).toContain('<h2 id="where-it-runs">Where it runs</h2>')
+    expect(markup).toContain('<a href="/docs/4.1/how-a-call-runs#stage-defer-lock">@Defer: lock</a> — ')
+    expect(markup.indexOf('where-it-runs')).toBeLessThan(markup.indexOf('id="parameters"'))
+    // A tag's older stage name stands for each stage it covers
+    expect(runsAt('4.1', model.symbol('decorators', 'Observer')!).map(stage => stage.name)).toEqual([
+      'Observers: onStart',
+      'Observers: onSettled',
+    ])
+    // No note without a tag, nor where the Guide, and so the figure, isn't rendered
+    expect(runsAt('4.1', model.symbol('decorators', 'MeoCord')!)).toEqual([])
+    expect(apiArticle(defer).toc.some(entry => entry.id === 'where-it-runs')).toBe(false)
+    vi.stubEnv('DOCS_NEXT', '')
+    expect(runsAt('4.1', defer)).toEqual([])
     vi.stubEnv('DOCS_NEXT', '1')
   })
 
