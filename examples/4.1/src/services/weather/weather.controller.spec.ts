@@ -50,7 +50,7 @@ describe('weatherProviders', () => {
 describe('a token nothing provides', () => {
   it('stops compile, naming the class and the token', () => {
     expect(() => MeoCordTestingModule.create({ controllers: [WeatherController] }).compile()).toThrow(
-      "WeatherService injects Symbol(WeatherSettings), which nothing provides: add a provider for it to the testing module's providers.",
+      "WeatherService: it injects Symbol(WeatherSettings), which nothing provides: add a provider for it to the testing module's providers.",
     )
   })
 })
