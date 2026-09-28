@@ -35,6 +35,9 @@ test. It gives a bot the structure a web framework gives a server.
 - **Tested the way it runs.** `invoke` runs a handler through the same pipeline the bot does, with mocks of
   discord.js's own classes. See [Testing](guide:testing).
 
+For a small bot, or to learn how Discord works, discord.js alone may be all you need; the comparison below shows the
+other frameworks built on it.
+
 It covers every interaction Discord sends, from slash commands, subcommands and autocomplete to buttons, the five
 select menus, modals, context menus and activity entry points, plus messages, reactions and any gateway event. A CLI
 creates the project, scaffolds its parts, builds it and runs it.
