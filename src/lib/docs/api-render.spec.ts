@@ -9,9 +9,11 @@ import {
   apiIndexArticle,
   apiKindArticle,
   apiSidebar,
+  glanceArticle,
   renderApiIndex,
 } from '@/lib/docs/api-render'
-import { apiModel } from '@/lib/docs/api-site'
+import { apiModel, apiSections } from '@/lib/docs/api-site'
+import { glanceTopic } from '@/lib/docs/glance'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
 
 // A fixed release, so the layouts are checked against signatures that do not change with each sync.
@@ -169,7 +171,10 @@ describe('the API by kind', () => {
 
   it('groups the sidebar by kind, heading each category once, before its first symbol', () => {
     const groups = apiSidebar('4.1', apiModel('4.1')!)
-    expect(groups[0].title).toBe('Controllers')
+    // The cheat sheets come first, then the kinds
+    expect(groups[0].title).toBe('At a glance')
+    expect(groups[0].items.map(item => item.title)).toEqual(['Decorators', 'respond()', 'Testing helpers', 'CLI'])
+    expect(groups[1].title).toBe('Controllers')
     const decorators = groups.find(group => group.title === 'Decorators')!
     expect(decorators.items.find(item => item.title === 'Cooldown')?.category).toBe('Pipeline stages')
     const nav = renderToStaticMarkup(SidebarNav({ groups: [decorators] }).render())
@@ -181,6 +186,35 @@ describe('the API by kind', () => {
     expect(nav).toMatch(/<ul aria-label="Pipeline stages"><li><a href="\/docs\/4\.1\/api\/decorators\/[A-Za-z]+"/)
     expect(nav).toContain('<a href="/docs/4.1/api/decorators/Cooldown"')
     expect(nav.match(/<ul aria-label="Pipeline stages">[\s\S]*?<\/ul>/)![0]).toContain('/decorators/Cooldown"')
+  })
+
+  it('draws each cheat sheet from the API or the CLI: how each entry is called, and what it does', () => {
+    const model = apiModel('4.1')!
+    const sheet = (slug: string) => html(glanceArticle('4.1', model, glanceTopic(slug)!)!.nodes)
+    const decorators = sheet('decorators')
+    expect(decorators).toContain('<h1>Decorators at a glance</h1>')
+    expect(decorators).toContain('<h2 id="pipeline-stages">Pipeline stages</h2>')
+    expect(decorators).toContain('<a href="/docs/4.1/api/decorators/Cooldown"><code>@Cooldown(options)</code></a>')
+    expect(decorators).toContain('<code>@UseGuard(...entries)</code>')
+    const respond = sheet('respond')
+    expect(respond).toContain('<code>respond(interaction)</code>')
+    expect(respond).toContain(
+      '<a href="/docs/4.1/api/responses/ResponseState#send"><code>send(payload, options?)</code></a>',
+    )
+    expect(respond).toContain('<h2 id="properties">Properties</h2>')
+    const testing = sheet('testing')
+    expect(testing).toContain('<code>createMockMessage(overrides?)</code>')
+    // A helper declared as a variable, with no signature of its own, is named
+    expect(testing).toContain('<a href="/docs/4.1/api/testing/createMockUser"><code>createMockUser</code></a>')
+    // Helpers only: an interface of the testing kind isn't one
+    expect(testing).not.toContain('MockMessageOverrides')
+    const cli = sheet('cli')
+    expect(cli).toContain('data-example="npx meocord@beta create my-bot"')
+    expect(cli).toContain(
+      '<a href="/docs/4.1/api/cli/generate#controller"><code>meocord generate controller</code></a>',
+    )
+    // An exact version's API has no cheat sheets
+    expect(apiSections(apiModel('4.1', '4.1.0-beta.7')!).some(section => section.slug === 'glance')).toBe(false)
   })
 
   it('shows every symbol with its summary on the index, and a kind by category on its page', () => {

@@ -33,6 +33,7 @@ import type { SinceEntry } from './lib/since.js'
 import { readVersions } from './lib/versions.js'
 import { apiArrangement, apiModel } from '../src/lib/docs/api-site.js'
 import { cliHref, cliManifest } from '../src/lib/docs/cli-site.js'
+import { GLANCE_TOPICS, glanceHref } from '../src/lib/docs/glance.js'
 import type { SearchManifest } from '../src/lib/search-manifest.js'
 
 const PAGEFIND_DIR = path.join(ROOT, 'public', '_pagefind')
@@ -123,8 +124,20 @@ for (const line of config.lines) {
   const searchPath = `/_pagefind/${line.line}.${hashTree(staging)}/`
   renameSync(staging, path.join(ROOT, 'public', searchPath))
 
+  // The cheat sheets, where the API is arranged by kind: `Decorators at a glance`
+  const glance =
+    apiArrangement(line.line) === 'kind'
+      ? GLANCE_TOPICS.map(topic => ({
+          name: `${topic.title} at a glance`,
+          kind: 'cheat-sheet',
+          url: glanceHref(line.line, topic.slug),
+        }))
+      : []
   const palette = JSON.stringify(
-    paletteIndex(line.line, guides, api, since, config, hrefOf, cli ? cliPaletteEntries(cli, cliHrefOf) : []),
+    paletteIndex(line.line, guides, api, since, config, hrefOf, [
+      ...(cli ? cliPaletteEntries(cli, cliHrefOf) : []),
+      ...glance,
+    ]),
   )
   const palettePath = `/palette/${line.line}.${hash(palette)}.json`
   writeFileSync(path.join(ROOT, 'public', palettePath), `${palette}\n`)

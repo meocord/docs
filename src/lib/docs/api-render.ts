@@ -28,7 +28,17 @@ import { specFor, VERSIONS } from '@/config/versions'
 import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
 import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
-import { CLI_SECTION, cliCommand, cliManifest, exampleInvocation, subcommandAnchor, usageOf } from '@/lib/docs/cli-site'
+import {
+  CLI_SECTION,
+  cliCommand,
+  cliHref,
+  cliManifest,
+  commandSummary,
+  exampleInvocation,
+  subcommandAnchor,
+  usageOf,
+} from '@/lib/docs/cli-site'
+import { callShape, firstSentence, GLANCE_SECTION, glanceHref, glanceTopic, type GlanceTopic } from '@/lib/docs/glance'
 import type { CliArgument, CliCommand, CliOption } from '../../../scripts/lib/cli'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { REPOSITORY } from '@/lib/docs/render'
@@ -714,6 +724,147 @@ export function renderApiKind(line: string, section: string) {
   return Window({
     crumbs: [...trail.slice(0, 2), { title: trail[2]?.title ?? section }],
     groups: apiSidebar(line, model),
+    tabs: guideTabs(line, 'api'),
+    version: versionChoices(line),
+    repository: REPOSITORY,
+    toc: article.toc,
+    children: Prose({ children: article.nodes }),
+  })
+}
+
+/** A cheat sheet's row: how an entry is called, linked to its page, and the first sentence of what it does. */
+function glanceRow(key: string, shapes: string[], href: string, summary: string) {
+  return {
+    key,
+    cells: [
+      Span(
+        shapes.flatMap((shape, index) => [...(index > 0 ? [' '] : []), A({ key: shape, href, children: Code(shape) })]),
+      ),
+      ...markdown(firstSentence(summary), `${key}-what`),
+    ] as Child[],
+  }
+}
+
+/** How a symbol is called, once per distinct shape of its signatures: `@Cooldown(options)`; its name without one. */
+function shapesOf(symbol: ApiSymbol, prefix = ''): string[] {
+  if (symbol.signatures.length === 0) return [prefix + symbol.name]
+  return [...new Set(symbol.signatures.map(signature => prefix + callShape(symbol.name, signature)))]
+}
+
+/** A cheat sheet's content, from the line's API or its CLI's manifest; undefined for a topic it has nothing for. */
+export function glanceArticle(
+  line: string,
+  model: ApiModel,
+  topic: GlanceTopic,
+): { nodes: Child[]; toc: TocEntry[] } | undefined {
+  const toc: TocEntry[] = []
+  const nodes: Child[] = [H1(`${topic.title} at a glance`, { key: 'title' }), ...markdown(topic.summary, 'lead')]
+  const heading = (title: string) => {
+    const id = headingId(title)
+    toc.push({ id, title, depth: 2 })
+    return H2(title, { key: `h-${id}`, id })
+  }
+  // A kind's symbols by category, each a row; `keep` picks the ones the sheet is about
+  const byCategory = (section: string, header: string, keep: (symbol: ApiSymbol) => boolean, prefix = '') => {
+    const listings = apiSections(model).find(candidate => candidate.slug === section)?.symbols ?? []
+    const categories = [...new Set(listings.map(listing => listing.category ?? 'Other'))]
+    return categories.flatMap(category => {
+      const rows = listings
+        .filter(listing => (listing.category ?? 'Other') === category)
+        .flatMap(listing => {
+          const symbol = model.symbol(section, listing.name)
+          return symbol && keep(symbol)
+            ? [glanceRow(listing.name, shapesOf(symbol, prefix), listing.href, listing.summary)]
+            : []
+        })
+      return rows.length > 0
+        ? [heading(category), cliTable(`t-${headingId(category)}`, [header, 'What it does'], rows)]
+        : []
+    })
+  }
+
+  if (topic.slug === 'decorators') {
+    nodes.push(...byCategory('decorators', 'Decorator', () => true, '@'))
+  } else if (topic.slug === 'testing') {
+    nodes.push(...byCategory('testing', 'Helper', symbol => symbol.kind === 'function' || symbol.kind === 'variable'))
+  } else if (topic.slug === 'respond') {
+    const respond = model.symbol('responses', 'respond')
+    const state = model.symbol('responses', 'ResponseState')
+    if (!respond || !state) return undefined
+    const stateHref = model.href({ section: state.section, symbol: state.name })
+    const rows = (kind: string) =>
+      state.members
+        .filter(member => (kind === 'method') === (member.kind === 'method'))
+        .map(member =>
+          glanceRow(
+            member.name,
+            member.signatures.length > 0
+              ? [...new Set(member.signatures.map(signature => callShape(member.name, signature)))]
+              : [member.name],
+            `${stateHref}#${member.anchor}`,
+            member.description,
+          ),
+        )
+    nodes.push(
+      cliTable(
+        't-respond',
+        ['Call', 'What it does'],
+        [
+          glanceRow(
+            'respond',
+            shapesOf(respond),
+            model.href({ section: respond.section, symbol: respond.name }),
+            respond.description,
+          ),
+        ],
+      ),
+      heading('Methods'),
+      cliTable('t-methods', ['Method', 'What it does'], rows('method')),
+      heading('Properties'),
+      cliTable('t-properties', ['Property', 'What it holds'], rows('property')),
+    )
+  } else if (topic.slug === 'cli') {
+    const manifest = cliManifest(lineVersions(line)[0])
+    if (!manifest) return undefined
+    const spec = specFor(line)
+    for (const command of manifest.commands) {
+      const everyOne = [command, ...command.commands]
+      nodes.push(
+        heading(`meocord ${command.name}`),
+        cliTable(
+          `t-${command.name}`,
+          ['Command', 'What it does', 'Example'],
+          everyOne.map(each => {
+            const example = exampleInvocation(each, spec)
+            const href = cliHref(line, command.name, each === command ? undefined : subcommandAnchor(each))
+            return {
+              key: each.path.join(' '),
+              cells: [
+                A({ href, children: Code(`meocord ${each.path.join(' ')}`) }),
+                ...markdown(firstSentence(commandSummary(each)), `${each.path.join('-')}-what`),
+                // An example a reader copies, which commands:check reads
+                Code(example, { 'data-example': example }),
+              ] as Child[],
+            }
+          }),
+        ),
+      )
+    }
+  }
+  return { nodes, toc }
+}
+
+/** A cheat sheet's page in the docs window, where the line's API is arranged by kind; undefined otherwise. */
+export function renderGlancePage(line: string, slug: string) {
+  const model = apiModel(line)
+  const topic = glanceTopic(slug)
+  if (!model || model.scheme.by !== 'kind' || !topic) return undefined
+  const article = glanceArticle(line, model, topic)
+  if (!article) return undefined
+  const trail = apiCrumbs(line, model, GLANCE_SECTION)
+  return Window({
+    crumbs: [...trail, { title: topic.title }],
+    groups: apiSidebar(line, model, glanceHref(line, slug)),
     tabs: guideTabs(line, 'api'),
     version: versionChoices(line),
     repository: REPOSITORY,

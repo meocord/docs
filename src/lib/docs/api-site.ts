@@ -7,6 +7,7 @@ import { VERSIONS } from '@/config/versions'
 import type { Layouts } from '@/lib/docs/api-layout'
 import { API_KINDS, ApiModel, type ApiScheme, type ApiSection, type SinceData } from '@/lib/docs/api-model'
 import { cliManifest, cliSection } from '@/lib/docs/cli-site'
+import { GLANCE_TOPICS, glanceSection } from '@/lib/docs/glance'
 import { docsHref, lineOf, resolveStoredHref } from '@/lib/urls'
 
 const semverParts = (version: string) => {
@@ -94,15 +95,27 @@ export function apiModel(line: string, version?: string, by = apiArrangement(lin
 }
 
 /**
- * An API's sections as its pages list them: the model's, and where it is arranged by kind, the CLI's
- * commands in the kinds' order, for a version whose package ships the CLI's manifest.
+ * An API's sections as its pages list them: the model's, and where it is arranged by kind, in the kinds'
+ * order, the CLI's commands for a version whose package ships the CLI's manifest, and the line's cheat
+ * sheets first, which an exact version's API doesn't have.
  */
 export function apiSections(model: ApiModel): ApiSection[] {
   const sections = model.sections()
-  const manifest = model.scheme.by === 'kind' ? cliManifest(model.version ?? lineVersions(model.line)[0]) : undefined
-  if (!manifest) return sections
+  if (model.scheme.by !== 'kind') return sections
+  const manifest = cliManifest(model.version ?? lineVersions(model.line)[0])
   const order = (slug: string) => API_KINDS.findIndex(kind => kind.slug === slug)
-  return [...sections, cliSection(model.line, manifest, model.version)].sort((a, b) => order(a.slug) - order(b.slug))
+  return [
+    ...(model.version ? [] : [glanceSection(model.line)]),
+    ...sections,
+    ...(manifest ? [cliSection(model.line, manifest, model.version)] : []),
+  ].sort((a, b) => order(a.slug) - order(b.slug))
+}
+
+/** Every `{ line, topic }` a cheat sheet is prerendered for, in the lines whose API is arranged by kind. */
+export function glanceParams(): { line: string; topic: string }[] {
+  return VERSIONS.lines
+    .filter(({ line }) => apiArrangement(line) === 'kind')
+    .flatMap(({ line }) => GLANCE_TOPICS.map(topic => ({ line, topic: topic.slug })))
 }
 
 /**

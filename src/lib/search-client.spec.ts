@@ -43,6 +43,8 @@ describe('jumps', () => {
     const [symbol] = jumps(ENTRIES, 'guard')
     expect(symbol).toMatchObject({ url: '/docs/4.1/api/decorator/Guard', excerpt: 'function in meocord/decorator' })
     expect(jumps(ENTRIES, 'cooldowns')[0].excerpt).toBe('Guide')
+    const sheet = { name: 'Decorators at a glance', kind: 'cheat-sheet', url: '/docs/4.1/api/glance/decorators' }
+    expect(jumps([sheet], 'decorators')[0]).toMatchObject({ url: sheet.url, excerpt: 'Cheat sheet' })
     expect(jumps(ENTRIES, 'c')).toEqual([])
   })
 })

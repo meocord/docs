@@ -352,6 +352,11 @@ describe('ApiModel by kind, where the tags are wrong', () => {
     expect(() => build(['meocord/core', [tagged('Odd', 'Widgets')]])).toThrow(
       "meocord/core's Odd has @group Widgets, which is not one of Controllers, Decorators",
     )
+    // The kinds the site draws itself, the CLI's commands and the cheat sheets, are no tag a symbol can take
+    expect(() => build(['meocord/core', [tagged('Cli', 'CLI')]])).toThrow('has @group CLI, which is not one of')
+    expect(() => build(['meocord/core', [tagged('Sheet', 'At a glance')]])).toThrow(
+      'which is not one of Controllers, Decorators, Responses, Utilities, Testing, Configuration, Types.',
+    )
   })
 
   it('fails on a symbol re-exported under another name, rather than file it under the first', () => {
