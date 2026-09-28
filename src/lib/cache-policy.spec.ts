@@ -119,4 +119,14 @@ describe('playgroundFrameCsp', () => {
     for (const origin of ['null', 'https://a.test; script-src *', 'https://a.test/x', 'javascript:alert(1)', ''])
       expect(playgroundFrameCsp(origin)).toBe(STATIC_FILE_CSP)
   })
+
+  it('takes plain http only for this machine, and denies everything for any other http site', () => {
+    expect(playgroundFrameCsp('http://meocord.dev')).toBe(STATIC_FILE_CSP)
+    expect(playgroundFrameCsp('http://docs.example.com:8080')).toBe(STATIC_FILE_CSP)
+    for (const origin of ['http://localhost:3000', 'http://127.0.0.1:8080', 'http://[::1]:4100', 'http://LOCALHOST'])
+      expect(playgroundFrameCsp(origin), origin).toContain(`frame-ancestors ${origin};`)
+    expect(playgroundFrameCsp('https://[::1]:4100')).toContain(
+      "script-src https://[::1]:4100/playground/ 'unsafe-eval'",
+    )
+  })
 })

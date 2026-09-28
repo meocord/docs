@@ -23,7 +23,9 @@ export const MOVING_PAGE = 'public, s-maxage=3600, stale-while-revalidate=86400'
 export const STATIC_FILE_CSP = "default-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 
 /** An origin as a policy can name it: a scheme, a host and a port, nothing a header could be split on. */
-const ORIGIN = /^https?:\/\/[a-z0-9.-]+(?::\d{1,5})?$/i
+const ORIGIN = /^(https?):\/\/([a-z0-9.-]+|\[::1\])(?::\d{1,5})?$/i
+/** The hosts a site may be served from over plain http: this machine, for local preview and the e2e server. */
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]'])
 
 /**
  * The playground frame's policy, for the site at `origin`. `sandbox` gives the frame an opaque origin
@@ -32,10 +34,12 @@ const ORIGIN = /^https?:\/\/[a-z0-9.-]+(?::\d{1,5})?$/i
  * by the site's configured origin, exactly: WebKit matches no `'self'` in a sandboxed document, and a
  * policy read from the request would make an immutable file vary by its Host header. The Worker the frame
  * starts from a blob inherits the policy. `'unsafe-eval'` runs the compiled code and `'wasm-unsafe-eval'`
- * the compiler. An origin that can't be named gets the flat-deny policy.
+ * the compiler. An origin that can't be named, or a plain-http one other than this machine's, gets the
+ * flat-deny policy, so no configuration can open the frame to a cleartext site.
  */
 export function playgroundFrameCsp(origin: string): string {
-  if (!ORIGIN.test(origin)) return STATIC_FILE_CSP
+  const named = ORIGIN.exec(origin)
+  if (!named || (named[1].toLowerCase() === 'http' && !LOOPBACK.has(named[2].toLowerCase()))) return STATIC_FILE_CSP
   const files = `${origin}/playground/`
   return [
     'sandbox allow-scripts',
