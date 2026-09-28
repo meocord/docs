@@ -13,7 +13,7 @@ const write = (id: string, frontmatter: string, body: string) =>
 const learn = 'learn: [One thing, Another]'
 write(
   'guards',
-  `title: Guards\nchapter: pipeline\norder: 2\nsummary: Guard calls.\n${learn}\nrequires: [services, first-command]\napi: [decorators/UseGuard]`,
+  `title: Guards\nchapter: pipeline\norder: 2\nsummary: Guard calls.\n${learn}\nrequires: [services, first-command]\napi: [decorators/UseGuard, decorators/Cooldown#per]`,
   '## How it works\n\nSee [services](guide:services#providers), [tickets](guide:recipes/tickets), [a planned page](guide:slash-commands), [the migration guide](guide:migrating#start) and [`@UseGuard`](api:decorators/UseGuard).',
 )
 write(
@@ -27,7 +27,7 @@ write('broken', 'title: Broken\nchapter: nowhere', 'Text.')
 
 vi.stubEnv('MEOCORD_DOCS_ROOT', root)
 vi.stubEnv('DOCS_NEXT', '1')
-const { guideEnabled, guideEntries, guideSidebar, guideTabs, guideView, resolveGuideLink } =
+const { guideEnabled, guideEntries, guidePagesTeaching, guideSidebar, guideTabs, guideView, resolveGuideLink } =
   await import('@/lib/docs/guide-site')
 const { guideArticle } = await import('@/lib/docs/render')
 const { Div } = await import('@meonode/ui')
@@ -48,6 +48,13 @@ describe('the Guide', () => {
   it("writes the line's package spec for {{meocord}}: its prerelease tag while the line is in prerelease", () => {
     const services = guideEntries('4.1').find(entry => entry.page.id === 'services')!
     expect(services.body).toContain('in a project from `npx meocord@beta create my-bot`')
+  })
+
+  it('finds the Guide pages that teach an API entry, one of its members included, and none where it is not rendered', () => {
+    expect(guidePagesTeaching('4.1', 'decorators', 'UseGuard')).toEqual([{ title: 'Guards', href: '/docs/4.1/guards' }])
+    expect(guidePagesTeaching('4.1', 'decorators', 'Cooldown')).toEqual([{ title: 'Guards', href: '/docs/4.1/guards' }])
+    expect(guidePagesTeaching('4.1', 'decorators', 'UseGuards')).toEqual([])
+    expect(guidePagesTeaching('4.0', 'decorators', 'UseGuard')).toEqual([])
   })
 
   it('resolves guide: and api: links, the reference pages and planned pages included', () => {
