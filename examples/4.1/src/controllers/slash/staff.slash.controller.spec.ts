@@ -1,7 +1,20 @@
-import { ChatInputCommandInteraction } from 'discord.js'
-import { createMockInteraction, inspectHandler, MeoCordTestingModule } from 'meocord/testing'
+import {
+  ChatInputCommandInteraction,
+  Collection,
+  type GuildMember,
+  type GuildMemberRoleManager,
+  type Role,
+} from 'discord.js'
+import {
+  createMock,
+  createMockGuild,
+  createMockInteraction,
+  inspectHandler,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { MuteSlashController } from '@src/controllers/slash/staff.slash.controller'
+import { ROLE_IDS } from '@src/guards/role-ids'
 import { Roles, RolesGuard } from '@src/guards/roles.guard'
 
 describe('MuteSlashController', () => {
@@ -13,6 +26,17 @@ describe('MuteSlashController', () => {
 
     await expect(module.invoke(MuteSlashController, 'mute', interaction)).resolves.toEqual({ ran: false })
     expect(inspectHandler(MuteSlashController, 'mute').guards).toEqual([RolesGuard])
-    expect(inspectHandler(MuteSlashController, 'mute').get(Roles)).toEqual(['moderator'])
+    expect(inspectHandler(MuteSlashController, 'mute').get(Roles)).toEqual([ROLE_IDS.moderator])
+  })
+
+  it('runs for a member with the moderator role, by its ID', async () => {
+    const moderator = createMock<Role>({ id: ROLE_IDS.moderator, name: 'moderator' })
+    const guild = createMockGuild({ id: '444444444444444444', roles: [moderator] })
+    const member = createMock<GuildMember>({
+      roles: createMock<GuildMemberRoleManager>({ cache: new Collection([[moderator.id, moderator]]) }),
+    })
+    const interaction = createMockInteraction(ChatInputCommandInteraction, { guildId: guild.id, guild, member })
+
+    await expect(module.invoke(MuteSlashController, 'mute', interaction)).resolves.toEqual({ ran: true })
   })
 })

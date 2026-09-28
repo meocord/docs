@@ -102,8 +102,8 @@ alone.
 
 ## Facts about the handler
 
-For a fact about a handler that any guard can read, such as the roles it requires, make a typed decorator with
-[`createMetadata`](api:utilities/createMetadata). A guard reads it through
+For a fact about a handler that any guard can read, such as the IDs of the roles it requires, make a typed decorator
+with [`createMetadata`](api:utilities/createMetadata). A guard reads it through
 [`ExecutionContext`](api:utilities/ExecutionContext), which it injects, and a handler's value wins over its
 controller's:
 
@@ -112,6 +112,11 @@ controller's:
 `RequireRoles` applies both the metadata and the guard, so a handler takes one decorator:
 
 ::example{file="controllers/slash/moderation.slash.controller.ts" region="apply"}
+
+The guard checks role IDs, not names: discord.js keys a member's roles by ID, and anyone who manages roles can rename
+one. Keep your server's role IDs in one place:
+
+::example{file="guards/role-ids.ts" region="role-ids"}
 
 `ExecutionContext` also gives the guard the handler's params with `getHandlerParams()`, raw, before validation and
 pipes, and the call's type, controller and handler. Only guards inject it; the other stages receive it as an argument.

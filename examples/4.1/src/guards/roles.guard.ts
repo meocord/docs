@@ -4,7 +4,7 @@ import { applyDecorators, createMetadata, ExecutionContext } from 'meocord/commo
 import { Guard, UseGuard } from 'meocord/decorator'
 import { type GuardInterface } from 'meocord/interface'
 
-// A typed decorator that stores a value on a handler, or on a whole controller
+// A typed decorator that stores a value on a handler, or on a whole controller: here, the IDs of the roles it requires
 export const Roles = createMetadata<string[]>('roles')
 
 @Guard()
@@ -15,9 +15,10 @@ export class RolesGuard implements GuardInterface {
   canActivate(interaction: ChatInputCommandInteraction): boolean {
     const required = this.context.get(Roles) ?? []
     if (required.length === 0) return true
-    return interaction.inCachedGuild() && required.some(role => interaction.member.roles.cache.has(role))
+    // A member's roles are keyed by ID, which is what Roles holds
+    return interaction.inCachedGuild() && required.some(roleId => interaction.member.roles.cache.has(roleId))
   }
 }
 
-export const RequireRoles = (...roles: string[]) => applyDecorators(Roles(roles), UseGuard(RolesGuard))
+export const RequireRoles = (...roleIds: string[]) => applyDecorators(Roles(roleIds), UseGuard(RolesGuard))
 // #endregion guard

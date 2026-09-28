@@ -33,6 +33,11 @@ Both apply like any decorator:
 
 ::example{file="controllers/slash/moderation.slash.controller.ts" region="apply"}
 
+The guard checks role IDs, not names: discord.js keys a member's roles by ID, and anyone who manages roles can
+rename one. Keep your server's role IDs in one place:
+
+::example{file="guards/role-ids.ts" region="role-ids"}
+
 `ExecutionContext` is injected only into guards: each call gets its own, so a controller or service, which
 is shared across calls, cannot inject it. It also gives the handler's arguments (`getArgs()`,
 `getInteraction()`, `getMessage()`, `getReaction()`), what is being handled (`getType()`), the controller and
