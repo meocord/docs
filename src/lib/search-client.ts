@@ -68,7 +68,9 @@ export function jumps(entries: readonly PaletteEntry[], query: string, limit = 5
           ? 'Guide'
           : entry.kind === 'command'
             ? 'CLI command'
-            : `${entry.kind.replace('-', ' ')} in meocord/${entry.entry}`,
+            : entry.kind === 'cheat-sheet'
+              ? 'Cheat sheet'
+              : `${entry.kind.replace('-', ' ')} in meocord/${entry.entry}`,
       sections: [],
       score: 0,
     }))

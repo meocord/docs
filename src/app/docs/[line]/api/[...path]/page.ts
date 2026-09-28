@@ -9,10 +9,12 @@ import {
   apiParams,
   cliParams,
   exactApiParams,
+  glanceParams,
   lineVersions,
 } from '@/lib/docs/api-site'
-import { renderApiKind, renderApiPage, renderCliPage } from '@/lib/docs/api-render'
+import { renderApiKind, renderApiPage, renderCliPage, renderGlancePage } from '@/lib/docs/api-render'
 import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
+import { GLANCE_SECTION, glanceTopic } from '@/lib/docs/glance'
 import { docsHref } from '@/lib/urls'
 import { firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -40,6 +42,7 @@ export function generateStaticParams() {
     ...apiKindParams().map(({ line, section }) => ({ line, path: [section] })),
     ...apiParams().map(({ line, section, symbol }) => ({ line, path: [section, symbol] })),
     ...exactApiParams().map(({ line, version, section, symbol }) => ({ line, path: [version, section, symbol] })),
+    ...glanceParams().map(({ line, topic }) => ({ line, path: [GLANCE_SECTION, topic] })),
     ...cliParams().map(({ line, version, command }) => ({
       line,
       path: version ? [version, CLI_SECTION, command] : [CLI_SECTION, command],
@@ -61,6 +64,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       line,
       description: `MeoCord ${line}'s ${kind.title.toLowerCase()}: ${kind.symbols.map(symbol => symbol.name).join(', ')}.`,
       canonical: docsHref({ kind: 'api-index', line, section: target.section }, VERSIONS),
+    })
+  }
+  // A cheat sheet, where the line's API is arranged by kind
+  if (target.section === GLANCE_SECTION && !target.version && apiArrangement(line) === 'kind') {
+    const topic = glanceTopic(target.symbol)
+    if (!topic) return {}
+    return pageMetadata({
+      title: `${topic.title} at a glance · API`,
+      line,
+      description: topic.summary.replace(/`/g, ''),
+      canonical: docsHref({ kind: 'api', line, section: GLANCE_SECTION, symbol: topic.slug }, VERSIONS),
     })
   }
   // A CLI command's page, where the line's API is arranged by kind
@@ -101,6 +115,7 @@ async function apiPage(line: string, path: string[]) {
   const target = parse(line, path)
   if (!target) return undefined
   if (!target.symbol) return renderApiKind(line, target.section)?.render()
+  if (target.section === GLANCE_SECTION && !target.version) return renderGlancePage(line, target.symbol)?.render()
   return target.section === CLI_SECTION && apiArrangement(line) === 'kind'
     ? renderCliPage(line, target.symbol, target.version)?.render()
     : renderApiPage(line, target.section, target.symbol, target.version)?.render()

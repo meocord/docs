@@ -106,15 +106,19 @@ export interface ApiSection {
   symbols: ApiListing[]
 }
 
-/** The kinds a by-kind API files its symbols under: each one's `@group` tag, URL segment and title, in order. */
+/**
+ * The kinds a by-kind API files its symbols under: each one's `@group` tag, URL segment and title, in order.
+ * A kind the site draws itself, from the CLI's manifest or from the other kinds, is no tag a symbol can take.
+ */
 export const API_KINDS = [
+  { group: 'At a glance', slug: 'glance', title: 'At a glance', drawn: true },
   { group: 'Controllers', slug: 'controllers', title: 'Controllers' },
   { group: 'Decorators', slug: 'decorators', title: 'Decorators' },
   { group: 'Responses', slug: 'responses', title: 'Responses' },
   { group: 'Utilities', slug: 'utilities', title: 'Utilities' },
   { group: 'Testing', slug: 'testing', title: 'Testing' },
   { group: 'Configuration', slug: 'configuration', title: 'Configuration' },
-  { group: 'CLI', slug: 'cli', title: 'CLI' },
+  { group: 'CLI', slug: 'cli', title: 'CLI', drawn: true },
   { group: 'Types', slug: 'types', title: 'Types' },
 ] as const
 
@@ -248,9 +252,10 @@ export class ApiModel {
   #kindOf(entry: string, declaration: Declaration): string {
     const tagged = blockTag(declaration, '@group')
     const group = tagged ?? (this.scheme.by === 'kind' ? this.scheme.groupOf?.(declaration.name) : undefined)
-    const kind = API_KINDS.find(candidate => candidate.group === group)
+    const taggable = API_KINDS.filter(candidate => !('drawn' in candidate))
+    const kind = taggable.find(candidate => candidate.group === group)
     if (kind) return kind.slug
-    const groups = API_KINDS.map(candidate => candidate.group).join(', ')
+    const groups = taggable.map(candidate => candidate.group).join(', ')
     throw new Error(
       group
         ? `${this.#source()}: ${entry}'s ${declaration.name} has @group ${group}, which is not one of ${groups}.`
