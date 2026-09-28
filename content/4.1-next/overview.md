@@ -50,8 +50,9 @@ test. It gives a bot the structure a web framework gives a server, and with it:
   bot says and the names of its commands.
 - **Routes and params the compiler checks.** A button's `counter/{count:int}` gives its handler `count` as a number,
   and a message command's `pay {to:member} {amount:int}` a member and a number. A handler whose params don't fit its
-  pattern, or a catalog missing a key, fails to compile. See [Components](guide:components#typed-params) and
-  [Message command params](guide:message-params).
+  pattern fails to compile, and so does a catalog with a key the default catalog lacks; `expectCompleteCatalog` finds
+  a missing one in a test. See [Components](guide:components#typed-params),
+  [Message command params](guide:message-params) and [Localisation](guide:localisation).
 - **Services by constructor.** A controller or a service names what it needs in its constructor, and MeoCord makes
   each one once, in dependency order. See [Services](guide:services).
 - **A CLI from create to deploy.** `npx {{meocord}} create` starts a project, `generate` scaffolds a controller, service
@@ -195,8 +196,8 @@ may add one.
 
 - **A modern core.** MeoCord runs on discord.js 14, with Node.js 22.13+ or Bun. What a plugin would add elsewhere is a
   plain [service](guide:services) here: injected where it's needed, and tested like the rest of the bot.
-- **Built for TypeScript.** Decorators, route and pattern params, and catalogs are all checked by the compiler, and
-  `npx {{meocord}} create` starts every project in TypeScript.
+- **Built for TypeScript.** The compiler checks each handler's params against its route or pattern, and each catalog's
+  keys against the default one's, and `npx {{meocord}} create` starts every project in TypeScript.
 - **One process, one bot.** A process logs in with the token its `meocord.config.ts` gives, so each bot keeps its own
   config, token and logs, and restarts on its own. One bot grows across processes, a shard in each; see
   [Sharding](guide:sharding).
