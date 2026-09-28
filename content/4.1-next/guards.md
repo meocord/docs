@@ -114,9 +114,12 @@ controller's:
 ::example{file="controllers/slash/moderation.slash.controller.ts" region="apply"}
 
 The guard checks role IDs, not names: discord.js keys a member's roles by ID, and anyone who manages roles can rename
-one. Keep your server's role IDs in one place:
+one. Read your server's role IDs from `.env`, adding `ADMIN_ROLE_ID` and `MODERATOR_ROLE_ID` to it:
 
 ::example{file="guards/role-ids.ts" region="role-ids"}
+
+A decorator reads them when your controller loads, and that works: MeoCord loads `meocord.config.ts`, and the
+`dotenv/config` import at its top, before your application's code.
 
 `ExecutionContext` also gives the guard the handler's params with `getHandlerParams()`, raw, before validation and
 pipes, and the call's type, controller and handler. Only guards inject it; the other stages receive it as an argument.
