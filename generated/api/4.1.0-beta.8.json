@@ -48817,7 +48817,8 @@
             "type": {
              "type": "literal",
              "value": true
-            }
+            },
+            "computedName": true
            }
           ],
           "groups": [
@@ -50058,7 +50059,8 @@
              "name": "T",
              "package": "meocord",
              "refersToTypeParameter": true
-            }
+            },
+            "computedName": true
            }
           ],
           "groups": [
