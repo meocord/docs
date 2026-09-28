@@ -24,7 +24,7 @@ with.
 ## Example
 
 The layout `meocord create` writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
-lockfile. It also makes the folder a git repository.
+lockfile, and it makes the folder a git repository:
 
 ```text
 .
