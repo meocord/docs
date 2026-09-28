@@ -131,8 +131,8 @@ other's type before that class exists. MeoCord stops the bot before it binds any
 class, the parameter and the classes that inject it:
 
 ```text
-Notes cannot be created: parameter 1 of its constructor has no runtime type. Usually Notes and a class it
-injects import each other (NotesController injects Notes), or the parameter is typed with an interface or
+Notes: parameter 1 of its constructor has no runtime type, so it cannot be created. Usually Notes and a class
+it injects import each other (NotesController injects Notes), or the parameter is typed with an interface or
 an `import type`. Move what they both need into a third service, or inject the parameter with @Inject(token).
 ```
 

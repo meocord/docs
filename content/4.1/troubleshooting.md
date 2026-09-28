@@ -32,7 +32,7 @@ list of every option of the wrong type. An option MeoCord does not know, often a
 [self-contained build](/docs/4.1/self-contained-builds#native-addons) made on one platform was started on another. Build
 where it runs; for a container, run `meocord build` inside the image.
 
-**"… cannot be created: parameter 1 of its constructor has no runtime type"**: a controller or service asks
+**"…: parameter 1 of its constructor has no runtime type, so it cannot be created"**: a controller or service asks
 for a parameter MeoCord cannot inject. Usually two services import each other, so the one loaded second
 recorded the other's type before it existed; the error names the classes that inject it. A parameter typed
 with an interface, or a type from `import type`, reads the same way. Move what both need into a third

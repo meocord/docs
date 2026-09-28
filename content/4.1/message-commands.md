@@ -250,10 +250,10 @@ handler, before it logs in:
 | `scope: 'dm'` on a command with a `member` param          | `scope is 'dm', but {target:member} is found only in a server.`                             |
 | Two patterns, or an alias and a pattern, that match alike | `… match the same messages, so only one of them could ever run.`                            |
 
-A pattern error begins with the handler it is about, such as `@MessageHandler('swap {a} {a}') in
-DiceMessageController.swap:`, and the last names both handlers. Two patterns match the same messages when
-they take the same prefix and differ only in param names, as `'roll {sides}'` and `'roll {count}'` do, or
-only in case, unless both are case-sensitive; change one pattern, or give one its own prefix.
+A pattern error begins with the handler it is about, such as
+`DiceMessageController.swap: @MessageHandler('swap {a} {a}'):`, and the last names both handlers. Two patterns match
+the same messages when they take the same prefix and differ only in param names, as `'roll {sides}'` and
+`'roll {count}'` do, or only in case, unless both are case-sensitive; change one pattern, or give one its own prefix.
 
 ## Testing
 
