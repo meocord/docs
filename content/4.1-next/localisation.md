@@ -114,8 +114,9 @@ Importing `t` works too. Injecting it keeps a test free to provide another:
 ## MeoCord's own texts
 
 What MeoCord itself tells users goes through the same translator: a message command's usage and what is wrong with
-it, the built-in `!help`, cooldown refusals, "Command not found!", the generic error, and the default presenter's
-"Working on it…" and "Oops!". Add a `meocord` group to any catalog, all of it or part:
+it, the built-in `!help`, cooldown refusals, "Command not found!", the generic error, the direct messages
+[`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) send, and the default
+presenter's "Working on it…" and "Oops!". Add a `meocord` group to any catalog, all of it or part:
 
 ::example{file="locales/id.ts" region="meocord"}
 
@@ -123,10 +124,10 @@ Each text is looked up on its own, so a line a language leaves out stays in MeoC
 English are in [`MeoCordMessages`](api:types/MeoCordMessages): a key MeoCord lacks, or a `{param}` its English text
 lacks, does not compile, and the error names the text and the params it takes.
 
-Answers to an interaction are in the user's language; replies to a message, and `!help`, in the server's preferred
-language, or the default locale's in a direct message. MeoCord's English stands as the English catalog: an English
-server or user gets it even when the default locale is another language, unless your own `en-US` or `en-GB` catalog
-words the text.
+Answers to an interaction are in the user's language; replies to a message, the direct messages about it, and
+`!help`, in the server's preferred language, or the default locale's in a direct message. MeoCord's English stands
+as the English catalog: an English server or user gets it even when the default locale is another language, unless
+your own `en-US` or `en-GB` catalog words the text.
 
 ::example{file="i18n-texts/paint.controller.spec.ts" region="usage"}
 

@@ -220,6 +220,26 @@ params:
 `@Validate` and `@UsePipe` need a pattern: on a `@MessageHandler()` for every message, they stop the bot at
 startup.
 
+## Telling the author privately
+
+A message command's error that no filter handled is logged, and a cooldown's refusal is skipped: a reply in the
+channel can't be private, so the author never learns why nothing happened. From 4.1.0-beta.8, two options send
+them a direct message instead, both off by default:
+
+::example{file="app-message-dm.ts" region="app"}
+
+- `dmOnError` tells the author the command failed, naming it, the channel and the server. The error is still
+  logged.
+- `dmOnCooldown` tells the author how long to wait, once per wait. The notice is counted in the app's cooldown
+  store, so with a [shared store](/docs/4.1/cooldowns#where-calls-are-counted) it holds across shards.
+
+Only patterned handlers are answered, and only when no exception filter handled the error. A command sent in a
+direct message is answered there, and a member whose direct messages are closed isn't told. Usage errors, a
+guard's or validation's reason and a `UserError` are answered in the channel as before. The texts are
+`meocord.dm.error` and `meocord.dm.cooldown`, translatable like MeoCord's other texts.
+
+::example{file="controllers/message/daily.message.controller.spec.ts" region="spec"}
+
 ## Replies with the theme's emoji
 
 MeoCord's replies to a message are plain text: a usage error, a guard's or validation's reason, and a

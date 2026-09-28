@@ -7,7 +7,7 @@ summary: Run a handler when a message matches a pattern, such as `!roll 20`, aft
 learn:
   - Write a pattern and receive its params
   - Set prefixes for the app, a handler, or each server
-  - Know which handler runs, and what a user sees on a misuse
+  - Know which handler runs, and what a user is told on a misuse, an error or a cooldown
   - Give a command aliases, a scope and a help listing
 requires: [first-command]
 api:
@@ -158,6 +158,30 @@ handler:
 A handler of its own, `config` or `config {key}`, still takes such a message. A subcommand with a
 [guard](guide:guards), and one whose options say `hidden: true`, is left out of the list, since the list runs
 no guards and must not name what a caller may be refused; named, it still gets its own usage.
+
+## Telling the author privately
+
+Two things a message command meets go unanswered in the channel: an error no filter handled, which is logged, and a
+cooldown's refusal, which is skipped. A reply in the channel can't be private, so the author never learns why
+nothing happened. Two options send them a direct message instead, both off by default:
+
+::example{file="app-message-dm.ts" region="app"}
+
+- `dmOnError` tells the author the command failed, naming it, the channel and the server: "Something went wrong
+  running !leaderboard in #general on Cat Cafe. Try again later." The error is still logged.
+- `dmOnCooldown` tells the author how long to wait, once per wait: retrying before it ends sends nothing more. The
+  notice is counted in the app's cooldown store, so with a [shared store](guide:recipes/cooldown-stores) it holds across
+  shards.
+
+Only patterned handlers are answered, and only when no [exception filter](guide:exception-filters) handled the error.
+A command sent in a direct message is answered there. A member whose direct messages are closed isn't told, and
+that's logged at debug level. A usage error, a guard's reason and a `UserError` are answered in the channel as
+before. The texts are `meocord.dm.error` and `meocord.dm.cooldown`, translated like
+[MeoCord's own texts](guide:localisation#meocords-own-texts).
+
+::example{file="controllers/message/daily.message.controller.ts" region="controller"}
+
+::example{file="controllers/message/daily.message.controller.spec.ts" region="spec"}
 
 ## Aliases, descriptions and scope
 
