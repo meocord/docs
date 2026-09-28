@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { HOME_LINE } from '@/config/home'
+import { specFor } from '@/config/versions'
 import { cardHash, findCard, ogImage, ogPath, parseCardFile } from '@/lib/og/cards'
 
 describe('og cards', () => {
@@ -6,6 +8,11 @@ describe('og cards', () => {
     const card = findCard('site', 'home')!
     expect(ogPath('site', 'home')).toBe(`/og/site/home.${cardHash(card)}.png`)
     expect(cardHash(card)).toMatch(/^[0-9a-f]{12}$/)
+  })
+
+  // A PNG isn't read after the build, so the card's command is checked here: the home page's line's spec
+  it("runs the home page's line's create command, as the home page does", () => {
+    expect(findCard('site', 'home')!.code).toBe(`npx ${specFor(HOME_LINE)} create my-bot`)
   })
 
   it('changes the hash with the content', () => {
