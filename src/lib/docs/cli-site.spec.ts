@@ -35,6 +35,12 @@ describe('the CLI reference', () => {
     const create = html(cliArticle(command('create'), 'meocord@beta').nodes)
     expect(create).toContain('data-example="npx meocord@beta create my-bot"')
     expect(create.match(/data-example=/g)).toHaveLength(1)
+    // The Guide pages that teach a command follow its reference
+    const taught = html(
+      cliArticle(command('start'), 'meocord@beta', [{ title: 'The CLI', href: '/docs/4.1/cli' }]).nodes,
+    )
+    expect(taught).toContain('<h2 id="in-the-guide">In the Guide</h2>')
+    expect(taught).toContain('<a href="/docs/4.1/cli">The CLI</a>')
     const { nodes, toc } = cliArticle(command('generate'), 'meocord@beta')
     const markup = html(nodes)
     // The example as a reader copies it: the highlighted runs' text

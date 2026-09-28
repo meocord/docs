@@ -1,5 +1,6 @@
 import {
   A,
+  Aside,
   Blockquote,
   Code,
   Div,
@@ -32,7 +33,7 @@ import type { CliArgument, CliCommand, CliOption } from '../../../scripts/lib/cl
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
+import { guideEnabled, guidePagesTeaching, guideTabs } from '@/lib/docs/guide-site'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
@@ -189,6 +190,7 @@ function sectionIds(anchors: string[]) {
     examples: id('examples'),
     members: id('members'),
     seeAlso: id('see-also'),
+    guide: id('in-the-guide'),
   }
 }
 
@@ -273,11 +275,34 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
   ]
 }
 
+/** The Guide pages that teach an entry, after its reference, as a Guide page lists the API it teaches. */
+function taughtIn(pages: { title: string; href: string }[], id: string): Child[] {
+  if (pages.length === 0) return []
+  return [
+    Aside({
+      key: 'guide',
+      'data-guide-api': true,
+      'aria-labelledby': id,
+      children: [
+        H2('In the Guide', { key: 'heading', id }),
+        Ul({
+          key: 'list',
+          children: pages.map(page => Li({ key: page.href, children: A({ href: page.href, children: page.title }) })),
+        }),
+      ],
+    }),
+  ]
+}
+
 /**
  * The page's content: the symbol's declaration, documentation and members, their long code laid
- * out as `layouts` formats it.
+ * out as `layouts` formats it, and the Guide pages in `guide` that teach it.
  */
-export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: Child[]; toc: TocEntry[] } {
+export function apiArticle(
+  symbol: ApiSymbol,
+  layouts: Layouts = {},
+  guide: { title: string; href: string }[] = [],
+): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
   const ids = sectionIds(symbol.anchors)
   const nodes: Child[] = [
@@ -342,6 +367,7 @@ export function apiArticle(symbol: ApiSymbol, layouts: Layouts = {}): { nodes: C
       }),
     )
   }
+  nodes.push(...taughtIn(guide, ids.guide))
   return { nodes, toc }
 }
 
@@ -398,7 +424,9 @@ export function renderApiPage(line: string, section: string, name: string, versi
   const symbol = model?.symbol(section, name)
   if (!model || !symbol) return undefined
   const href = model.href({ section: symbol.section, symbol: symbol.name })
-  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version))
+  // The Guide teaches the line's API as it stands, so an exact version's page doesn't link it
+  const guide = version ? [] : guidePagesTeaching(line, symbol.section, symbol.name)
+  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version), guide)
   const trail = apiCrumbs(line, model, symbol.section, symbol.entry)
   const crumbs: Crumb[] = [
     trail[0],
@@ -611,7 +639,11 @@ function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string, sp
 }
 
 /** A top-level command's page: its details, then each subcommand's, at its own anchor; `spec` is the package its `create` example runs. */
-export function cliArticle(command: CliCommand, spec: string): { nodes: Child[]; toc: TocEntry[] } {
+export function cliArticle(
+  command: CliCommand,
+  spec: string,
+  guide: { title: string; href: string }[] = [],
+): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
   const nodes: Child[] = [
     H1(`meocord ${command.name}`, { key: 'title' }),
@@ -625,6 +657,7 @@ export function cliArticle(command: CliCommand, spec: string): { nodes: Child[];
       ...commandDetails(sub, 'h3', `sub-${id}`, spec),
     )
   }
+  nodes.push(...taughtIn(guide, 'in-the-guide'))
   return { nodes, toc }
 }
 
@@ -634,7 +667,8 @@ export function renderCliPage(line: string, name: string, version?: string) {
   const manifest = model?.scheme.by === 'kind' ? cliManifest(version ?? lineVersions(line)[0]) : undefined
   const command = manifest && cliCommand(manifest, name)
   if (!model || !command) return undefined
-  const { nodes, toc } = cliArticle(command, specFor(line, version))
+  const guide = version ? [] : guidePagesTeaching(line, CLI_SECTION, command.name)
+  const { nodes, toc } = cliArticle(command, specFor(line, version), guide)
   const trail = apiCrumbs(line, model, CLI_SECTION)
   return Window({
     crumbs: [trail[0], ...(version ? [{ title: version }] : []), ...trail.slice(1), { title: command.name }],

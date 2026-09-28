@@ -24,6 +24,18 @@ export function guideEntries(line: string): Entry[] {
   return entries.get(line)!
 }
 
+/**
+ * The Guide pages that teach an API entry, in reading order: those whose `api` front matter names it,
+ * or one of its members. None where the Guide isn't rendered.
+ */
+export function guidePagesTeaching(line: string, section: string, symbol: string): { title: string; href: string }[] {
+  if (!guideEnabled(line)) return []
+  const entry = `${section}/${symbol}`
+  return guideEntries(line)
+    .filter(({ page }) => page.api.some(listed => listed.split('#')[0] === entry))
+    .map(({ page }) => ({ title: page.title, href: guidePageHref(line, page) }))
+}
+
 /** Where a Guide page lives: `/docs/<line>/<id>`, or under its group for recipes and coming-from pages. */
 export function guidePageHref(line: string, page: Pick<GuidePage, 'id' | 'group'>, anchor?: string): string {
   const group = page.group === 'recipes' || page.group === 'coming-from' ? page.group : undefined

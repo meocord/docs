@@ -26,6 +26,16 @@ describe('apiArticle', () => {
     expect(members.every(entry => entry.id === entry.title.toLowerCase())).toBe(true)
   })
 
+  it('lists the Guide pages that teach it, after its reference, at an id of its own', () => {
+    const symbol = model.symbol('decorator', 'Cooldown')!
+    const guide = [{ title: 'Cooldowns', href: '/docs/4.1/cooldowns' }]
+    const markup = renderToStaticMarkup(Div({ children: apiArticle(symbol, {}, guide).nodes }).render())
+    expect(markup).toContain('<aside data-guide-api="true" aria-labelledby="in-the-guide">')
+    expect(markup).toContain('<h2 id="in-the-guide">In the Guide</h2>')
+    expect(markup).toContain('<a href="/docs/4.1/cooldowns">Cooldowns</a>')
+    expect(renderToStaticMarkup(Div({ children: apiArticle(symbol).nodes }).render())).not.toContain('In the Guide')
+  })
+
   it('gives a function its parameters, returns and examples', () => {
     const { toc } = apiArticle(model.symbol('decorator', 'Cooldown')!)
     // Its options under its parameters, from CooldownOptions
