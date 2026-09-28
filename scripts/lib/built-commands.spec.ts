@@ -52,6 +52,9 @@ describe('the create commands a reader gets', () => {
       '<p>`meocord build` writes dist/.</p>' +
       '<pre tabindex="0" data-language="bash"><code>npx meocord build --prod\nmeocord start --prod</code></pre>' +
       '<pre data-language="shell"><code>$ meocord g co slash Greeting\nnpm run build\n# meocord start</code></pre>' +
+      // A command after an assignment, or after another command, runs the same
+      '<pre data-language="sh"><code>MEOCORD_LOG_LEVEL=debug meocord start\ncd my-bot &amp;&amp; meocord build\n' +
+      'npm ci; npx meocord build --prod\nMEOCORD_RUNTIME=/usr/bin/bun npx meocord start</code></pre>' +
       // A transcript, or output, is text: shown, not run
       '<pre data-language="text"><code>$ meocord start --prod\nenv: node: No such file</code></pre><pre><code>meocord start</code></pre>'
     const code = pageCode('/docs/4.1/cli', html)
@@ -59,6 +62,8 @@ describe('the create commands a reader gets', () => {
     expect(check('/docs/4.1/cli', '', code)).toEqual([
       `page.html (/docs/4.1/cli): "meocord start --prod" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
       `page.html (/docs/4.1/cli): "$ meocord g co slash Greeting" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
+      `page.html (/docs/4.1/cli): "MEOCORD_LOG_LEVEL=debug meocord start" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
+      `page.html (/docs/4.1/cli): "cd my-bot && meocord build" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
     ])
     // On an API page, what a reader copies is its examples
     const api = '<pre>meocord build [options]</pre><div data-example="meocord build --dev"></div>'
