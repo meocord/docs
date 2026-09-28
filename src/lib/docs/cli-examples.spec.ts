@@ -53,8 +53,8 @@ const everyCommand = (command: CliCommand): CliCommand[] => [command, ...command
 const examples = [
   ...new Set((manifest?.commands ?? []).flatMap(everyCommand).map(command => exampleInvocation(command, spec))),
 ]
-// The CLI's own arguments: after `meocord`, or after `npx <spec>`
-const argv = (example: string) => example.split(' ').slice(example.startsWith('npx ') ? 2 : 1)
+// The CLI's own arguments, after `npx <spec>`
+const argv = (example: string) => example.split(' ').slice(2)
 // Commands that only print, or write into the working directory, run in full; the rest would install, build or log in
 const runs = (example: string) => ['show', 'generate'].includes(argv(example)[0]!)
 const dirs: string[] = []
@@ -76,6 +76,8 @@ describe("the CLI reference's examples, against the CLI they describe", () => {
       for (const each of everyCommand(command)) expect(text).toContain(exampleInvocation(each, spec))
     }
     expect(examples.filter(example => /[<>[\]]/.test(example))).toEqual([])
+    // A shell has no meocord on its path, so each runs through npx
+    expect(examples.filter(example => !example.startsWith('npx '))).toEqual([])
   })
 
   it.each(examples)('%s parses', async example => {

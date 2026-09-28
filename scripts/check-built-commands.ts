@@ -1,13 +1,15 @@
 /**
  * Fails when a built page, the search index or the palette tells a reader to create a project with a
- * package spec other than the one that installs that page's line. Run after `next build`.
+ * package spec other than the one that installs that page's line, or gives them a `meocord` command to
+ * copy that a shell can't run. Run after `next build`.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { gunzipSync } from 'zlib'
 import { HOME_LINE } from '../src/config/home'
-import { type BuiltText, commandProblems, pageText, searchText } from './lib/built-commands.js'
+import { type BuiltText, commandProblems, pageCode, pageText, searchText } from './lib/built-commands.js'
+import type { CliCommand, CliManifest } from './lib/cli.js'
 import { paths, ROOT } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
 
@@ -25,7 +27,8 @@ for (const file of filesUnder(app).filter(name => name.endsWith('.html'))) {
     .split(path.sep)
     .join('/')
   const url = route === 'index' ? '/' : `/${route}`
-  texts.push({ file: path.relative(ROOT, file), url, text: pageText(url, readFileSync(file, 'utf8')) })
+  const html = readFileSync(file, 'utf8')
+  texts.push({ file: path.relative(ROOT, file), url, text: pageText(url, html), code: pageCode(url, html) })
 }
 
 // The search index's fragments, each the text of one page: gzipped JSON after Pagefind's signature
@@ -54,10 +57,20 @@ if (!texts.some(text => text.file.endsWith('.html'))) {
   console.error('No built pages under .next/server/app: run the build first.')
   process.exit(1)
 }
-const problems = commandProblems(texts, readVersions(paths.versions), HOME_LINE)
+// The CLI's commands and aliases, in every version that ships its manifest, and what prints its help or version
+const commands = new Set(['help', '--help', '-h', '--version', '-V'])
+const addCommands = (command: CliCommand) => {
+  for (const name of [command.name, ...command.aliases]) commands.add(name)
+}
+for (const file of filesUnder(path.join(ROOT, 'generated', 'cli')).filter(name => name.endsWith('.json')))
+  (JSON.parse(readFileSync(file, 'utf8')) as CliManifest).commands.forEach(addCommands)
+
+const problems = commandProblems(texts, readVersions(paths.versions), HOME_LINE, commands)
 if (problems.length > 0) {
-  console.error(`${problems.length} create command(s) that don't install their page's line:`)
+  console.error(`${problems.length} problem(s) with the commands a reader gets:`)
   for (const problem of problems) console.error(`  ${problem}`)
   process.exit(1)
 }
-console.log(`Every create command in ${texts.length} built texts installs its page's line.`)
+console.log(
+  `In ${texts.length} built texts, every create command installs its page's line and every copied command runs.`,
+)
