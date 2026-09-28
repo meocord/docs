@@ -1,42 +1,13 @@
-import path from 'node:path'
-import ts from 'typescript'
 import { beforeAll, describe, expect, it } from 'vitest'
+import { compile, pinnedModules } from '../../../tests/playground'
 import { MAX_RESULT_LENGTH, type Dispatch, type LogLine, type RunResult } from './protocol'
 import { fitted, type ModuleMap, runPlayground } from './run'
 
-// The 4.1 line's pinned packages, as the playground's runtime bundles them
-const pinned = path.resolve(__dirname, '../../../examples/4.1/node_modules')
 let modules: ModuleMap
 
 beforeAll(async () => {
-  await import(path.join(pinned, 'reflect-metadata/Reflect.js'))
-  const entry = (name: string) => import(path.join(pinned, 'meocord/dist/esm', name, 'index.js'))
-  modules = {
-    'discord.js': await import(path.join(pinned, 'discord.js/src/index.js')),
-    'meocord/common': await entry('common'),
-    'meocord/decorator': await entry('decorator'),
-    'meocord/enum': await entry('enum'),
-    'meocord/interface': await entry('interface'),
-    'meocord/testing': await entry('testing'),
-    'reflect-metadata': {},
-  }
+  modules = await pinnedModules('4.1')
 })
-
-// What swc does in the browser: legacy decorators with their metadata, as CommonJS
-const compile = (source: string) => {
-  const { outputText, diagnostics } = ts.transpileModule(source, {
-    reportDiagnostics: true,
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
-    },
-  })
-  const error = diagnostics?.find(each => each.category === ts.DiagnosticCategory.Error)
-  if (error) throw new Error(ts.flattenDiagnosticMessageText(error.messageText, '\n'))
-  return outputText
-}
 
 const run = (source: string, dispatch: Dispatch[], extra: Record<string, unknown> = {}) => {
   const logs: LogLine[] = []

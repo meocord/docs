@@ -89,7 +89,7 @@ characters, throws.
 
 A parameter can name its type, `{name:type}`, and the handler receives the value rather than its text:
 
-::example{file="controllers/button/counter.button.controller.ts" region="typed"}
+::playground{file="controllers/button/counter.button.controller.ts" region="typed" dispatch="button counter/41"}
 
 | Type                          | The handler receives | A segment such as    |
 | ----------------------------- | -------------------- | -------------------- |
