@@ -18,13 +18,13 @@ import { LANGUAGES } from '@/lib/prose/languages'
 
 /**
  * Editor colours drawn from the site's palette, one hue per kind of token, each at 4.5:1 or better on
- * the code frame's canvas in its mode (checked in highlight.spec.ts).
+ * every surface code is drawn on in its mode, lit and stopped lines included (checked in tokens.spec.ts).
  */
 export const CODE_PALETTES = {
   dark: {
     background: '#161618',
     plain: '#E2E2E6',
-    comment: '#8E8E98',
+    comment: '#90909A',
     keyword: '#8C98FF',
     decorator: '#F29CCB',
     string: '#6CCB91',
@@ -41,7 +41,7 @@ export const CODE_PALETTES = {
     comment: '#66666E',
     keyword: '#4150CC',
     decorator: '#A3317A',
-    string: '#1F7A45',
+    string: '#1E7542',
     regex: '#B3322B',
     number: '#A1510B',
     type: '#0E7169',
