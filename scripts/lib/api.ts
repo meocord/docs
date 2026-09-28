@@ -6,7 +6,8 @@
 
 import { readFileSync, writeFileSync } from 'fs'
 import path from 'path'
-import { Application, LogLevel, normalizePath, TSConfigReader, type JSONOutput } from 'typedoc'
+import { Application, Converter, LogLevel, normalizePath, TSConfigReader, type JSONOutput } from 'typedoc'
+import ts from 'typescript'
 
 export interface ApiMeta {
   package: string
@@ -114,6 +115,17 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     },
     [new TSConfigReader()],
   )
+  // TypeDoc draws a return type from the checker, which resolves a conditional alias, `DeepMocked<T>`,
+  // into its branch: the alias is lost, and its `infer`s read as unbound names. A return written as
+  // an alias's name is drawn as written instead.
+  app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
+    const node = declaration && 'type' in declaration ? declaration.type : undefined
+    if (!node || !ts.isTypeReferenceNode(node)) return
+    const symbol = context.checker.getSymbolAtLocation(node.typeName)
+    const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? context.checker.getAliasedSymbol(symbol) : symbol
+    if (target && target.flags & ts.SymbolFlags.TypeAlias)
+      reflection.type = context.converter.convertType(context.withScope(reflection), node)
+  })
   const project = await app.convert()
   if (!project) throw new Error(`TypeDoc could not convert ${meta.package}@${meta.version}.`)
 
