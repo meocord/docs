@@ -178,9 +178,28 @@ export const PIPELINE: readonly PipelineStage[] = [
 export const everyStage = (stages: readonly PipelineStage[] = PIPELINE): PipelineStage[] =>
   stages.flatMap(stage => [stage, ...everyStage(stage.around ?? [])])
 
+/**
+ * The stage names meocord's `@pipeline` tags used in releases before they took the figure's ids:
+ * 4.1.0-beta.6 and beta.7 tag @Observer `observers` and @Defer's second step `lock`.
+ */
+export const LEGACY_STAGES: Readonly<Record<string, readonly string[]>> = {
+  observers: ['observers-start', 'observers-settled'],
+  lock: ['defer-lock'],
+}
+
+/** The figure's stages a `@pipeline` tag's stage names, through LEGACY_STAGES for an older name; none for an unknown one. */
+export function stagesNamed(name: string): PipelineStage[] {
+  const ids = LEGACY_STAGES[name] ?? [name]
+  return everyStage().filter(stage => ids.includes(stage.id))
+}
+
+/** A stage's anchor in the figure, which a note on an API page links. */
+export const stageAnchor = (id: string) => `stage-${id}`
+
 function stageItem(stage: PipelineStage, href: (url: string) => string): NodeInstance {
   return Li({
     key: stage.id,
+    id: stageAnchor(stage.id),
     'data-kinds': stage.kinds.join(' '),
     'data-frame': stage.around ? true : undefined,
     children: [

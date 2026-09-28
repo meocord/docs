@@ -81,6 +81,8 @@ export interface ApiSymbol {
   group?: string
   /** Every id a link can name on its page: its members', then its options'. */
   anchors: string[]
+  /** Where it runs in a call, from its `@pipeline` tags: the stage as a tag names it, and what the tag says of it. */
+  pipeline: { stage: string; text: string }[]
 }
 
 export interface SinceData {
@@ -375,6 +377,7 @@ export class ApiModel {
       seeAlso: this.#seeAlso(declaration.comment),
       group: group(declaration),
       anchors: [...anchors].filter(anchor => !shellIds().includes(anchor)),
+      pipeline: pipelineTags(declaration),
     }
   }
 
@@ -859,6 +862,25 @@ function blockTag(declaration: Declaration, tag: string): string | undefined {
     if (text) return text
   }
   return undefined
+}
+
+/**
+ * A declaration's `@pipeline` tags, `<stage> <what it does there>`, from its own comment and every
+ * signature's, each once: overloads repeat them.
+ */
+export function pipelineTags(declaration: Declaration): { stage: string; text: string }[] {
+  const tags = new Map<string, { stage: string; text: string }>()
+  for (const comment of [declaration.comment, ...(declaration.signatures ?? []).map(signature => signature.comment)])
+    for (const block of comment?.blockTags ?? []) {
+      if (block.tag !== '@pipeline') continue
+      const written = block.content
+        .map(part => part.text)
+        .join('')
+        .trim()
+      const [stage = '', ...rest] = written.split(/\s+/)
+      if (stage) tags.set(written, { stage, text: rest.join(' ') })
+    }
+  return [...tags.values()]
 }
 
 /** A declaration's `@group`, from its own comment or, for a function, its signatures'. */

@@ -18,6 +18,7 @@ import { checkGuide, reservedProblems } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
 import { literalCreates, PACKAGE_SPEC } from './lib/package-spec.js'
+import { pipelineStageProblems } from './lib/pipeline-tags.js'
 import { readVersions } from './lib/versions.js'
 import { memberAnchor } from '../src/lib/urls'
 import { cliManifest, subcommandAnchor } from '../src/lib/docs/cli-site'
@@ -41,6 +42,7 @@ function filesUnder(dir: string, root = dir): Record<string, string> {
 const lineAt = (text: string, offset: number) => text.slice(0, offset).split('\n').length
 
 const config = readVersions(paths.versions)
+const problems: string[] = []
 const site: SiteSnapshot = {
   config,
   authored: {},
@@ -68,7 +70,12 @@ for (const { line, versions } of config.lines) {
   site.migrating[line] = readIf(paths.migrating(line))
   site.examples[line] = filesUnder(paths.examples(line))
   for (const version of versions) {
-    if (existsSync(paths.api(version))) site.apis.add(version)
+    const api = readIf(paths.api(version))
+    if (api) {
+      site.apis.add(version)
+      // An API page links each @pipeline stage to its place in the figure on How a call runs
+      problems.push(...pipelineStageProblems(JSON.parse(api), version))
+    }
     const reference = readIf(paths.config(version))
     site.configs[version] = reference ? (JSON.parse(reference) as ConfigDocument) : undefined
     const changelog = readIf(paths.changelog(version))
@@ -78,7 +85,7 @@ for (const { line, versions } of config.lines) {
 
 site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
-const problems = checkSite(site)
+problems.push(...checkSite(site))
 // No Guide page may take a path the site routes itself, or will
 problems.push(...reservedProblems(ROOT))
 

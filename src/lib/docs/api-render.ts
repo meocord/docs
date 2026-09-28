@@ -43,7 +43,8 @@ import type { CliArgument, CliCommand, CliOption } from '../../../scripts/lib/cl
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { guideEnabled, guidePagesTeaching, guideTabs } from '@/lib/docs/guide-site'
+import { guideEnabled, guidePagesTeaching, guideTabs, resolveGuideLink } from '@/lib/docs/guide-site'
+import { stageAnchor, stagesNamed } from '@/lib/docs/pipeline'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
@@ -201,6 +202,7 @@ function sectionIds(anchors: string[]) {
     members: id('members'),
     seeAlso: id('see-also'),
     guide: id('in-the-guide'),
+    pipeline: id('where-it-runs'),
   }
 }
 
@@ -308,14 +310,47 @@ function taughtIn(pages: { title: string; href: string }[], id: string, toc: Toc
   ]
 }
 
+/** A stage of a call an entry runs at, linked to its place in the pipeline figure, with what its tag says. */
+export interface RunsAt {
+  name: string
+  href: string
+  text: string
+}
+
+/**
+ * The stages of How a call runs' figure a symbol's `@pipeline` tags name, in the tags' order. None where
+ * the Guide isn't rendered, since the figure is on one of its pages.
+ */
+export function runsAt(line: string, symbol: Pick<ApiSymbol, 'pipeline'>): RunsAt[] {
+  if (!guideEnabled(line)) return []
+  return symbol.pipeline.flatMap(({ stage, text }) =>
+    stagesNamed(stage).map(found => ({
+      name: found.name,
+      href: resolveGuideLink(line, `guide:how-a-call-runs#${stageAnchor(found.id)}`),
+      text,
+    })),
+  )
+}
+
+/** Where an entry runs in a call, after its description: each stage a link into the figure, and what happens there. */
+function whereItRuns(stages: RunsAt[], id: string, toc: TocEntry[]): Child[] {
+  if (stages.length === 0) return []
+  toc.push({ id, title: 'Where it runs', depth: 2 })
+  return [
+    H2('Where it runs', { key: 'pipeline-heading', id }),
+    ...markdown(stages.map(stage => `- [${stage.name}](${stage.href}) — ${stage.text}`).join('\n'), 'pipeline'),
+  ]
+}
+
 /**
  * The page's content: the symbol's declaration, documentation and members, their long code laid
- * out as `layouts` formats it, and the Guide pages in `guide` that teach it.
+ * out as `layouts` formats it, where it runs in a call, and the Guide pages in `guide` that teach it.
  */
 export function apiArticle(
   symbol: ApiSymbol,
   layouts: Layouts = {},
   guide: { title: string; href: string }[] = [],
+  stages: RunsAt[] = [],
 ): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
   const ids = sectionIds(symbol.anchors)
@@ -338,6 +373,7 @@ export function apiArticle(
     ...(symbol.deprecated ? [Blockquote({ key: 'deprecated', children: markdown(symbol.deprecated, 'd') })] : []),
     signatureBlock(symbol.code, 'declaration', layouts, 'code'),
     ...markdown(symbol.description, 'description'),
+    ...whereItRuns(stages, ids.pipeline, toc),
   ]
 
   const [first, ...overloads] = symbol.signatures
@@ -440,7 +476,7 @@ export function renderApiPage(line: string, section: string, name: string, versi
   const href = model.href({ section: symbol.section, symbol: symbol.name })
   // The Guide teaches the line's API as it stands, so an exact version's page doesn't link it
   const guide = version ? [] : guidePagesTeaching(line, symbol.section, symbol.name)
-  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version), guide)
+  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version), guide, version ? [] : runsAt(line, symbol))
   const trail = apiCrumbs(line, model, symbol.section, symbol.entry)
   const crumbs: Crumb[] = [
     trail[0],
