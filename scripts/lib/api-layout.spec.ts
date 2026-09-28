@@ -21,7 +21,7 @@ describe('formatDisplay', () => {
 
     const returns = (await formatDisplay('returns', text(command.signatures[0].returns!.type)))!
     expect(returns).toMatch(
-      /^<P extends Record<string, any>, R extends void \| Promise<void>>\(\n {2}target: object,\n/,
+      /^<P extends Record<string, any>, R extends Promise<void> \| void>\(\n {2}target: object,\n/,
     )
     expect(returns).toContain('\n  _descriptor:\n    | TypedPropertyDescriptor<')
     expect(returns.endsWith('\n) => void')).toBe(true)
@@ -30,10 +30,10 @@ describe('formatDisplay', () => {
   it("breaks @UseGuard's parameter type into its union's members at a table cell's width", async () => {
     const guard = symbol('decorator', 'UseGuard')
     expect(await formatDisplay('param', text(guard.signatures[0].params[0].type))).toBe(
-      ['(', '  | ((...args: any[]) => GuardInterface)', '  | GuardWithParams', ')[]'].join('\n'),
+      ['(', '  | (new (...args: any[]) => GuardInterface)', '  | GuardWithParams', ')[]'].join('\n'),
     )
     expect(await formatDisplay('declaration', text(guard.code[0]))).toBe(
-      ['UseGuard(', '  ...guards: (((...args: any[]) => GuardInterface) | GuardWithParams)[]', '): any'].join('\n'),
+      ['UseGuard(', '  ...guards: ((new (...args: any[]) => GuardInterface) | GuardWithParams)[]', '): any'].join('\n'),
     )
   })
 

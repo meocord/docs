@@ -132,7 +132,7 @@ describe('apiArticle code', async () => {
   it("lays a long parameter type out in its cell, as @UseGuard's", () => {
     const markup = html('decorator', 'UseGuard')
     const cell = /<code data-type="true">([\s\S]*?)<\/code>/.exec(markup)![1].replace(/<[^>]+>/g, '')
-    expect(cell).toBe(['(', '  | ((...args: any[]) =&gt; GuardInterface)', '  | GuardWithParams', ')[]'].join('\n'))
+    expect(cell).toBe(['(', '  | (new (...args: any[]) =&gt; GuardInterface)', '  | GuardWithParams', ')[]'].join('\n'))
   })
 
   it('keeps short code, and all code without layouts, on one line', () => {

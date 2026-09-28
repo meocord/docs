@@ -183,6 +183,15 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     if (node && ts.isTypeNode(node) && namesAlias(node, context.checker))
       reflection.type = context.converter.convertType(context.withScope(reflection), node)
   })
+  // A signature's type parameter comes from the checker, which reorders a union and fills in a type's
+  // default arguments; its constraint and default read as the declaration writes them
+  app.converter.on(Converter.EVENT_CREATE_TYPE_PARAMETER, (context, reflection) => {
+    const declaration = context.getSymbolFromReflection(reflection)?.declarations?.find(ts.isTypeParameterDeclaration)
+    if (!declaration) return
+    const scope = context.withScope(reflection)
+    if (declaration.constraint) reflection.type = context.converter.convertType(scope, declaration.constraint)
+    if (declaration.default) reflection.default = context.converter.convertType(scope, declaration.default)
+  })
   // TypeDoc names a destructured parameter `__namedParameters`, and a @param names it once resolving; one
   // no @param names reads as it binds, `{ dmOnly, quiet }`
   const bindings = new Map<ParameterReflection, string>()
