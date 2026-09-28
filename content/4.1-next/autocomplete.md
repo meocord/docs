@@ -83,4 +83,4 @@ filters.
 
 - [Context menus](guide:context-menus): commands on a user or a message.
 - [Validation](guide:validation): checking the value the member finally sends.
-- [Invoke and dispatch](guide:invoke-and-dispatch): testing an autocomplete handler with `focused`.
+- [Mocks](guide:mocks#options-and-fields): testing an autocomplete handler, with `focused` naming the option typed in.
