@@ -2,11 +2,12 @@ import { type ChatInputCommandInteraction } from 'discord.js'
 import { respond } from 'meocord/common'
 import { Command, Controller } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
+import { ROLE_IDS } from '@src/guards/role-ids'
 import { RequireRoles } from '@src/guards/roles.guard'
 
 // #region base
 @Controller()
-@RequireRoles('moderator')
+@RequireRoles(ROLE_IDS.moderator)
 export abstract class StaffSlashController {}
 
 @Controller()

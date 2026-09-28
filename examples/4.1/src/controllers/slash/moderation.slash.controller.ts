@@ -3,6 +3,7 @@ import { respond } from 'meocord/common'
 import { Command, Controller } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
 import { OnlyInChannels } from '@src/guards/channel.guard'
+import { ROLE_IDS } from '@src/guards/role-ids'
 import { RequireRoles } from '@src/guards/roles.guard'
 
 @Controller()
@@ -15,7 +16,7 @@ export class ModerationSlashController {
   }
 
   @Command('ban', CommandType.SLASH)
-  @RequireRoles('admin', 'moderator')
+  @RequireRoles(ROLE_IDS.admin, ROLE_IDS.moderator)
   async ban(interaction: ChatInputCommandInteraction) {
     await respond(interaction).send({ content: 'Banned.' })
   }
