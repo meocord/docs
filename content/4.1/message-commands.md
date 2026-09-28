@@ -233,9 +233,11 @@ them a direct message instead, both off by default:
 - `dmOnCooldown` tells the author how long to wait, once per wait. The notice is counted in the app's cooldown
   store, so with a [shared store](/docs/4.1/cooldowns#where-calls-are-counted) it holds across shards.
 
-Only patterned handlers are answered, and only when no exception filter handled the error. A command sent in a
-direct message is answered there, and a member whose direct messages are closed isn't told. Usage errors, a
-guard's or validation's reason and a `UserError` are answered in the channel as before. The texts are
+Only patterned handlers are answered, and only when no exception filter handled the error. The app above takes
+commands in servers only; a bot that also takes them in direct messages, with the `DirectMessages` intent and
+discord.js's `Partials.Channel`, answers one sent there in that conversation. A member whose direct messages are
+closed isn't told. Usage errors, a guard's or validation's reason and a `UserError` are answered in the channel as
+before. The texts are
 `meocord.dm.error` and `meocord.dm.cooldown`, translatable like MeoCord's other texts.
 
 ::example{file="controllers/message/daily.message.controller.spec.ts" region="spec"}

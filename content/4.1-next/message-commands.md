@@ -174,10 +174,11 @@ nothing happened. Two options send them a direct message instead, both off by de
   shards.
 
 Only patterned handlers are answered, and only when no [exception filter](guide:exception-filters) handled the error.
-A command sent in a direct message is answered there. A member whose direct messages are closed isn't told, and
-that's logged at debug level. A usage error, a guard's reason and a `UserError` are answered in the channel as
-before. The texts are `meocord.dm.error` and `meocord.dm.cooldown`, translated like
-[MeoCord's own texts](guide:localisation#meocords-own-texts).
+The app above takes commands in servers only. A bot that also takes them in direct messages, with the
+`DirectMessages` intent and discord.js's `Partials.Channel`, answers one sent there in that conversation. A member
+whose direct messages are closed isn't told, and that's logged at debug level. A usage error, a guard's reason and a
+`UserError` are answered in the channel as before. The texts are `meocord.dm.error` and `meocord.dm.cooldown`,
+translated like [MeoCord's own texts](guide:localisation#meocords-own-texts).
 
 ::example{file="controllers/message/daily.message.controller.ts" region="controller"}
 
