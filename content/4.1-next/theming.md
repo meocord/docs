@@ -146,7 +146,8 @@ To send one message as written, pass `{ fill: false }` as the second argument to
 
 MeoCord's replies to a message are plain text, which a theme leaves as it is: a usage error, a guard's or validation's
 reason, and a `UserError`'s message. With `@MeoCord({ messages: { replyEmoji: true } })` each of them begins with the
-call's `emojis.warning`, and the built-in help with its `emojis.info`: see [Message commands](guide:message-commands).
+call's `emojis.warning`, as do the direct messages of `dmOnError` and `dmOnCooldown`, and the built-in help with its
+`emojis.info`: see [Usage errors](guide:message-commands#usage-errors).
 
 ## Per server and per user
 
