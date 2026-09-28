@@ -32,23 +32,24 @@ export type ChapterId = (typeof CHAPTERS)[number]['id']
  */
 export const PLANNED_ROUTES = ['playground'] as const
 
-/**
- * The paths under `/docs/<line>/` the site already routes, from src/app/docs/[line]/'s folders, and the
- * appendix groups' folders, which a Guide page's own path can't start with either.
- */
+/** The paths under `/docs/<line>/` the site already routes, from src/app/docs/[line]/'s folders. */
 export function routedSlugs(root: string): string[] {
-  const routes = readdirSync(path.join(root, 'src', 'app', 'docs', '[line]'), { withFileTypes: true })
+  return readdirSync(path.join(root, 'src', 'app', 'docs', '[line]'), { withFileTypes: true })
     .filter(entry => entry.isDirectory() && !entry.name.startsWith('['))
     .map(entry => entry.name)
-  return [...routes, 'recipes', 'coming-from']
 }
 
-/** Guide paths that take one of the site's own: a routed path, or a planned one. */
+/**
+ * Guide paths that take one of the site's own: a routed or planned path, or one below it. An appendix
+ * group's folder, `recipes/…` or `coming-from/…`, is a Guide path's own, and only the folder itself is taken.
+ */
 export function reservedProblems(root: string, plan = GUIDE_PLAN): string[] {
   const reserved = new Set([...routedSlugs(root), ...PLANNED_ROUTES])
+  // The groups whose pages sit in a folder of their own, as guidePath places them
+  const folders = new Set(['recipes', 'coming-from'])
   return Object.values(plan)
     .flat()
-    .filter(page => reserved.has(page))
+    .filter(page => reserved.has(page.split('/')[0]!) || folders.has(page))
     .map(page => `The Guide's plan has "${page}", a path the site routes itself`)
 }
 

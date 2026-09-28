@@ -316,9 +316,16 @@ describe('the plan', () => {
   it("takes none of the site's own paths: the routed ones, read from the app, and the planned ones", () => {
     expect(routedSlugs(process.cwd())).toEqual(expect.arrayContaining(['api', 'changelog', 'migrating', 'missing']))
     expect(reservedProblems(process.cwd())).toEqual([])
-    expect(reservedProblems(process.cwd(), { ...GUIDE_PLAN, appendix: ['missing', 'playground'] })).toEqual([
+    expect(
+      reservedProblems(process.cwd(), {
+        ...GUIDE_PLAN,
+        appendix: ['missing', 'playground', 'api/x', 'recipes', 'recipes/tickets'],
+      }),
+    ).toEqual([
       'The Guide\'s plan has "missing", a path the site routes itself',
       'The Guide\'s plan has "playground", a path the site routes itself',
+      'The Guide\'s plan has "api/x", a path the site routes itself',
+      'The Guide\'s plan has "recipes", a path the site routes itself',
     ])
     const pages = Object.values(GUIDE_PLAN).flat()
     expect(
