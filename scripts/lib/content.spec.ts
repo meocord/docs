@@ -179,6 +179,15 @@ describe('checkSite', () => {
     ])
   })
 
+  it('takes a playground link to a line with one, and refuses one to a line without', () => {
+    const pages = {
+      a: page('id: a\ntitle: A', 'Try [the playground](/docs/4.1/playground) or [the old one](/docs/4.0/playground).'),
+    }
+    expect(checkSite(withAuthored(pages))).toEqual([
+      'content/4.1/a.md: /docs/4.0/playground links a playground 4.0 does not have',
+    ])
+  })
+
   it('reads an ::example from examples/compare with from="compare", and refuses other sources', () => {
     const pages = {
       a: page(

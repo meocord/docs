@@ -35,7 +35,8 @@ export type DocsTarget =
   | { kind: 'playground'; line: string; code?: string }
 
 const LINE = /^\d+\.\d+$/
-const SHARED = /^v\d+\.[\w-]+$/
+/** A share link's fragment, which carries a playground's code: `v1.<code>`. */
+export const SHARED_CODE = /^v\d+\.[\w-]+$/
 const VERSION = /^(\d+)\.(\d+)\.\d+(?:-[0-9A-Za-z.-]+)?$/
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
 const ENTRY = /^(?:meocord\/)?([a-z][a-z0-9-]*)$/
@@ -143,7 +144,7 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
       return `/docs/${target.line}/missing/${check(target.id, SLUG, 'page id')}`
 
     case 'playground':
-      return `/docs/${segment}/playground${target.code === undefined ? '' : `#${check(target.code, SHARED, 'share code')}`}`
+      return `/docs/${segment}/playground${target.code === undefined ? '' : `#${check(target.code, SHARED_CODE, 'share code')}`}`
   }
 }
 

@@ -14,6 +14,12 @@ import { docsHref } from '@/lib/urls'
 /** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
 export const guideEnabled = guideRendered
 
+/**
+ * Whether a line has a playground page, and a Playground tab and palette entry for it: its Guide is
+ * rendered, and the build made its runtime.
+ */
+export const hasPlaygroundPage = (line: string) => guideEnabled(line) && playgroundFrame(line) !== undefined
+
 interface Entry {
   page: GuidePage
   body: string
@@ -190,7 +196,7 @@ export function guideTabs(line: string, current: 'guide' | 'api' | 'playground')
   return [
     ...(first ? [{ title: 'Guide', href: guidePageHref(line, first.page), current: current === 'guide' }] : []),
     ...(api ? [{ title: 'API', href: api, current: current === 'api' }] : []),
-    ...(playgroundFrame(line)
+    ...(hasPlaygroundPage(line)
       ? [
           {
             title: 'Playground',

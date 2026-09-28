@@ -66,10 +66,14 @@ export async function encodeShared(shared: Shared): Promise<string> {
 
 /**
  * The code and inputs a fragment carries, or undefined when it carries none it can read: another format,
- * damaged data, or more than a run takes, which it stops decompressing at.
+ * damaged data, a fragment longer than a link carries, or more than a run takes, which it stops
+ * decompressing at.
  */
 export async function decodeShared(fragment: string): Promise<Shared | undefined> {
   const text = fragment.replace(/^#/, '')
+  // Nothing longer than a link can be shared is read: a decompressor may hand over its whole output at once,
+  // WebKit's among them, so only the input's length bounds what decoding allocates
+  if (text.length > PREFIX.length + MAX_SHARED_LENGTH) return undefined
   if (!text.startsWith(PREFIX) || !/^[\w-]+$/.test(text.slice(PREFIX.length))) return undefined
   try {
     const bytes = fromBase64Url(text.slice(PREFIX.length))

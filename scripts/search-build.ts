@@ -36,6 +36,7 @@ import { cliHref, cliManifest } from '../src/lib/docs/cli-site.js'
 import { GLANCE_TOPICS, glanceHref } from '../src/lib/docs/glance.js'
 import type { SearchManifest } from '../src/lib/search-manifest.js'
 import { docsHref } from '../src/lib/urls.js'
+import { hasPlaygroundPage } from '../src/lib/docs/guide-site.js'
 
 const PAGEFIND_DIR = path.join(ROOT, 'public', '_pagefind')
 const PALETTE_DIR = path.join(ROOT, 'public', 'palette')
@@ -134,8 +135,8 @@ for (const line of config.lines) {
           url: glanceHref(line.line, topic.slug),
         }))
       : []
-  // The playground, where the Guide is rendered: every line it renders for gets a runtime
-  const playground = guideRendered(line.line)
+  // The playground, where the line has its page: `playground:build` runs first, so the runtime is known
+  const playground = hasPlaygroundPage(line.line)
     ? [{ name: 'Playground', kind: 'guide', url: docsHref({ kind: 'playground', line: line.line }, config) }]
     : []
   const palette = JSON.stringify(

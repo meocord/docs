@@ -310,8 +310,13 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       }
       const link = parsed.target
       const line = lines.get(link.line)!
-      if (link.kind === 'line' || link.kind === 'missing' || link.kind === 'api-index' || link.kind === 'playground')
+      if (link.kind === 'line' || link.kind === 'missing' || link.kind === 'api-index') continue
+      // A playground exists for a line whose guides the site writes, the lines the build makes a runtime for
+      if (link.kind === 'playground') {
+        if (line.guides !== 'authored')
+          problems.push(`${where}: ${target} links a playground ${link.line} does not have`)
         continue
+      }
       if (link.kind === 'api') {
         const problem = apiLinkProblem(link, line.versions)
         if (problem) problems.push(`${where}: ${target} ${problem}`)

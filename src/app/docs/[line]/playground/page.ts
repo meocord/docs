@@ -3,7 +3,8 @@ import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import { pageMetadata } from '@/lib/docs/page-metadata'
-import { hasPlaygroundPage, renderPlaygroundPage } from '@/lib/docs/playground-page'
+import { hasPlaygroundPage } from '@/lib/docs/guide-site'
+import { renderPlaygroundPage } from '@/lib/docs/playground-page'
 import { lines } from '@/lib/docs/site'
 import { docsHref } from '@/lib/urls'
 
@@ -17,9 +18,9 @@ export const instant = false
 // A line's playground, where its Guide is rendered and the build has its runtime: it runs the line's pin,
 // so there is no page per exact version
 export function generateStaticParams() {
-  return lines()
-    .filter(line => hasPlaygroundPage(line))
-    .map(line => ({ line }))
+  const playgrounds = lines().filter(line => hasPlaygroundPage(line))
+  // Next takes no empty list here: a build where no line has a playground prerenders one line's 404 instead
+  return (playgrounds.length > 0 ? playgrounds : lines().slice(0, 1)).map(line => ({ line }))
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

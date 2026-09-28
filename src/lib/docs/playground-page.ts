@@ -3,7 +3,7 @@ import { Prose } from '@/components/nodes'
 import { PlaygroundPageIsland } from '@/components/prose/PlaygroundPageIsland'
 import { Window } from '@/components/shell/Window'
 import { VERSIONS } from '@/config/versions'
-import { guideEnabled, guideEntries, guidePageHref, guideTabs } from '@/lib/docs/guide-site'
+import { guideEntries, guidePageHref, guideTabs, hasPlaygroundPage } from '@/lib/docs/guide-site'
 import { playgroundFrame } from '@/lib/docs/playground-site'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
@@ -48,9 +48,6 @@ export function guidePlaygrounds(line: string): GuidePlayground[] {
   )
 }
 
-/** Whether a line has a playground page: its Guide is rendered, and the build has its runtime. */
-export const hasPlaygroundPage = (line: string) => guideEnabled(line) && playgroundFrame(line) !== undefined
-
 /**
  * A line's playground: an editor for code and the inputs to dispatch, started from one of the Guide's
  * playgrounds, a Run button, a button that copies a link carrying both, and the result. The code runs as
@@ -59,7 +56,7 @@ export const hasPlaygroundPage = (line: string) => guideEnabled(line) && playgro
  */
 export function renderPlaygroundPage(line: string): NodeInstance | undefined {
   const frame = playgroundFrame(line)
-  if (!guideEnabled(line) || !frame) return undefined
+  if (!hasPlaygroundPage(line) || !frame) return undefined
   const examples = guidePlaygrounds(line)
   const [first] = examples
   const field = (id: string, label: string, control: NodeInstance, hint?: NodeInstance) =>
