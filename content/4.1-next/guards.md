@@ -168,7 +168,8 @@ A guard can also be tested alone, with `createExecutionContext` building the con
 ## Build it
 
 The staff channel shows each piece of feedback with Approve and Reject buttons, and anyone who can see the channel can
-press them. Only the staff should decide, so add a guard that checks for the staff role:
+press them. Only the staff should decide, so add a guard that checks for the staff role. It reads the role from the
+settings' `staffRoleId`, so add `STAFF_ROLE_ID` to `.env`, with your staff role's ID:
 
 ::example{file="tutorial/staff.guard.ts" region="guard"}
 
