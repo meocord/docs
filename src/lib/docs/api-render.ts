@@ -275,9 +275,13 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
   ]
 }
 
-/** The Guide pages that teach an entry, after its reference, as a Guide page lists the API it teaches. */
-function taughtIn(pages: { title: string; href: string }[], id: string): Child[] {
+/**
+ * The Guide pages that teach an entry, after its reference, as a Guide page lists the API it teaches;
+ * listed in the page's contents like its other sections.
+ */
+function taughtIn(pages: { title: string; href: string }[], id: string, toc: TocEntry[]): Child[] {
   if (pages.length === 0) return []
+  toc.push({ id, title: 'In the Guide', depth: 2 })
   return [
     Aside({
       key: 'guide',
@@ -367,7 +371,7 @@ export function apiArticle(
       }),
     )
   }
-  nodes.push(...taughtIn(guide, ids.guide))
+  nodes.push(...taughtIn(guide, ids.guide, toc))
   return { nodes, toc }
 }
 
@@ -657,7 +661,7 @@ export function cliArticle(
       ...commandDetails(sub, 'h3', `sub-${id}`, spec),
     )
   }
-  nodes.push(...taughtIn(guide, 'in-the-guide'))
+  nodes.push(...taughtIn(guide, 'in-the-guide', toc))
   return { nodes, toc }
 }
 

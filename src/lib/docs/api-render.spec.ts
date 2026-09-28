@@ -29,7 +29,10 @@ describe('apiArticle', () => {
   it('lists the Guide pages that teach it, after its reference, at an id of its own', () => {
     const symbol = model.symbol('decorator', 'Cooldown')!
     const guide = [{ title: 'Cooldowns', href: '/docs/4.1/cooldowns' }]
-    const markup = renderToStaticMarkup(Div({ children: apiArticle(symbol, {}, guide).nodes }).render())
+    const { nodes, toc } = apiArticle(symbol, {}, guide)
+    const markup = renderToStaticMarkup(Div({ children: nodes }).render())
+    expect(toc.at(-1)).toEqual({ id: 'in-the-guide', title: 'In the Guide', depth: 2 })
+    expect(apiArticle(symbol).toc.some(entry => entry.id === 'in-the-guide')).toBe(false)
     expect(markup).toContain('<aside data-guide-api="true" aria-labelledby="in-the-guide">')
     expect(markup).toContain('<h2 id="in-the-guide">In the Guide</h2>')
     expect(markup).toContain('<a href="/docs/4.1/cooldowns">Cooldowns</a>')
