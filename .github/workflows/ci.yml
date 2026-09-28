@@ -151,6 +151,8 @@ jobs:
   # every one calibrating its CPU slowdown to itself.
   performance:
     name: Performance (${{ matrix.shard }})
+    # About half a run's runner time, so it runs in the merge queue and on main, where it still gates the merge
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -176,17 +178,21 @@ jobs:
           path: playwright-report
           retention-days: 7
 
-  # The check branch protection requires: the build, the e2e suite and every performance shard passed.
+  # The check branch protection requires: the build, the e2e suite and every performance shard passed, the shards
+  # skipped only on a pull request, where they don't run.
   build-and-e2e:
     name: Build and e2e
     if: always()
     needs: [e2e, performance]
     runs-on: ubuntu-latest
     steps:
-      - run: test "$E2E" = success && test "$PERFORMANCE" = success
+      - run: |
+          test "$E2E" = success
+          test "$PERFORMANCE" = success || { test "$EVENT" = pull_request && test "$PERFORMANCE" = skipped; }
         env:
           E2E: ${{ needs.e2e.result }}
           PERFORMANCE: ${{ needs.performance.result }}
+          EVENT: ${{ github.event_name }}
 
   image:
     name: Image
