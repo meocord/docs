@@ -4,9 +4,18 @@
  * tarball's paths or the bundler's chunk files.
  */
 
-import { readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
 import path from 'path'
-import { Application, Converter, LogLevel, normalizePath, TSConfigReader, type JSONOutput } from 'typedoc'
+import {
+  Application,
+  Converter,
+  LogLevel,
+  normalizePath,
+  type ParameterReflection,
+  TSConfigReader,
+  type JSONOutput,
+} from 'typedoc'
+import semver from 'semver'
 import ts from 'typescript'
 
 export interface ApiMeta {
@@ -77,6 +86,56 @@ export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.Pr
 }
 
 /** Runs TypeDoc over an unpacked package and returns its API document. */
+/** This repository's own install, where the packages a documented package leans on are found. */
+const REPOSITORY_MODULES = path.resolve(import.meta.dirname, '..', '..', 'node_modules')
+
+/**
+ * Links a package's peer dependencies, discord.js among them, from this repository's install into its
+ * node_modules, so the types it names from them resolve rather than read as `any`. A peer the
+ * repository lacks, or holds outside the package's range, fails the generation, naming it.
+ */
+function linkPeers(packageDir: string): void {
+  const manifest = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
+    peerDependencies?: Record<string, string>
+  }
+  for (const [name, range] of Object.entries(manifest.peerDependencies ?? {})) {
+    const installed = path.join(REPOSITORY_MODULES, name)
+    if (!existsSync(path.join(installed, 'package.json')))
+      throw new Error(`${name} ${range}, a peer of the package, isn't installed here: add it to devDependencies.`)
+    const { version } = JSON.parse(readFileSync(path.join(installed, 'package.json'), 'utf8')) as { version: string }
+    if (!semver.satisfies(version, range))
+      throw new Error(`${name}@${version} is installed here, outside the package's peer range ${range}.`)
+    const link = path.join(packageDir, 'node_modules', name)
+    if (existsSync(link)) continue
+    mkdirSync(path.dirname(link), { recursive: true })
+    symlinkSync(realpathSync(installed), link, 'dir')
+  }
+}
+
+/** Whether a type as written names a type alias, directly or in a union or an intersection. */
+function namesAlias(node: ts.TypeNode, checker: ts.TypeChecker): boolean {
+  if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node))
+    return node.types.some(part => namesAlias(part, checker))
+  if (!ts.isTypeReferenceNode(node)) return false
+  const symbol = checker.getSymbolAtLocation(node.typeName)
+  const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
+  return !!target && !!(target.flags & ts.SymbolFlags.TypeAlias)
+}
+
+/** A destructured parameter as it binds: `{ dmOnly, quiet }`, each element by the name a caller passes. */
+function bindingText(pattern: ts.BindingPattern): string {
+  const names = pattern.elements.map(element => {
+    if (ts.isOmittedExpression(element)) return ''
+    const name = ts.isIdentifier(element.name)
+      ? element.propertyName && ts.isIdentifier(element.propertyName)
+        ? element.propertyName.text
+        : element.name.text
+      : bindingText(element.name)
+    return `${element.dotDotDotToken ? '...' : ''}${name}`
+  })
+  return ts.isObjectBindingPattern(pattern) ? `{ ${names.join(', ')} }` : `[${names.join(', ')}]`
+}
+
 export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typedoc'>): Promise<ApiDocument> {
   const entries = entryPoints(packageDir)
   if (Object.keys(entries).length === 0)
@@ -98,6 +157,7 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     }),
   )
 
+  linkPeers(packageDir)
   const app = await Application.bootstrapWithPlugins(
     {
       entryPoints: files,
@@ -116,15 +176,23 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     [new TSConfigReader()],
   )
   // TypeDoc draws a return type from the checker, which resolves a conditional alias, `DeepMocked<T>`,
-  // into its branch: the alias is lost, and its `infer`s read as unbound names. A return written as
-  // an alias's name is drawn as written instead.
+  // into its branch: the alias is lost, and its `infer`s read as unbound names. A return written with an
+  // alias's name, alone or within a union or an intersection, is drawn as written instead.
   app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
     const node = declaration && 'type' in declaration ? declaration.type : undefined
-    if (!node || !ts.isTypeReferenceNode(node)) return
-    const symbol = context.checker.getSymbolAtLocation(node.typeName)
-    const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? context.checker.getAliasedSymbol(symbol) : symbol
-    if (target && target.flags & ts.SymbolFlags.TypeAlias)
+    if (node && ts.isTypeNode(node) && namesAlias(node, context.checker))
       reflection.type = context.converter.convertType(context.withScope(reflection), node)
+  })
+  // TypeDoc names a destructured parameter `__namedParameters`, and a @param names it once resolving; one
+  // no @param names reads as it binds, `{ dmOnly, quiet }`
+  const bindings = new Map<ParameterReflection, string>()
+  app.converter.on(Converter.EVENT_CREATE_PARAMETER, (context, reflection) => {
+    const declaration = context.getSymbolFromReflection(reflection)?.valueDeclaration
+    if (declaration && ts.isParameter(declaration) && !ts.isIdentifier(declaration.name))
+      bindings.set(reflection, bindingText(declaration.name))
+  })
+  app.converter.on(Converter.EVENT_RESOLVE_END, () => {
+    for (const [reflection, binding] of bindings) if (reflection.name === '__namedParameters') reflection.name = binding
   })
   const project = await app.convert()
   if (!project) throw new Error(`TypeDoc could not convert ${meta.package}@${meta.version}.`)

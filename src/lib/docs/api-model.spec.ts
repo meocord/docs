@@ -346,6 +346,18 @@ describe('ApiModel option rows on beta.7', () => {
     expect(hidden.anchor).toBe('hidden')
   })
 
+  it("reads a destructured parameter as it binds, and a return written with an alias's name as written", () => {
+    const usage = byKind.symbol('responses', 'MessageUsageError')!
+    const constructor = usage.members.find(member => member.name === 'constructor')!
+    expect(constructor.code[0]!.map(token => token.text).join('')).toContain('{ serverOnly, dmOnly, quiet }?:')
+    // A destructured parameter a @param names keeps that name
+    const suite = byKind.symbol('testing', 'testCooldownStore')!
+    expect(suite.signatures[0]!.params.map(param => param.name)).toContain('framework')
+    // discord.js resolves, so a return naming its Message reads as written
+    const message = byKind.symbol('testing', 'createMockMessage')!
+    expect(message.signatures[0]!.returns!.type.map(token => token.text).join('')).toMatch(/^DeepMocked<Message> & \{/)
+  })
+
   it("gives an option named like one of the window's ids an anchor of its own, not none", () => {
     const content = byKind
       .symbol('testing', 'createMockMessage')!
