@@ -11,8 +11,12 @@ import {
   Converter,
   LogLevel,
   normalizePath,
-  type ParameterReflection,
+  DeclarationReflection,
+  ParameterReflection,
+  ReflectionKind,
+  type SomeType,
   TSConfigReader,
+  UnionType,
   type JSONOutput,
 } from 'typedoc'
 import semver from 'semver'
@@ -122,6 +126,18 @@ function namesAlias(node: ts.TypeNode, checker: ts.TypeChecker): boolean {
   return !!target && !!(target.flags & ts.SymbolFlags.TypeAlias)
 }
 
+/** A union without its `undefined`, or the one type left. */
+function withoutUndefined(type: SomeType): SomeType {
+  if (type.type !== 'union') return type
+  const types = type.types.filter(each => !(each.type === 'intrinsic' && each.name === 'undefined'))
+  return types.length === 1 ? types[0]! : new UnionType(types)
+}
+
+/** Whether a type holds an object's properties itself, alone or in an intersection: what options are listed from. */
+const spellsOutObject = (type: SomeType): boolean =>
+  (type.type === 'reflection' && !type.declaration.signatures) ||
+  (type.type === 'intersection' && type.types.some(spellsOutObject))
+
 /** A destructured parameter as it binds: `{ dmOnly, quiet }`, each element by the name a caller passes. */
 function bindingText(pattern: ts.BindingPattern): string {
   const names = pattern.elements.map(element => {
@@ -178,10 +194,42 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   // TypeDoc draws a return type from the checker, which resolves a conditional alias, `DeepMocked<T>`,
   // into its branch: the alias is lost, and its `infer`s read as unbound names. A return written with an
   // alias's name, alone or within a union or an intersection, is drawn as written instead.
+  // Parameter types read as written too; where the checker spelled a parameter out as an object, as it
+  // does `ThemeOverride`, that stays beside it as `resolvedType`, which the reference lists options from
+  const resolved = new Map<ParameterReflection | DeclarationReflection, SomeType>()
   app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
     const node = declaration && 'type' in declaration ? declaration.type : undefined
+    const scope = context.withScope(reflection)
     if (node && ts.isTypeNode(node) && namesAlias(node, context.checker))
-      reflection.type = context.converter.convertType(context.withScope(reflection), node)
+      reflection.type = context.converter.convertType(scope, node)
+    for (const parameter of reflection.parameters ?? []) {
+      const written = context.getSymbolFromReflection(parameter)?.valueDeclaration
+      if (!written || !ts.isParameter(written) || !written.type || written.type.kind === ts.SyntaxKind.ThisType)
+        continue
+      const checked = parameter.type
+      const type = context.converter.convertType(scope.withScope(parameter), written.type)
+      // An optional parameter reads without the `undefined` its `?` already says, as TypeDoc draws it
+      parameter.type = written.questionToken ? withoutUndefined(type) : type
+      if (checked && spellsOutObject(checked) && !spellsOutObject(parameter.type)) resolved.set(parameter, checked)
+    }
+  })
+  // A property's type too, where TypeDoc took it from the checker rather than the written node
+  app.converter.on(Converter.EVENT_CREATE_DECLARATION, (context, reflection) => {
+    if (reflection.kind !== ReflectionKind.Property) return
+    const written = context.getSymbolFromReflection(reflection)?.valueDeclaration
+    if (!written || !(ts.isPropertySignature(written) || ts.isPropertyDeclaration(written)) || !written.type) return
+    const checked = reflection.type
+    const type = context.converter.convertType(context.withScope(reflection), written.type)
+    reflection.type = reflection.flags.isOptional ? withoutUndefined(type) : type
+    if (checked && spellsOutObject(checked) && !spellsOutObject(reflection.type)) resolved.set(reflection, checked)
+  })
+  app.serializer.addSerializer<ParameterReflection | DeclarationReflection>({
+    priority: 0,
+    supports: item => item instanceof ParameterReflection || item instanceof DeclarationReflection,
+    toObject: (item, object, serializer) => {
+      const type = resolved.get(item)
+      return type ? { ...object, resolvedType: serializer.toObject(type) } : object
+    },
   })
   // A signature's type parameter comes from the checker, which reorders a union and fills in a type's
   // default arguments; its constraint and default read as the declaration writes them
