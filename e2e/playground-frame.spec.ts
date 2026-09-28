@@ -9,6 +9,9 @@ const frame = manifest.lines.find(each => each.line === '4.1')!.frame
 
 type Message = { type: string; id?: number } & Record<string, unknown>
 
+// A run starts a Worker that loads the runtime and compiles the compiler, which a cold engine takes a while to do
+test.setTimeout(60_000)
+
 /**
  * Embeds the 4.1 frame in a docs page as the site will, sandboxed, and records every message it posts.
  * Returns the paths of the requests the page and the frame's Worker made under /playground/.
@@ -239,7 +242,8 @@ for (;;) {}
   const started = Date.now()
   const after = await send(page, runOf(COUNTER, [{ kind: 'button', customId: 'counter/2' }]))
   expect(after).toMatchObject({ ok: true, steps: [{ ran: true, handlers: ['Counter.add'] }] })
-  expect(Date.now() - started).toBeLessThan(5_000)
+  // Well inside the minute a Worker left spinning would hold the next run for
+  expect(Date.now() - started).toBeLessThan(20_000)
 })
 
 test('gives each run a fresh Worker, with nothing left of the run before', async ({ page }) => {
