@@ -325,7 +325,22 @@ test('answers a malformed request, and one sent while a run is in progress, with
   expect(await send(page, { type: 'run', id: next++, source: 1, dispatch: [] })).toMatchObject({
     ok: false,
     stage: 'request',
-    message: 'the code is over 64,000 characters, the most a run takes',
+    message: 'the code is text',
+  })
+  // A list with holes, made in the page, where postMessage keeps them
+  const id = next++
+  await page.evaluate(id => {
+    const users: string[] = new Array(5)
+    const target = (window as unknown as { __frame: HTMLIFrameElement }).__frame.contentWindow!
+    target.postMessage(
+      { type: 'run', id, source: 'export {}', dispatch: [{ kind: 'userselect', customId: 'x', users }] },
+      '*',
+    )
+  }, id)
+  expect(await resultOf(page, id)).toMatchObject({
+    ok: false,
+    stage: 'request',
+    message: "a user select menu's users are 1 to 25 different snowflakes",
   })
   const first = runOf(COUNTER, [{ kind: 'button', customId: 'counter/1' }])
   const second = runOf(COUNTER, [{ kind: 'button', customId: 'counter/2' }])

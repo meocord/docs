@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   isRunStarted,
+  isSnowflake,
   MAX_RESULT_LENGTH,
   MAX_SOURCE_LENGTH,
   MAX_STEPS,
@@ -68,10 +69,8 @@ describe('parseRunRequest', () => {
       [{ type: 'result' }, 'not a run request'],
       [run({ id: '1' }), 'a run request has a numeric id'],
       [run({ id: 1.5 }), 'a run request has a numeric id'],
-      [
-        run({ source: 1 }),
-        `the code is over ${MAX_SOURCE_LENGTH.toLocaleString('en')} characters, the most a run takes`,
-      ],
+      [run({ source: 1 }), 'the code is text'],
+      [run({ source: 'x\uD800' }), 'the code is text'],
       [run({ source: 'x'.repeat(MAX_SOURCE_LENGTH + 1) }), `the code is over 64,000 characters, the most a run takes`],
       [run({ dispatch: 'x' }), `a run dispatches a list of up to ${MAX_STEPS} inputs`],
       [
@@ -86,11 +85,11 @@ describe('parseRunRequest', () => {
       [run({ dispatch: [{ kind: 'userselect', users: ['1'] }] }), 'a user select menu names its customId'],
       [
         run({ dispatch: [{ kind: 'userselect', customId: 'x', users: ['me'] }] }),
-        "a user select menu's users are 1 to 25 snowflakes",
+        "a user select menu's users are 1 to 25 different snowflakes",
       ],
       [
         run({ dispatch: [{ kind: 'userselect', customId: 'x', users: [] }] }),
-        "a user select menu's users are 1 to 25 snowflakes",
+        "a user select menu's users are 1 to 25 different snowflakes",
       ],
       [run({ dispatch: [{ kind: 'reaction', content: 'x', action: 'add' }] }), 'a reaction names its emoji'],
       [
@@ -111,7 +110,7 @@ describe('parseRunRequest', () => {
       [run({ dispatch: [{ kind: 'button' }] }), 'a button names its customId'],
       [
         run({ dispatch: [{ kind: 'select', customId: 'x', values: [1] }] }),
-        "a select menu's values are up to 25 strings",
+        "a select menu's values are up to 25 different strings",
       ],
       [run({ dispatch: [{ kind: 'select', values: [] }] }), 'a select menu names its customId'],
       [
@@ -122,7 +121,7 @@ describe('parseRunRequest', () => {
       [run({ dispatch: [{ kind: 'message' }] }), 'a message has its content'],
       [run({ caller: 'me' }), 'the caller is an object'],
       [run({ caller: { userId: 'abc' } }), "the caller's userId is a snowflake"],
-      [run({ caller: { username: 'x'.repeat(33) } }), "the caller's username is up to 32 characters"],
+      [run({ caller: { username: 'x'.repeat(33) } }), "the caller's username is 1 to 32 characters"],
       [run({ caller: { inGuild: 'yes' } }), "the caller's inGuild is true or false"],
       [run({ controllers: [1] }), 'controllers are export names'],
     ]
@@ -215,5 +214,82 @@ describe('isRunStarted', () => {
     expect(isRunStarted({ type: 'started', id: 2 }, 3)).toBe(false)
     expect(isRunStarted({ type: 'result', id: 3 }, 3)).toBe(false)
     expect(isRunStarted(null, 3)).toBe(false)
+  })
+})
+
+describe('the shapes every input shares', () => {
+  const sparse = (length: number, ...set: [number, string][]) => {
+    const list: string[] = new Array(length)
+    for (const [index, value] of set) list[index] = value
+    return list
+  }
+  const one = (dispatch: Record<string, unknown>) => parseRunRequest(run({ dispatch: [dispatch] }))
+
+  it('refuses a list with a hole, in a request and in a result, for select values and user select users', () => {
+    const inputs = [
+      { kind: 'select', customId: 'pick', values: sparse(3, [0, 'a']) },
+      { kind: 'userselect', customId: 'assign/7', users: sparse(5) },
+      { kind: 'userselect', customId: 'assign/7', users: sparse(2, [0, '13']) },
+    ]
+    for (const input of inputs) {
+      expect(typeof one(input), JSON.stringify(input)).toBe('string')
+      const step = { input, ran: true, handlers: [], calls: [] }
+      expect(parseRunResult({ type: 'result', id: 3, ok: true, steps: [step], logs: [] }, 3)).toBeUndefined()
+    }
+    // A hole among the dispatches, the handlers or the controllers fails the same way
+    expect(parseRunRequest(run({ dispatch: sparse(2) }))).toBe('each dispatch is an object')
+    expect(parseRunRequest(run({ controllers: sparse(2, [0, 'A']) }))).toBe('controllers are export names')
+    const holed = { input: { kind: 'button', customId: 'x' }, ran: true, handlers: sparse(2, [0, 'A.a']), calls: [] }
+    expect(parseRunResult({ type: 'result', id: 3, ok: true, steps: [holed], logs: [] }, 3)).toBeUndefined()
+  })
+
+  it('refuses a lone surrogate in every text an input carries', () => {
+    const lone = '\uD800'
+    const cases: [Record<string, unknown>, string][] = [
+      [{ kind: 'reaction', emoji: lone, content: 'x', action: 'add' }, 'a reaction names its emoji'],
+      [{ kind: 'reaction', emoji: '⭐', content: `hi ${lone}`, action: 'add' }, "a reaction's message has its content"],
+      [{ kind: 'message', content: lone }, 'a message has its content'],
+      [{ kind: 'button', customId: `a${lone}` }, 'a button names its customId'],
+      [{ kind: 'select', customId: 'pick', values: [lone] }, "a select menu's values are up to 25 different strings"],
+      [{ kind: 'modal', customId: 'form', fields: { about: lone } }, "a modal's fields are strings by custom ID"],
+      [{ kind: 'modal', customId: 'form', fields: { [lone]: 'x' } }, "a modal's fields are strings by custom ID"],
+      [{ kind: 'slash', command: lone }, 'a slash dispatch names its command'],
+      [{ kind: 'slash', command: 'x', options: { note: lone } }, 'option note is a string, a number or a boolean'],
+      [{ kind: 'slash', command: 'x', options: { [lone]: 1 } }, 'an option is named in 1 to 32 characters'],
+    ]
+    for (const [input, reason] of cases) expect(one(input), JSON.stringify(input)).toBe(reason)
+    expect(parseRunRequest(run({ caller: { username: lone } }))).toBe("the caller's username is 1 to 32 characters")
+  })
+
+  it('takes a snowflake as Discord writes one, for the users and the caller alike', () => {
+    for (const id of ['1', '13', '100000000000000001', '18446744073709551615']) {
+      expect(isSnowflake(id), id).toBe(true)
+      expect(one({ kind: 'userselect', customId: 'x', users: [id] }), id).toMatchObject({ dispatch: [{ users: [id] }] })
+      expect(parseRunRequest(run({ caller: { userId: id } })), id).toMatchObject({ caller: { userId: id } })
+    }
+    for (const id of ['0', '007', '18446744073709551616', '123456789012345678901', '-1', '1e3', ' 13', 13]) {
+      expect(isSnowflake(id), String(id)).toBe(false)
+      expect(one({ kind: 'userselect', customId: 'x', users: [id] }), String(id)).toBe(
+        "a user select menu's users are 1 to 25 different snowflakes",
+      )
+      expect(parseRunRequest(run({ caller: { userId: id } })), String(id)).toBe("the caller's userId is a snowflake")
+    }
+  })
+
+  it('refuses a user or a value picked twice, and an empty custom ID wherever one is named', () => {
+    expect(one({ kind: 'userselect', customId: 'x', users: ['13', '13'] })).toBe(
+      "a user select menu's users are 1 to 25 different snowflakes",
+    )
+    expect(one({ kind: 'select', customId: 'x', values: ['a', 'a'] })).toBe(
+      "a select menu's values are up to 25 different strings",
+    )
+    expect(one({ kind: 'button', customId: '' })).toBe('a button names its customId')
+    expect(one({ kind: 'select', customId: '', values: [] })).toBe('a select menu names its customId')
+    expect(one({ kind: 'userselect', customId: '', users: ['13'] })).toBe('a user select menu names its customId')
+    expect(one({ kind: 'modal', customId: '', fields: {} })).toBe('a modal names its customId')
+    expect(one({ kind: 'modal', customId: 'form', fields: { '': 'x' } })).toBe(
+      "a modal's fields are strings by custom ID",
+    )
+    expect(one({ kind: 'button', customId: 'x'.repeat(101) })).toBe('a button names its customId')
   })
 })

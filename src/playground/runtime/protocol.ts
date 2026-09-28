@@ -104,17 +104,51 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const isId = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value)
 
-const isText = (value: unknown, max = 4000): value is string => typeof value === 'string' && value.length <= max
+/**
+ * A string of `min` to `max` UTF-16 code units, and well formed: a lone surrogate is in no text Discord sends,
+ * and breaks what encodes it.
+ */
+const isText = (value: unknown, { min = 0, max = 4000 }: { min?: number; max?: number } = {}): value is string =>
+  typeof value === 'string' && value.length >= min && value.length <= max && value.isWellFormed()
+
+/** A component's or a modal field's custom ID: 1 to 100 characters, as Discord takes it. */
+const isCustomId = (value: unknown): value is string => isText(value, { min: 1, max: 100 })
+
+const SNOWFLAKE = /^[1-9]\d{0,19}$/
+const MAX_SNOWFLAKE = 2n ** 64n - 1n
+
+/** A Discord id: a decimal number with no leading zero, at most 2⁶⁴ − 1. */
+export const isSnowflake = (value: unknown): value is string =>
+  typeof value === 'string' && SNOWFLAKE.test(value) && BigInt(value) <= MAX_SNOWFLAKE
+
+/**
+ * A list of `min` to `max` strings, each passing `item`, or undefined when it isn't one. It is read by index,
+ * so a hole is an item that fails; with `unique`, no string may come twice.
+ */
+function stringList(
+  value: unknown,
+  { min, max, item, unique = false }: { min: number; max: number; item: (each: unknown) => boolean; unique?: boolean },
+): string[] | undefined {
+  if (!Array.isArray(value) || value.length < min || value.length > max) return undefined
+  const list: string[] = []
+  for (let index = 0; index < value.length; index += 1) {
+    const each: unknown = value[index]
+    if (!item(each)) return undefined
+    list.push(each as string)
+  }
+  return unique && new Set(list).size !== list.length ? undefined : list
+}
 
 function parseDispatch(value: unknown): Dispatch | string {
   if (!isRecord(value)) return 'each dispatch is an object'
   switch (value.kind) {
     case 'slash': {
-      if (!isText(value.command, 100) || value.command === '') return 'a slash dispatch names its command'
+      if (!isText(value.command, { min: 1, max: 100 })) return 'a slash dispatch names its command'
       if (value.options === undefined) return { kind: 'slash', command: value.command }
       if (!isRecord(value.options)) return "a slash dispatch's options are an object"
       const options: Record<string, string | number | boolean> = {}
       for (const [name, option] of Object.entries(value.options)) {
+        if (!isText(name, { min: 1, max: 32 })) return 'an option is named in 1 to 32 characters'
         if (!(isText(option) || typeof option === 'number' || typeof option === 'boolean'))
           return `option ${name} is a string, a number or a boolean`
         options[name] = option
@@ -122,34 +156,41 @@ function parseDispatch(value: unknown): Dispatch | string {
       return { kind: 'slash', command: value.command, options }
     }
     case 'button':
-      return isText(value.customId, 100) ? { kind: 'button', customId: value.customId } : 'a button names its customId'
-    case 'select':
-      if (!isText(value.customId, 100)) return 'a select menu names its customId'
-      if (!Array.isArray(value.values) || !value.values.every(each => isText(each, 100)) || value.values.length > 25)
-        return "a select menu's values are up to 25 strings"
-      return { kind: 'select', customId: value.customId, values: [...value.values] }
+      return isCustomId(value.customId) ? { kind: 'button', customId: value.customId } : 'a button names its customId'
+    case 'select': {
+      if (!isCustomId(value.customId)) return 'a select menu names its customId'
+      const values = stringList(value.values, {
+        min: 0,
+        max: 25,
+        item: each => isText(each, { min: 1, max: 100 }),
+        unique: true,
+      })
+      if (!values) return "a select menu's values are up to 25 different strings"
+      return { kind: 'select', customId: value.customId, values }
+    }
+    case 'userselect': {
+      if (!isCustomId(value.customId)) return 'a user select menu names its customId'
+      const users = stringList(value.users, { min: 1, max: 25, item: isSnowflake, unique: true })
+      if (!users) return "a user select menu's users are 1 to 25 different snowflakes"
+      return { kind: 'userselect', customId: value.customId, users }
+    }
     case 'modal': {
-      if (!isText(value.customId, 100)) return 'a modal names its customId'
-      if (!isRecord(value.fields) || !Object.values(value.fields).every(each => isText(each)))
-        return "a modal's fields are strings by custom ID"
-      return { kind: 'modal', customId: value.customId, fields: { ...(value.fields as Record<string, string>) } }
+      if (!isCustomId(value.customId)) return 'a modal names its customId'
+      if (!isRecord(value.fields)) return "a modal's fields are strings by custom ID"
+      const fields: Record<string, string> = {}
+      for (const [id, field] of Object.entries(value.fields)) {
+        if (!isCustomId(id) || !isText(field)) return "a modal's fields are strings by custom ID"
+        fields[id] = field
+      }
+      return { kind: 'modal', customId: value.customId, fields }
     }
     case 'message':
-      return isText(value.content, 2000) ? { kind: 'message', content: value.content } : 'a message has its content'
-    case 'userselect': {
-      if (!isText(value.customId, 100)) return 'a user select menu names its customId'
-      if (
-        !Array.isArray(value.users) ||
-        value.users.length === 0 ||
-        value.users.length > 25 ||
-        !value.users.every(each => isText(each, 20) && /^\d+$/.test(each))
-      )
-        return "a user select menu's users are 1 to 25 snowflakes"
-      return { kind: 'userselect', customId: value.customId, users: [...value.users] }
-    }
+      return isText(value.content, { max: 2000 })
+        ? { kind: 'message', content: value.content }
+        : 'a message has its content'
     case 'reaction': {
-      if (!isText(value.emoji, 64) || value.emoji === '') return 'a reaction names its emoji'
-      if (!isText(value.content, 2000)) return "a reaction's message has its content"
+      if (!isText(value.emoji, { min: 1, max: 64 })) return 'a reaction names its emoji'
+      if (!isText(value.content, { max: 2000 })) return "a reaction's message has its content"
       if (value.action !== 'add' && value.action !== 'remove') return "a reaction's action is add or remove"
       return { kind: 'reaction', emoji: value.emoji, content: value.content, action: value.action }
     }
@@ -169,13 +210,15 @@ function parseDispatch(value: unknown): Dispatch | string {
 export function parseRunRequest(data: unknown): RunRequest | string {
   if (!isRecord(data) || data.type !== 'run') return 'not a run request'
   if (!isId(data.id)) return 'a run request has a numeric id'
-  if (!isText(data.source, MAX_SOURCE_LENGTH))
+  if (typeof data.source !== 'string' || !data.source.isWellFormed()) return 'the code is text'
+  if (data.source.length > MAX_SOURCE_LENGTH)
     return `the code is over ${MAX_SOURCE_LENGTH.toLocaleString('en')} characters, the most a run takes`
   if (!Array.isArray(data.dispatch) || data.dispatch.length > MAX_STEPS)
     return `a run dispatches a list of up to ${MAX_STEPS} inputs`
   const dispatch: Dispatch[] = []
-  for (const each of data.dispatch) {
-    const parsed = parseDispatch(each)
+  // By index, so a hole is an input that fails
+  for (let index = 0; index < data.dispatch.length; index += 1) {
+    const parsed = parseDispatch(data.dispatch[index])
     if (typeof parsed === 'string') return parsed
     dispatch.push(parsed)
   }
@@ -183,16 +226,20 @@ export function parseRunRequest(data: unknown): RunRequest | string {
   if (data.caller !== undefined) {
     if (!isRecord(data.caller)) return 'the caller is an object'
     const { userId, username, inGuild } = data.caller
-    if (userId !== undefined && !(isText(userId, 20) && /^\d+$/.test(userId)))
-      return "the caller's userId is a snowflake"
-    if (username !== undefined && !isText(username, 32)) return "the caller's username is up to 32 characters"
+    if (userId !== undefined && !isSnowflake(userId)) return "the caller's userId is a snowflake"
+    if (username !== undefined && !isText(username, { min: 1, max: 32 }))
+      return "the caller's username is 1 to 32 characters"
     if (inGuild !== undefined && typeof inGuild !== 'boolean') return "the caller's inGuild is true or false"
     request.caller = { userId, username, inGuild }
   }
   if (data.controllers !== undefined) {
-    if (!Array.isArray(data.controllers) || !data.controllers.every(each => isText(each, 100)))
-      return 'controllers are export names'
-    request.controllers = [...data.controllers]
+    const controllers = stringList(data.controllers, {
+      min: 0,
+      max: 50,
+      item: each => isText(each, { min: 1, max: 100 }),
+    })
+    if (!controllers) return 'controllers are export names'
+    request.controllers = controllers
   }
   return request
 }
@@ -212,7 +259,8 @@ function parseStep(value: unknown): Step | undefined {
   if (!isRecord(value) || typeof value.ran !== 'boolean') return undefined
   const input = parseDispatch(value.input)
   if (typeof input === 'string') return undefined
-  if (!Array.isArray(value.handlers) || !value.handlers.every(each => typeof each === 'string')) return undefined
+  const handlers = stringList(value.handlers, { min: 0, max: 50, item: each => typeof each === 'string' })
+  if (!handlers) return undefined
   const { error } = value
   if (error !== undefined && !(isRecord(error) && typeof error.name === 'string' && typeof error.message === 'string'))
     return undefined
@@ -230,7 +278,7 @@ function parseStep(value: unknown): Step | undefined {
   return {
     input,
     ran: value.ran,
-    handlers: [...value.handlers],
+    handlers,
     ...(error !== undefined && { error: { name: error.name as string, message: error.message as string } }),
     calls,
   }

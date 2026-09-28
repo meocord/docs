@@ -175,6 +175,27 @@ function mockUser(testing: Testing, id: string, username: string): Record<string
   return testing.createMockUser({ id, username })
 }
 
+const CUSTOM_EMOJI = /^<(a?):(\w{2,32}):(\d{17,20})>$/
+
+/**
+ * A reaction's emoji as discord.js gives it: a server's own, written `<:name:id>` as Discord formats it, by its
+ * name and id; any other, by its name alone.
+ */
+function emojiOf(written: string) {
+  const custom = CUSTOM_EMOJI.exec(written)
+  if (custom) {
+    const [, animated, name, id] = custom
+    return {
+      name,
+      id,
+      animated: animated === 'a',
+      identifier: `${animated ? 'a:' : ''}${name}:${id}`,
+      toString: () => written,
+    }
+  }
+  return { name: written, id: null, animated: false, identifier: encodeURIComponent(written), toString: () => written }
+}
+
 /** The playground's server, where a call comes from unless the caller is in a DM. */
 const SERVER_NAME = 'MeoCord Playground'
 
@@ -226,10 +247,9 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
     }
     case 'reaction': {
       const message = testing.createMockMessage({ ...from, content: dispatch.content })
-      const { emoji } = dispatch
       const reaction = testing.createMockInteraction(discord.MessageReaction, {
         message,
-        emoji: { name: emoji, id: null, identifier: encodeURIComponent(emoji), toString: () => emoji },
+        emoji: emojiOf(dispatch.emoji),
         count: 1,
       })
       const { ADD, REMOVE } = context.enums.ReactionHandlerAction
