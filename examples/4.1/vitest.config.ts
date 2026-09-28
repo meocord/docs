@@ -15,5 +15,11 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@src': fileURLToPath(new URL('./src', import.meta.url)) } },
-  test: { setupFiles: ['reflect-metadata'], clearMocks: true, include: ['src/**/*.spec.ts'] },
+  test: {
+    setupFiles: ['reflect-metadata'],
+    clearMocks: true,
+    include: ['src/**/*.spec.ts'],
+    // What a bot's .env gives the examples that read it; a spec has no .env of its own
+    env: { ADMIN_ROLE_ID: '222222222222222222', MODERATOR_ROLE_ID: '333333333333333333' },
+  },
 })
