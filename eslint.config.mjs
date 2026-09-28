@@ -74,6 +74,24 @@ export default defineConfig([
     rules: { '@next/next/no-assign-module-variable': 'off' },
   },
   {
+    // Every axe run goes through e2e/axe.ts, which lets the page's animations settle first
+    files: ['e2e/**'],
+    ignores: ['e2e/axe.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@axe-core/playwright',
+              message: "Run axe through e2e/axe.ts's axe(), which settles animations first.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Files the rule below does not cover still import the factories through their module
     files: ['src/**'],
     ignores: ['src/app/**', 'src/components/**'],
