@@ -63,7 +63,12 @@ export function jumps(entries: readonly PaletteEntry[], query: string, limit = 5
       url: entry.url,
       title: entry.name,
       kind: entry.kind,
-      excerpt: entry.kind === 'guide' ? 'Guide' : `${entry.kind.replace('-', ' ')} in meocord/${entry.entry}`,
+      excerpt:
+        entry.kind === 'guide'
+          ? 'Guide'
+          : entry.kind === 'command'
+            ? 'CLI command'
+            : `${entry.kind.replace('-', ' ')} in meocord/${entry.entry}`,
       sections: [],
       score: 0,
     }))

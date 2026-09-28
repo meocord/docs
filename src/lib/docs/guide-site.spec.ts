@@ -50,6 +50,9 @@ describe('the Guide', () => {
     expect(resolveGuideLink('4.1', 'guide:migrating#start')).toBe('/docs/4.1/migrating#start')
     expect(resolveGuideLink('4.1', 'guide:changelog')).toBe('/docs/4.1/changelog')
     expect(resolveGuideLink('4.1', 'api:decorators/UseGuard')).toBe('/docs/4.1/api/decorators/UseGuard')
+    // A CLI command, and a subcommand at its anchor on the command's page
+    expect(resolveGuideLink('4.1', 'api:cli/build')).toBe('/docs/4.1/api/cli/build')
+    expect(resolveGuideLink('4.1', 'api:cli/generate#controller')).toBe('/docs/4.1/api/cli/generate#controller')
     expect(resolveGuideLink('4.1', 'https://discord.com')).toBe('https://discord.com')
   })
 

@@ -9,6 +9,7 @@ import { readdirSync, readFileSync } from 'fs'
 import semver from 'semver'
 import type { TrustedRoot } from '@sigstore/protobuf-specs'
 import { generateApi } from './api.js'
+import { readCliManifest } from './cli.js'
 import { parseChangelog, rewriteLibraryLinks, sliceChangelog } from './changelog.js'
 import { configReference } from './config-reference.js'
 import {
@@ -62,6 +63,9 @@ export async function generateVersion(pkg: VerifiedPackage, config: VersionsConf
   )
   const section = rewriteLibraryLinks(sliceChangelog(pkg.changelog(), pkg.version), line, linkAnchors(config, line))
   writeChangelog(parseChangelog(pkg.version, section, pkg.published))
+  // The CLI's reference, from the versions that ship one
+  const cli = readCliManifest(pkg.dir, pkg.version)
+  if (cli) writeJson(paths.cli(pkg.version), cli)
 }
 
 /** Rewrites since.json from every API document in the repository. */

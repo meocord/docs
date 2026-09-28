@@ -20,6 +20,8 @@ import { listPages, loadPage, resolveExample } from './lib/pages.js'
 import {
   apiDocuments,
   changelogDocuments,
+  cliDocuments,
+  cliPaletteEntries,
   guideDocument,
   guidePageDocuments,
   migratingDocument,
@@ -29,7 +31,8 @@ import {
 } from './lib/search.js'
 import type { SinceEntry } from './lib/since.js'
 import { readVersions } from './lib/versions.js'
-import { apiModel } from '../src/lib/docs/api-site.js'
+import { apiArrangement, apiModel } from '../src/lib/docs/api-site.js'
+import { cliHref, cliManifest } from '../src/lib/docs/cli-site.js'
 import type { SearchManifest } from '../src/lib/search-manifest.js'
 
 const PAGEFIND_DIR = path.join(ROOT, 'public', '_pagefind')
@@ -101,6 +104,10 @@ for (const line of config.lines) {
     return location && model!.href(location)
   }
   if (api) documents.push(...apiDocuments(line.line, api, config, hrefOf))
+  // The CLI's commands, where the line's API is arranged by kind and its newest version ships their manifest
+  const cli = apiArrangement(line.line) === 'kind' ? cliManifest(newestFirst[0]) : undefined
+  const cliHrefOf = (command: string, sub?: string) => cliHref(line.line, command, sub)
+  if (cli) documents.push(...cliDocuments(line.line, cli, cliHrefOf))
 
   const pages = documents
     .map(document => ({ url: document.url, html: searchHtml(document, config) }))
@@ -118,7 +125,9 @@ for (const line of config.lines) {
   const searchPath = `/_pagefind/${line.line}.${hashTree(staging)}/`
   renameSync(staging, path.join(ROOT, 'public', searchPath))
 
-  const palette = JSON.stringify(paletteIndex(line.line, guides, api, since, config, hrefOf))
+  const palette = JSON.stringify(
+    paletteIndex(line.line, guides, api, since, config, hrefOf, cli ? cliPaletteEntries(cli, cliHrefOf) : []),
+  )
   const palettePath = `/palette/${line.line}.${hash(palette)}.json`
   writeFileSync(path.join(ROOT, 'public', palettePath), `${palette}\n`)
 

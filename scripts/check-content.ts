@@ -19,6 +19,7 @@ import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
 import { memberAnchor } from '../src/lib/urls'
+import { cliManifest, subcommandAnchor } from '../src/lib/docs/cli-site'
 import { apiModel } from '../src/lib/docs/api-site.js'
 
 const readIf = (file: string) => (existsSync(file) ? readFileSync(file, 'utf8') : undefined)
@@ -117,6 +118,13 @@ for (const line of config.lines) {
     // A link names a member as it is written, and goes to its anchor, wherever the page moved it
     known.members.push(...symbol.anchors, ...symbol.members.map(member => memberAnchor(member.name)))
     apiSymbols.set(name, known)
+  }
+  // The CLI's commands, as the Guide names them: api:cli/<command>[#subcommand]
+  for (const command of cliManifest(line.versions.at(-1))?.commands ?? []) {
+    const known = apiSymbols.get(command.name) ?? { kinds: [], members: [] }
+    known.kinds.push('cli')
+    known.members.push(...command.commands.map(subcommandAnchor))
+    apiSymbols.set(command.name, known)
   }
   const migrating = site.migrating[line.line]
   const report = checkGuide(files, {

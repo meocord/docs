@@ -18,6 +18,7 @@ exact version they describe.
 | `generated/changelog/<version>.json`   | The version's CHANGELOG.md section, split into entries, each marked if breaking                                            | the pipeline only   |
 | `generated/readme-anchors/<line>.json` | For a line whose guides are imported from its README: which page holds each heading                                        | the pipeline only   |
 | `generated/config/<version>.json`      | The version's `meocord.config.ts` options, read from its API document and since.json                                       | the pipeline only   |
+| `generated/cli/<version>.json`         | The version's CLI commands, arguments and options, from the `dist/cli.json` its package ships (from 4.1.0-beta.7)          | the pipeline only   |
 | `generated/since.json`                 | The first version every symbol, member and parameter appears in, from the API diffs                                        | the pipeline only   |
 
 A line's status is `prerelease`, `current`, `maintained` or `archived`. `latest` is the current line and

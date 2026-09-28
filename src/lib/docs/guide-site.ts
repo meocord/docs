@@ -3,7 +3,8 @@ import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
 import { VERSIONS } from '@/config/versions'
-import { apiLandingHref, apiModel, resolveSiteHref } from '@/lib/docs/api-site'
+import { apiLandingHref, apiModel, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
+import { CLI_SECTION, cliCommand, cliHref, cliManifest } from '@/lib/docs/cli-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
@@ -47,7 +48,12 @@ export function resolveGuideLink(line: string, url: string): string {
     return guidePageHref(line, { id: id!, group: group as GuidePage['group'] }, anchor)
   }
   if (base.startsWith('api:')) {
-    const symbol = base.slice('api:'.length).split('/')[1]
+    const [kind, symbol] = base.slice('api:'.length).split('/')
+    // A CLI command, and a subcommand at its anchor on the command's page
+    if (kind === CLI_SECTION) {
+      const manifest = cliManifest(lineVersions(line)[0])
+      return manifest && cliCommand(manifest, symbol) ? cliHref(line, symbol, anchor) : url
+    }
     const model = apiModel(line)
     const found = model?.find(symbol)
     return found && model ? model.href({ ...found, member: anchor }) : url

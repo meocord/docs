@@ -2,8 +2,17 @@ import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
-import { apiArrangement, apiKindParams, apiModel, apiParams, exactApiParams } from '@/lib/docs/api-site'
-import { renderApiKind, renderApiPage } from '@/lib/docs/api-render'
+import {
+  apiArrangement,
+  apiKindParams,
+  apiModel,
+  apiParams,
+  cliParams,
+  exactApiParams,
+  lineVersions,
+} from '@/lib/docs/api-site'
+import { renderApiKind, renderApiPage, renderCliPage } from '@/lib/docs/api-render'
+import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
 import { docsHref } from '@/lib/urls'
 import { firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -31,6 +40,10 @@ export function generateStaticParams() {
     ...apiKindParams().map(({ line, section }) => ({ line, path: [section] })),
     ...apiParams().map(({ line, section, symbol }) => ({ line, path: [section, symbol] })),
     ...exactApiParams().map(({ line, version, section, symbol }) => ({ line, path: [version, section, symbol] })),
+    ...cliParams().map(({ line, version, command }) => ({
+      line,
+      path: version ? [version, CLI_SECTION, command] : [CLI_SECTION, command],
+    })),
   ]
 }
 
@@ -48,6 +61,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       line,
       description: `MeoCord ${line}'s ${kind.title.toLowerCase()}: ${kind.symbols.map(symbol => symbol.name).join(', ')}.`,
       canonical: docsHref({ kind: 'api-index', line, section: target.section }, VERSIONS),
+    })
+  }
+  // A CLI command's page, where the line's API is arranged by kind
+  if (target.section === CLI_SECTION && apiArrangement(line) === 'kind') {
+    const manifest = cliManifest(target.version ?? lineVersions(line)[0])
+    const command = manifest && cliCommand(manifest, target.symbol)
+    if (!command) return {}
+    return pageMetadata({
+      title: `meocord ${command.name} · CLI${target.version ? ` ${target.version}` : ''}`,
+      line,
+      description: commandSummary(command) || `The meocord ${command.name} command.`,
+      canonical: docsHref({ kind: 'api', line, section: CLI_SECTION, symbol: command.name }, VERSIONS),
+      index: !target.version,
     })
   }
   const symbol = apiModel(line, target.version)?.symbol(target.section, target.symbol)
@@ -74,9 +100,10 @@ async function apiPage(line: string, path: string[]) {
   cacheLife('max')
   const target = parse(line, path)
   if (!target) return undefined
-  return target.symbol
-    ? renderApiPage(line, target.section, target.symbol, target.version)?.render()
-    : renderApiKind(line, target.section)?.render()
+  if (!target.symbol) return renderApiKind(line, target.section)?.render()
+  return target.section === CLI_SECTION && apiArrangement(line) === 'kind'
+    ? renderCliPage(line, target.symbol, target.version)?.render()
+    : renderApiPage(line, target.section, target.symbol, target.version)?.render()
 }
 
 export default async function ApiPage({ params }: Params) {
