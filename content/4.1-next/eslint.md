@@ -9,6 +9,7 @@ learn:
   - Catch import cycles before the bot refuses to start over one
 requires: [project-structure, services]
 api: [configuration/typescriptConfig]
+since: 4.0.0
 ---
 
 `meocord/eslint` exports a base ESLint config for a MeoCord project. It lints your TypeScript, `meocord.config.ts`

@@ -38,7 +38,7 @@ once, and nothing else changes. Unset, `sharding` leaves `clientOptions.shards` 
 
 ## A process per shard
 
-`mode: 'process'` runs each shard in a process of its own. Start the bot as usual, with `meocord start`,
+`mode: 'process'` runs each shard in a process of its own. Start the bot as usual, with `npx meocord start`,
 `node dist/main.js`, Bun, pm2 or Docker, and the first process becomes a manager that:
 
 - registers the commands once, then spawns the shards one after another from the built bundle, with the same runtime

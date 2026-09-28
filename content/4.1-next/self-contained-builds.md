@@ -62,7 +62,7 @@ declares. So a glibc build carries no musl binaries, even where both were instal
 
 A compiled binary loads only on the operating system, CPU and C library it was built for. A build made on a Mac
 carries macOS binaries, and a Debian (glibc) binary doesn't load on Alpine (musl). Build on the platform you deploy to:
-for a container, run `meocord build` inside the image.
+for a container, run `npx meocord build --prod` inside the image.
 
 The build records its platform in `meocord.platform.json`. A bot started on another platform stops before it goes
 online, with a message naming both.

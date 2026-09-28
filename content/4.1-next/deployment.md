@@ -11,6 +11,7 @@ learn:
   - Choose the runtime the bot runs on
 requires: [cli, configuration, lifecycle-hooks]
 api: [cli/build, cli/start, configuration/MeoCordConfig]
+since: 4.0.0
 ---
 
 A deployed bot is a production build, its production dependencies, and the environment it reads its token from. This
@@ -159,9 +160,9 @@ the bot the only process, and it receives the signal itself.
 decides: `bun run` points `npm_execpath` at its own binary, and npm, pnpm and yarn at a `.js` file, which falls through
 to Node.
 
-It decides more than tidiness. It spares a Bun-only image a second runtime just to launch, and it picks the allocator,
-which matters for a bot doing heavy native work such as canvas rendering. Development runs the bundle through the same
-command, so the runtime in `--dev` is the one that ships. To pin a binary, set `MEOCORD_RUNTIME`:
+The choice matters for more than tidiness. It spares a Bun-only image a second runtime just to launch, and it picks
+the allocator, which matters for a bot doing heavy native work such as canvas rendering. Development runs the bundle
+through the same command, so the runtime in `--dev` is the one that ships. To pin a binary, set `MEOCORD_RUNTIME`:
 
 ```bash
 MEOCORD_RUNTIME=/usr/local/bin/bun npm run start
@@ -193,13 +194,7 @@ Then `bun run start` runs the CLI and the bot on Bun, and Node needn't exist.
 The feedback bot runs in your test server with `start --dev`. Put it on a server of its own. Its `.env` there holds the
 three values it reads: `DISCORD_TOKEN`, the review channel's ID in `FEEDBACK_CHANNEL_ID`, and in `STAFF_ROLE_ID` the
 role the staff guard checks. To copy an ID, turn on **Developer Mode** under Discord's **Advanced** settings, then
-right-click the channel or role. Then build it and start it:
-
-```bash
-npm ci && npx meocord build --prod
-npm ci --omit=dev
-npx meocord start --prod
-```
+right-click the channel or role. Then build and start it there with the three commands in [Example](#example).
 
 The bot logs in and registers `/feedback` everywhere it's installed. Run it from another account: the form opens, and
 the report reaches the review channel.
