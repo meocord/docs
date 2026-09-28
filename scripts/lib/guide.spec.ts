@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { checkGuide, guidePath, readingOrder, type GuideContext, type GuidePage } from './guide'
+import {
+  checkGuide,
+  GUIDE_PLAN,
+  guidePath,
+  readingOrder,
+  RESERVED_SLUGS,
+  type GuideContext,
+  type GuidePage,
+} from './guide'
 
 const context: GuideContext = {
   line: '4.1',
@@ -301,6 +309,18 @@ describe('checkGuide', () => {
       'content/4.1-next/guards.md: an ::example reads from "4.0", but only "compare" can be named',
       'content/4.1-next/guards.md: an ::example names no file',
     ])
+  })
+})
+
+describe('the plan', () => {
+  it("takes none of the site's own paths: a page is its slug, or a slug in an appendix group's folder", () => {
+    const reserved = new Set<string>(RESERVED_SLUGS)
+    const pages = Object.values(GUIDE_PLAN).flat()
+    expect(pages.filter(path => reserved.has(path))).toEqual([])
+    expect(
+      pages.filter(path => path.includes('/') && !['recipes', 'coming-from'].includes(path.split('/')[0]!)),
+    ).toEqual([])
+    expect(pages).toContain('what-can-i-build')
   })
 })
 
