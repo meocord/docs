@@ -55,7 +55,9 @@ allow it. When some refuse, it's told the longest wait among them. On Redis Clus
 [option](guide:recipes/cooldown-stores#redis-cluster).
 
 A refused call throws [`CooldownError`](api:responses/CooldownError), which the built-in fallback answers only to the
-caller: "Slow down: try again in 12s."
+caller: "Slow down: try again in 12s." An interaction gets it privately. A message command's refusal is skipped, since
+a reply in the channel can't be private, unless the app turns on
+[`dmOnCooldown`](guide:message-commands#telling-the-author-privately), which tells the author once per wait.
 
 `@Cooldown` works on interaction and message handlers. On a controller, it applies to each of its handlers apart, so
 a controller's `uses: 3` gives every handler three.
