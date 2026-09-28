@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import type { Token } from '@/lib/docs/api-model'
+import { isComputedType, type Token } from '@/lib/docs/api-model'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
 const pkgDir = realpathSync('examples/4.1/node_modules/meocord')
@@ -201,5 +201,54 @@ describe('type parameters', () => {
         }
       }
     expect(compared).toBeGreaterThan(300)
+  })
+})
+
+describe('option rows', () => {
+  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
+  afterAll(() => vi.unstubAllEnvs())
+
+  it('show a computed type as the checker resolved it, and a named one as written', async () => {
+    const { apiModel } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    const cooldown = model.symbol('decorators', 'Cooldown')!
+    const byForm = cooldown.signatures.find(signature => text(signature.code).includes("['by']"))!
+    // The signature as written; the row that explains `by` with the function it takes
+    expect(text(byForm.code)).toContain("by: NonNullable<CooldownOptions<P>['by']>")
+    const by = byForm.params.find(param => param.name === 'options.by')!
+    expect(text(by.type)).toBe(
+      '(context: ExecutionContext, params: P) => CooldownKey | undefined | Promise<CooldownKey | undefined>',
+    )
+    // A mapped type over a type parameter resolves to nothing plainer, so its row reads as written
+    const meocord = model.symbol('decorators', 'MeoCord')!
+    const guards = meocord.signatures[0]!.params.find(param => param.name === 'options.guards')!
+    expect(text(guards.type)).toContain('[K in keyof G]')
+  })
+
+  it("list the theme's roles for a parameter written by the name of a computed type", async () => {
+    const { apiModel } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    const useTheme = model.symbol('decorators', 'UseTheme')!
+    expect(text(useTheme.signatures[0]!.code)).toBe('UseTheme(theme: ThemeOverride): ClassDecorator & MethodDecorator')
+    const rows = (params: { name: string; option?: boolean }[]) =>
+      params.filter(param => param.option).map(param => param.name)
+    expect(rows(useTheme.signatures[0]!.params)).toEqual(
+      expect.arrayContaining(['theme.buttons', 'theme.buttons.danger', 'theme.colors.primary', 'theme.emojis.loading']),
+    )
+    const builder = model.symbol('testing', 'TestingModuleBuilder')!
+    const overrideTheme = builder.members.find(member => member.name === 'overrideTheme')!.signatures[0]!
+    expect(rows(overrideTheme.params)).toEqual(rows(useTheme.signatures[0]!.params))
+  })
+})
+
+describe('isComputedType', () => {
+  it('knows a type worked out from others from one named', () => {
+    for (const type of ['indexedAccess', 'conditional', 'mapped', 'query'])
+      expect(isComputedType({ type }), type).toBe(true)
+    expect(isComputedType({ type: 'typeOperator', operator: 'keyof' })).toBe(true)
+    expect(isComputedType({ type: 'reference', package: 'typescript' })).toBe(true)
+    expect(isComputedType({ type: 'typeOperator', operator: 'readonly' })).toBe(false)
+    expect(isComputedType({ type: 'reference', package: 'meocord' })).toBe(false)
+    expect(isComputedType({ type: 'reflection' })).toBe(false)
   })
 })
