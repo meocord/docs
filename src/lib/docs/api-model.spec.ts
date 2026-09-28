@@ -46,14 +46,17 @@ describe('ApiModel', () => {
       '/docs/4.1/api/interface/CooldownOptions',
     )
     const [signature] = cooldown.signatures
+    // CooldownOptions' members, each once, in the interface's order, with its type
     expect(signature.params.map(param => param.name)).toEqual([
       'options',
+      'options.bypass',
+      'options.per',
       'options.seconds',
       'options.uses',
-      'options.per',
-      'options.bypass',
     ])
-    expect(signature.params[2].description).toBe('Calls allowed within the window. Defaults to `1`.')
+    const uses = signature.params.find(param => param.name === 'options.uses')!
+    expect(uses.description).toBe('Calls allowed within the window. Defaults to `1`.')
+    expect(text(uses.type)).toBe('number')
     expect(text(signature.returns!.type)).toBe('ClassDecorator & MethodDecorator')
     expect(signature.examples[0]).toMatch(/^```ts\n@Command\('daily'/)
     expect(cooldown.description).toMatch(/^Limits how often a handler runs/)
@@ -269,9 +272,42 @@ describe('ApiModel options', () => {
     expect(text(i18n.type)).not.toBe('')
     expect(i18n.description).not.toBe('')
     expect(meocord.anchors).toEqual(expect.arrayContaining(['i18n', 'theme', 'providers', 'cooldownstore']))
-    expect(byKind.symbol('decorators', 'UseTheme')!.anchors).toEqual(['buttons', 'colors', 'emojis'])
+    // Each theme group, and beneath it the roles of the …Overrides interface it is typed by
+    expect(byKind.symbol('decorators', 'UseTheme')!.anchors).toEqual(
+      expect.arrayContaining(['buttons', 'colors', 'emojis', 'colors-primary', 'emojis-loading']),
+    )
     expect(byKind.href({ ...byKind.find('MeoCord')!, member: 'cooldownStore' })).toBe(
       '/docs/4.1/api/decorators/MeoCord#cooldownstore',
     )
+  })
+})
+
+describe('ApiModel option types inline', () => {
+  const beta6 = (
+    JSON.parse(readFileSync('generated/api/4.1.0-beta.6.json', 'utf8')) as { project: JSONOutput.ProjectReflection }
+  ).project
+  const byKind = new ApiModel('4.1', beta6, versions, since, undefined, { by: 'kind' })
+  const rows = (name: string) => byKind.symbol('decorators', name)!.signatures.flatMap(signature => signature.params)
+
+  it("shows an options interface's members under the parameter it types, with each member's own since", () => {
+    const defer = rows('Defer').filter(param => param.name.startsWith('options.'))
+    expect(defer.map(param => param.name)).toEqual(expect.arrayContaining(['options.ephemeral', 'options.mode']))
+    expect(defer.every(param => param.type.length > 0)).toBe(true)
+    const help = rows('MessageHandler').find(param => param.name === 'options.hidden')!
+    expect(help).toMatchObject({ anchor: 'hidden', since: '4.1.0-beta.6' })
+  })
+
+  it('shows them one level into an inline options object, and for each part of an intersection', () => {
+    const messages = rows('MeoCord').filter(param => param.name.startsWith('options.messages.'))
+    expect(messages.find(param => param.name === 'options.messages.prefix')).toMatchObject({
+      anchor: 'messages-prefix',
+    })
+    expect(byKind.symbol('decorators', 'MeoCord')!.anchors).toContain('messages-prefix')
+    // Cooldown's options are CooldownOptions and an object of its own
+    expect(rows('Cooldown').map(param => param.name)).toEqual(
+      expect.arrayContaining(['options.seconds', 'options.uses']),
+    )
+    // A class is not an options type: the translator keeps its link to its own page
+    expect(rows('MeoCord').some(param => param.name.startsWith('options.i18n.'))).toBe(false)
   })
 })

@@ -28,7 +28,17 @@ describe('apiArticle', () => {
 
   it('gives a function its parameters, returns and examples', () => {
     const { toc } = apiArticle(model.symbol('decorator', 'Cooldown')!)
-    expect(toc.map(entry => entry.id)).toEqual(['parameters', 'returns', 'examples'])
+    // Its options under its parameters, from CooldownOptions
+    expect(toc.map(entry => entry.id)).toEqual([
+      'parameters',
+      'by',
+      'bypass',
+      'per',
+      'seconds',
+      'uses',
+      'returns',
+      'examples',
+    ])
   })
 
   it('keeps a section anchor clear of a member with the same name', () => {
