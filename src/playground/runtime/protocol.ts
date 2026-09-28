@@ -20,13 +20,23 @@ export interface Caller {
   inGuild?: boolean
 }
 
-/** One interaction or message to dispatch, as a reader describes it. */
+/**
+ * The gateway events a run can emit, each with the caller as its one argument: the member who joined or
+ * left, in the playground's server.
+ */
+export const PLAYGROUND_EVENTS = ['guildMemberAdd', 'guildMemberRemove'] as const
+
+/** One interaction, message, reaction or gateway event to dispatch, as a reader describes it. */
 export type Dispatch =
   | { kind: 'slash'; command: string; options?: Record<string, string | number | boolean> }
   | { kind: 'button'; customId: string }
   | { kind: 'select'; customId: string; values: string[] }
+  | { kind: 'userselect'; customId: string; users: string[] }
   | { kind: 'modal'; customId: string; fields: Record<string, string> }
   | { kind: 'message'; content: string }
+  /** The caller reacting with `emoji` to a message of `content`, or taking the reaction back. */
+  | { kind: 'reaction'; emoji: string; content: string; action: 'add' | 'remove' }
+  | { kind: 'event'; event: (typeof PLAYGROUND_EVENTS)[number] }
 
 export interface RunRequest {
   type: 'run'
@@ -126,8 +136,29 @@ function parseDispatch(value: unknown): Dispatch | string {
     }
     case 'message':
       return isText(value.content, 2000) ? { kind: 'message', content: value.content } : 'a message has its content'
+    case 'userselect': {
+      if (!isText(value.customId, 100)) return 'a user select menu names its customId'
+      if (
+        !Array.isArray(value.users) ||
+        value.users.length === 0 ||
+        value.users.length > 25 ||
+        !value.users.every(each => isText(each, 20) && /^\d+$/.test(each))
+      )
+        return "a user select menu's users are 1 to 25 snowflakes"
+      return { kind: 'userselect', customId: value.customId, users: [...value.users] }
+    }
+    case 'reaction': {
+      if (!isText(value.emoji, 64) || value.emoji === '') return 'a reaction names its emoji'
+      if (!isText(value.content, 2000)) return "a reaction's message has its content"
+      if (value.action !== 'add' && value.action !== 'remove') return "a reaction's action is add or remove"
+      return { kind: 'reaction', emoji: value.emoji, content: value.content, action: value.action }
+    }
+    case 'event':
+      return PLAYGROUND_EVENTS.includes(value.event as (typeof PLAYGROUND_EVENTS)[number])
+        ? { kind: 'event', event: value.event as (typeof PLAYGROUND_EVENTS)[number] }
+        : `an event is ${PLAYGROUND_EVENTS.join(' or ')}`
     default:
-      return 'a dispatch is slash, button, select, modal or message'
+      return 'a dispatch is slash, button, select, userselect, modal, message, reaction or event'
   }
 }
 

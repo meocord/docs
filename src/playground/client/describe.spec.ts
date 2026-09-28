@@ -5,7 +5,7 @@ import { parseDispatchList } from '../dispatch-list'
 describe('describeInput', () => {
   it('writes each input as a dispatch step, which reads back as the same input', () => {
     const written =
-      "/settings notify email enabled:true count:3 note:'hi there'; button counter/1; select pick a,'b c'; modal feedback about='bugs, lots' name=ada; message !ping now"
+      "/settings notify email enabled:true count:3 note:'hi there'; button counter/1; select pick a,'b c'; modal feedback about='bugs, lots' name=ada; message !ping now; userselect assign/7 13,14; reaction ⭐ on 'nice post'; reaction remove 👍 on hi; event guildMemberAdd"
     const list = parseDispatchList(written)
     if (typeof list === 'string') throw new Error(list)
     const described = list.steps.map(describeInput)
@@ -15,6 +15,10 @@ describe('describeInput', () => {
       "select pick a,'b c'",
       "modal feedback about='bugs, lots' name=ada",
       'message !ping now',
+      'userselect assign/7 13,14',
+      "reaction ⭐ on 'nice post'",
+      'reaction remove 👍 on hi',
+      'event guildMemberAdd',
     ])
     expect(parseDispatchList(described.join('; '))).toEqual(list)
   })

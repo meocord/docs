@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { compile, pinnedModules } from '../../../tests/playground'
 import { MAX_RESULT_LENGTH, type Dispatch, type LogLine, type RunResult } from './protocol'
@@ -341,4 +343,56 @@ export class Loud {
 `
   const result = ok(await run(source, [{ kind: 'button', customId: 'loud' }]))
   expect(result.steps[0].error?.message).toMatch(/^a{2000}… \[cut: 50,000 characters\]$/)
+})
+
+describe('reactions, gateway events and user selects', () => {
+  const example = (file: string) =>
+    readFileSync(path.resolve(__dirname, '../../../examples/4.1/src', file), 'utf8').replace(
+      /^\s*\/\/ #(end)?region.*$/gm,
+      '',
+    )
+
+  it("runs a reaction handler for the emoji it names, with the caller as the reacting user, and records the message's replies", async () => {
+    const result = ok(
+      await run(
+        example('controllers/reaction/star.reaction.controller.ts'),
+        [
+          { kind: 'reaction', emoji: '⭐', content: 'A good post', action: 'add' },
+          { kind: 'reaction', emoji: '⭐', content: 'A good post', action: 'remove' },
+          { kind: 'reaction', emoji: '👍', content: 'A good post', action: 'add' },
+        ],
+        { caller: { username: 'mika' } },
+      ),
+    )
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['StarReactionController.star'] })
+    expect(result.steps[0].calls).toEqual([{ method: 'reply', payload: 'mika starred this.' }])
+    // Removing the star reaches the handler, which answers nothing
+    expect(result.steps[1]).toMatchObject({ ran: true, calls: [] })
+    // No handler for this emoji
+    expect(result.steps[2]).toMatchObject({ ran: false, handlers: [], calls: [] })
+  })
+
+  it("emits a gateway event with the caller as the member, in the playground's server, naming the handler", async () => {
+    const result = ok(
+      await run(example('controllers/event/welcome.controller.ts'), [
+        { kind: 'event', event: 'guildMemberAdd' },
+        { kind: 'event', event: 'guildMemberRemove' },
+      ]),
+    )
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['WelcomeController.greet'] })
+    expect(result.steps[0].calls).toEqual([{ method: 'send', payload: 'Welcome to MeoCord Playground!' }])
+    expect(result.steps[1]).toMatchObject({ ran: false, handlers: [], calls: [] })
+  })
+
+  it('selects users by id, the caller among them by name', async () => {
+    const result = ok(
+      await run(
+        example('controllers/select-menu/assign.select-menu.controller.ts'),
+        [{ kind: 'userselect', customId: 'assign/7', users: ['13', '14'] }],
+        { caller: { userId: '13', username: 'ada' } },
+      ),
+    )
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['AssignSelectMenuController.assign'] })
+    expect(result.steps[0].calls[0]).toMatchObject({ payload: { content: 'Task 7 is assigned to ada, user-14.' } })
+  })
 })
