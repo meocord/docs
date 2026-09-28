@@ -287,8 +287,13 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
       for (const reflection of Object.values(context.project.reflections)) {
         if (!(reflection instanceof DeclarationReflection)) continue
         if (!reflection.kindOf(ReflectionKind.Interface | ReflectionKind.TypeLiteral)) continue
+        // Every list of them the reflection holds, so a grouping or a category can't sort them again
         reflection.children?.sort(byId)
-        for (const group of reflection.groups ?? []) group.children.sort(byId)
+        for (const category of reflection.categories ?? []) category.children.sort(byId)
+        for (const group of reflection.groups ?? []) {
+          group.children.sort(byId)
+          for (const category of group.categories ?? []) category.children.sort(byId)
+        }
       }
     },
     -200,
