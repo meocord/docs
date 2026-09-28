@@ -14,5 +14,5 @@ import { PaintController } from '@src/i18n-texts/paint.controller'
   i18n: t,
   messages: { prefix: '!', types: { color } },
 })
-export class TranslatedApp {}
+export default class TranslatedApp {}
 // #endregion app
