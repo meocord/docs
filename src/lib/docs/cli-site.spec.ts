@@ -14,13 +14,15 @@ const html = (nodes: ReturnType<typeof cliArticle>['nodes']) => renderToStaticMa
 describe('the CLI reference', () => {
   it("writes each command's usage, and an example from the manifest alone, with sample values", () => {
     expect(usageOf(command('build'))).toBe('meocord build [options]')
-    expect(exampleInvocation(command('build'), 'meocord@beta')).toBe('meocord build --dev')
+    expect(exampleInvocation(command('build'), 'meocord@beta')).toBe('npx meocord build --dev')
     // `create` runs outside a project, so it runs the package that installs the page's version
     expect(exampleInvocation(command('create'), 'meocord@beta')).toBe('npx meocord@beta create my-bot')
     expect(exampleInvocation(command('create'), 'meocord@4.1.0-beta.7')).toBe('npx meocord@4.1.0-beta.7 create my-bot')
-    expect(exampleInvocation(command('register'), 'meocord@beta')).toBe('meocord register --build')
+    expect(exampleInvocation(command('register'), 'meocord@beta')).toBe('npx meocord register --build')
     // A command that only groups others shows its first subcommand's, a required argument by its first choice
-    expect(exampleInvocation(command('generate'), 'meocord@beta')).toBe('meocord generate controller button Greeting')
+    expect(exampleInvocation(command('generate'), 'meocord@beta')).toBe(
+      'npx meocord generate controller button Greeting',
+    )
     const unknown = { ...command('create'), arguments: [{ ...command('create').arguments[0]!, name: 'region' }] }
     expect(() => exampleInvocation(unknown, 'meocord@beta')).toThrow(
       "meocord create's example has no sample value for <region>",
@@ -40,7 +42,7 @@ describe('the CLI reference', () => {
       .replace(/<[^>]+>/g, '')
       .replace(/&lt;|&#x3C;/g, '<')
       .replace(/&gt;/g, '>')
-    expect(text).toContain('meocord generate controller button Greeting')
+    expect(text).toContain('npx meocord generate controller button Greeting')
     expect(markup).toContain('<h2 id="controller">meocord generate controller</h2>')
     expect(toc.map(entry => entry.id)).toEqual(command('generate').commands.map(subcommandAnchor))
   })

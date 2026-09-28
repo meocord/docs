@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { commandProblems, htmlText, lineOfUrl, pageText, searchText } from './built-commands'
+import { commandProblems, htmlText, lineOfUrl, pageCode, pageText, searchText } from './built-commands'
 import type { VersionsConfig } from './versions'
 
 const config: VersionsConfig = {
@@ -11,7 +11,9 @@ const config: VersionsConfig = {
     { line: '4.0', status: 'current', guides: 'readme', versions: ['4.0.0'] },
   ],
 }
-const check = (url: string, text: string) => commandProblems([{ file: 'page.html', url, text }], config, '4.1')
+const commands = new Set(['create', 'build', 'start', 'generate', 'g', '--version', '-V'])
+const check = (url: string, text: string, code?: string[]) =>
+  commandProblems([{ file: 'page.html', url, text, code }], config, '4.1', commands)
 
 describe('the create commands a reader gets', () => {
   it('finds the line a page documents: by its URL, through the aliases, and the home page by its own', () => {
@@ -32,10 +34,10 @@ describe('the create commands a reader gets', () => {
     expect(check('/docs/4.1/getting-started', 'Run `npx meocord@beta create my-bot`.')).toEqual([])
     expect(check('/docs/latest/getting-started', 'npx meocord create my-bot')).toEqual([])
     expect(check('/', 'npx meocord create my-bot')).toEqual([
-      `page.html (/): "npx meocord create" doesn't install 4.1; its pages run meocord@beta`,
+      `page.html (/): "npx meocord create" doesn't install 4.1; this page runs meocord@beta`,
     ])
     expect(check('/docs/4.0/overview', 'bunx meocord@beta create x')).toEqual([
-      `page.html (/docs/4.0/overview): "bunx meocord@beta create" doesn't install 4.0; its pages run meocord`,
+      `page.html (/docs/4.0/overview): "bunx meocord@beta create" doesn't install 4.0; this page runs meocord`,
     ])
     expect(check('/_not-found', 'meocord create')).toEqual([
       `page.html (/_not-found): "meocord create" is on a page of no line, so it installs no line in particular`,
@@ -43,6 +45,24 @@ describe('the create commands a reader gets', () => {
     expect(check('/docs/4.1/overview', 'npx {{meocord}} create')).toEqual([
       'page.html (/docs/4.1/overview): {{meocord}} was left in the output',
     ])
+  })
+
+  it('refuses a copyable meocord command a shell has nothing on its path to run', () => {
+    const html =
+      '<p>`meocord build` writes dist/.</p>' +
+      '<pre tabindex="0" data-language="bash"><code>npx meocord build --prod\nmeocord start --prod</code></pre>' +
+      '<pre data-language="shell"><code>$ meocord g co slash Greeting\nnpm run build\n# meocord start</code></pre>' +
+      // A transcript, or output, is text: shown, not run
+      '<pre data-language="text"><code>$ meocord start --prod\nenv: node: No such file</code></pre><pre><code>meocord start</code></pre>'
+    const code = pageCode('/docs/4.1/cli', html)
+    expect(code).toContain('meocord start --prod')
+    expect(check('/docs/4.1/cli', '', code)).toEqual([
+      `page.html (/docs/4.1/cli): "meocord start --prod" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
+      `page.html (/docs/4.1/cli): "$ meocord g co slash Greeting" doesn't run in a shell, which has no meocord on its path; write npx meocord, or run it from a package script`,
+    ])
+    // On an API page, what a reader copies is its examples
+    const api = '<pre>meocord build [options]</pre><div data-example="meocord build --dev"></div>'
+    expect(pageCode('/docs/4.1/api/cli/build', api)).toEqual(['meocord build --dev'])
   })
 
   it("leaves changelogs and migration guides, which name past releases' commands", () => {
@@ -59,7 +79,7 @@ describe('the create commands a reader gets', () => {
     expect(check('/docs/4.1/api/cli/create', 'npx meocord@beta create my-bot')).toEqual([])
     expect(check('/docs/4.1/api/4.1.0-beta.7/cli/create', 'npx meocord@4.1.0-beta.7 create my-bot')).toEqual([])
     expect(check('/docs/4.1/api/4.1.0-beta.7/cli/create', 'npx meocord@beta create my-bot')).toEqual([
-      `page.html (/docs/4.1/api/4.1.0-beta.7/cli/create): "npx meocord@beta create" doesn't install 4.1; its pages run meocord@4.1.0-beta.7`,
+      `page.html (/docs/4.1/api/4.1.0-beta.7/cli/create): "npx meocord@beta create" doesn't install 4.1.0-beta.7; this page runs meocord@4.1.0-beta.7`,
     ])
     // The search index and the palette hold an API page's own text, which a reader doesn't run
     expect(searchText('/docs/4.1/api/cli/create', 'meocord create')).toBe('')
