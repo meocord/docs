@@ -2,6 +2,7 @@ import { A, Aside, Div, H1, H2, Li, Nav, Node, type NodeInstance, P, Span, Ul } 
 
 type Child = NodeInstance | string
 import { Prose } from '@/components/nodes'
+import { PlaygroundIsland } from '@/components/prose/PlaygroundIsland'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { guideEnabled, guideTabs, guideView, resolveGuideLink, type GuideView } from '@/lib/docs/guide-site'
@@ -153,6 +154,12 @@ export function renderGuidePage(line: string, pagePath: string) {
     version: versionChoices(line, view.page.id),
     repository: REPOSITORY,
     toc: view.toc,
-    children: Prose({ children: [...guideArticle(line, view), Node(ReadingIsland, { key: 'island' })] }),
+    children: Prose({
+      children: [
+        ...guideArticle(line, view),
+        Node(ReadingIsland, { key: 'island' }),
+        ...(view.playgrounds > 0 ? [Node(PlaygroundIsland, { key: 'playground' })] : []),
+      ],
+    }),
   })
 }

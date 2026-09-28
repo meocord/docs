@@ -6,6 +6,7 @@ import { VERSIONS } from '@/config/versions'
 import { apiLandingHref, apiModel, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
 import { CLI_SECTION, cliCommand, cliHref, cliManifest } from '@/lib/docs/cli-site'
 import { FIGURES } from '@/lib/docs/figures'
+import { playgroundEmbed } from '@/lib/docs/playground-embed'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
@@ -119,6 +120,8 @@ export interface GuideView {
   /** Where the page sits in the chapters, for a page of one: `{ index: 3, total: 41 }`, counted from 1. */
   progress?: { index: number; total: number }
   requires: { title: string; href: string }[]
+  /** How many playgrounds the page embeds; a page with one loads the playground's island. */
+  playgrounds: number
 }
 
 /** One Guide page of a line, lowered for Prose, by its path; undefined when the Guide has no such page. */
@@ -128,10 +131,15 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
   if (!entry) return undefined
   const { page, body } = entry
 
+  let playgrounds = 0
   const lowered = lowerMarkdown(body, {
     href: url => resolveGuideLink(line, url),
     example: (file, region, from) => resolveExample(from ?? line, file, region, { page: pagePath }),
     figure: (name, key) => FIGURES[name]?.(url => resolveGuideLink(line, url), key),
+    playground: (directive, key) => {
+      playgrounds += 1
+      return playgroundEmbed(line, directive, key, { page: pagePath })
+    },
   })
   const toc = lowered.headings
     .filter(heading => heading.depth === 2 || heading.depth === 3)
@@ -167,6 +175,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
       const required = byId.get(id)
       return required ? [{ title: required.title, href: guidePageHref(line, required) }] : []
     }),
+    playgrounds,
   }
 }
 
