@@ -13,17 +13,50 @@ const PAGES = [
   '/docs/4.0/missing/interceptors',
 ]
 
+const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+
+/** axe's serious and critical violations, as lines naming each rule and where it failed. */
+const seriousOf = (violations: Awaited<ReturnType<typeof axe>>['violations']) =>
+  violations
+    .filter(violation => violation.impact === 'serious' || violation.impact === 'critical')
+    .map(
+      violation =>
+        `${violation.id} (${violation.impact}): ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`,
+    )
+
 for (const path of PAGES) {
   test(`${path} has no serious or critical accessibility violation`, async ({ page }) => {
     await page.goto(path)
-    const { violations } = await axe(page, builder => builder.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']))
-    const serious = violations
-      .filter(violation => violation.impact === 'serious' || violation.impact === 'critical')
-      .map(
-        violation =>
-          `${violation.id} (${violation.impact}): ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`,
-      )
-    expect(serious).toEqual([])
+    const { violations } = await axe(page, builder => builder.withTags(WCAG))
+    expect(seriousOf(violations)).toEqual([])
+  })
+}
+
+// The home panel in each state a reader sees it in: as the server paints it, which reduced motion keeps by
+// not playing the demo; once the demo has played to its lit line; and with a blocked call stopped at the
+// guard. Each measured once it has settled, so a lit line's colours are read on the background it keeps.
+for (const scheme of ['light', 'dark'] as const) {
+  test(`the home panel has no serious violation as painted, played or stopped, in ${scheme}`, async ({ browser }) => {
+    const painted = await browser.newContext({ colorScheme: scheme, reducedMotion: 'reduce' })
+    const still = await painted.newPage()
+    await still.goto('/')
+    await expect(still.locator('[data-pipeline] .line[data-lit]')).toHaveCount(0)
+    expect(seriousOf((await axe(still, builder => builder.withTags(WCAG))).violations), 'as painted').toEqual([])
+    await painted.close()
+
+    const context = await browser.newContext({ colorScheme: scheme })
+    const page = await context.newPage()
+    await page.goto('/')
+    const panel = page.locator('[data-pipeline]')
+    await expect(panel.locator('[data-pane="code"] .line[data-lit="current"]')).toBeVisible({ timeout: 10_000 })
+    await expect(panel).toHaveAttribute('data-answered', '')
+    expect(seriousOf((await axe(page, builder => builder.withTags(WCAG))).violations), 'played').toEqual([])
+
+    await panel.locator('[data-choose="blocked"]').click()
+    await expect(panel.locator('[data-pane="code"] .line[data-lit="stopped"]')).toBeVisible({ timeout: 10_000 })
+    await expect(panel).toHaveAttribute('data-answered', '')
+    expect(seriousOf((await axe(page, builder => builder.withTags(WCAG))).violations), 'stopped').toEqual([])
+    await context.close()
   })
 }
 
