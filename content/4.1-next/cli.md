@@ -54,8 +54,8 @@ with code 1, so a script or a CI job stops too.
 `build` and `start` build for development unless they're given `-p, --prod`, which wins when both `-d` and `-p` are
 given. `register` works the other way round: it registers as production does, unless it's given `-d, --dev`.
 
-The bot runs on the runtime you launched the CLI with: `bun run start` runs it under Bun, and `npm run start` under
-Node. [Which runtime the bot runs on](guide:deployment#which-runtime-the-bot-runs-on) covers pinning one.
+The bot runs on the runtime you launched the CLI with: `bun run start:prod` runs it under Bun, and `npm run start:prod`
+under Node. [Which runtime the bot runs on](guide:deployment#which-runtime-the-bot-runs-on) covers pinning one.
 
 ## Creating a project
 
@@ -71,8 +71,8 @@ this guide documents. [Getting started](guide:getting-started) walks through it.
 ## Development and production
 
 `start --dev` builds the bot as it starts, then watches the project: a change rebuilds it and restarts the bot, and
-`meocord.config.ts` is watched too. It registers the commands to `commands.developmentGuild`, and only when they
-changed since the last development start; `--force-register` sends them anyway.
+`meocord.config.ts` is watched too. It registers the commands to `commands.developmentGuild`, or globally without one,
+and only when they changed since the last development start; `--force-register` sends them anyway.
 
 For production, build once and start the build:
 

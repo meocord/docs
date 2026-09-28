@@ -104,11 +104,15 @@ On a server of your own, a unit restarts the bot when it crashes and starts it a
 Description=My Discord bot
 After=network-online.target
 Wants=network-online.target
+# Stop restarting after five failures in two minutes
+StartLimitIntervalSec=120
+StartLimitBurst=5
 
 [Service]
 User=bot
 WorkingDirectory=/srv/my-bot
 EnvironmentFile=/srv/my-bot/.env
+# Node's path on this server, as `command -v node` prints it
 ExecStart=/usr/bin/node dist/main.js
 Restart=on-failure
 RestartSec=5
@@ -118,10 +122,11 @@ TimeoutStopSec=15
 WantedBy=multi-user.target
 ```
 
-Enable it with `systemctl enable --now my-bot`, and read its logs with `journalctl -u my-bot`. A bot that can't log
-in, with a wrong token for instance, exits with code 1: `Restart=on-failure` retries it, and systemd gives up after a
-few failures in a row rather than retrying a bad token forever. Run it as a user of its own, which owns nothing but the
-bot's folder.
+Enable it with `systemctl enable --now my-bot`, and read its logs with `journalctl -u my-bot`. A bot that can't log in,
+with a wrong token for instance, exits with code 1: `Restart=on-failure` retries it, and the start limit stops systemd
+after five failures in two minutes rather than retrying a bad token forever. Without that limit, systemd's default of
+five starts in ten seconds is never reached with `RestartSec=5`, and it retries forever. Run it as a user of its own,
+which owns nothing but the bot's folder.
 
 ## pm2
 
@@ -155,24 +160,25 @@ the bot the only process, and it receives the signal itself.
 
 ## Which runtime the bot runs on
 
-`start` runs the bot on the runtime you launched it with, with nothing to configure: `bun run start` runs
-`dist/main.js` under Bun, and `npm run start` under Node. When the CLI itself runs on Node, the runner that launched it
-decides: `bun run` points `npm_execpath` at its own binary, and npm, pnpm and yarn at a `.js` file, which falls through
-to Node.
+`start` runs the bot on the runtime you launched it with, with nothing to configure: `bun run start:prod` runs
+`dist/main.js` under Bun, and `npm run start:prod` under Node. When the CLI itself runs on Node, the runner that
+launched it decides: `bun run` points `npm_execpath` at its own binary, and npm, pnpm and yarn at a `.js` file, which
+falls through to Node.
 
 The choice matters for more than tidiness. It spares a Bun-only image a second runtime just to launch, and it picks
 the allocator, which matters for a bot doing heavy native work such as canvas rendering. Development runs the bundle
 through the same command, so the runtime in `--dev` is the one that ships. To pin a binary, set `MEOCORD_RUNTIME`:
 
 ```bash
-MEOCORD_RUNTIME=/usr/local/bin/bun npm run start
+MEOCORD_RUNTIME=/usr/local/bin/bun npm run start:prod
 ```
 
 ### The CLI on Bun
 
 The runtime above is the bot's. The CLI's own process is chosen by its `#!/usr/bin/env node` line, which stays as it
-is because npm on Windows builds its `.cmd` launcher from it. On a machine with no Node, tell Bun to ignore the line,
-per command with `bun --bun meocord start --prod`, or once for the project:
+is because npm on Windows builds its `.cmd` launcher from it. On a machine with no Node, Bun stands in for `node`, so
+`bun run start:prod` runs the CLI and the bot on Bun with nothing to set. Where Node is installed and you want the CLI
+on Bun too, tell Bun to ignore the line, per command with `bun --bun meocord start --prod`, or once for the project:
 
 ```toml
 # bunfig.toml
@@ -180,7 +186,7 @@ per command with `bun --bun meocord start --prod`, or once for the project:
 bun = true
 ```
 
-Then `bun run start` runs the CLI and the bot on Bun, and Node needn't exist.
+Then `bun run start:prod` runs the CLI on Bun as well as the bot.
 
 ## Gotchas
 
