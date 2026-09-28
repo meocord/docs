@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STATIC_GENERATION_BUDGET_S, staticGeneration } from './static-generation.js'
+import { PAGE_BUDGET_WORKER_MS, pageCost, staticGeneration, staticGenerationReport } from './static-generation.js'
 
 describe('staticGeneration', () => {
   it('reads the last summary line, in seconds or milliseconds', () => {
@@ -25,7 +25,22 @@ describe('staticGeneration', () => {
     expect(staticGeneration('')).toBeUndefined()
   })
 
-  it('holds the budget the site agreed on', () => {
-    expect(STATIC_GENERATION_BUDGET_S).toBe(180)
+  it('costs a page by the workers sharing the time, so more versions add pages, not cost', () => {
+    const beta7 = staticGeneration('✓ Generating static pages using 3 workers (2348/2348) in 3.0min')!
+    const beta8 = staticGeneration('✓ Generating static pages using 3 workers (2596/2596) in 186s')!
+    expect(Math.round(pageCost(beta7))).toBe(230)
+    expect(Math.round(pageCost(beta8))).toBe(215)
+    // 2,596 pages in 186 s, a slow runner, is within the budget a page
+    expect(staticGenerationReport(beta8)).toEqual({
+      summary: '2596 pages prerendered in 186.0 s on 3 workers: 215 worker-ms a page (budget 300)',
+      over: false,
+    })
+  })
+
+  it('refuses a build whose pages render slower, however few', () => {
+    const slow = staticGeneration('✓ Generating static pages using 3 workers (2596/2596) in 4.5min')!
+    expect(staticGenerationReport(slow).over).toBe(true)
+    expect(staticGenerationReport({ pages: 100, workers: 3, seconds: 12 }).over).toBe(true)
+    expect(PAGE_BUDGET_WORKER_MS).toBe(300)
   })
 })
