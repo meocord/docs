@@ -85,12 +85,19 @@ button acts on. A user with three game accounts can check each of them in once a
 
 ::example{file="controllers/button/check-in.button.controller.ts" region="by"}
 
-`by` gets the call's `ExecutionContext` and the handler's params as the handler gets them, after validation and
-pipes. Declare the params it reads, and a handler that doesn't receive them doesn't compile.
+`by` gets the call's `ExecutionContext` and the handler's params as the handler gets them: a component's customId
+params, a command's options, a modal's fields, after validation and pipes. For a piped object, return a stable id from
+it, such as `({ account }) => account.uid`.
 
+- Declare the params `by` reads, or pass them as the type argument, `@Cooldown<{ uid: string }>({ … })`. A key the
+  handler doesn't receive, or receives as another type, fails to compile; undeclared, they're
+  `Record<string, unknown>`.
 - With `per: 'global'`, the limit is per resource across every user.
 - Returning `undefined` counts the call as though there were no `by`.
-- An error `by` throws goes to the [exception filters](guide:exception-filters), and the call isn't counted.
+- An error `by` throws goes to the [exception filters](guide:exception-filters), and no cooldown on the handler counts
+  the call.
+- The value becomes part of the key the store counts under, encoded so a value holding `:` can't count under another's
+  key. `inspectHandler(...).cooldowns` reports `by: true` for a cooldown that has one.
 
 The guard runs first, so a stranger pressing someone else's button is refused without spending the owner's
 check-in:
@@ -127,9 +134,11 @@ A shared store can be down, restarting or cut off. When it throws, rejects or do
 
 ::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
 
-- **`'deny'`**, the default, refuses the call with `CooldownStoreError`, since a cooldown that can't be checked
-  isn't known to allow it. The fallback answers only the caller: "Cooldowns can't be checked right now: try again
-  shortly."
+- **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown
+  that can't be checked isn't known to allow it. The fallback answers only the caller: "Cooldowns can't be checked
+  right now: try again shortly." An [exception filter](guide:exception-filters) that catches `CooldownStoreError` can
+  say it another way, or in the user's language, and [observers](guide:observers) see the outcome `'error'`, with that
+  error.
 - **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
 
 Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many

@@ -94,10 +94,16 @@ in `?`:
 
 ::example{file="controllers/message/moderation.message.controller.ts" region="flags"}
 
-- A value with spaces goes in quotes: `--note="buy milk"`. A flag given twice takes its last value.
-- A flag the command doesn't have gets the usage reply: `--all is not an option of this command`.
-- Words in quotes are never flags, so `"--bots"` stays text. A command with no flags reads `--bots` as an
-  ordinary word.
+- A value with spaces goes in quotes: `--note="buy milk"`. A flag given twice takes its last value. An untyped
+  flag also takes `yes`, `no`, `on`, `off`, `true` or `false`, so `--bots=no` gives `false`.
+- A flag the command doesn't have gets the usage reply: `--all is not an option of this command`. So does a typed
+  flag left out, `--from is missing`, or given no value, `--from needs a value, such as --from=<from>`.
+- A flag before the command's first word, as in `!--bots purge 5`, isn't read, and the message names no command. A
+  pattern that begins with a param has no command word, so its flags may come anywhere.
+- Words in quotes are never flags, so `"--bots"` stays text. A command with no flags reads `--bots` as an ordinary
+  word. A rest takes the message's text without its flags, keeping its own spacing and line breaks.
+- A flag's name starts with a letter, then letters, digits or `_`. `{--9lives}` stops the bot as it loads, since a
+  message couldn't give it; see [Errors at startup](guide:message-commands#errors-at-startup).
 
 ## Lists
 

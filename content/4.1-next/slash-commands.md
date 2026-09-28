@@ -113,6 +113,11 @@ itself, and its handler receives a `PrimaryEntryPointCommandInteraction`:
 
 ::example{file="controllers/context-menu/builders/launch.builder.ts" region="builder"}
 
+Its `handler` decides who answers. With `EntryPointCommandHandlerType.AppHandler`, as here, Discord sends the
+interaction to the bot, where `@Command('launch', LaunchCommandBuilder)` handles it. With
+`EntryPointCommandHandlerType.DiscordLaunchActivity`, Discord launches the activity itself, and the bot receives
+nothing.
+
 ## Gotchas
 
 - **Old commands linger after you move scopes.** Going from global to server commands, or back, leaves the old ones

@@ -48,6 +48,9 @@ A `/transfer` of more coins than the user holds doesn't change the balance, and 
 short of. The error is logged only at debug level, since the bot did nothing wrong, and observers see the outcome
 `'refused'`. `code` and `context` let a filter or a presenter phrase it otherwise, such as in the user's language.
 
+Subclass it to name your own errors, `class NotEnoughCoinsError extends UserError`: the fallback answers every subclass
+the same way, and a filter can `@Catch(NotEnoughCoinsError)` to word that one otherwise.
+
 ## How it works
 
 Filters surround every stage of a call, so an error from the guards, the interceptors, validation, a pipe, a cooldown
@@ -116,6 +119,20 @@ deferral is deleted and the message follows up privately.
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's
 or validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
 seconds. Other errors of message, reaction and event handlers are only logged. The fallback never throws.
+
+## Failures never end the process
+
+An error anywhere in a call is caught, so a handler or a stage that throws or rejects never ends the bot's process:
+
+- **Inside a handler's call,** the filters and then the built-in fallback receive it, as above.
+- **Before a handler is reached,** such as for an interaction no handler matches, or one that fails while its handler
+  is looked up, the global filters receive it, and the fallback still answers the user.
+- **In an event handler,** each call is isolated: its error is logged with the event and the handler, and the next
+  listener still runs.
+- **In MeoCord's own Discord listeners,** such as the one for `clientReady`, a rejection is logged against the event
+  rather than left as an unhandled rejection, which would end the process.
+
+The fallback itself never throws: an answer Discord refuses is logged.
 
 ## Testing
 
