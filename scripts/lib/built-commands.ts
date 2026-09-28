@@ -56,10 +56,19 @@ function expected(url: string, config: VersionsConfig, line: string): { target: 
 }
 
 /**
- * A copied line that runs `meocord` itself, with one of its commands: a shell doesn't put a project's
- * `node_modules/.bin` on its path, so it runs only through a package runner or a package script.
+ * A command in a copied line that runs `meocord` itself: a shell doesn't put a project's
+ * `node_modules/.bin` on its path, so it runs only through a package runner or a package script. Each
+ * command of the line counts, after `&&`, `||`, `;` or `|`, and after any `NAME=value` it sets.
  */
-const BARE = /^(?:\$\s+)?meocord\s+(\S+)/
+const BARE = /^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*meocord\s+(\S+)/
+
+/** The commands a shell line runs: split at `&&`, `||`, `;` and `|`, a leading prompt dropped. */
+const commandsOf = (line: string) =>
+  line
+    .trim()
+    .replace(/^\$\s+/, '')
+    .split(/&&|\|\||;|\|/)
+    .map(part => part.trim())
 
 const decode = (text: string) =>
   text
@@ -125,8 +134,8 @@ export function commandProblems(
       )
     }
     for (const copied of code) {
-      const bare = BARE.exec(copied.trim())
-      if (bare && commands.has(bare[1]!))
+      const bare = commandsOf(copied).some(part => commands.has(BARE.exec(part)?.[1] ?? ''))
+      if (bare)
         problems.push(
           `${file} (${url}): "${copied.trim()}" doesn't run in a shell, which has no meocord on its path; ` +
             'write npx meocord, or run it from a package script',
