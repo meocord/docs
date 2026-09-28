@@ -1,4 +1,3 @@
-// #region service
 import { Service } from 'meocord/decorator'
 import { type DispatchOutcome } from 'meocord/interface'
 
@@ -19,4 +18,3 @@ export class RefusalLog {
     this.entries.push(entry)
   }
 }
-// #endregion service

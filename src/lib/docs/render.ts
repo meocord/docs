@@ -21,7 +21,7 @@ export function renderGuide(line: string, slug: string) {
   return Window({
     crumbs: page.crumbs,
     groups: sidebar(line, slug),
-    version: versionChoices(line, page.entry.id),
+    version: versionChoices(line, { page: page.entry, line }),
     repository: REPOSITORY,
     toc: page.toc,
     children: Prose({
@@ -151,7 +151,7 @@ export function renderGuidePage(line: string, pagePath: string) {
     crumbs: view.crumbs,
     groups: sidebar(line, view.page.id),
     tabs: guideTabs(line, 'guide'),
-    version: versionChoices(line, view.page.id),
+    version: versionChoices(line, { page: view.page, line }),
     repository: REPOSITORY,
     toc: view.toc,
     children: Prose({

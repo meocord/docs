@@ -1,4 +1,3 @@
-// #region app
 import { MeoCord } from 'meocord/decorator'
 import { GatewayIntentBits } from 'discord.js'
 import { t } from '@src/i18n'
@@ -15,4 +14,3 @@ import { PaintController } from '@src/i18n-texts/paint.controller'
   messages: { prefix: '!', types: { color } },
 })
 export default class TranslatedApp {}
-// #endregion app

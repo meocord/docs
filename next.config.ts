@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next'
-import { guideRendered } from './scripts/lib/guide'
+import { guidePath, readGuide } from './scripts/lib/guide'
 import { listPages } from './scripts/lib/pages'
 import { DOC_ALIASES } from './src/config/aliases'
 import { guideAliasRedirects } from './src/config/guide-aliases'
@@ -33,12 +33,21 @@ const nextConfig: NextConfig = {
     // request time.
     '/**': ['./.search/manifest.json', './.api-layout/*.json'],
   },
-  // Guide slugs meocord's JSDoc links ahead of their pages, sent to the page that holds the topic now.
+  // Each Guide path in a line whose guides come from its README, sent to that line's page on the topic
   async redirects() {
-    const lines = manifest.lines.map(({ line }) => ({ line, pages: listPages(line), guide: guideRendered(line) }))
-    // The aliases name pages of the line whose guides are authored, which the Guide is written for.
-    const authored = manifest.lines.find(entry => entry.guides === 'authored')?.line ?? DOC_ALIASES.next
-    return guideAliasRedirects(lines, DOC_ALIASES.latest, authored)
+    const lines = manifest.lines
+      .filter(entry => entry.guides === 'readme')
+      .map(({ line }) => ({ line, pages: listPages(line) }))
+    return manifest.lines
+      .filter(entry => entry.guides === 'authored')
+      .flatMap(({ line }) =>
+        guideAliasRedirects(
+          lines,
+          DOC_ALIASES.latest,
+          readGuide(line).map(({ page }) => ({ ...page, path: guidePath(page) })),
+          line,
+        ),
+      )
   },
   async rewrites() {
     return [

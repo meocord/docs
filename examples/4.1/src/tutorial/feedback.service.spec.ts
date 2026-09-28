@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { FeedbackNotFoundError } from '@src/tutorial/feedback.errors'
 import { FeedbackService } from '@src/tutorial/feedback.service'
 
-// #region spec
 describe('FeedbackService', () => {
   const entry = { authorId: '111', locale: Locale.EnglishUS, about: 'Music bot', details: 'It skips songs.' }
 
@@ -21,4 +20,3 @@ describe('FeedbackService', () => {
     expect(() => new FeedbackService().decide('9', 'rejected')).toThrow(FeedbackNotFoundError)
   })
 })
-// #endregion spec

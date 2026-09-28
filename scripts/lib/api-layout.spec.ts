@@ -7,7 +7,11 @@ import { apiModel } from '../../src/lib/docs/api-site.js'
 // A fixed release, so the layouts are checked against signatures that do not change with each sync.
 const model = apiModel('4.1', '4.1.0-beta.4')!
 const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
-const symbol = (entry: string, name: string) => model.symbol(entry, name)!
+// A symbol by the entry point it is imported from, wherever the line's API files it
+const symbol = (entry: string, name: string) => {
+  const location = model.locate(entry, name)!
+  return model.symbol(location.section, location.symbol)!
+}
 const nonSpace = (value: string) => value.replace(/\s+/g, '')
 
 describe('formatDisplay', () => {

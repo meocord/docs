@@ -11,8 +11,8 @@ import { playgroundFrame } from '@/lib/docs/playground-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
-/** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
-export const guideEnabled = guideRendered
+/** Whether the site renders a line's Guide: a line whose guides are authored, as versions.json lists it. */
+export const guideEnabled = (line: string) => guideRendered(line)
 
 /**
  * Whether a line has a playground page, and a Playground tab and palette entry for it: its Guide is

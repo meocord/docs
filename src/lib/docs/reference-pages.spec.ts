@@ -10,6 +10,7 @@ import {
   migratingArticle,
   missingArticle,
   missingParams,
+  movedMissingHref,
   renderChangelog,
   renderMigrating,
   releaseArticle,
@@ -122,6 +123,24 @@ describe('missing', () => {
     const params = missingParams()
     expect(params).toContainEqual({ line: '4.0', id: 'interceptors' })
     expect(params.some(param => param.line === '4.1' && param.id === 'interceptors')).toBe(false)
+    // A topic 4.0 keeps under another id is no missing page: 4.0 has it
+    for (const id of ['slash-commands', 'context-menus', 'components', 'cli', 'testing-recipes'])
+      expect(params, id).not.toContainEqual({ line: '4.0', id })
+  })
+
+  it("sends an id the line has a page for to that page, and an old id to the missing page's own", () => {
+    expect(movedMissingHref('4.1', 'command-types')).toBe('/docs/4.1/slash-commands')
+    expect(movedMissingHref('4.0', 'slash-commands')).toBe('/docs/latest/command-types')
+    expect(movedMissingHref('4.0', 'how-a-handler-runs')).toBe('/docs/4.0/missing/how-a-call-runs')
+    expect(movedMissingHref('4.0', 'how-a-call-runs')).toBeUndefined()
+  })
+
+  it('says a topic first appears in a release only when that release is newer than the line', () => {
+    const lead = (line: string, id: string) =>
+      renderToStaticMarkup(Div({ children: missingArticle(line, id)!.nodes.slice(1, 2) }).render())
+    expect(lead('4.0', 'services')).toContain(
+      '<p><strong>Services and injection</strong> is not documented for MeoCord 4.0.</p>',
+    )
   })
 
   it('says where the page is documented, for a line without it', () => {

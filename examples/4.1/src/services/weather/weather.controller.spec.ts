@@ -10,7 +10,6 @@ import {
   WeatherSource,
 } from '@src/services/weather/weather.source'
 
-// #region spec
 describe('WeatherController', () => {
   // The testing module takes providers in the same shapes as the app
   const module = MeoCordTestingModule.create({
@@ -32,9 +31,7 @@ describe('WeatherController', () => {
     expect(module.get(WEATHER_SETTINGS).units).toBe('imperial')
   })
 })
-// #endregion spec
 
-// #region factory
 describe('weatherProviders', () => {
   it('picks the HTTP source when an API is configured, and the fixed one otherwise', () => {
     const [, source] = weatherProviders
@@ -44,7 +41,6 @@ describe('weatherProviders', () => {
     expect(source.useFactory({ apiUrl: '', units: 'metric' })).toBeInstanceOf(FixedWeatherSource)
   })
 })
-// #endregion factory
 
 // #region missing
 describe('a token nothing provides', () => {

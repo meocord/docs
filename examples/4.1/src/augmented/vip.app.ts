@@ -5,7 +5,6 @@ import { CommandType } from 'meocord/enum'
 
 @Controller()
 export class VipSlashController {
-  // #region read
   @Command('vip', CommandType.SLASH)
   async vip(interaction: ChatInputCommandInteraction) {
     // The app's own role, typed and always set: the root theme has to give it
@@ -13,7 +12,6 @@ export class VipSlashController {
       embeds: [new EmbedBuilder().setDescription('Welcome back').setColor(useTheme().colors.vip)],
     })
   }
-  // #endregion read
 }
 
 // #region app

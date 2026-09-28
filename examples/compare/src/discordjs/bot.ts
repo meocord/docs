@@ -11,12 +11,10 @@ import {
   SlashCommandBuilder,
 } from 'discord.js'
 
-// #region service
 // Shared logic lives wherever you put it, and is passed around by hand
 export const greetings = {
   build: (name: string) => `Hello, ${name}!`,
 }
-// #endregion service
 
 // #region register
 // Commands are registered by a separate call, usually a script run before starting the bot

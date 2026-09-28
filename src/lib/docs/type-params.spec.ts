@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { isComputedType, propertyKey, type Token } from '@/lib/docs/api-model'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
@@ -125,7 +125,6 @@ function renderedTypeParams(name: string, code: Token[]): string[] | undefined {
 }
 
 describe('type parameters', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
   afterAll(() => vi.unstubAllEnvs())
 
   it("read as the pinned version's declarations write them: modifiers, constraints and defaults", async () => {
@@ -204,7 +203,6 @@ describe('type parameters', () => {
 })
 
 describe('option rows', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
   afterAll(() => vi.unstubAllEnvs())
 
   it('show a computed type as the checker resolved it, and a named one as written', async () => {

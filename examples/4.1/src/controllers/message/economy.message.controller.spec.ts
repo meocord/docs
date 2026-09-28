@@ -56,7 +56,6 @@ describe('ModerationMessageController and the built-in help', () => {
     )
   })
 
-  // #region help-spec
   it('answers !help with the commands, and !help m with the one it names', async () => {
     const list = createMockMessage({ content: '!help' })
     await module.dispatch(list)
@@ -68,5 +67,4 @@ describe('ModerationMessageController and the built-in help', () => {
       'Usage: !mute <target> [duration] [reason…]\nTimes a member out, for 10 minutes unless told otherwise.',
     )
   })
-  // #endregion help-spec
 })

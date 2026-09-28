@@ -3,11 +3,12 @@
  * examples and generated data in step with versions.json.
  */
 
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { ApiDocument } from './api.js'
 import type { AnchorTarget, ChangelogDocument } from './changelog.js'
-import { pageAnchors, parsePage } from './content.js'
+import { pageAnchors } from './content.js'
+import { readGuide } from './guide.js'
 import { withPlaceholder } from './package-spec.js'
 import { importReadme, pageFile } from './readme.js'
 import type { VersionsConfig } from './versions.js'
@@ -27,13 +28,13 @@ export const paths = {
   migrating: (line: string) => path.join(ROOT, 'content', 'migrating', `${line}.md`),
   since: path.join(ROOT, 'generated', 'since.json'),
   readmeAnchors: (line: string) => path.join(ROOT, 'generated', 'readme-anchors', `${line}.json`),
-  /** A line's authored guides, written by people; the pipeline only creates a new line's folder. */
+  /** A line's Guide, written by people; the pipeline only creates a new line's folder. */
   content: (line: string) => path.join(ROOT, 'content', line),
-  /** A line's Guide, in the overhauled template, written ahead of replacing its guides. */
-  guide: (line: string) => path.join(ROOT, 'content', `${line}-next`),
   /** A line's guides imported from its README, which the site shows until the line's guides are authored. */
   readme: (line: string) => path.join(ROOT, 'generated', 'readme', line),
   examples: (line: string) => path.join(ROOT, 'examples', line),
+  /** The URLs the deployed site answers, which scripts/live-routes.ts records from a build of it. */
+  liveRoutes: path.join(ROOT, 'e2e', 'fixtures', 'live-routes.json'),
 }
 
 function write(file: string, text: string): void {
@@ -83,19 +84,19 @@ export function lineAnchors(line: string): Record<string, string> {
 }
 
 /**
- * Where README anchors land in a line's authored guides: a README section's anchor on the page with
- * that id, or that id among its `formerly`; any other anchor on the page with a heading of that name.
+ * Where README anchors land in a line's Guide: a README section's anchor on the page with that id, or
+ * that id among its `formerly`; any other anchor on the page with a heading of that name.
  */
 export function authoredAnchors(line: string): Record<string, AnchorTarget> {
-  const dir = paths.content(line)
-  if (!existsSync(dir)) return {}
-  const pages = readdirSync(dir)
-    .filter(file => file.endsWith('.md'))
-    .map(file => ({ slug: file.replace(/\.md$/, ''), ...parsePage(readFileSync(path.join(dir, file), 'utf8')) }))
+  const pages = readGuide(line, ROOT).map(({ page, body }) => ({
+    target: { slug: page.id, group: page.group === 'help' ? undefined : page.group },
+    ids: [page.id, ...page.formerly],
+    body,
+  }))
   const anchors: Record<string, AnchorTarget> = {}
-  for (const { slug, frontmatter } of pages)
-    for (const id of [frontmatter.id ?? slug, ...(frontmatter.formerly ?? [])]) anchors[id] = { slug }
-  for (const { slug, body } of pages) for (const anchor of pageAnchors(body)) anchors[anchor] ??= { slug, anchor }
+  for (const { target, ids } of pages) for (const id of ids) anchors[id] = target
+  for (const { target, body } of pages)
+    for (const anchor of pageAnchors(body)) anchors[anchor] ??= { ...target, anchor }
   return anchors
 }
 

@@ -48,11 +48,11 @@ describe('page metadata', () => {
     )
   })
 
-  it('a guide on a prerelease line: its first paragraph, canonical at its line', async () => {
+  it('a Guide page on a prerelease line: its summary, canonical at its line', async () => {
     expect(await guide.generateMetadata(params({ line: '4.1', slug: ['guards'] }))).toEqual(
       expected(
         'Guards · MeoCord 4.1',
-        'A guard decides whether a handler runs. It implements canActivate, returning true to let the call through and false to stop it silently. To tell the user…',
+        'Decide whether a call may run, before the handler or anything costly sees it, and tell the user why when it may not.',
         '/docs/4.1/guards',
       ),
     )
@@ -65,19 +65,19 @@ describe('page metadata', () => {
     expect(meta.openGraph).toMatchObject({ url: '/docs/latest/guards' })
   })
 
-  it('a tutorial page and a recipe page, as guides', async () => {
-    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['tutorial'] }))).toEqual(
+  it("an appendix page, and a recipe at its group's path", async () => {
+    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['what-can-i-build'] }))).toEqual(
       expected(
-        'Tutorial: a feedback bot · MeoCord 4.1',
-        'This tutorial builds a complete bot, a step at a time, on top of A first command. Members send feedback with /feedback. It opens a form, and the bot…',
-        '/docs/4.1/tutorial',
+        'What you can build · MeoCord 4.1',
+        'Every kind of handler MeoCord runs, from slash commands to gateway events, each with a small working example.',
+        '/docs/4.1/what-can-i-build',
       ),
     )
-    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['recipe-tickets'] }))).toEqual(
+    expect(await guide.generateMetadata(params({ line: '4.1', slug: ['recipes', 'cooldown-stores'] }))).toEqual(
       expected(
-        'A ticket system · MeoCord 4.1',
-        '/ticket asks for a subject and details in a modal, opens a private thread with the member in it, and posts a Close button that the member or the staff…',
-        '/docs/4.1/recipe-tickets',
+        'Cooldown stores · MeoCord 4.1',
+        'Keep cooldown counts in Redis, across shards, or in PostgreSQL, SQLite or MongoDB, and check a store of your own.',
+        '/docs/4.1/recipes/cooldown-stores',
       ),
     )
   })
@@ -86,29 +86,29 @@ describe('page metadata', () => {
     expect(await landing.generateMetadata(params({ line: '4.1' }))).toEqual(
       expected(
         'Overview · MeoCord 4.1',
-        'MeoCord is a framework for Discord bots built on discord.js. You write a bot as controllers and services, and decorators connect them to Discord…',
+        'What MeoCord is, what a bot built with it is made of, and how its parts run from build to shutdown.',
         '/docs/4.1/overview',
       ),
     )
   })
 
   it('an API symbol: its doc comment’s summary', async () => {
-    expect(await api.generateMetadata(params({ line: '4.1', path: ['decorator', 'Command'] }))).toEqual(
+    expect(await api.generateMetadata(params({ line: '4.1', path: ['decorators', 'Command'] }))).toEqual(
       expected(
         'Command · meocord/decorator · MeoCord 4.1',
         'Routes a command, a component or a modal submission to the method it decorates.',
-        '/docs/4.1/api/decorator/Command',
+        '/docs/4.1/api/decorators/Command',
       ),
     )
   })
 
   it('an exact version’s API symbol: never indexed, canonical at the line’s page', async () => {
-    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorator', 'Command'] }))
+    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorators', 'Command'] }))
     expect(meta).toEqual({
       ...expected(
         'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
         'Decorator to register command methods in a controller.',
-        '/docs/4.1/api/decorator/Command',
+        '/docs/4.1/api/decorators/Command',
       ),
     })
   })
@@ -139,10 +139,10 @@ describe('page metadata', () => {
   })
 
   it('a page missing from a line: noindex, with no canonical', async () => {
-    expect(await missing.generateMetadata(params({ line: '4.0', id: 'quick-start' }))).toEqual(
+    expect(await missing.generateMetadata(params({ line: '4.0', id: 'first-command' }))).toEqual(
       expected(
-        'A first command (not documented) · MeoCord 4.0',
-        'A first command is not documented for MeoCord 4.0. See where it is, and what 4.0 documents.',
+        'Your first command (not documented) · MeoCord 4.0',
+        'Your first command is not documented for MeoCord 4.0. See where it is, and what 4.0 documents.',
       ),
     )
   })

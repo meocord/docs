@@ -2,8 +2,11 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { Div } from '@meonode/ui'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
-import { claims, features, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
+import { pageAnchors } from '../../../scripts/lib/content'
+import { guidePath, readGuide } from '../../../scripts/lib/guide'
+import { buildKinds, CLAIMS, claims, doors, pipelineDemo } from '@/lib/home/data'
 
 // The example's `home` region, read here independently of the site's own example resolver.
 function regionFromFile(): string {
@@ -65,27 +68,48 @@ describe('the pipeline panel', () => {
 })
 
 describe('the sections below', () => {
-  it('back each claim with a region from the examples', () => {
-    for (const claim of claims()) expect(claim.code.length, claim.title).toBeGreaterThan(40)
-  })
-
-  it('list what is new and the spec that runs', () => {
-    expect(whatsNew().length).toBeGreaterThan(2)
-    expect(specReport().lines[0]).toMatch(/^the stages of a call › /)
-  })
-
-  it('pair each feature with what its recorded call produced', () => {
-    const [routing, cooldown, validation, presenter] = features()
-    for (const feature of features()) expect(feature.code.length).toBeGreaterThan(0)
-    expect(routing.code).toContain("'card/{ownerId}/refresh'")
-    expect(routing.result).toEqual({
-      kind: 'route',
-      customId: 'card/111/refresh',
-      handler: 'CardButtonController.refresh',
-      params: { ownerId: '111' },
+  it('links each claim to a Guide page, at a heading it has where the link names one', () => {
+    const guide = readGuide('4.1')
+    const missing = CLAIMS.filter(({ guide: link }) => {
+      const [path, anchor] = link.slice('guide:'.length).split('#')
+      const page = guide.find(entry => guidePath(entry.page) === path)
+      return !page || (anchor !== undefined && !pageAnchors(page.body).has(anchor))
     })
-    expect(cooldown.result).toMatchObject({ kind: 'private', text: expect.stringMatching(/try again in 3s/) })
-    expect(validation.result).toMatchObject({ kind: 'private', text: expect.stringMatching(/^minutes:/) })
-    expect(presenter.result).toMatchObject({ kind: 'embed', title: 'Something went wrong', private: true })
+    expect(missing).toEqual([])
+    expect(claims().map(claim => claim.href)).toEqual([
+      '/docs/4.1/responses#how-it-works',
+      '/docs/4.1/testing',
+      '/docs/4.1/how-a-call-runs',
+      '/docs/4.1/components#typed-params',
+    ])
+  })
+
+  it('shows every kind of handler What you can build does, each opening its section', () => {
+    const kinds = buildKinds()
+    expect(kinds.map(kind => kind.title)).toEqual([
+      'Slash commands',
+      'Subcommands',
+      'Buttons',
+      'Select menus',
+      'Modals',
+      'Context menus',
+      'Autocomplete',
+      'Message commands',
+      'Reactions',
+      'Gateway events',
+    ])
+    expect(kinds[0].href).toBe('/docs/4.1/what-can-i-build#slash-commands')
+    const lead = renderToStaticMarkup(Div({ children: kinds[0].lead }).render()).replace(/^<div>|<\/div>$/g, '')
+    expect(lead).toBe('<p>A member types <code>/echo</code> and picks its options.</p>')
+  })
+
+  it('opens three doors: the Guide, the reference, and moving from another version or framework', () => {
+    const [learn, lookUp, migrate] = doors()
+    expect(learn.links[0]).toEqual({ title: 'Overview', href: '/docs/4.1/overview' })
+    expect(lookUp.links).toEqual([
+      { title: 'API reference', href: '/docs/4.1/api' },
+      { title: 'CLI', href: '/docs/4.1/api/cli' },
+    ])
+    expect(migrate.links[0]).toEqual({ title: 'Migrating to 4.1', href: '/docs/4.1/migrating' })
   })
 })

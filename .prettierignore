@@ -6,3 +6,4 @@ bun.lock
 public/
 generated/
 scripts/__fixtures__/
+e2e/fixtures/

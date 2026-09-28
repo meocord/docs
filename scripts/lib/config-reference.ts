@@ -1,7 +1,7 @@
 /**
  * The meocord.config.ts reference: every option `MeoCordConfig` declares, and the options of the
  * interfaces it nests, such as `sharding`, read from a version's API document with their type,
- * default, first version and JSDoc. The site shows it as a generated page of each authored line.
+ * default, first version and JSDoc. The site shows it as a generated appendix page of each line's Guide.
  */
 
 import { pageSlugger } from '../../src/lib/page-ids'
@@ -192,9 +192,11 @@ export function configReferencePage(line: string, doc: ConfigDocument): string {
     '---',
     `id: ${CONFIG_REFERENCE_SLUG}`,
     'title: meocord.config.ts reference',
-    'section: Reference',
+    'chapter: appendix',
+    'group: help',
     'order: 90',
     `source: config@${doc.version}`,
+    'summary: Every option meocord.config.ts takes, with its type, its default and the version it first appeared in.',
     '---',
     '',
     `Every option \`meocord.config.ts\` takes, generated from the declarations of meocord ${doc.version}. ` +

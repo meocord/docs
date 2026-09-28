@@ -1,4 +1,3 @@
-// #region service
 import { Service } from 'meocord/decorator'
 import { type DispatchOutcome } from 'meocord/interface'
 
@@ -18,4 +17,3 @@ export class MetricsService {
     return this.counts.get(`${type} ${handler} ${outcome}`) ?? 0
   }
 }
-// #endregion service

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import App from '@src/app-beyond-commands'
 import { KeywordMessageController } from '@src/controllers/message/keyword.message.controller'
 
-// #region spec
 describe('KeywordMessageController', () => {
   // With the app, a message is matched after its prefix, as the bot matches it
   const module = MeoCordTestingModule.create({ app: App, controllers: [KeywordMessageController] }).compile()
@@ -27,4 +26,3 @@ describe('KeywordMessageController', () => {
     expect(module.get(KeywordMessageController).messagesSeen).toBe(1)
   })
 })
-// #endregion spec

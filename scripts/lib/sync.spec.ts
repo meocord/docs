@@ -224,19 +224,28 @@ describe('README anchors for an authored line', () => {
   it('lands a section on the page with its id or former id, and a heading on the page holding it', () => {
     mkdirSync(path.join(root, 'content', '8.1'), { recursive: true })
     writeFileSync(
-      path.join(root, 'content', '8.1', 'component-routing.md'),
-      '---\nid: command-parameters\ntitle: Routing\n---\n\n## Modal fields\n',
+      path.join(root, 'versions.json'),
+      JSON.stringify({ lines: [{ line: '8.1', status: 'prerelease', guides: 'authored', versions: [] }] }),
     )
-    writeFileSync(
-      path.join(root, 'content', '8.1', 'overview.md'),
-      '---\nid: overview\ntitle: Overview\nformerly: [features]\n---\n\n## Modal fields\n',
-    )
+    const page = (id: string, fields: string, body: string) =>
+      writeFileSync(
+        path.join(root, 'content', '8.1', `${id}.md`),
+        `---\nid: ${id}\ntitle: ${id}\n${fields}\nsummary: About ${id}.\nlearn: [One, Two]\n---\n\n${body}\n`,
+      )
+    page('components', 'chapter: interactions\norder: 1\nformerly: [component-routing]', '## Modal fields')
+    page('overview', 'chapter: start\norder: 1\nformerly: [features]', '## Modal fields')
+    // A recipe sits in its group's folder, and its anchors carry the group
+    page('tickets', 'chapter: appendix\ngroup: recipes\norder: 1', '## The code')
 
     expect(authoredAnchors('8.1')).toEqual({
-      'command-parameters': { slug: 'component-routing' },
-      overview: { slug: 'overview' },
-      features: { slug: 'overview' },
-      'modal-fields': { slug: 'component-routing', anchor: 'modal-fields' },
+      components: { slug: 'components', group: undefined },
+      'component-routing': { slug: 'components', group: undefined },
+      overview: { slug: 'overview', group: undefined },
+      features: { slug: 'overview', group: undefined },
+      tickets: { slug: 'tickets', group: 'recipes' },
+      // A heading two pages have lands on the first, in reading order
+      'modal-fields': { slug: 'overview', group: undefined, anchor: 'modal-fields' },
+      'the-code': { slug: 'tickets', group: 'recipes', anchor: 'the-code' },
     })
   })
 

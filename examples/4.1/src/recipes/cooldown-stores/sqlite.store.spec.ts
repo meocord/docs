@@ -3,7 +3,6 @@ import { testCooldownStore } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { cooldownCallsTable, SqliteCooldownStore } from '@src/recipes/cooldown-stores/sqlite.store'
 
-// #region spec
 testCooldownStore(
   'SqliteCooldownStore',
   () => {
@@ -13,4 +12,3 @@ testCooldownStore(
   },
   { describe, it, expect },
 )
-// #endregion spec

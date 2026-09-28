@@ -7,16 +7,13 @@ import { CommandType } from 'meocord/enum'
 @Controller()
 @UseTheme({ colors: { primary: '#26A042' } })
 export class StoreSlashController {
-  // #region read
   @Command('receipt', CommandType.SLASH)
   async receipt(interaction: ChatInputCommandInteraction) {
     const { colors, emojis } = useTheme()
     const receipt = new EmbedBuilder().setDescription(`${emojis.success} Paid`).setColor(colors.success)
     await respond(interaction).send({ embeds: [receipt] })
   }
-  // #endregion read
 
-  // #region fill
   @Command('refund', CommandType.SLASH)
   @UseTheme({ colors: { primary: '#E3606D' }, emojis: { loading: '💸' } })
   @Defer()
@@ -31,6 +28,5 @@ export class StoreSlashController {
     const banner = new EmbedBuilder().setImage('https://meocord.dev/og.png')
     await respond(interaction).send({ embeds: [banner] }, { fill: false })
   }
-  // #endregion fill
 }
 // #endregion store

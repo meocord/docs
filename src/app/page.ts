@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { Div, H1, Node } from '@meonode/ui'
-import { FeatureSection, NewSection, StartSection, TestingSection, WhySection } from '@/components/home/HomeSections'
+import { BuildSection, DoorsSection, WhySection } from '@/components/home/HomeSections'
 import { HomeRows, Prose } from '@/components/nodes'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
 
@@ -11,9 +11,7 @@ import { HOME_LINE } from '@/config/home'
 import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { claims, features, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
-import { docsHref } from '@/lib/urls'
-import { resolveExample } from '../../scripts/lib/pages'
+import { buildKinds, claims, doors, pipelineDemo } from '@/lib/home/data'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
 export const metadata: Metadata = pageMetadata({
@@ -22,15 +20,12 @@ export const metadata: Metadata = pageMetadata({
   canonical: '/',
 })
 
-const guide = (slug: string) => docsHref({ kind: 'guide', line: HOME_LINE, slug }, VERSIONS)
-
 // Cached for the life of the build: the page depends only on the repository's files, and highlighting
 // reads the clock, which a prerender allows only inside a cache.
 async function home() {
   'use cache'
   cacheLife('max')
   const status = VERSIONS.lines.find(entry => entry.line === HOME_LINE)?.status
-  const report = specReport()
 
   return Window({
     crumbs: [{ title: 'Overview' }],
@@ -55,20 +50,7 @@ async function home() {
         PipelinePanel(pipelineDemo()),
         HomeRows({
           key: 'rows',
-          children: [
-            WhySection(claims()),
-            FeatureSection(features()),
-            StartSection(guide('quick-start'), specFor(HOME_LINE)),
-            TestingSection(
-              {
-                file: report.file,
-                code: resolveExample(HOME_LINE, report.file.replace(/^src\//, ''), 'spec'),
-                report: report.lines,
-              },
-              guide('testing'),
-            ),
-            NewSection(HOME_LINE, whatsNew(), guide('whats-new')),
-          ],
+          children: [BuildSection(buildKinds()), WhySection(claims()), DoorsSection(doors(), specFor(HOME_LINE))],
         }),
         Node(ReadingIsland, { key: 'island' }),
       ],

@@ -1,15 +1,16 @@
 /**
- * The Guide: a line's pages in reading order, chapter by chapter, from content/<line>-next/. Each page
+ * The Guide: a line's pages in reading order, chapter by chapter, from content/<line>/. Each page
  * follows one template (fixed sections in a fixed order), links other pages and the API by `guide:`
  * and `api:` targets that the check resolves, and pulls every code block from the line's examples.
  */
 
-import { existsSync, readdirSync, readFileSync } from 'fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
+import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { EXAMPLE_SOURCE, fenceLanguages, hasRegion, markdownLinks, pageAnchors, withoutCode } from './content'
 import { withPackageSpec } from './package-spec'
-import type { VersionsConfig } from './versions'
+import { newestIn, readVersions, type VersionsConfig } from './versions'
 import { memberAnchor } from '../../src/lib/urls'
 import { parseDispatchList } from '../../src/playground/dispatch-list'
 import { outsideModules, READER_MODULES } from '../../src/playground/runtime/modules'
@@ -94,6 +95,7 @@ export const GUIDE_PLAN: Readonly<Record<ChapterId, readonly string[]>> = {
     'coming-from/discordx',
     'coming-from/necord',
     'what-can-i-build',
+    'config-reference',
     'troubleshooting',
     'faq',
     'glossary',
@@ -129,6 +131,7 @@ export interface GuideFrontmatter {
   api?: string[]
   since?: string
   formerly?: string[]
+  covers?: string[]
 }
 
 export interface GuidePage {
@@ -142,7 +145,10 @@ export interface GuidePage {
   requires: string[]
   api: string[]
   since?: string
+  /** The old slugs of this line that redirect to the page. */
   formerly: string[]
+  /** The ids of other lines' pages on the same topic, such as 4.0's `command-types` for slash commands. */
+  covers: string[]
 }
 
 /** The repository root the Guide is read from (the tests point it at a scratch directory). */
@@ -150,12 +156,24 @@ const docsRoot = (root?: string) => root ?? process.env.MEOCORD_DOCS_ROOT ?? pro
 
 /** Where a line's Guide is written, below the repository root. */
 export function guideFolder(line: string, root?: string): string {
-  return path.join(docsRoot(root), 'content', `${line}-next`)
+  return path.join(docsRoot(root), 'content', line)
 }
 
-/** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
-export function guideRendered(line: string): boolean {
-  return process.env.DOCS_NEXT === '1' && existsSync(guideFolder(line))
+// The lines whose guides are authored, by versions.json's path and modification time: read again only once
+// the file changes, as under `next dev`, where a line's pages call this for every link they resolve
+const authoredLines = new Map<string, { modified: number; lines: ReadonlySet<string> }>()
+
+/** Whether the site renders a line's Guide: a line whose guides are authored, as versions.json lists it. */
+export function guideRendered(line: string, root?: string): boolean {
+  const file = path.resolve(docsRoot(root), 'versions.json')
+  const modified = existsSync(file) ? statSync(file).mtimeMs : -1
+  let known = authoredLines.get(file)
+  if (known?.modified !== modified) {
+    const lines = modified < 0 ? [] : readVersions(file).lines.filter(entry => entry.guides === 'authored')
+    known = { modified, lines: new Set(lines.map(entry => entry.line)) }
+    authoredLines.set(file, known)
+  }
+  return known.lines.has(line)
 }
 
 export function parseGuidePage(text: string): { frontmatter: GuideFrontmatter; body: string } {
@@ -173,6 +191,60 @@ export function readGuidePage(slug: string, text: string): { page?: GuidePage; b
   return { page: readFrontmatter('', slug, frontmatter, []), body }
 }
 
+/** A page as the lines' pages are matched: its id, the old slugs it took over, and the pages it covers. */
+export interface TopicPage {
+  id: string
+  formerly: readonly string[]
+  /** `<line>/<id>[#<anchor>]`: a page of a line on this page's topic, or a retired one of its own line. */
+  covers?: readonly string[]
+}
+
+/** A `covers` entry, `<line>/<id>[#<anchor>]`, or undefined when it isn't one. */
+export function parseCover(entry: string): { line: string; id: string; anchor?: string } | undefined {
+  const match = /^(\d+\.\d+)\/([a-z0-9][a-z0-9-]*)(?:#([a-z0-9][a-z0-9-]*))?$/.exec(entry)
+  return match ? { line: match[1], id: match[2], anchor: match[3] } : undefined
+}
+
+/**
+ * The page of `line` on the same topic as a page of `from`, and the section to land at: the page with its
+ * id; else the page it covers in `line`; else a page of `line` that covers it; else one it took an old slug
+ * of, or that took an old slug of its. The version switcher, the missing pages and the alias redirects all
+ * decide it here.
+ */
+export function counterpartIn<T extends TopicPage>(
+  pages: readonly T[],
+  line: string,
+  page: TopicPage,
+  from: string,
+): { page: T; anchor?: string } | undefined {
+  const exact = pages.find(candidate => candidate.id === page.id)
+  if (exact) return { page: exact }
+  for (const cover of (page.covers ?? []).map(parseCover)) {
+    const covered = cover?.line === line ? pages.find(candidate => candidate.id === cover.id) : undefined
+    if (covered) return { page: covered, anchor: cover!.anchor }
+  }
+  const covering = pages.find(candidate =>
+    (candidate.covers ?? []).some(entry => {
+      const cover = parseCover(entry)
+      return cover?.line === from && cover.id === page.id
+    }),
+  )
+  if (covering) return { page: covering }
+  const renamed = pages.find(candidate => page.formerly.includes(candidate.id) || candidate.formerly.includes(page.id))
+  return renamed && { page: renamed }
+}
+
+/** The page of `line` known by an id of that line: its own, a retired one it covers, or an old slug it took over. */
+export function pageKnownAs<T extends TopicPage>(pages: readonly T[], line: string, id: string): T | undefined {
+  return (
+    pages.find(page => page.id === id) ??
+    pages.find(page =>
+      (page.covers ?? []).some(entry => parseCover(entry)?.line === line && parseCover(entry)?.id === id),
+    ) ??
+    pages.find(page => page.formerly.includes(id))
+  )
+}
+
 /** A page's path below `/docs/<line>/`: its id, under its group for recipes and coming-from pages. */
 export function guidePath(page: Pick<GuidePage, 'id' | 'group'>): string {
   return page.group === 'recipes' || page.group === 'coming-from' ? `${page.group}/${page.id}` : page.id
@@ -187,18 +259,33 @@ export function readingOrder(pages: GuidePage[]): GuidePage[] {
   )
 }
 
+/**
+ * A line's configuration reference, an appendix page generated from its newest version's generated/config
+ * file; undefined without one.
+ */
+export function configReferenceText(line: string, config: VersionsConfig, root?: string): string | undefined {
+  const entry = config.lines.find(candidate => candidate.line === line)
+  if (!entry || entry.versions.length === 0) return undefined
+  const file = path.join(docsRoot(root), 'generated', 'config', `${newestIn(entry)}.json`)
+  return existsSync(file)
+    ? configReferencePage(line, JSON.parse(readFileSync(file, 'utf8')) as ConfigDocument)
+    : undefined
+}
+
 /** A line's Guide in reading order, each page with its body; a page whose front matter fails content:check is left out. */
 export function readGuide(line: string, root?: string): { page: GuidePage; body: string }[] {
   const dir = guideFolder(line, root)
   if (!existsSync(dir)) return []
   const config = JSON.parse(readFileSync(path.join(docsRoot(root), 'versions.json'), 'utf8')) as VersionsConfig
-  const read = readdirSync(dir)
+  const files: [string, string][] = readdirSync(dir)
     .filter(file => file.endsWith('.md'))
-    .flatMap(file => {
-      const text = withPackageSpec(readFileSync(path.join(dir, file), 'utf8'), config, line)
-      const { page, body } = readGuidePage(file.replace(/\.md$/, ''), text)
-      return page ? [{ page, body }] : []
-    })
+    .map(file => [file.replace(/\.md$/, ''), withPackageSpec(readFileSync(path.join(dir, file), 'utf8'), config, line)])
+  const reference = configReferenceText(line, config, root)
+  if (reference) files.push([CONFIG_REFERENCE_SLUG, reference])
+  const read = files.flatMap(([slug, text]) => {
+    const { page, body } = readGuidePage(slug, text)
+    return page ? [{ page, body }] : []
+  })
   return readingOrder(read.map(entry => entry.page)).map(page => read.find(entry => entry.page === page)!)
 }
 
@@ -251,6 +338,16 @@ function apiRefProblem(ref: string, symbols: GuideContext['apiSymbols']): string
 const GITHUB_MIGRATING = /^https:\/\/github\.com\/meocord\/meocord\/(?:blob|tree)\/[^/]+\/docs\/MIGRATING\.md$/
 
 /** What the check reads besides the pages: the line's example files and the API's symbol names. */
+/** The pages a `covers` entry may name, by line. */
+export interface Coverable {
+  /** The lines versions.json lists. */
+  lines: readonly string[]
+  /** Each line's current pages, by id, with their headings' anchors where known. */
+  pages: Record<string, Record<string, readonly string[] | undefined>>
+  /** Each line's pages the deployed site served, by id. */
+  deployed: Record<string, readonly string[]>
+}
+
 export interface GuideContext {
   line: string
   /** Example files per folder, keyed by their path under examples/<folder>/. */
@@ -262,6 +359,10 @@ export interface GuideContext {
   apiSymbols: Map<string, { kinds: string[]; members: string[] }>
   /** The headings of the line's migration guide, which `guide:migrating#…` links. */
   migratingAnchors?: Set<string>
+  /** What a `covers` entry may name; without it, only its form is checked. */
+  coverable?: Coverable
+  /** The line's generated pages, by slug: pages others link, held to no template. */
+  generated?: Record<string, string>
   /**
    * Whether the Guide is complete, as it must be once it replaces the line's guides: a link to a
    * planned page not yet written then fails instead of being counted.
@@ -324,7 +425,93 @@ function readFrontmatter(where: string, slug: string, fm: GuideFrontmatter, prob
     api: fm.api ?? [],
     since: fm.since,
     formerly: fm.formerly ?? [],
+    covers: fm.covers ?? [],
   }
+}
+
+/**
+ * The paths below `/docs/<line>/` the Guide takes, which no old slug can redirect from: every page's of
+ * the plan and of the pages given, and the appendix groups' folders, whose pages sit below them.
+ */
+export function guideTaken(pages: readonly Pick<GuidePage, 'id' | 'group'>[] = []): Set<string> {
+  return new Set([...PLANNED, 'recipes', 'coming-from', ...pages.map(guidePath)])
+}
+
+/**
+ * Checks each old slug a page redirects from: a slug of its own, claimed by one page, and no path the Guide
+ * or its plan takes, which the redirect would never reach.
+ */
+function checkFormerly(
+  folder: string,
+  pages: Map<string, { page: GuidePage }>,
+  problems: string[],
+  coverable?: Coverable,
+): void {
+  const taken = guideTaken([...pages.values()].map(({ page }) => page))
+  const claimed = new Map<string, string>()
+  for (const [slug, { page }] of pages)
+    for (const old of page.formerly) {
+      const where = `${folder}/${slug}.md`
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(old)) problems.push(`${where}: formerly "${old}" is not a page slug`)
+      else if (taken.has(old)) problems.push(`${where}: formerly "${old}" is a path the Guide takes`)
+      else if (claimed.has(old)) problems.push(`${where}: formerly "${old}" is also ${claimed.get(old)}'s`)
+      claimed.set(old, slug)
+    }
+  // A page covers another line's page on its topic, many pages one, as 4.1's slash-commands and context-menus
+  // both cover 4.0/command-types; or a page its own line retired, which no current page is known by.
+  const current = new Set([...pages.values()].flatMap(({ page }) => [page.id, ...page.formerly]))
+  for (const [slug, { page }] of pages)
+    for (const entry of page.covers) {
+      const where = `${folder}/${slug}.md: covers "${entry}"`
+      const cover = parseCover(entry)
+      const line = folder.slice('content/'.length)
+      if (!cover) problems.push(`${where} is not <line>/<id>, with an optional #anchor`)
+      else if (!coverable) continue
+      else if (!coverable.lines.includes(cover.line)) problems.push(`${where} names a line versions.json doesn't list`)
+      else if (cover.line === line && cover.id === page.id) problems.push(`${where} is the page itself`)
+      else if (cover.line === line && current.has(cover.id))
+        problems.push(`${where} is a current page of this line, where only a retired one can be covered`)
+      else if (cover.line === line && !coverable.deployed[line]?.includes(cover.id))
+        problems.push(`${where} names no page this line's deployed site served`)
+      else if (
+        cover.line !== line &&
+        !(cover.id in (coverable.pages[cover.line] ?? {})) &&
+        !coverable.deployed[cover.line]?.includes(cover.id)
+      )
+        problems.push(`${where} names no page of ${cover.line}`)
+      else if (cover.anchor && !coverable.pages[cover.line]?.[cover.id]?.includes(cover.anchor))
+        problems.push(`${where} names no heading of that page`)
+    }
+}
+
+/**
+ * The regions of an examples folder that nothing shows: no `::example` or `::playground` of the pages
+ * given embeds them, and they are not among `shown`, what the site embeds by itself. `from` is how an
+ * embed names the folder, as `from="compare"`; a line's own folder has none. A tutorial's `step:` regions
+ * mark the steps of a file shown whole, and are not embedded by name.
+ */
+export function unembeddedRegions(
+  folder: string,
+  examples: Record<string, string>,
+  pages: readonly string[],
+  { from, shown = [] }: { from?: string; shown?: readonly { file: string; region: string }[] } = {},
+): string[] {
+  const embedded = new Set(shown.map(({ file, region }) => `${file}#${region}`))
+  for (const body of pages)
+    for (const match of withoutCode(body).matchAll(/::(?:example|playground)\{([^}]*)\}/g)) {
+      const attributes = Object.fromEntries(
+        [...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]),
+      )
+      if (attributes.from === from && attributes.region) embedded.add(`${attributes.file}#${attributes.region}`)
+    }
+  return Object.entries(examples).flatMap(([file, text]) => {
+    if (!file.startsWith('src/')) return []
+    const path = file.slice('src/'.length)
+    return [...text.matchAll(/\/\/ #region (\S+)/g)]
+      .map(([, region]) => region)
+      .filter(region => !region.startsWith('step:') && !embedded.has(`${path}#${region}`))
+      .map(region => `examples/${folder}/${file}: region "${region}" is embedded by no page; embed it, or remove it`)
+  })
 }
 
 /** Checks the sections: the template's headings present and in order, no H1, nothing below `###`. */
@@ -505,7 +692,7 @@ function checkLinks(
 export function checkGuide(files: Record<string, string>, context: GuideContext): GuideReport {
   const problems: string[] = []
   const planned: string[] = []
-  const folder = `content/${context.line}-next`
+  const folder = `content/${context.line}`
   const pages = new Map<string, { page: GuidePage; body: string; anchors: Set<string> }>()
   for (const [slug, text] of Object.entries(files)) {
     const where = `${folder}/${slug}.md`
@@ -513,10 +700,19 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     const page = readFrontmatter(where, slug, frontmatter, problems)
     if (page) pages.set(slug, { page, body, anchors: pageAnchors(body) })
   }
+  // A generated page, such as the configuration reference, is linked like any other but written by no one
+  const generated = new Set<string>()
+  for (const [slug, text] of Object.entries(context.generated ?? {})) {
+    const { frontmatter, body } = parseGuidePage(text)
+    const page = readFrontmatter(`generated ${slug}`, slug, frontmatter, problems)
+    if (page) pages.set(slug, { page, body, anchors: pageAnchors(body) })
+    generated.add(slug)
+  }
 
   const orders = new Map<string, string>()
   const known = new Set(pages.keys())
   for (const [slug, { page, body, anchors }] of pages) {
+    if (generated.has(slug)) continue
     const where = `${folder}/${slug}.md`
     const place = `${page.chapter}/${page.group ?? ''}/${page.order}`
     if (orders.has(place)) problems.push(`${where}: order ${page.order} is also ${orders.get(place)}'s`)
@@ -544,6 +740,7 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     checkExamples(where, body, context, problems)
     checkLinks(where, body, pages, context, anchors, problems, planned)
   }
+  checkFormerly(folder, pages, problems, context.coverable)
   // A link or region used more than once on a page is reported once.
   return { problems: [...new Set(problems)], planned: [...new Set(planned)] }
 }

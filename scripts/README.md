@@ -9,8 +9,7 @@ exact version they describe.
 | Path                                   | Contents                                                                                                                   | Edited by           |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | `versions.json`                        | The documented versions, grouped into minor lines with a status each, and provenance                                       | the sync, reviewers |
-| `content/<line>/`                      | A line's authored guides: one Markdown page each, with `id` and `title` front matter                                       | people              |
-| `content/<line>-next/`                 | A line's Guide in the overhauled template, written ahead of replacing its guides; `content:check` holds it to the template | people              |
+| `content/<line>/`                      | A line's Guide: one Markdown page each, in the Guide's template, which `content:check` holds it to                         | people              |
 | `content/migrating/<line>.md`          | A line's migration guide, with headings kept stable for the links that name them; a line without one has no Migrating page | people              |
 | `generated/readme/<line>/`             | A line's guides imported from the README its newest version shipped                                                        | the pipeline only   |
 | `examples/<line>/`                     | A workspace pinning that line's exact meocord; guides embed its files                                                      | people              |
@@ -34,10 +33,10 @@ pages when the changelog is generated. `content:check` checks each against the h
 a link to a README section that no page holds, since it is left on GitHub.
 
 Content stores links by line, `/docs/4.1/guards`, never through `latest` or `next`, in the form
-`src/lib/urls.ts` builds; the site maps them to the URLs it emits. `scripts/lib/pages.ts` is how the site
-reads a line's pages and the code an `::example` embeds. An authored line also shows `config-reference`, a
-page built from its newest version's `generated/config/<version>.json`; `content:check` refuses a
-hand-written page with that slug.
+`src/lib/urls.ts` builds; the site maps them to the URLs it emits. `scripts/lib/guide.ts` is how the site
+reads a line's Guide, and `scripts/lib/pages.ts` its imported README pages and the code an `::example` embeds.
+A line's Guide also has `config-reference`, an appendix page built from its newest version's
+`generated/config/<version>.json`; `content:check` refuses a hand-written page with that slug.
 
 ## Verifying a version
 

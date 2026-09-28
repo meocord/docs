@@ -1,6 +1,5 @@
 import { Service } from 'meocord/decorator'
 
-// #region wallet
 @Service()
 export class WalletService {
   private readonly balances = new Map<string, number>()
@@ -15,4 +14,3 @@ export class WalletService {
     this.balances.set(userId, this.balance(userId) + amount)
   }
 }
-// #endregion wallet

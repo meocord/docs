@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { GUIDE_FIGURES, GUIDE_PLAN } from '../../../scripts/lib/guide'
 import { pageAnchors } from '../../../scripts/lib/content'
 import { apiModel } from '@/lib/docs/api-site'
@@ -12,7 +12,6 @@ import { everyStage, HANDLER_KINDS, LEGACY_STAGES, PIPELINE, pipelineFigure, sta
 const figure = () => renderToStaticMarkup(Div({ children: pipelineFigure(url => url) }).render())
 
 describe('the pipeline figure', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
   afterAll(() => vi.unstubAllEnvs())
 
   it("links each stage to a Guide page on the plan, at a heading it has, and to the line's API", () => {
@@ -22,7 +21,7 @@ describe('the pipeline figure', () => {
       const [page, anchor] = stage.guide.replace(/^guide:/, '').split('#')
       expect(planned.has(page!), `${stage.id} links ${stage.guide}`).toBe(true)
       if (anchor) {
-        const body = readFileSync(`content/4.1-next/${page}.md`, 'utf8')
+        const body = readFileSync(`content/4.1/${page}.md`, 'utf8')
         expect(pageAnchors(body).has(anchor), `${stage.id} links ${stage.guide}`).toBe(true)
       }
       if (stage.api) {
@@ -92,7 +91,7 @@ describe('the pipeline figure', () => {
     const markup = figure()
     const ids = everyStage().map(stage => `stage-${stage.id}`)
     for (const id of ids) expect(markup).toContain(`<li id="${id}"`)
-    const page = readFileSync('content/4.1-next/how-a-call-runs.md', 'utf8')
+    const page = readFileSync('content/4.1/how-a-call-runs.md', 'utf8')
     expect(ids.filter(id => pageAnchors(page).has(id))).toEqual([])
   })
 

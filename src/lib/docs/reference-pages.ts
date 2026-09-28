@@ -1,14 +1,24 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
+import semver from 'semver'
 import { A, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Time, Ul } from '@meonode/ui'
-import { listPages, migratingGuide, type PageEntry } from '../../../scripts/lib/pages'
+import { migratingGuide } from '../../../scripts/lib/pages'
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { TocEntry } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
 import { lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
 import { REPOSITORY } from '@/lib/docs/render'
-import { lines, sidebar, versionChoices } from '@/lib/docs/site'
+import {
+  counterpart,
+  type LinePage,
+  linePages,
+  linePageWithId,
+  lines,
+  sidebar,
+  type Topic,
+  versionChoices,
+} from '@/lib/docs/site'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { changelogSectionAnchor, docsHref } from '@/lib/urls'
 
@@ -267,20 +277,40 @@ export function migratingArticle(line: string): { nodes: Child[]; toc: TocEntry[
 }
 
 /** A page id's entries in every line that has it, by line. */
-function pagesWithId(id: string): { line: string; page: PageEntry }[] {
+function pagesWithId(id: string): { line: string; page: LinePage }[] {
   return lines().flatMap(line => {
-    const page = listPages(line).find(entry => entry.id === id || entry.formerly.includes(id))
+    const page = linePageWithId(line, id)
     return page ? [{ line, page }] : []
   })
 }
 
-/** Every `{ line, id }` a missing page is prerendered for: each id a line lacks that another line has. */
+/**
+ * Every `{ line, id }` a missing page is prerendered for: each page of another line whose topic the line
+ * has no page on, by that page's id.
+ */
 export function missingParams(): { line: string; id: string }[] {
-  const all = new Set(lines().flatMap(line => listPages(line).map(page => page.id)))
   return lines().flatMap(line => {
-    const here = new Set(listPages(line).flatMap(page => [page.id, ...page.formerly]))
-    return [...all].filter(id => !here.has(id)).map(id => ({ line, id }))
+    const ids = new Set(
+      lines()
+        .filter(other => other !== line)
+        .flatMap(other => linePages(other).filter(page => !counterpart(line, { page, line: other })))
+        .map(page => page.id),
+    )
+    return [...ids].map(id => ({ line, id }))
   })
+}
+
+/**
+ * Where a missing page's reader belongs when its id isn't the one the site uses: the line's own page on
+ * the topic, where it has one, or else the missing page by the id of the page that has it now, as an old
+ * slug finds it. Undefined for a missing page at its own URL, or no topic at all.
+ */
+export function movedMissingHref(line: string, id: string): string | undefined {
+  if (!lines().includes(line)) return undefined
+  const found = pagesWithId(id).find(entry => entry.line !== line)
+  const present = linePageWithId(line, id)?.href ?? (found && counterpart(line, found)?.href)
+  if (present) return present
+  return found && found.page.id !== id ? docsHref({ kind: 'missing', line, id: found.page.id }, VERSIONS) : undefined
 }
 
 /** The page a reader lands on when a line has no page with this id: where it is, and what this line has. */
@@ -288,7 +318,10 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
   const elsewhere = pagesWithId(id).filter(found => found.line !== line)
   if (elsewhere.length === 0 || !lines().includes(line)) return undefined
   const title = elsewhere[0].page.title
-  const since = elsewhere.map(found => found.page.since).find(Boolean)
+  // Said only of a release after the line's, where the topic is new
+  const since = elsewhere
+    .map(found => found.page.since)
+    .find(version => version !== undefined && semver.valid(version) && semver.gt(version, `${line}.999`))
   const nodes: Child[] = [
     H1(`Not in ${line}`, { key: 'title' }),
     P(
@@ -302,11 +335,11 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
     H2('Where it is documented', { key: 'elsewhere', id: 'elsewhere' }),
     Ul({
       key: 'elsewhere-list',
-      children: elsewhere.map(({ line: other, page: { slug, title } }) =>
+      children: elsewhere.map(({ line: other, page: { href, title } }) =>
         Li({
           key: other,
           children: A({
-            href: docsHref({ kind: 'guide', line: other, slug }, VERSIONS),
+            href,
             children: `${title} in ${other}`,
           }),
         }),
@@ -330,7 +363,7 @@ function page(
   title: string,
   nodes: Child[],
   toc: TocEntry[],
-  options: { id?: string; current?: string; parent?: { title: string; href: string } } = {},
+  options: { topic?: Topic; current?: string; parent?: { title: string; href: string } } = {},
 ) {
   return Window({
     crumbs: [
@@ -339,7 +372,7 @@ function page(
       { title },
     ],
     groups: sidebar(line, options.current),
-    version: versionChoices(line, options.id),
+    version: versionChoices(line, options.topic),
     repository: REPOSITORY,
     toc,
     children: Prose({ children: nodes }),
@@ -364,5 +397,7 @@ export function renderMigrating(line: string) {
 
 export function renderMissing(line: string, id: string) {
   const article = missingArticle(line, id)
-  return article && page(line, `Not in ${line}`, article.nodes, [], { id })
+  // The switcher offers each line's page on the topic, as the line documenting it knows it
+  const found = pagesWithId(id).find(entry => entry.line !== line)
+  return article && page(line, `Not in ${line}`, article.nodes, [], { topic: found })
 }

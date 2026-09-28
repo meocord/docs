@@ -67,9 +67,10 @@ const README =
 
 /**
  * Where a README anchor lands on a line's pages: the slug of the page holding it, keeping the anchor,
- * or a page and the anchor to use there, none for the page itself.
+ * or a page, with the appendix group whose folder it sits in, and the anchor to use there, none for the
+ * page itself.
  */
-export type AnchorTarget = string | { slug: string; anchor?: string }
+export type AnchorTarget = string | { slug: string; group?: 'recipes' | 'coming-from'; anchor?: string }
 
 /** The stored href a README anchor lands on, or undefined when no page of the line has it. */
 export function anchorHref(line: string, anchors: Record<string, AnchorTarget>, anchor: string): string | undefined {
@@ -77,7 +78,7 @@ export function anchorHref(line: string, anchors: Record<string, AnchorTarget>, 
   if (target === undefined) return undefined
   return typeof target === 'string'
     ? storedHref({ kind: 'guide', line, slug: target, anchor })
-    : storedHref({ kind: 'guide', line, slug: target.slug, anchor: target.anchor })
+    : storedHref({ kind: 'guide', line, slug: target.slug, group: target.group, anchor: target.anchor })
 }
 
 /**

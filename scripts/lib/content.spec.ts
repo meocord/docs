@@ -164,19 +164,26 @@ describe('checkSite', () => {
     ])
   })
 
-  it('refuses a ::playground, which only the Guide renders', () => {
+  it('refuses a ::playground in a page imported from a README, which only the Guide renders', () => {
     const pages = {
       a: page(
-        'id: a\ntitle: A',
+        'id: a\ntitle: A\nsource: readme@4.0.0',
         '::playground{file="guards/owner.guard.ts" dispatch="/ping"}\n\n```text\n::playground{file="x.ts"}\n```',
       ),
-      b: page('id: b\ntitle: B', 'Run it: ::playground{file="x.ts" dispatch="/ping"}, or see `::playground`.'),
-      c: page('id: c\ntitle: C', 'Written as `::playground{…}` in the Guide.'),
+      b: page(
+        'id: b\ntitle: B\nsource: readme@4.0.0',
+        'Run it: ::playground{file="x.ts" dispatch="/ping"}, or see `::playground`.',
+      ),
+      c: page('id: c\ntitle: C\nsource: readme@4.0.0', 'Written as `::playground{…}` in the Guide.'),
     }
-    expect(checkSite(withAuthored(pages))).toEqual([
-      'content/4.1/a.md: ::playground is a Guide directive',
-      'content/4.1/b.md: ::playground is a Guide directive',
+    expect(checkSite(site({ readme: { ...site().readme, '4.0': { ...site().readme['4.0'], ...pages } } }))).toEqual([
+      'generated/readme/4.0/a.md: ::playground is a Guide directive',
+      'generated/readme/4.0/b.md: ::playground is a Guide directive',
     ])
+    // A Guide page runs it
+    expect(
+      checkSite(withAuthored({ d: page('id: d\ntitle: D', '::playground{file="x.ts" dispatch="/ping"}') })),
+    ).toEqual([])
   })
 
   it('takes a playground link to a line with one, and refuses one to a line without', () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { API_KINDS } from '@/lib/docs/api-model'
 import {
   apiArrangement,
@@ -36,8 +36,7 @@ describe('the site API', () => {
     expect(apiModel('4.0')).toBe(apiModel('4.0'))
   })
 
-  it("opens a line's API where every app starts, MeoCordFactory", () => {
-    expect(apiLandingHref('4.1')).toBe('/docs/4.1/api/core/MeoCordFactory')
+  it('opens a line by entry point where every app starts, MeoCordFactory, and has none for an unknown line', () => {
     expect(apiLandingHref('4.0')).toBe('/docs/latest/api/core/MeoCordFactory')
     expect(apiLandingHref('9.9')).toBeUndefined()
   })
@@ -49,7 +48,7 @@ describe('the site API', () => {
   })
 
   it('lists the pages to prerender for each line and every exact version', () => {
-    expect(apiParams()).toContainEqual({ line: '4.1', section: 'decorator', symbol: 'Cooldown' })
+    expect(apiParams()).toContainEqual({ line: '4.1', section: 'decorators', symbol: 'Cooldown' })
     const exact = exactApiParams()
     expect(exact).toContainEqual({ line: '4.0', version: '4.0.0-beta.2', section: 'core', symbol: 'MeoCordFactory' })
     expect(new Set(exact.map(param => param.version))).toEqual(
@@ -65,10 +64,7 @@ describe('apiLayouts', () => {
   })
 })
 
-describe('the site API where the Guide is rendered', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
-  afterAll(() => vi.unstubAllEnvs())
-
+describe('the site API by kind', () => {
   it('arranges a line with a Guide by kind, and opens it on its index; 4.0 stays by entry point', () => {
     expect(apiArrangement('4.1')).toBe('kind')
     expect(apiArrangement('4.0')).toBe('entry')

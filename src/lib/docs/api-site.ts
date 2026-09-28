@@ -143,13 +143,20 @@ const STORED_API = /^\/docs\/(\d+\.\d+)\/api\/(?:(\d+\.\d+\.\d+[^/]*)\/)?([a-z][
  */
 export function resolveSiteHref(href: string): string {
   const match = STORED_API.exec(href)
-  if (match && apiArrangement(match[1]) === 'kind') {
-    const [, line, version, entry, symbol, anchor] = match
-    const model = apiModel(line, version)
-    const location = model?.locate(entry, symbol)
-    if (model && location) return `${model.href(location)}${anchor ?? ''}`
-  }
-  return resolveStoredHref(href, VERSIONS)
+  const moved = match && movedApiHref(match[1], match[2], match[3], match[4])
+  return moved ? `${moved}${match[5] ?? ''}` : resolveStoredHref(href, VERSIONS)
+}
+
+/**
+ * Where an API page by its entry point, `[<version>/]<entry>/<symbol>`, lives in a line whose API is
+ * arranged by kind; undefined where the line is arranged by entry point, or the symbol is filed under
+ * the same segment.
+ */
+export function movedApiHref(line: string, version: string | undefined, entry: string, symbol: string) {
+  if (apiArrangement(line) !== 'kind') return undefined
+  const model = apiModel(line, version)
+  const location = model?.locate(entry, symbol)
+  return model && location && location.section !== entry ? model.href(location) : undefined
 }
 
 const layouts = new Map<string, Layouts>()

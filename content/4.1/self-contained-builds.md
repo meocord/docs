@@ -1,16 +1,36 @@
 ---
 id: self-contained-builds
 title: Self-contained builds
-section: Shipping
-order: 63
+chapter: shipping
+order: 2
+summary: Build everything the bot needs into dist/, so a server runs it with no node_modules and no install step.
+learn:
+  - Build the bot into dist/ with its dependencies inside
+  - Ship native addons, built for the platform you deploy to
+  - Keep a module out of the bundle, and one a dependency only tries to load
+requires: [cli, configuration]
+api: [configuration/MeoCordConfig]
+since: 4.1.0
 ---
 
-By default, `dist/main.js` imports its dependencies at runtime, which is why the server needs `node_modules`.
-With `bundleDependencies`, the build puts everything the bot needs inside `dist` instead:
+By default, `dist/main.js` imports its dependencies when it runs, so the server needs `node_modules` beside it. With
+`bundleDependencies`, the build puts everything the bot needs inside `dist/` instead, and deploying is copying one
+folder.
+
+## When to use it
+
+- **A small image or a plain server:** `dist/` holds the bot and nothing else, with no install step and no package
+  manager on the server.
+- **An exact ship:** the server runs the packages the build was made with, never a newer patch resolved at install.
+
+When the server installs its dependencies anyway, from the lockfile as [Deployment](guide:deployment) does, a regular
+build is simpler, and it has no platform to match.
+
+## Example
 
 ::example{file="config/self-contained.meocord.config.ts" region="config"}
 
-Deploying is then copying `dist/`, with no install step:
+Build it as usual, with `npx meocord build --prod`. The server needs `dist/` alone:
 
 ```text
 dist/
@@ -21,41 +41,60 @@ dist/
 └── meocord.platform.json  (if there are native addons)
 ```
 
-## Native addons
+Start it with `node dist/main.js`, or `npx meocord start --prod` where the CLI is installed.
 
-Plain JavaScript dependencies are bundled into `main.js`. Native addons, packages that ship a compiled
-`.node` binary such as `sharp`, canvas bindings or database drivers, cannot be. MeoCord finds them while
-building, keeps them out of the bundle, and copies each, with its platform binary and what it needs at
-runtime, into `dist/node_modules`. There is nothing to list; the build names what it packed:
+## How it works
+
+Plain JavaScript dependencies are bundled into `main.js`. A native addon, a package that ships a compiled `.node`
+binary such as `sharp`, a canvas binding or a database driver, can't be. The build finds each one, keeps it out of the
+bundle, and copies it into `dist/node_modules`, with its platform binary and what it needs at runtime. There's nothing
+to list; the build names what it packed:
 
 ```text
 Native addons packed into dist: meo-canvas, sharp
 dist/node_modules holds 7 packages; nothing else to install.
 ```
 
-Only the binaries for the platform building are copied, going by the `os`, `cpu` and `libc` each platform
-package declares, so a glibc build carries no musl binaries even where both were installed.
+It copies only the binaries for the platform building, going by the `os`, `cpu` and `libc` each platform package
+declares. So a glibc build carries no musl binaries, even where both were installed.
 
-**Build on the platform you deploy to.** A compiled binary loads only on the operating system, CPU and C
-library it was built for: a build made on a Mac carries macOS binaries, and a Debian (glibc) binary does not
-load on Alpine (musl). For a container, run `meocord build` inside the image. The build records its platform
-in `meocord.platform.json`, and a bot started elsewhere stops before going online with a message naming
-both.
+## Native addons and platforms
+
+A compiled binary loads only on the operating system, CPU and C library it was built for. A build made on a Mac
+carries macOS binaries, and a Debian (glibc) binary doesn't load on Alpine (musl). Build on the platform you deploy to:
+for a container, run `npx meocord build --prod` inside the image.
+
+The build records its platform in `meocord.platform.json`. A bot started on another platform stops before it goes
+online, with a message naming both.
 
 ## Externals
 
-`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those are
-copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`,
-belongs in `optionalExternals`: see [Optional dependencies](/docs/4.1/configuration#optional-dependencies).
-discord.js's own optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated
-that way.
+`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those are copied into
+`dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
+`optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. See
+[the options](guide:configuration#options).
 
-## On bun
+discord.js's optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated that way.
 
-A self-contained build runs under bun as under node. With no `node_modules` in reach, bun downloads any
-package the moment something imports it; `meocord start` passes `--no-install` for you, and launching the
-bundle yourself, pass it too:
+## On Bun
+
+A self-contained build runs under Bun as under Node. With no `node_modules` in reach, Bun downloads any package the
+moment something imports it. `meocord start` passes `--no-install` for you; when you launch the bundle yourself, pass
+it too:
 
 ```dockerfile
 CMD ["bun", "--no-install", "dist/main.js"]
 ```
+
+## Gotchas
+
+- **A build from your laptop doesn't run on the server** when they differ in platform and the bot uses a native addon.
+  Build where it runs, and read the startup message: it names both platforms.
+- **Bun without `--no-install`** fetches a missing package at runtime instead of failing, so a bundle that lacks one
+  seems to work until the network is down.
+
+## Next steps
+
+- [Deployment](guide:deployment): run the build in Docker, under systemd or pm2, and stop it cleanly.
+- [Configuration](guide:configuration): the build's other options, and loading `.env` per environment.
+- [`MeoCordConfig`](api:configuration/MeoCordConfig): every option, with its default.

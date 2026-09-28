@@ -8,23 +8,78 @@ import { resolveSiteHref } from '@/lib/docs/api-site'
 import { versionOption, versionOptions } from '@/lib/version-options'
 import { firstParagraph } from '@/lib/docs/page-metadata'
 import { guideEnabled, guideEntries, guidePageHref, guideSidebar } from '@/lib/docs/guide-site'
-import { guidePath } from '../../../scripts/lib/guide'
+import { counterpartIn, guidePath, pageKnownAs, type TopicPage } from '../../../scripts/lib/guide'
 
 /** The lines the site renders pages for: every line versions.json lists, archived ones included. */
 export function lines(): string[] {
   return VERSIONS.lines.map(entry => entry.line)
 }
 
-/** Every `{ line, slug }` a docs page is prerendered for. */
-export function pageParams(): { line: string; slug: string[] }[] {
-  return lines().flatMap(line =>
-    guideEnabled(line)
-      ? guideEntries(line).map(({ page }) => ({ line, slug: guidePath(page).split('/') }))
-      : listPages(line).map(page => ({ line, slug: [page.slug] })),
-  )
+const guideHref = (line: string, slug: string) => docsHref({ kind: 'guide', line, slug }, VERSIONS)
+
+/** A page of a line as the site routes it: from its Guide, or from its README for a line without one. */
+export interface LinePage {
+  id: string
+  /** Its path below the line: a slug, or `<group>/<slug>` for a recipe or coming-from page. */
+  path: string
+  title: string
+  href: string
+  since?: string
+  /** The old slugs of this line that redirect to it. */
+  formerly: string[]
+  /** The ids of other lines' pages on its topic. */
+  covers: string[]
 }
 
-const guideHref = (line: string, slug: string) => docsHref({ kind: 'guide', line, slug }, VERSIONS)
+/** A line's pages: its Guide in reading order where it is rendered, and its README's pages otherwise. */
+export function linePages(line: string): LinePage[] {
+  if (guideEnabled(line))
+    return guideEntries(line).map(({ page }) => ({
+      id: page.id,
+      path: guidePath(page),
+      title: page.title,
+      href: guidePageHref(line, page),
+      since: page.since,
+      formerly: page.formerly,
+      covers: page.covers,
+    }))
+  return listPages(line).map(page => ({
+    id: page.id,
+    path: page.slug,
+    title: page.title,
+    href: guideHref(line, page.slug),
+    since: page.since,
+    formerly: page.formerly,
+    covers: [],
+  }))
+}
+
+/** A page of a line, as the version switcher and the missing pages match it with the other lines' pages. */
+export interface Topic {
+  page: TopicPage
+  line: string
+}
+
+/** A line's page known by an id of that line: its own, a retired one it covers, or an old slug it took over. */
+export function linePageWithId(line: string, id: string): LinePage | undefined {
+  return pageKnownAs(linePages(line), line, id)
+}
+
+/** A line's page on the topic of another line's page, at the section it covers where it names one. */
+export function counterpart(line: string, topic: Topic): LinePage | undefined {
+  const found = counterpartIn(linePages(line), line, topic.page, topic.line)
+  return found && (found.anchor ? { ...found.page, href: `${found.page.href}#${found.anchor}` } : found.page)
+}
+
+/** Where the page a line's Guide lists an old slug for lives now; undefined for a slug no page held. */
+export function movedPageHref(line: string, slug: string): string | undefined {
+  return linePages(line).find(page => page.formerly.includes(slug))?.href
+}
+
+/** Every `{ line, slug }` a docs page is prerendered for. */
+export function pageParams(): { line: string; slug: string[] }[] {
+  return lines().flatMap(line => linePages(line).map(page => ({ line, slug: page.path.split('/') })))
+}
 
 /** The glyph for each section of the guides; any other section gets the book. */
 const SECTION_ICONS: Record<string, GlyphName> = {
@@ -75,18 +130,18 @@ function referenceGroup(line: string, currentSlug?: string): NavGroup {
 }
 
 /**
- * The version switcher's choices from a page: each line links to the same page when it has one
- * (matched by page id, or an id the page was formerly known by), and to where the line lands otherwise.
+ * The version switcher's choices from a page: each line links to its page on the same topic when it has
+ * one (see `counterpartIn`), and to its page saying it has none otherwise.
  */
-export function versionChoices(line: string, id?: string): { current: VersionOption; options: VersionOption[] } {
+export function versionChoices(line: string, topic?: Topic): { current: VersionOption; options: VersionOption[] } {
   const options = versionOptions(VERSIONS).map(option => {
-    if (!id) return option
-    const match = listPages(option.label).find(page => page.id === id || page.formerly.includes(id))
-    if (match) return { ...option, href: guideHref(option.label, match.slug) }
+    if (!topic) return option
+    const match = counterpart(option.label, topic)
+    if (match) return { ...option, href: match.href }
     // A line without the page says so, and where it is, rather than landing somewhere else.
     return option.label === line
       ? option
-      : { ...option, href: docsHref({ kind: 'missing', line: option.label, id }, VERSIONS) }
+      : { ...option, href: docsHref({ kind: 'missing', line: option.label, id: topic.page.id }, VERSIONS) }
   })
   return { current: options.find(option => option.label === line) ?? versionOption(line, VERSIONS), options }
 }

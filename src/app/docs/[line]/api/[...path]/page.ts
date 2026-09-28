@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import {
   apiArrangement,
@@ -11,6 +11,7 @@ import {
   exactApiParams,
   glanceParams,
   lineVersions,
+  movedApiHref,
 } from '@/lib/docs/api-site'
 import { renderApiKind, renderApiPage, renderCliPage, renderGlancePage } from '@/lib/docs/api-render'
 import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
@@ -123,5 +124,10 @@ async function apiPage(line: string, path: string[]) {
 
 export default async function ApiPage({ params }: Params) {
   const { line, path } = await params
-  return (await apiPage(line, path)) ?? notFound()
+  const page = await apiPage(line, path)
+  if (page) return page
+  // A page by entry point, from before the line's API was arranged by kind, sent to where it is now
+  const target = parse(line, path)
+  const moved = target?.symbol && movedApiHref(line, target.version, target.section, target.symbol)
+  return moved ? permanentRedirect(moved) : notFound()
 }

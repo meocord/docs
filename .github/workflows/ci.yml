@@ -122,31 +122,6 @@ jobs:
           path: playwright-report
           retention-days: 7
 
-  # The Guide, which a DOCS_NEXT=1 build renders in place of a line's authored pages: every Guide page, and
-  # the specs of what only the Guide draws, e2e/guide-*.spec.ts, which skip themselves in the other builds
-  guide:
-    name: Guide
-    runs-on: ubuntu-latest
-    env:
-      DOCS_NEXT: '1'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - run: bun install --frozen-lockfile
-      - run: bun run build
-      - run: bun --bun x playwright install --with-deps chromium
-      - run: bun run test:e2e e2e/every-guide.spec.ts e2e/guide- --project chromium
-      - if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: playwright-report-guide
-          path: playwright-report
-          retention-days: 7
-
   # The largest-paint budgets, measured on runners that run nothing else meanwhile, a few pages each,
   # every one calibrating its CPU slowdown to itself.
   performance:
