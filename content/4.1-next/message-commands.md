@@ -139,6 +139,17 @@ The reply doesn't ping the user, and is deleted after 10 seconds; `deleteUsageRe
 the server's language where the app's catalog translates them; see
 [MeoCord's own texts](guide:localisation#meocords-own-texts).
 
+These replies are plain text, so a test that checks them keeps passing when the theme's colours change.
+`@MeoCord({ messages: { replyEmoji: true } })` begins each one with the call's `emojis.warning`, from the app's
+theme, the handler's `@UseTheme`, or the server's or user's theme from `themeFor`. That covers a usage error, a
+guard's or validation's reason, a `UserError`'s message, whether a command or an `@On` handler of a message event
+threw it, and the direct messages of `dmOnError` and `dmOnCooldown`:
+
+```text
+⚠️ Usage: !roll <sides>
+sides: "lots" is not a valid whole number
+```
+
 The error is a [`MessageUsageError`](api:responses/MessageUsageError), carrying `usage` and `issues`. It
 reaches the handler's exception filters first, so a filter can answer in the app's own words, and
 [observers](guide:observers) see its outcome as `'invalid'`.
@@ -190,11 +201,16 @@ A handler's options say more about its command:
 
 ::example{file="controllers/message/moderation.message.controller.ts" region="metadata"}
 
-- `aliases` are other words for the command: `!m @ana 1h` runs `mute`. An alias can be several words, such as
-  `'cfg set'`, and a misuse is answered with the usage as the user typed it.
+- `aliases` are other words for the command, in place of the words the pattern begins with: `!m @ana 1h` runs
+  `mute`. A misuse is answered with the usage as the user typed it.
+- An alias can be several words, such as `'cfg set'` for `config set {key} {value...}`, and is ranked by its own
+  words.
 - `description` is what the command does, for the help listing.
 - `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an out-of-scope
-  handler matches is answered that the command works in a server only, or in direct messages only.
+  handler matches is answered `This command works in a server only.` or
+  `This command works in direct messages only.` A command with a `member`, `role` or `channel` param works in
+  servers only whatever its scope says, and `scope: 'dm'` with one stops the bot as it loads; see
+  [Errors at startup](#errors-at-startup).
 - `hidden: true` leaves the command out of the help listing and a parent's list of subcommands.
 
 ## A help command
@@ -228,6 +244,8 @@ or an alias:
 - `!help config`, for words with no handler of their own, lists their subcommands.
 - An app's own `@MessageHandler('help …')` always runs instead, and the bot warns at startup that the built-in
   never answers the word.
+- With `replyEmoji`, the reply begins with the theme's `emojis.info`. It isn't deleted, since the caller asked for
+  it, and a reply over 2,000 characters is sent as several.
 
 The reply is plain text, in the server's language where the app's catalog has MeoCord's help texts. To write it
 another way, such as in an embed, give the app's [presenter](guide:presenters) a `messageHelp(help, message)`
@@ -242,9 +260,35 @@ can reach, and which guards hide, are not worked out again:
 
 ::example{file="controllers/message/help.message.controller.ts" region="help"}
 
+## Errors at startup
+
+The message routes are built as the bot loads, and a mistake in a pattern stops it before it logs in. The report is
+one line that begins with the handler and its pattern, such as
+`DiceMessageController.swap: @MessageHandler('swap {a} {a}'):`, followed by the problem, and the process exits 1:
+
+| Mistake                                          | What follows the handler                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| A rest before another word, `'{text...} please'` | `{text...} takes the rest of the message, so it must be last.`                              |
+| A required word after an optional param          | `{name?} is optional, so only optional params may follow it; …`                             |
+| Text, optional, before another optional param    | `{name?} comes before another optional param, so it needs a type …`                         |
+| A type nothing adds, `'{accent:colour}'`         | `{accent:colour} names no type. The types are …`                                            |
+| A name used twice, `'swap {a} {a}'`              | `{a} appears twice; give each param and flag its own name.`                                 |
+| A flag's name that doesn't start with a letter   | `{--9lives}: a flag's name starts with a letter, as a message could not give it otherwise.` |
+| Braces inside a word, `'a{b}'`                   | `"a{b}" is not a param: a param is a whole word, …`                                         |
+| `scope: 'dm'` on a command with a `member` param | `scope is 'dm', but {target:member} is found only in a server.`                             |
+
+Two patterns that match the same messages stop the bot too, naming both handlers: `… match the same messages, so
+only one of them could ever run. Change one pattern, or give one its own prefix.` They match alike when they take the
+same prefix and differ only in param names, as `'roll {sides}'` and `'roll {count}'` do, or only in case, unless both
+are case-sensitive. An alias and a pattern count the same way.
+
 ## Testing
 
-`resolveRoute(App, { content })` returns the handler a message reaches, from decorator metadata alone.
+`resolveRoute(App, { content })` returns the handler a message reaches, with the params its pattern captures,
+from decorator metadata alone. A message that starts with a mention of the bot needs the bot's id, as `botId`, and
+`dm: true` resolves it as a direct message, where only handlers whose scope fits run. `resolveRoute` can't call a
+prefix function, so for an app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError`
+without one.
 `module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage replies
 and the built-in help included:
 
@@ -252,7 +296,11 @@ and the built-in help included:
 
 `module.invoke(Controller, 'method', message)` runs one handler, and first checks that dispatch would give it
 the message: `!roll 20` for `roll {sides}`, in an app that also has a `roll 20` handler, rejects naming the
-handler that runs. See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
+handler that runs. `invoke` calls an app's prefix function with the message, as the bot does:
+
+::example{file="app-with-guild-prefix.spec.ts" region="spec"}
+
+See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
 
 ## Gotchas
 
