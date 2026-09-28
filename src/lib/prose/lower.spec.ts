@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { Div } from '@meonode/ui'
+import { Div, Figure } from '@meonode/ui'
 import { lowerMarkdown, type LowerOptions } from '@/lib/prose/lower'
 
 const html = (markdown: string, options?: LowerOptions) =>
@@ -51,6 +51,13 @@ describe('lowerMarkdown', () => {
       example: (file, region, from) => `// ${from} ${file} ${region}`,
     })
     expect(out).toContain('// compare discordjs/bot.ts client')
+  })
+
+  it('draws a ::figure the page names, and nothing for one it has none of', () => {
+    const figure = (name: string, key: number) =>
+      name === 'pipeline' ? Figure({ key, 'data-pipeline': true }) : undefined
+    expect(html('::figure{name="pipeline"}', { figure })).toBe('<div><figure data-pipeline="true"></figure></div>')
+    expect(html('::figure{name="map"}\n\nAfter.', { figure })).toBe('<div><p>After.</p></div>')
   })
 
   it('turns a GitHub alert into a callout, and leaves other quotes alone', () => {

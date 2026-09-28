@@ -1,5 +1,6 @@
 import { createNode } from '@meonode/ui'
 import { hitAreaCss, safe } from '@/lib/design/css'
+import { HANDLER_KINDS } from '@/lib/docs/pipeline'
 
 const heading = (level: 'h1' | 'h2' | 'h3' | 'h4') => ({
   fontSize: `theme.type.${level}.size`,
@@ -324,6 +325,76 @@ export const Prose = createNode('article', {
       textTransform: 'uppercase',
       color: 'theme.ink.secondary',
     },
+
+    // The pipeline figure: each stage in order, the ones that wrap others drawn around them.
+    '& [data-pipeline]': { margin: 'theme.space.6 0' },
+    '& [data-pipeline] fieldset': {
+      display: 'flex',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 'theme.space.2',
+      margin: '0 0 theme.space.4',
+      padding: 0,
+      border: 'none',
+    },
+    '& [data-pipeline] legend': {
+      float: 'left',
+      marginRight: 'theme.space.1',
+      fontSize: 'theme.type.small.size',
+      color: 'theme.ink.secondary',
+    },
+    '& [data-pipeline] label': {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 'theme.space.2',
+      padding: 'theme.space.1 theme.space.3',
+      border: 'theme.line.width solid theme.line.hairline',
+      borderRadius: 'theme.radius.chip',
+      fontSize: 'theme.type.small.size',
+      cursor: 'pointer',
+    },
+    '& [data-pipeline] label:has(input:checked)': { borderColor: 'theme.accent.default' },
+    '& [data-pipeline] label:has(input:focus-visible)': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: 'theme.focus.offset',
+    },
+    '& [data-pipeline] input': { margin: 0, accentColor: 'theme.accent.default' },
+    '& [data-pipeline] ol': { display: 'grid', gap: 'theme.space.2', margin: 0, padding: 0, listStyle: 'none' },
+    '& [data-pipeline] li': { margin: 0 },
+    '& [data-pipeline] [data-stage]': {
+      padding: 'theme.space.2 theme.space.3',
+      border: 'theme.line.width solid theme.line.hairline',
+      borderRadius: 'theme.radius.control',
+      background: 'theme.surface.fill',
+    },
+    '& [data-pipeline] [data-stage] > a:first-child': { fontWeight: 'theme.font.weight.semibold' },
+    '& [data-pipeline] [data-stage] p': {
+      margin: 'theme.space.1 0 0',
+      fontSize: 'theme.type.small.size',
+      color: 'theme.ink.secondary',
+    },
+    '& [data-pipeline] li[data-frame]': {
+      padding: 'theme.space.2',
+      border: 'theme.line.width dashed theme.line.strong',
+      borderRadius: 'theme.radius.callout',
+    },
+    '& [data-pipeline] li[data-frame] > [data-stage]': {
+      padding: '0 theme.space.1 theme.space.2',
+      border: 'none',
+      background: 'none',
+    },
+    // A kind of handler picked shows only the stages it runs; a frame it skips keeps what it wraps, unframed
+    ...Object.fromEntries(
+      HANDLER_KINDS.flatMap(({ id }) => {
+        const picked = `& [data-pipeline]:has(input[value="${id}"]:checked)`
+        const skipped = `:not([data-kinds~="${id}"])`
+        return [
+          [`${picked} li${skipped}:not([data-frame])`, { display: 'none' }],
+          [`${picked} li[data-frame]${skipped}`, { padding: 0, border: 'none' }],
+          [`${picked} li[data-frame]${skipped} > [data-stage]`, { display: 'none' }],
+        ]
+      }),
+    ),
 
     // After the body: the API entries the page teaches, then the pages before and after it.
     '& [data-guide-api]': {

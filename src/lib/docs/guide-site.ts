@@ -5,6 +5,7 @@ import type { GlyphName } from '@/components/shell/icons'
 import { VERSIONS } from '@/config/versions'
 import { apiLandingHref, apiModel, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
 import { CLI_SECTION, cliCommand, cliHref, cliManifest } from '@/lib/docs/cli-site'
+import { FIGURES } from '@/lib/docs/figures'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
@@ -118,6 +119,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
   const lowered = lowerMarkdown(body, {
     href: url => resolveGuideLink(line, url),
     example: (file, region, from) => resolveExample(from ?? line, file, region, { page: pagePath }),
+    figure: (name, key) => FIGURES[name]?.(url => resolveGuideLink(line, url), key),
   })
   const toc = lowered.headings
     .filter(heading => heading.depth === 2 || heading.depth === 3)

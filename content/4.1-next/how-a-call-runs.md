@@ -48,25 +48,10 @@ the handler runs last.
 
 ## How it works
 
-A call runs these stages, top to bottom:
+A call runs these stages, top to bottom. Each links to the page that teaches it, and a stage drawn around others
+wraps them. Pick a kind of handler to see only the stages it runs:
 
-```text
-observers: onStart
-exception filters, around everything below
-  @Defer, first step: acknowledge the interaction
-  parse: read a message command's words into its params
-  guards: global, then the controller's, then the method's
-  cooldown check: only before a message command's fetch
-  fetch: the members, users, roles and channels a message names
-  interceptors, around everything below
-    validation
-    pipes
-    cooldowns: count the call
-    @Defer, second step: lock the component's message
-    the handler
-  the built-in fallback, for an error no filter handled
-observers: onSettled
-```
+::figure{name="pipeline"}
 
 Each stage sits where it does for a reason:
 

@@ -134,6 +134,10 @@ describe('markdownText', () => {
     )
   })
 
+  it('drops a figure, whose page names what it shows', () => {
+    expect(markdownText('Before.\n\n::figure{name="pipeline"}\n\nAfter.')).toBe('Before.\n\nAfter.')
+  })
+
   it('expands an example into its code, and drops one it cannot read', () => {
     const examples = (file: string, region?: string) => (file === 'a.ts' ? `code of ${region}` : undefined)
     expect(markdownText('::example{file="a.ts" region="guard"}\n::example{file="missing.ts"}', examples)).toBe(

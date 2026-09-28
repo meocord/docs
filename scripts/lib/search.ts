@@ -66,6 +66,8 @@ export function markdownText(markdown: string, examples: ExampleSource = () => u
     }
     // A table's separator row carries no words.
     if (/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(line)) continue
+    // A figure is drawn from data, and its page's prose names what it shows
+    if (/^::figure\{[^}]*\}\s*$/.test(line.trim())) continue
     const example = EXAMPLE.exec(line.trim())
     if (example) {
       const attributes = Object.fromEntries([...example[1].matchAll(ATTRIBUTE)].map(([, key, value]) => [key, value]))
