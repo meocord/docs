@@ -4,7 +4,7 @@
  * emits with resolveStoredHref.
  */
 
-import { docsHref, type DocsTarget } from '../../src/lib/urls'
+import { docsHref, type DocsTarget, SHARED_CODE } from '../../src/lib/urls'
 
 /** The stored form of a link: docsHref for a line that is not current, so it names the line. */
 export function storedHref(target: DocsTarget): string {
@@ -41,6 +41,8 @@ export function parseStored(href: string, lines: readonly string[]): { target: D
   } else if (parts[0] === 'migrating' && parts.length === 1) {
     target = { kind: 'migrating', line, anchor }
   } else if (parts[0] === 'playground' && parts.length === 1) {
+    if (anchor !== undefined && !SHARED_CODE.test(anchor))
+      return { problem: `carries "${anchor}", which is no playground's code; a playground link carries v1.<code>` }
     target = { kind: 'playground', line, code: anchor }
   } else if (parts[0] === 'missing' && parts.length === 2) {
     target = { kind: 'missing', line, id: parts[1] }

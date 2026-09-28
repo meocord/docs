@@ -62,7 +62,10 @@ export function playgroundEmbed(
               {
                 kind: 'playground',
                 line,
-                code: sharedFragment({ source: request.source, dispatch: directive.dispatch }),
+                code: sharedFragment(
+                  { source: request.source, dispatch: directive.dispatch },
+                  `examples/${line}/src/${directive.file}`,
+                ),
               },
               VERSIONS,
             ),

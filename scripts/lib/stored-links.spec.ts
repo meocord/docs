@@ -36,6 +36,9 @@ describe('parseStored', () => {
     expect(parseStored('/docs/4.1/playground#v1.abc', lines)).toMatchObject({
       target: { kind: 'playground', code: 'v1.abc' },
     })
+    expect(parseStored('/docs/4.1/playground#intro', lines)).toEqual({
+      problem: 'carries "intro", which is no playground\'s code; a playground link carries v1.<code>',
+    })
   })
 
   it('says why a link is not a stored one', () => {

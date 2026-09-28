@@ -46,9 +46,29 @@ describe('the share format', () => {
       encode({ source: 'x'.repeat(64_001), dispatch: '/ping' }),
     ])
       expect(await decodeShared(fragment), fragment.slice(0, 40)).toBeUndefined()
-    // A small link that inflates to far more than a run takes stops early
-    const bomb = `v1.${deflateRawSync(Buffer.from(`{"source":"${'a'.repeat(5_000_000)}","dispatch":""}`)).toString('base64url')}`
-    expect(bomb.length).toBeLessThan(10_000)
+    // A link within the cap that inflates to far more than a run takes stops early
+    const bomb = `v1.${deflateRawSync(Buffer.from(`{"source":"${'a'.repeat(1_200_000)}","dispatch":""}`), { level: 9 }).toString('base64url')}`
+    expect(bomb.length).toBeLessThanOrEqual(3 + MAX_SHARED_LENGTH)
     expect(await decodeShared(bomb)).toBeUndefined()
+  })
+
+  it('reads no fragment longer than a link carries, before decompressing anything', async () => {
+    const Original = globalThis.DecompressionStream
+    let made = 0
+    globalThis.DecompressionStream = class extends Original {
+      constructor(format: CompressionFormat) {
+        made += 1
+        super(format)
+      }
+    }
+    try {
+      expect(await decodeShared(`v1.${'A'.repeat(MAX_SHARED_LENGTH + 1)}`)).toBeUndefined()
+      expect(made).toBe(0)
+      // At the cap it is read, and here fails as the damaged data it is
+      expect(await decodeShared(`v1.${'A'.repeat(MAX_SHARED_LENGTH)}`)).toBeUndefined()
+      expect(made).toBe(1)
+    } finally {
+      globalThis.DecompressionStream = Original
+    }
   })
 })
