@@ -49,9 +49,16 @@ describe('formatDisplay', () => {
     const formatted = (await formatDisplay('member', text(constructor.code[0])))!
     expect(formatted).toMatch(/^new TestingModule\(\n {2}container: Container,\n/)
 
-    const mock = (await formatDisplay('declaration', text(symbol('testing', 'createMock').code[0])))!
+    // A type TypeDoc stops expanding reads `...`, which the formatter keeps
+    const stopped =
+      'createMock<T extends object>(props?: MockProps<T>): { -readonly [K in ... | ... | ...]: ... extends ... ? ... : ... } & T'
+    const mock = (await formatDisplay('declaration', stopped))!
     expect(mock).toContain('[K in ... | ... | ...]: ... extends ... ? ... : ...')
-    expect(mock.split('\n').length).toBeGreaterThan(5)
+    expect(mock.split('\n').length).toBeGreaterThan(1)
+    // A return type written as an alias's name is drawn as written, not expanded
+    expect(text(symbol('testing', 'createMock').code[0])).toBe(
+      'createMock<T extends object>(props?: MockProps<T>): DeepMocked<T>',
+    )
   })
 
   it('changes only spaces, trailing commas and leading bars: every name stays, in order', async () => {
