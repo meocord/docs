@@ -78,8 +78,43 @@ A theme has three groups of roles:
 | `buttons` | `primary`, `neutral`, `success`, `danger`                    | `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`                                |
 
 `warning` is for what the user can fix, such as a refused or invalid call. `danger` is a fault in the bot. MeoCord
-checks every token where it's set: a bad colour in `@MeoCord({ theme })` or `@UseTheme` stops the bot before it logs
-in, naming the decorator and the key.
+checks every token where it's set; see [Valid tokens](#valid-tokens).
+
+### Defaults
+
+| Role      | Colour    | Emoji | Button style            |
+| --------- | --------- | ----- | ----------------------- |
+| `primary` | `#7680F4` | —     | `ButtonStyle.Primary`   |
+| `neutral` | `#888B95` | —     | `ButtonStyle.Secondary` |
+| `success` | `#26A042` | ✅    | `ButtonStyle.Success`   |
+| `warning` | `#B08400` | ⚠️    | —                       |
+| `danger`  | `#E3606D` | ⛔    | `ButtonStyle.Danger`    |
+| `info`    | `#1699AE` | ℹ️    | —                       |
+| `loading` | —         | ⏳    | —                       |
+
+The colours keep the hues of 4.0's `Theme`, with their lightness moved until each gives at least 3:1 against every
+surface an embed's stripe or a container's accent sits on in Discord's light, dark, darker and midnight themes: the
+contrast WCAG 2.1 asks of a graphic that carries meaning. A test in MeoCord holds every default to it, so a default
+that changes still reads on light and dark alike.
+
+### Valid tokens
+
+- **A colour** is a 6-digit hex string such as `'#7680F4'`, with or without `#`; a whole number from `0` to
+  `0xFFFFFF`; an `[r, g, b]` tuple of whole numbers from 0 to 255; or a discord.js colour name such as `'Blurple'`. A
+  3-digit hex string such as `'#FFF'` isn't one.
+- **An emoji** is one unicode emoji, flags, keycaps, skin tones and joined sequences such as `'👨‍👩‍👧'` included, or a
+  custom one written `<:name:id>` or `<a:name:id>`. A shortcode such as `':smile:'` isn't one. A custom emoji must also
+  be one the bot may use, such as an emoji the application owns.
+- **A button style** is `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`.
+- **A role MeoCord reserves** is refused in any group, in JavaScript as in TypeScript.
+
+Each problem is named with its key path and what to give instead, such as
+`theme.colors.primary: '#GGG' is not a colour: give a 6-digit hex string such as '#7680F4', …`. MeoCord's groups are
+checked whatever roles an app added to them; a group of the app's own is the app's to check.
+
+A theme set in code is checked where it's declared. A bad token in `@MeoCord({ theme })` or `@UseTheme` stops the bot
+before it logs in. The message names where the theme was set, then each token it refuses, as in
+`ShopController.refund: @UseTheme: the theme has 1 problem:` followed by `theme.emojis.loading: …`.
 
 ## Reading the theme
 
@@ -108,6 +143,10 @@ the error's tone.
 To send one message as written, pass `{ fill: false }` as the second argument to `send()`, `edit()` or
 `followUp()`, as `/banner` does above. The next message is filled again. What you send around `respond()`, with
 `interaction.reply()`, is never touched.
+
+MeoCord answers a message command in plain text, which a theme leaves as it is. With
+`@MeoCord({ messages: { replyEmoji: true } })`, a usage or error reply begins with the call's `emojis.warning`, and the
+built-in help with its `emojis.info`: see [Message commands](guide:message-commands).
 
 ## Per server and per user
 
