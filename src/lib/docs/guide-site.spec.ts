@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from 'vitest'
 // A Guide of four pages in a scratch root: two chapters in reading order, and a recipe apart.
 const root = mkdtempSync(path.join(tmpdir(), 'guide-site-'))
 mkdirSync(path.join(root, 'content', '4.1-next'), { recursive: true })
+const lines = [{ line: '4.1', status: 'prerelease', guides: 'authored', versions: ['4.1.0-beta.7'] }]
+writeFileSync(path.join(root, 'versions.json'), JSON.stringify({ package: 'meocord', since: '4.1.0-beta.0', lines }))
 const write = (id: string, frontmatter: string, body: string) =>
   writeFileSync(path.join(root, 'content', '4.1-next', `${id}.md`), `---\nid: ${id}\n${frontmatter}\n---\n\n${body}\n`)
 const learn = 'learn: [One thing, Another]'
@@ -17,7 +19,7 @@ write(
 write(
   'services',
   `title: Services\nchapter: structure\norder: 1\nsummary: Share state.\n${learn}`,
-  '## Providers\n\nText.',
+  '## Providers\n\nText, in a project from `npx {{meocord}} create my-bot`.',
 )
 write('how-a-call-runs', `title: How a call runs\nchapter: pipeline\norder: 1\nsummary: The order.\n${learn}`, 'Text.')
 write('tickets', 'title: A ticket system\nchapter: appendix\ngroup: recipes\norder: 1\nsummary: Tickets.', 'Text.')
@@ -41,6 +43,11 @@ describe('the Guide', () => {
       'guards',
       'tickets',
     ])
+  })
+
+  it("writes the line's package spec for {{meocord}}: its prerelease tag while the line is in prerelease", () => {
+    const services = guideEntries('4.1').find(entry => entry.page.id === 'services')!
+    expect(services.body).toContain('in a project from `npx meocord@beta create my-bot`')
   })
 
   it('resolves guide: and api: links, the reference pages and planned pages included', () => {

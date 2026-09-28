@@ -22,6 +22,7 @@ import {
   writeChangelog,
   writeJson,
 } from './layout.js'
+import { distTagProblems } from './package-spec.js'
 import type { Fetch, Packument } from './registry.js'
 import { apiKeys, computeSince, type SinceEntry } from './since.js'
 import { fetchVerified, type VerifiedPackage } from './verified-package.js'
@@ -106,8 +107,14 @@ export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<Sync
   const added: string[] = []
   const statusChanges: string[] = []
   const touched = new Map<string, VerifiedPackage>()
+  const missing = missingVersions(config, deps.packument)
 
-  for (const version of missingVersions(config, deps.packument)) {
+  // Pages run a line's package spec, so a tag that installs another line fails here, before anything is fetched
+  const lines = missing.reduce((next, version) => addVersion(next, version).config, config)
+  const tags = distTagProblems(lines, deps.packument)
+  if (tags.length > 0) throw new Error(`The registry's dist-tags don't match versions.json:\n${tags.join('\n')}`)
+
+  for (const version of missing) {
     log(`${version}: verifying`)
     const pkg = await fetchVerified(config, deps.packument, version, deps.trustedRoot, deps.fetch)
     try {

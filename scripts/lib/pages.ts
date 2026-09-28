@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { parsePage, type Frontmatter } from './content'
+import { withPackageSpec } from './package-spec'
 import { asOf } from './steps'
 import { newestIn, type VersionsConfig } from './versions'
 
@@ -48,10 +49,15 @@ export function pagesDir(line: string, { root = process.cwd() }: Options = {}): 
   return entry.guides === 'authored' ? path.join(root, 'content', line) : path.join(root, 'generated', 'readme', line)
 }
 
+/** A page file of a line as the site shows it, with the line's package spec in place of `{{meocord}}`. */
+function readPageFile(file: string, line: string, config: VersionsConfig): string {
+  return withPackageSpec(readFileSync(file, 'utf8'), config, line)
+}
+
 /** A line's migration guide, from content/migrating/<line>.md; undefined for a line without one. */
 export function migratingGuide(line: string, { root = process.cwd() }: Options = {}): string | undefined {
   const file = path.join(root, 'content', 'migrating', `${line}.md`)
-  return existsSync(file) ? readFileSync(file, 'utf8') : undefined
+  return existsSync(file) ? readPageFile(file, line, versions(root)) : undefined
 }
 
 /**
@@ -68,14 +74,15 @@ export function configPage(line: string, { root = process.cwd() }: Options = {})
 
 /** A line's pages, in sidebar order: by `order`, then title. */
 export function listPages(line: string, options: Options = {}): PageEntry[] {
+  const config = versions(options.root ?? process.cwd())
   const dir = pagesDir(line, options)
   const files: [string, string][] = existsSync(dir)
     ? readdirSync(dir)
         .filter(file => file.endsWith('.md'))
-        .map(file => [file.replace(/\.md$/, ''), readFileSync(path.join(dir, file), 'utf8')])
+        .map(file => [file.replace(/\.md$/, ''), readPageFile(path.join(dir, file), line, config)])
     : []
-  const config = configPage(line, options)
-  if (config) files.push([CONFIG_REFERENCE_SLUG, config])
+  const reference = configPage(line, options)
+  if (reference) files.push([CONFIG_REFERENCE_SLUG, reference])
   return files
     .map(([slug, text]) => {
       const { frontmatter } = parsePage(text)
@@ -101,7 +108,7 @@ export function loadPage(line: string, slug: string, options: Options = {}): Pag
     if (config) return parsePage(config)
   }
   const file = path.join(pagesDir(line, options), `${slug}.md`)
-  return existsSync(file) ? parsePage(readFileSync(file, 'utf8')) : undefined
+  return existsSync(file) ? parsePage(readPageFile(file, line, versions(options.root ?? process.cwd()))) : undefined
 }
 
 /**

@@ -14,13 +14,13 @@ order: 1
 - **A Discord application** with a bot, from the
   [Discord Developer Portal](https://discord.com/developers/applications), and its token.
 
-`discord.js` 14 and `dotenv` 18 are peer dependencies; `meocord create` installs both. MeoCord ships ESM and
+`discord.js` 14 and `dotenv` 18 are peer dependencies; `{{meocord}} create` installs both. MeoCord ships ESM and
 CommonJS builds, and new projects are set up for ESM.
 
 ## Create a project
 
 ```bash
-npx meocord create my-bot
+npx {{meocord}} create my-bot
 ```
 
 The CLI asks which package manager to use, or takes it as a flag: `--use-npm`, `--use-yarn`, `--use-pnpm` or

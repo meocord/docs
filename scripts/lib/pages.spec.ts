@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { configPage, listPages, loadPage, pagesDir, resolveExample } from './pages.js'
+import { configPage, listPages, loadPage, migratingGuide, pagesDir, resolveExample } from './pages.js'
 
 const root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-pages-'))
 afterAll(() => rmSync(root, { recursive: true, force: true }))
@@ -15,6 +15,7 @@ const write = (file: string, text: string) => {
 write(
   'versions.json',
   JSON.stringify({
+    package: 'meocord',
     lines: [
       { line: '4.1', status: 'prerelease', guides: 'authored', versions: ['4.1.0-beta.0'] },
       { line: '4.0', status: 'current', guides: 'readme', versions: ['4.0.0'] },
@@ -25,11 +26,14 @@ write(
   'generated/readme/4.0/guards.md',
   '---\nid: guards\ntitle: Guards\norder: 2\nsource: readme@4.0.0\n---\n\nImported.\n',
 )
-write('generated/readme/4.0/overview.md', '---\nid: overview\ntitle: Overview\norder: 0\n---\n\nIntro.\n')
+write(
+  'generated/readme/4.0/overview.md',
+  '---\nid: overview\ntitle: Overview\norder: 0\n---\n\nRun `npx {{meocord}} create`.\n',
+)
 write('content/4.0/draft.md', '---\nid: draft\ntitle: Draft\n---\n\nNot shown yet.\n')
 write(
   'content/4.1/overview.md',
-  '---\nid: overview\ntitle: Overview\nsection: Start\norder: 0\nformerly: [features]\n---\n\nHi.\n',
+  '---\nid: overview\ntitle: Overview\nsection: Start\norder: 0\nformerly: [features]\n---\n\nRun `npx {{meocord}} create`.\n',
 )
 write(
   'content/4.1/guards.md',
@@ -111,6 +115,13 @@ describe('pagesDir, listPages and loadPage', () => {
     })
     expect(loadPage('4.0', 'draft', { root })).toBeUndefined()
     expect(loadPage('4.0', '../4.1/guards', { root })).toBeUndefined()
+  })
+
+  it("writes the line's package spec for {{meocord}}: the package for the current line, its tag for a prerelease", () => {
+    expect(loadPage('4.0', 'overview', { root })?.body).toBe('\nRun `npx meocord create`.\n')
+    expect(loadPage('4.1', 'overview', { root })?.body).toBe('\nRun `npx meocord@beta create`.\n')
+    write('content/migrating/4.1.md', '# Migrating\n\n`npx {{meocord}} create`\n')
+    expect(migratingGuide('4.1', { root })).toBe('# Migrating\n\n`npx meocord@beta create`\n')
   })
 
   it('refuses a line versions.json does not list, and lists nothing for a line without pages', () => {

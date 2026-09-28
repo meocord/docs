@@ -17,6 +17,7 @@ import {
 import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
+import { literalCreates, PACKAGE_SPEC } from './lib/package-spec.js'
 import { readVersions } from './lib/versions.js'
 import { memberAnchor } from '../src/lib/urls'
 import { apiModel } from '../src/lib/docs/api-site.js'
@@ -88,6 +89,15 @@ for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'examples')
     for (const comment of commentsOf(text))
       for (const { line, word } of gendered(comment.text, index => lineAt(text, comment.offset + index)))
         problems.push(`examples/${file}:${line}: "${word}" is a gendered pronoun; write they, them or their`)
+
+// A create command installs the line its page documents: {{meocord}}, not a package spec written out.
+// Migration guides are left alone, since they name the commands of releases before theirs.
+for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
+  if (file.endsWith('.md') && !file.startsWith('migrating/'))
+    for (const { line, command } of literalCreates(text))
+      problems.push(
+        `content/${file}:${line}: "${command}" names the package itself; write "${PACKAGE_SPEC} create", which installs this line`,
+      )
 
 // Prose wraps at PROSE_WIDTH in every Markdown file of content/, the Guide and migration guides included
 for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
