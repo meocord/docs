@@ -160,6 +160,9 @@ export const kindName = (kind: number) => KINDS[kind] ?? 'declaration'
 
 const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 
+/** A row of a parameter's options, with the name its anchor is made from once the rows are final. */
+type OptionRow = Omit<ApiParam, 'anchor'> & { anchorKey?: string }
+
 /** The interfaces whose members show on the page of what takes one, as a parameter or an option. */
 const OPTIONS_TYPE = /(?:Options|Settings|Overrides)$/
 
@@ -392,25 +395,27 @@ export class ApiModel {
   /** A signature's details; with `anchors`, the ids taken on its page, its options' rows get ids of their own. */
   #signature(signature: Signature, key: string, anchors?: Set<string>): ApiSignature {
     const params: ApiParam[] = []
+    // An option takes its name's anchor, or `<name>-option` where the page or the window has that one
     const anchor = (property: string) => {
-      const id = memberAnchor(property)
-      if (!anchors || anchors.has(id)) return undefined
-      anchors.add(id)
+      if (!anchors) return undefined
+      const id = [memberAnchor(property), `${memberAnchor(property)}-option`].find(each => !anchors.has(each))
+      if (id) anchors.add(id)
       return id
     }
     for (const parameter of signature.parameters ?? []) {
       params.push(this.#param(parameter, `${key}(${parameter.name})`))
       // Its options, wherever its type declares them: inline, in an options interface, or both
-      const rows = this.#optionRows(parameter.type, parameter.name, anchor, true)
+      const rows = this.#optionRows(parameter.type, parameter.name, true)
       // `@param options.seconds` documents a property for this function in particular: its row's text, or a row of its own
       const highlighted = parameter.type?.type === 'reference' ? parameter.type.highlightedProperties : undefined
       for (const [property, parts] of Object.entries(highlighted ?? {})) {
         const name = `${parameter.name}.${property}`
         const row = rows.find(each => each.name === name)
         if (row) row.description = this.#parts(parts) || row.description
-        else rows.push({ name, anchor: anchor(property), type: [], optional: false, description: this.#parts(parts) })
+        else rows.push({ name, anchorKey: property, type: [], optional: false, description: this.#parts(parts) })
       }
-      params.push(...rows)
+      // Anchors once the rows are final, so a merged row takes one
+      params.push(...rows.map(({ anchorKey, ...row }) => ({ ...row, anchor: anchorKey && anchor(anchorKey) })))
     }
     const returns = signature.comment?.blockTags?.find(tag => tag.tag === '@returns')
     const returnsType = signature.type && signature.kind !== 16384 ? this.type(signature.type) : undefined
@@ -447,16 +452,30 @@ export class ApiModel {
   /**
    * The rows of the options a parameter or an option is typed by, under `prefix`: each property of an
    * object typed inline, each member of an options interface (…Options, …Settings, …Overrides) with its
-   * since from the interface, and both for an intersection of them. With `nested`, an inline property
-   * typed by an options interface shows that interface's members beneath it too.
+   * since from the interface, and for an intersection one row per name, its inline part's type and text
+   * over an interface's. With `nested`, an inline property typed by an options interface shows that
+   * interface's members beneath it too. Each row carries the name its anchor is made from, not the anchor.
    */
-  #optionRows(
-    type: SomeType | undefined,
-    prefix: string,
-    anchor: (name: string) => string | undefined,
-    nested = false,
-  ): ApiParam[] {
-    if (type?.type === 'intersection') return type.types.flatMap(part => this.#optionRows(part, prefix, anchor, nested))
+  #optionRows(type: SomeType | undefined, prefix: string, nested = false): OptionRow[] {
+    if (type?.type === 'intersection') {
+      const merged = new Map<string, OptionRow>()
+      for (const row of type.types.flatMap(part => this.#optionRows(part, prefix, nested))) {
+        const earlier = merged.get(row.name)
+        // A later part is the more specific: its own object in `Options & { … }`
+        merged.set(
+          row.name,
+          earlier
+            ? {
+                ...earlier,
+                ...row,
+                description: row.description || earlier.description,
+                since: earlier.since ?? row.since,
+              }
+            : row,
+        )
+      }
+      return [...merged.values()]
+    }
     if (type?.type === 'reflection') {
       if (type.declaration.signatures) return []
       return (type.declaration.children ?? [])
@@ -464,14 +483,17 @@ export class ApiModel {
         .flatMap(property => [
           {
             name: `${prefix}.${property.name}`,
-            anchor: anchor(property.name),
+            anchorKey: property.name,
             type: property.type ? this.type(property.type) : [],
             optional: !!property.flags?.isOptional,
             defaultValue: defaultValue(property),
             description: this.#text(property.comment),
           },
           ...(nested
-            ? this.#optionRows(property.type, `${prefix}.${property.name}`, name => anchor(`${property.name}-${name}`))
+            ? this.#optionRows(property.type, `${prefix}.${property.name}`).map(row => ({
+                ...row,
+                anchorKey: row.anchorKey && `${property.name}-${row.anchorKey}`,
+              }))
             : []),
         ])
     }
@@ -485,7 +507,7 @@ export class ApiModel {
       .filter(member => SAFE_NAME.test(member.name) && !member.flags?.isPrivate)
       .map(member => ({
         name: `${prefix}.${member.name}`,
-        anchor: anchor(member.name),
+        anchorKey: member.name,
         type: member.type ? this.type(member.type) : [],
         optional: !!member.flags?.isOptional,
         defaultValue: defaultValue(member),
