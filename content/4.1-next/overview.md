@@ -19,7 +19,8 @@ modal, and the framework routes each interaction to it.
 
 Every call a handler receives passes through the same pipeline. Guards decide whether it runs, interceptors wrap it,
 validation and pipes check and shape its input, cooldowns limit how often it runs, and exception filters decide what the
-user is told when it throws. Each of these applies to one method, a whole controller, or the entire bot.
+user is told when it throws. Guards, interceptors and exception filters apply to one method, a whole controller or the
+entire bot; cooldowns to a method or a controller; validation to a method.
 
 ## When to use it
 
@@ -70,11 +71,13 @@ and where each part of this guide sits.
    store, and every controller and service the app lists, with everything they inject, as
    [singletons](#what-lives-how-long). With [process sharding](guide:sharding), the first process instead becomes a
    manager that starts the shards, each of which runs these steps itself.
-2. **Log in.** `start()` builds the component routes once, attaches MeoCord's listeners to the client, and logs in. A
-   failed login rejects `start()` and sets the exit code to 1.
-3. **Ready.** When Discord says the client is ready, the controllers and services are resolved and their `onReady` hooks
-   run in dependency order; see [Lifecycle hooks](guide:lifecycle-hooks). Alongside, the commands the builders describe
-   are registered; see [Slash commands](guide:slash-commands).
+2. **Log in.** `start()` first makes every provided value, waiting for async factories, and the services `@MeoCord`
+   lists, so their constructors run before login. It then builds the component routes once, attaches MeoCord's
+   listeners to the client, and logs in. A failed factory or login rejects `start()` and sets the exit code to 1.
+3. **Ready.** When Discord says the client is ready, whatever isn't made yet, such as the controllers and the services
+   only injected, is resolved, and the `onReady` hooks run in dependency order; see
+   [Lifecycle hooks](guide:lifecycle-hooks). Alongside, the commands the builders describe are registered; see
+   [Slash commands](guide:slash-commands).
 
 ### Dispatch
 

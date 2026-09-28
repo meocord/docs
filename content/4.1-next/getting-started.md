@@ -30,7 +30,8 @@ You need:
 - **A server to test in,** where you can add the bot.
 
 `discord.js` 14 and `dotenv` 18 are peer dependencies, which `meocord create` installs. TypeScript comes with the
-project: 5.0 or newer works with `skipLibCheck` on, as generated projects have it, and 5.8 or newer with it off.
+project, and 5.0 or newer works. Keep `skipLibCheck` on, as generated projects have it: discord.js's own dependencies
+don't typecheck without it.
 
 ## Example
 
@@ -42,7 +43,8 @@ npx meocord start --dev      # development, rebuilding and restarting on every c
 ```
 
 The CLI asks which package manager to use, or takes it as a flag: `--use-npm`, `--use-yarn`, `--use-pnpm` or
-`--use-bun`. The project is named after the argument, and pins the MeoCord version that created it.
+`--use-bun`. The project is named after the argument, and depends on the MeoCord version that created it, as a `^`
+range.
 
 ## How it works
 
