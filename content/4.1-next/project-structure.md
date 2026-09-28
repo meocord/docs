@@ -23,7 +23,8 @@ with.
 
 ## Example
 
-The layout `meocord create` writes, besides a README, `.gitignore` and `.prettierrc.mjs`:
+The layout `meocord create` writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
+lockfile. It also makes the folder a git repository.
 
 ```text
 .
