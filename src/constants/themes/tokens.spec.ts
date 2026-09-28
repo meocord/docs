@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { themeTokens } from '@/constants/themes/tokens'
+import { CODE_PALETTES } from '@/lib/prose/highlight'
 
 const css = readFileSync(path.join(process.cwd(), 'src/app/globals.css'), 'utf8')
 
@@ -90,5 +91,30 @@ describe('palettes', () => {
     it('keeps text on the accent at 4.5:1', () => {
       expect(contrast(colour('accent-content'), colour('accent'))).toBeGreaterThanOrEqual(4.5)
     })
+
+    // Every surface highlighted code is drawn on, in every state: a new one joins this list.
+    const codeSurfaces = () => ({
+      // A code frame, a signature and the home page's panel
+      canvas: colour('canvas'),
+      // A type in an API page's parameter table, in inline code's fill
+      'a parameter type': over(colour('fill'), colour('sheet')),
+      // The home panel's lit line, as the demo runs
+      'the lit line': over(colour('accent-band'), colour('canvas')),
+      // The home panel's line a stage stopped the call at
+      'the stopped line': over(colour('danger-tint'), colour('canvas')),
+    })
+
+    it("draws code on the palette's canvas, the background the highlighter is given", () => {
+      expect(parse(CODE_PALETTES[mode].background.toLowerCase())).toEqual(colour('canvas'))
+    })
+
+    it.each(Object.keys(CODE_PALETTES[mode]).filter(name => name !== 'background'))(
+      'keeps %s code at 4.5:1 on every surface code is drawn on',
+      name => {
+        const token = parse((CODE_PALETTES[mode] as Record<string, string>)[name].toLowerCase())
+        for (const [surface, background] of Object.entries(codeSurfaces()))
+          expect(contrast(token, background), surface).toBeGreaterThanOrEqual(4.5)
+      },
+    )
   })
 })

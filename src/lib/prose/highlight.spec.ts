@@ -2,27 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { CODE_PALETTES, highlight } from '@/lib/prose/highlight'
 import { isKnownLanguage, LANGUAGES } from '@/lib/prose/languages'
 
-const hex = (colour: string) => [1, 3, 5].map(i => parseInt(colour.slice(i, i + 2), 16))
-const luminance = (colour: string) => {
-  const [r, g, b] = hex(colour).map(c => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const contrast = (a: string, b: string) => {
-  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p)
-  return (x + 0.05) / (y + 0.05)
-}
-
 // Every colour a token can take in one line of code, in the order they appear.
 const colours = (html: string, mode: 'dark' | 'light') =>
   [...html.matchAll(new RegExp(`--code-${mode}:(#[0-9A-F]{6})`, 'g'))].map(match => match[1])
 
 describe('the code palettes', () => {
-  it.each(['dark', 'light'] as const)('reach 4.5:1 on the code canvas in %s mode', mode => {
-    const { background, ...tokens } = CODE_PALETTES[mode]
-    for (const [name, colour] of Object.entries(tokens))
-      expect(contrast(colour, background), name).toBeGreaterThanOrEqual(4.5)
-  })
-
   it('gives each kind of token its own colour', () => {
     const { background: _background, ...tokens } = CODE_PALETTES.dark
     expect(new Set(Object.values(tokens)).size).toBe(Object.keys(tokens).length)
