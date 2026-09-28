@@ -5,10 +5,11 @@ import { codeFrame } from '@/lib/prose/code'
 import type { PlaygroundDirective } from '@/lib/prose/lower'
 import { parseDispatchList } from '@/playground/dispatch-list'
 
-// Read once, when the pages are rendered: the built HTML names the frame, and the server never reads it again
+// Read once when a build renders the pages: the built HTML names the frame, and the server never reads it again.
+// A dev server reads it for every page, so a `playground:build` run after it started is picked up.
 let manifest: ReturnType<typeof readPlaygroundManifest> | null = null
 const lineFrame = (line: string) => {
-  if (manifest === null) manifest = readPlaygroundManifest()
+  if (manifest === null || process.env.NODE_ENV !== 'production') manifest = readPlaygroundManifest()
   return playgroundFor(manifest, line)?.frame
 }
 
@@ -32,6 +33,7 @@ export function playgroundEmbed(
   })
   const frame = frameOf(line)
   if (!frame) return Div({ key, 'data-playground-embed': true, 'data-playground-unavailable': true, children: shown })
+  const inputs = `playground-inputs-${key}`
   const request = {
     source: resolveExample(line, directive.file, undefined, { page }),
     dispatch: list.steps,
@@ -48,8 +50,15 @@ export function playgroundEmbed(
         key: 'bar',
         'data-playground-bar': true,
         children: [
-          Button('Run', { key: 'run', type: 'button', hidden: true, 'data-playground-run': true }),
-          Span(['Dispatches ', Code(directive.dispatch, { key: 'dispatch' })], { key: 'inputs' }),
+          // Described by its inputs, so a page's several Run buttons are told apart
+          Button('Run', {
+            key: 'run',
+            type: 'button',
+            hidden: true,
+            'data-playground-run': true,
+            'aria-describedby': inputs,
+          }),
+          Span(['Dispatches ', Code(directive.dispatch, { key: 'dispatch' })], { key: 'inputs', id: inputs }),
         ],
       }),
       Div({ key: 'output', 'data-playground-output': true, 'aria-live': 'polite' }),

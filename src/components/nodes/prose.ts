@@ -184,7 +184,6 @@ export const Prose = createNode('article', {
     },
     '& [data-playground-run][aria-busy="true"]': { cursor: 'progress' },
     '& [data-playground-run][hidden]': { display: 'none' },
-    '& [data-playground-output]:empty': { display: 'none' },
     '& [data-playground-output]': {
       marginTop: 'theme.space.3',
       padding: 'theme.space.3 theme.space.4',
@@ -192,6 +191,8 @@ export const Prose = createNode('article', {
       borderRadius: 'theme.radius.code',
       fontSize: 'theme.type.small.size',
     },
+    // Collapsed, not hidden, while empty: a live region must be in the tree before it changes to be announced
+    '& [data-playground-output]:empty': { margin: 0, padding: 0, border: 0 },
     '& [data-playground-output] p': { margin: 0 },
     '& [data-playground-steps]': { margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 'theme.space.3' },
     '& [data-playground-steps] > li': { margin: 0 },
