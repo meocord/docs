@@ -227,7 +227,7 @@ export function pipelineFigure(href: (url: string) => string, key?: number): Nod
     })
   return Figure({
     key,
-    'data-pipeline': true,
+    'data-pipeline-figure': true,
     children: [
       Fieldset({
         key: 'kinds',

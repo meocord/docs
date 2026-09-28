@@ -6,6 +6,7 @@ import { GUIDE_FIGURES, GUIDE_PLAN } from '../../../scripts/lib/guide'
 import { pageAnchors } from '../../../scripts/lib/content'
 import { apiModel } from '@/lib/docs/api-site'
 import { FIGURES } from '@/lib/docs/figures'
+import { Prose } from '@/components/nodes'
 import { everyStage, HANDLER_KINDS, PIPELINE, pipelineFigure } from '@/lib/docs/pipeline'
 
 const figure = () => renderToStaticMarkup(Div({ children: pipelineFigure(url => url) }).render())
@@ -74,6 +75,17 @@ describe('the pipeline figure', () => {
     expect(markup).toContain('<a href="api:decorators/UseGuard" data-api="true"><code>@UseGuard</code></a>')
     expect(PIPELINE.at(0)!.id).toBe('observers-start')
     expect(PIPELINE.at(-1)!.id).toBe('observers-settled')
+  })
+
+  it("is styled by an attribute of its own, which the home page's panel of the same name doesn't carry", () => {
+    const markup = figure()
+    expect(markup).toContain('<figure data-pipeline-figure="true">')
+    expect(markup).not.toContain('data-pipeline=')
+    // The reading column's rules for the figure, each scoped to its attribute and none to the home panel's
+    const rules = Object.keys((Prose({ children: [] }) as unknown as { props: { css: object } }).props.css)
+    const named = rules.filter(rule => rule.includes('data-pipeline'))
+    expect(named.length).toBeGreaterThan(10)
+    expect(named.filter(rule => !rule.startsWith('& [data-pipeline-figure]'))).toEqual([])
   })
 
   it('is the one figure a Guide page can name, and content:check knows it', () => {

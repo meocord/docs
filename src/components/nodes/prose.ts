@@ -327,8 +327,8 @@ export const Prose = createNode('article', {
     },
 
     // The pipeline figure: each stage in order, the ones that wrap others drawn around them.
-    '& [data-pipeline]': { margin: 'theme.space.6 0' },
-    '& [data-pipeline] fieldset': {
+    '& [data-pipeline-figure]': { margin: 'theme.space.6 0' },
+    '& [data-pipeline-figure] fieldset': {
       display: 'flex',
       flexWrap: 'wrap',
       alignItems: 'center',
@@ -337,13 +337,13 @@ export const Prose = createNode('article', {
       padding: 0,
       border: 'none',
     },
-    '& [data-pipeline] legend': {
+    '& [data-pipeline-figure] legend': {
       float: 'left',
       marginRight: 'theme.space.1',
       fontSize: 'theme.type.small.size',
       color: 'theme.ink.secondary',
     },
-    '& [data-pipeline] label': {
+    '& [data-pipeline-figure] label': {
       display: 'inline-flex',
       alignItems: 'center',
       gap: 'theme.space.2',
@@ -353,42 +353,42 @@ export const Prose = createNode('article', {
       fontSize: 'theme.type.small.size',
       cursor: 'pointer',
     },
-    '& [data-pipeline] label:has(input:checked)': { borderColor: 'theme.accent.default' },
-    '& [data-pipeline] label:has(input:focus-visible)': {
+    '& [data-pipeline-figure] label:has(input:checked)': { borderColor: 'theme.accent.default' },
+    '& [data-pipeline-figure] label:has(input:focus-visible)': {
       outline: 'theme.focus.width solid theme.accent.default',
       outlineOffset: 'theme.focus.offset',
     },
-    '& [data-pipeline] input': { margin: 0, accentColor: 'theme.accent.default' },
-    '& [data-pipeline] ol': { display: 'grid', gap: 'theme.space.2', margin: 0, padding: 0, listStyle: 'none' },
-    '& [data-pipeline] li': { margin: 0 },
-    '& [data-pipeline] [data-stage]': {
+    '& [data-pipeline-figure] input': { margin: 0, accentColor: 'theme.accent.default' },
+    '& [data-pipeline-figure] ol': { display: 'grid', gap: 'theme.space.2', margin: 0, padding: 0, listStyle: 'none' },
+    '& [data-pipeline-figure] li': { margin: 0 },
+    '& [data-pipeline-figure] [data-stage]': {
       padding: 'theme.space.2 theme.space.3',
       border: 'theme.line.width solid theme.line.hairline',
       borderRadius: 'theme.radius.control',
       background: 'theme.surface.fill',
     },
-    '& [data-pipeline] [data-stage] > a:first-child': { fontWeight: 'theme.font.weight.semibold' },
-    '& [data-pipeline] [data-stage] p': {
+    '& [data-pipeline-figure] [data-stage] > a:first-child': { fontWeight: 'theme.font.weight.semibold' },
+    '& [data-pipeline-figure] [data-stage] p': {
       margin: 'theme.space.1 0 0',
       fontSize: 'theme.type.small.size',
       color: 'theme.ink.secondary',
     },
-    '& [data-pipeline] li[data-frame]': {
+    '& [data-pipeline-figure] li[data-frame]': {
       padding: 'theme.space.2',
       border: 'theme.line.width dashed theme.line.strong',
       borderRadius: 'theme.radius.callout',
     },
-    '& [data-pipeline] li[data-frame] > [data-stage]': {
+    '& [data-pipeline-figure] li[data-frame] > [data-stage]': {
       padding: '0 theme.space.1 theme.space.2',
       border: 'none',
       background: 'none',
     },
     // A stage's words for one kind show once that kind is picked, in place of its words for any
-    '& [data-pipeline] [data-stage] p[data-kinds]': { display: 'none' },
+    '& [data-pipeline-figure] [data-stage] p[data-kinds]': { display: 'none' },
     // A kind of handler picked shows only the stages it runs; a frame it skips keeps what it wraps, unframed
     ...Object.fromEntries(
       HANDLER_KINDS.flatMap(({ id }) => {
-        const picked = `& [data-pipeline]:has(input[value="${id}"]:checked)`
+        const picked = `& [data-pipeline-figure]:has(input[value="${id}"]:checked)`
         const skipped = `:not([data-kinds~="${id}"])`
         return [
           [`${picked} li${skipped}:not([data-frame])`, { display: 'none' }],
