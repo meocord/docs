@@ -38,6 +38,20 @@ describe('the pipeline figure', () => {
     // Autocomplete answers within three seconds, so it runs no interceptors, and message commands alone parse
     expect(everyStage().find(stage => stage.id === 'interceptors')!.kinds).not.toContain('autocomplete')
     expect(everyStage().find(stage => stage.id === 'parse')!.kinds).toEqual(['message'])
+    // A message handler without a pattern takes guards, interceptors and cooldowns, and none of a pattern's stages
+    const bare = everyStage()
+      .filter(stage => stage.kinds.includes('message-listener'))
+      .map(stage => stage.id)
+    expect(bare).toEqual([
+      'observers-start',
+      'filters',
+      'guards',
+      'interceptors',
+      'cooldowns',
+      'handler',
+      'fallback',
+      'observers-settled',
+    ])
   })
 
   it('draws each stage in order, the ones a stage wraps inside it, with a choice of handler', () => {
