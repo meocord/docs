@@ -24835,7 +24835,8 @@
             "type": {
              "type": "literal",
              "value": true
-            }
+            },
+            "computedName": true
            }
           ],
           "groups": [
