@@ -26,17 +26,18 @@ shows one small bot both ways. The discordx side is typechecked against `discord
 
 ## What maps to what
 
-| In discordx                                      | In MeoCord                                                              |
-| ------------------------------------------------ | ----------------------------------------------------------------------- |
-| A `@Discord()` class                             | A `@Controller()` class, listed in the app class                        |
-| `@Slash` and a `@SlashOption` per parameter      | `@Command` with a `@CommandBuilder` class                               |
-| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId}/refresh', CommandType.BUTTON)`, with captures |
-| `@SimpleCommand` and a `@SimpleCommandOption`    | A [message command](guide:message-commands) pattern, with typed params  |
-| A guard function with `next()`                   | A [guard](guide:guards) class, which can inject services                |
-| `RateLimit` from `@discordx/utilities`           | [`@Cooldown`](guide:cooldowns)                                          |
-| `@On({ event })` with `ArgsOf`                   | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments |
-| `DIService.engine` set to tsyringe or TypeDI     | Built in: [services](guide:services) are injected by constructor        |
-| `importx` over your files                        | The app class's `controllers` list                                      |
+| In discordx                                      | In MeoCord                                                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| A `@Discord()` class                             | A `@Controller()` class, listed in the app class                                                          |
+| `@Slash` and a `@SlashOption` per parameter      | `@Command` with a `@CommandBuilder` class                                                                 |
+| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId}/refresh', CommandType.BUTTON)`, with captures                                   |
+| `@SimpleCommand` and a `@SimpleCommandOption`    | A [message command](guide:message-commands) pattern, with typed params                                    |
+| A guard function with `next()`                   | A [guard](guide:guards) class, which can inject services                                                  |
+| A `catch` around `executeCommand`                | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
+| `RateLimit` from `@discordx/utilities`           | [`@Cooldown`](guide:cooldowns)                                                                            |
+| `@On({ event })` with `ArgsOf`                   | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments                                   |
+| `DIService.engine` set to tsyringe or TypeDI     | Built in: [services](guide:services) are injected by constructor                                          |
+| `importx` over your files                        | The app class's `controllers` list                                                                        |
 
 ## A slash command
 
@@ -84,8 +85,10 @@ but doesn't fit it gets the command's usage in reply:
 
 discordx's documentation names no hook for an error a handler throws, so the bot catches it where it calls
 `executeInteraction`, or in the handler. In MeoCord, the error reaches the handler's
-[exception filters](guide:exception-filters) first, then the built-in fallback, which logs it and answers an
-interaction privately.
+[exception filters](guide:exception-filters) first, then the
+[built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it and tells the member something went
+wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, unless the app
+turns on [`dmOnError`](guide:message-commands#telling-the-author-privately).
 
 ## Events and startup
 

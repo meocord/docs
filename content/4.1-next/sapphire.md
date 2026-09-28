@@ -26,17 +26,18 @@ Sapphire side is typechecked against `@sapphire/framework` 5.5.1.
 
 ## What maps to what
 
-| In Sapphire                                        | In MeoCord                                                               |
-| -------------------------------------------------- | ------------------------------------------------------------------------ |
-| A `Command` piece in `commands/`                   | A controller method with `@Command`, listed in the app class             |
-| `registerApplicationCommands` and its registry     | A `@CommandBuilder` class                                                |
-| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId}/refresh`      |
-| `messageRun` and `Args`                            | A [message command](guide:message-commands) pattern, with typed params   |
-| A precondition                                     | A [guard](guide:guards), for commands and components alike               |
-| `cooldownLimit` and `cooldownDelay`                | [`@Cooldown`](guide:cooldowns)                                           |
-| A listener for `chatInputCommandError`             | An [exception filter](guide:exception-filters), or the built-in fallback |
-| A `Listener` piece in `listeners/`                 | [`@On`](guide:gateway-events) on a controller method                     |
-| `container`, augmented with your own properties    | [Services](guide:services), injected by constructor                      |
+| In Sapphire                                        | In MeoCord                                                                                                |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| A `Command` piece in `commands/`                   | A controller method with `@Command`, listed in the app class                                              |
+| `registerApplicationCommands` and its registry     | A `@CommandBuilder` class                                                                                 |
+| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId}/refresh`                                       |
+| `messageRun` and `Args`                            | A [message command](guide:message-commands) pattern, with typed params                                    |
+| A precondition                                     | A [guard](guide:guards), for commands and components alike                                                |
+| `cooldownLimit` and `cooldownDelay`                | [`@Cooldown`](guide:cooldowns)                                                                            |
+| A listener for `chatInputCommandError`             | An [exception filter](guide:exception-filters), or the built-in fallback                                  |
+| A listener for `messageCommandError`               | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
+| A `Listener` piece in `listeners/`                 | [`@On`](guide:gateway-events) on a controller method                                                      |
+| `container`, augmented with your own properties    | [Services](guide:services), injected by constructor                                                       |
 
 ## A slash command
 
@@ -90,7 +91,9 @@ what the member is told:
 
 ::example{from="compare" file="sapphire/listeners/command-error.ts" region="listener"}
 
-In MeoCord the built-in fallback logs the error and answers an interaction privately. An
+In MeoCord the [built-in fallback](guide:exception-filters#the-built-in-fallback) logs the error and tells the member
+something went wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only,
+unless the app turns on [`dmOnError`](guide:message-commands#telling-the-author-privately). An
 [exception filter](guide:exception-filters) answers an error of its own type in its own words, on one handler, a
 controller or the whole bot:
 
@@ -120,10 +123,10 @@ discord.js objects:
 
 ## When Sapphire is the better pick
 
-Sapphire is the most downloaded of these frameworks on npm, and its official plugins add i18next translation,
-subcommands, scheduled tasks, an HTTP API and hot reloading. It supports JavaScript as well as TypeScript. Pick it for
-that ecosystem, or to write JavaScript; see [other ways to build a bot](guide:overview#other-ways-to-build-a-bot).
-MeoCord has no plugins: what a plugin adds, you write as a service.
+Sapphire's official plugins add i18next translation, subcommands, scheduled tasks, an HTTP API and hot reloading, and
+it supports JavaScript as well as TypeScript. Pick it for that ecosystem, or to write JavaScript. As of 25 September
+2026, [other ways to build a bot](guide:overview#other-ways-to-build-a-bot) compares it with the others. MeoCord has
+no plugins: what a plugin adds, you write as a service.
 
 ## Moving over
 
