@@ -64,15 +64,20 @@ const sampleFor = (name: string, choices: readonly string[] | null, command: Cli
   return sample
 }
 
+/** The command a reader runs outside any project, where no meocord is installed to run it. */
+const OUTSIDE_A_PROJECT = 'create'
+
 /**
  * A command a reader can copy and run, from the manifest alone: its words, each required argument by
  * its first choice or a sample value, its mandatory options, and, for a command that takes no
- * argument, one option. A command that only groups others shows its first subcommand's.
+ * argument, one option. A command that only groups others shows its first subcommand's. `create`
+ * runs the package `spec` names, the one that installs the page's version (`npx meocord@beta create`);
+ * the others run the project's own meocord.
  */
-export function exampleInvocation(command: CliCommand): string {
+export function exampleInvocation(command: CliCommand, spec: string): string {
   if (command.arguments.length === 0 && command.options.length === 0 && command.commands[0])
-    return exampleInvocation(command.commands[0])
-  const words = ['meocord', ...command.path]
+    return exampleInvocation(command.commands[0], spec)
+  const words = command.path[0] === OUTSIDE_A_PROJECT ? ['npx', spec, ...command.path] : ['meocord', ...command.path]
   const required = command.arguments.filter(each => each.required)
   for (const argument of required) words.push(sampleFor(argument.name, argument.choices, command))
   const value = (option: CliOption) =>

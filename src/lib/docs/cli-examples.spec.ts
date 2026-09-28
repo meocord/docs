@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { CliCommand } from '../../../scripts/lib/cli'
 import { cliArticle } from '@/lib/docs/api-render'
+import { specFor } from '@/config/versions'
 import { cliManifest, exampleInvocation } from '@/lib/docs/cli-site'
 
 // The CLI of the version the 4.1 examples pin, which the site's newest CLI pages describe
@@ -39,17 +40,23 @@ async function parses(example: string): Promise<string | undefined> {
   const program = newProgram()
   parseOnly(program)
   try {
-    await program.parseAsync(example.split(' ').slice(1), { from: 'user' })
+    await program.parseAsync(argv(example), { from: 'user' })
     return undefined
   } catch (error) {
     return errors.join('') || String(error)
   }
 }
 
+// The line's pages run `create` through the spec that installs the line; the pinned CLI is its newest
+const spec = specFor('4.1')
 const everyCommand = (command: CliCommand): CliCommand[] => [command, ...command.commands.flatMap(everyCommand)]
-const examples = [...new Set((manifest?.commands ?? []).flatMap(everyCommand).map(exampleInvocation))]
+const examples = [
+  ...new Set((manifest?.commands ?? []).flatMap(everyCommand).map(command => exampleInvocation(command, spec))),
+]
+// The CLI's own arguments: after `meocord`, or after `npx <spec>`
+const argv = (example: string) => example.split(' ').slice(example.startsWith('npx ') ? 2 : 1)
 // Commands that only print, or write into the working directory, run in full; the rest would install, build or log in
-const runs = (example: string) => ['show', 'generate'].includes(example.split(' ')[1]!)
+const runs = (example: string) => ['show', 'generate'].includes(argv(example)[0]!)
 const dirs: string[] = []
 
 describe("the CLI reference's examples, against the CLI they describe", () => {
@@ -62,11 +69,11 @@ describe("the CLI reference's examples, against the CLI they describe", () => {
   it('has a manifest for the pinned version, and every example is on its page, with no placeholder', () => {
     expect(manifest?.meocordVersion).toBe(pkg.version)
     for (const command of manifest!.commands) {
-      const text = renderToStaticMarkup(Div({ children: cliArticle(command).nodes }).render())
+      const text = renderToStaticMarkup(Div({ children: cliArticle(command, spec).nodes }).render())
         .replace(/<[^>]+>/g, '')
         .replace(/&lt;|&#x3C;/g, '<')
         .replace(/&gt;/g, '>')
-      for (const each of everyCommand(command)) expect(text).toContain(exampleInvocation(each))
+      for (const each of everyCommand(command)) expect(text).toContain(exampleInvocation(each, spec))
     }
     expect(examples.filter(example => /[<>[\]]/.test(example))).toEqual([])
   })
@@ -80,7 +87,7 @@ describe("the CLI reference's examples, against the CLI they describe", () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'meocord-cli-example-'))
     dirs.push(dir)
     writeFileSync(path.join(dir, 'package.json'), '{ "name": "example", "private": true }\n')
-    const run = promisify(execFile)(process.execPath, [bin, ...example.split(' ').slice(1)], { cwd: dir })
+    const run = promisify(execFile)(process.execPath, [bin, ...argv(example)], { cwd: dir })
     await expect(
       run.then(
         () => 0,
