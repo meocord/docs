@@ -1,6 +1,6 @@
 import initSwc, { transformSync } from '@swc/wasm-web'
-import { type LogLine, parseRunRequest, type RunResult } from './protocol'
-import { type ModuleMap, runPlayground } from './run'
+import { LOG_LEVELS, type LogLine, parseRunRequest, type RunResult, type RunStarted } from './protocol'
+import { fitted, type ModuleMap, runPlayground } from './run'
 
 /** What the frame sets before it loads the runtime: where swc's WebAssembly is, as an absolute URL. */
 interface Boot {
@@ -13,7 +13,6 @@ type WorkerScope = typeof globalThis & {
   onmessage: ((event: MessageEvent) => void) | null
 }
 
-const LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const
 // Logger colours its lines for a terminal; the result view shows them plain
 const ANSI = /\u001b\[[0-9;]*m/g
 
@@ -29,7 +28,7 @@ const text = (value: unknown) => {
 
 /** Sends what the console receives during a run to that run's logs. */
 function captureConsole(sink: () => LogLine[] | undefined) {
-  for (const level of LEVELS) {
+  for (const level of LOG_LEVELS) {
     const original = console[level].bind(console)
     console[level] = (...args: unknown[]) => {
       const logs = sink()
@@ -84,17 +83,11 @@ export function startWorker(modules: ModuleMap) {
         if (!wasm) throw new Error('The playground runtime was loaded without its compiler.')
         swc ??= initSwc(wasm)
         await swc
+        scope.postMessage({ type: 'started', id: request.id } satisfies RunStarted)
         scope.postMessage(await runPlayground(request, { modules, compile, logs }))
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        scope.postMessage({
-          type: 'result',
-          id: request.id,
-          ok: false,
-          stage: 'compile',
-          message,
-          logs,
-        } satisfies RunResult)
+        scope.postMessage(fitted({ type: 'result', id: request.id, ok: false, stage: 'compile', message, logs }))
       } finally {
         current = undefined
       }

@@ -6,7 +6,9 @@ import {
   MOVING_PAGE,
   NAMED_FILE,
   pathKind,
+  playgroundFrameCsp,
   prereleaseRedirect,
+  STATIC_FILE_CSP,
   VERSIONED_PAGE,
 } from '@/lib/cache-policy'
 
@@ -77,6 +79,7 @@ describe('playground assets', () => {
     expect(pathKind('/playground/4.1.0-beta.7.0123456789.js')).toBe('playground')
     expect(pathKind('/playground/4.1.0.abcdef0123.js')).toBe('playground')
     expect(pathKind('/playground/swc.abcdef0123.wasm')).toBe('playground')
+    expect(pathKind('/playground/frame.abcdef0123.js')).toBe('playground')
     expect(cacheControlFor('/playground/swc.abcdef0123.wasm')).toBe(IMMUTABLE)
     expect(isInertPath('/playground/4.1.0-beta.7.0123456789.js')).toBe(true)
   })
@@ -85,5 +88,38 @@ describe('playground assets', () => {
     expect(pathKind('/playground/runtime.js')).toBe('page')
     expect(pathKind('/playground/4.1.0-beta.7.0123456789.js.map')).toBe('page')
     expect(pathKind('/playground/swc.xyz.wasm')).toBe('page')
+    expect(pathKind('/playground/frame.abcdef0123.html')).toBe('page')
+    expect(pathKind('/playground/4.1.0-beta.7.abcdef0123.wasm')).toBe('page')
+  })
+
+  it("caches a line's hashed frame as immutable, under its own policy", () => {
+    expect(pathKind('/playground/4.1.0-beta.7.0123456789.html')).toBe('playground-frame')
+    expect(cacheControlFor('/playground/4.1.0-beta.7.0123456789.html')).toBe(IMMUTABLE)
+    expect(isInertPath('/playground/4.1.0-beta.7.0123456789.html')).toBe(false)
+  })
+})
+
+describe('playgroundFrameCsp', () => {
+  it("sandboxes the frame and limits its scripts and requests to the playground's files, by the site's host", () => {
+    expect(playgroundFrameCsp('https://meocord.dev').split('; ')).toEqual([
+      'sandbox allow-scripts',
+      "default-src 'none'",
+      "script-src https://meocord.dev/playground/ http://meocord.dev/playground/ 'unsafe-eval' 'wasm-unsafe-eval'",
+      'worker-src blob:',
+      'connect-src https://meocord.dev/playground/ http://meocord.dev/playground/',
+      'frame-ancestors https://meocord.dev http://meocord.dev',
+      "base-uri 'none'",
+      "form-action 'none'",
+    ])
+    // The scheme the request came in on doesn't matter: behind the edge it is always http
+    expect(playgroundFrameCsp('http://meocord.dev')).toBe(playgroundFrameCsp('https://meocord.dev'))
+    expect(playgroundFrameCsp('http://localhost:4100')).toContain(
+      'frame-ancestors https://localhost:4100 http://localhost:4100;',
+    )
+  })
+
+  it('denies everything for an origin a policy cannot name', () => {
+    for (const origin of ['null', 'https://a.test; script-src *', 'https://a.test/x', 'javascript:alert(1)', ''])
+      expect(playgroundFrameCsp(origin)).toBe(STATIC_FILE_CSP)
   })
 })

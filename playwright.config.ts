@@ -15,6 +15,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     // The panes again as a browser without the Navigation API sees them, such as an older Safari or Firefox.
     { name: 'no-navigation-api', use: { ...devices['Desktop Chrome'] }, testMatch: 'panes.spec.ts' },
+    // The playground's isolation rests on each engine's sandbox and policy, so its frame runs in all three.
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: 'playground-frame.spec.ts' },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: 'playground-frame.spec.ts' },
   ],
   // The production build behind the CSP proxy, on its own ports, stopped when the run ends.
   webServer: {

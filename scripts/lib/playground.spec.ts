@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkInstalled,
   contentName,
+  frameDocument,
   installedVersion,
   nodeModulesPlugin,
   playgroundLines,
@@ -79,6 +80,28 @@ describe('contentName', () => {
     expect(name).toMatch(/^4\.1\.0-beta\.7\.[0-9a-f]{10}\.js$/)
     expect(contentName('4.1.0-beta.7', 'bytes', 'js')).toBe(name)
     expect(contentName('4.1.0-beta.7', 'other', 'js')).not.toBe(name)
+  })
+})
+
+describe('frameDocument', () => {
+  const paths = {
+    script: '/playground/frame.0123456789.js',
+    runtime: '/playground/4.1.0-beta.7.abcdef0123.js',
+    wasm: '/playground/swc.9876543210.wasm',
+  }
+
+  it("holds only the frame's script, told where the runtime and the compiler are", () => {
+    const html = frameDocument(paths)
+    expect(html).toContain(
+      '<script src="/playground/frame.0123456789.js" data-runtime="/playground/4.1.0-beta.7.abcdef0123.js" data-wasm="/playground/swc.9876543210.wasm"></script>',
+    )
+    expect(html.match(/<script/g)).toHaveLength(1)
+  })
+
+  it("refuses a path outside the playground's files, or one an attribute can't hold", () => {
+    expect(() => frameDocument({ ...paths, runtime: 'https://example.com/x.js' })).toThrow(/not https:\/\/example/)
+    expect(() => frameDocument({ ...paths, wasm: '/playground/a"b.wasm' })).toThrow()
+    expect(() => frameDocument({ ...paths, script: '/_next/static/x.js' })).toThrow()
   })
 })
 

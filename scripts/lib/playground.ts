@@ -73,6 +73,25 @@ export function contentName(prefix: string, bytes: Uint8Array | string, extensio
   return `${prefix}.${hash}.${extension}`
 }
 
+/**
+ * The frame the page embeds for a line: no content, only the script that starts the line's runtime in a
+ * Worker, told where the runtime and the compiler are. Every path is the site's own.
+ */
+export function frameDocument(paths: { script: string; runtime: string; wasm: string }): string {
+  for (const each of Object.values(paths))
+    if (!/^\/playground\/[\w.-]+$/.test(each))
+      throw new Error(`A frame loads only the playground's files, not ${each}.`)
+  return [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<meta charset="utf-8">',
+    '<title>MeoCord playground</title>',
+    `<script src="${paths.script}" data-runtime="${paths.runtime}" data-wasm="${paths.wasm}"></script>`,
+    '</html>',
+    '',
+  ].join('\n')
+}
+
 /** The bundle's entry for a line: the async context first, then each reader module, handed to the Worker. */
 export function runtimeEntry(runtimeDir: string): string {
   const imports = READER_MODULES.map((specifier, index) => `import * as m${index} from '${specifier}'`)

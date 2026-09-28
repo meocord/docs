@@ -20,7 +20,15 @@ afterEach(() => {
 
 const manifest: PlaygroundManifest = {
   swc: '/playground/swc.0123456789.wasm',
-  lines: [{ line: '4.1', version: '4.1.0-beta.7', runtime: '/playground/4.1.0-beta.7.abcdef0123.js', gzip: 362591 }],
+  lines: [
+    {
+      line: '4.1',
+      version: '4.1.0-beta.7',
+      runtime: '/playground/4.1.0-beta.7.abcdef0123.js',
+      frame: '/playground/4.1.0-beta.7.9876543210.html',
+      gzip: 362591,
+    },
+  ],
 }
 
 describe('readPlaygroundManifest', () => {
@@ -36,8 +44,9 @@ describe('readPlaygroundManifest', () => {
 })
 
 describe('playgroundFor', () => {
-  it("gives a line's runtime with the compiler, and nothing for a line without one", () => {
+  it("gives a line's frame and runtime with the compiler, and nothing for a line without one", () => {
     expect(playgroundFor(manifest, '4.1')).toEqual({
+      frame: '/playground/4.1.0-beta.7.9876543210.html',
       runtime: '/playground/4.1.0-beta.7.abcdef0123.js',
       swc: '/playground/swc.0123456789.wasm',
       version: '4.1.0-beta.7',

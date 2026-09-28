@@ -1,7 +1,8 @@
 /**
  * Builds the playground's runtime: for each line whose guides the site writes, one classic script a
  * Worker loads with `importScripts`, holding the meocord its examples pin, discord.js and the run
- * loop, in public/playground/ under a name that carries its hash; swc's WebAssembly beside it; and
+ * loop, and the sandboxed document the page embeds to run it; the frame's script and swc's WebAssembly
+ * beside them, all in public/playground/ under names that carry their hash; and
  * .playground/manifest.json naming them for the site. Fails when a runtime is over its budget.
  */
 
@@ -13,6 +14,7 @@ import { paths, ROOT } from './lib/layout.js'
 import {
   checkInstalled,
   contentName,
+  frameDocument,
   installedVersion,
   nodeModulesPlugin,
   type PlaygroundManifest,
@@ -23,6 +25,7 @@ import {
 import { readVersions } from './lib/versions.js'
 
 const RUNTIME_DIR = path.join(ROOT, 'src', 'playground', 'runtime')
+const FRAME_ENTRY = path.join(ROOT, 'src', 'playground', 'frame', 'frame.ts')
 const OUT = path.join(ROOT, 'public', 'playground')
 const MANIFEST = path.join(ROOT, '.playground', 'manifest.json')
 
@@ -41,6 +44,21 @@ const wasm = readFileSync(path.join(ROOT, 'node_modules', '@swc', 'wasm-web', 'w
 const swcName = contentName('swc', wasm, 'wasm')
 copyFileSync(path.join(ROOT, 'node_modules', '@swc', 'wasm-web', 'wasm_bg.wasm'), path.join(OUT, swcName))
 const manifest: PlaygroundManifest = { swc: `/playground/${swcName}`, lines: [] }
+
+const frameScript = await build({
+  entryPoints: [FRAME_ENTRY],
+  bundle: true,
+  write: false,
+  platform: 'browser',
+  format: 'iife',
+  minify: true,
+  target: 'es2020',
+  logLevel: 'error',
+  legalComments: 'none',
+})
+const frameBytes = frameScript.outputFiles[0]!.contents
+const frameName = contentName('frame', frameBytes, 'js')
+writeFileSync(path.join(OUT, frameName), frameBytes)
 
 for (const { line, version } of playgroundLines(readVersions(paths.versions), pinOf)) {
   // The bundle resolves meocord from the line's examples, so what is installed there is what ships
@@ -76,7 +94,10 @@ for (const { line, version } of playgroundLines(readVersions(paths.versions), pi
     )
   const name = contentName(version, bytes, 'js')
   writeFileSync(path.join(OUT, name), bytes)
-  manifest.lines.push({ line, version, runtime: `/playground/${name}`, gzip })
+  const html = frameDocument({ script: `/playground/${frameName}`, runtime: `/playground/${name}`, wasm: manifest.swc })
+  const frame = contentName(version, html, 'html')
+  writeFileSync(path.join(OUT, frame), html)
+  manifest.lines.push({ line, version, runtime: `/playground/${name}`, frame: `/playground/${frame}`, gzip })
   console.log(
     `[playground] ${line}: meocord ${version} -> public/playground/${name} (${(gzip / 1024).toFixed(0)} KB gz)`,
   )
