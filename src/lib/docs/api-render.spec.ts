@@ -229,6 +229,10 @@ describe('the API by kind', () => {
     expect(html(kind.nodes)).toContain('<h2 id="decorators-pipeline-stages">Pipeline stages</h2>')
     expect(kind.toc.map(entry => entry.title)).toContain('Pipeline stages')
     expect(apiKindArticle(model, 'nothing')).toBeUndefined()
+    // The CLI's page names the help every command takes, which its manifest leaves out
+    expect(html(apiKindArticle(model, 'cli')!.nodes)).toContain(
+      '<p>Every command also takes <code>-h, --help</code>, which prints its usage, arguments and options, as <code>meocord help &lt;command&gt;</code> does.</p>',
+    )
     // The index and kinds exist only where the API is arranged by kind
     vi.stubEnv('DOCS_NEXT', '')
     expect(renderApiIndex('4.1')).toBeUndefined()
