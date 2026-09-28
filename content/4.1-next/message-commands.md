@@ -85,7 +85,7 @@ Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
 - `prefix` is a string, or a list such as `['!', '?']`. The longest prefix that fits is used, and a space
   after it is allowed, so `! roll 20` works too. Without one, a pattern matches the message as it is.
 - `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix.
-- `mention: 'only'` starts every command in a server with a mention of the bot and nothing else. A direct
+- `mention: 'only'` starts every command in a server with a mention of the bot, never a prefix. A direct
   message, addressed to the bot already, starts as usual. Discord sends a message's text without the
   privileged `MessageContent` intent when it mentions the bot, and in direct messages, so a mention-only bot
   needs no such intent.
@@ -255,7 +255,7 @@ Add a message controller beside the slash command. It files through the same `Fe
 
 `{about:bug|idea|praise}` takes one of three words, and `{details...}` the rest of the message. `scope: 'guild'`
 keeps it to servers. In the app, add the controller, the `GuildMessages` intent that delivers messages in
-servers, and `messages: { mention: 'only' }`, so a command starts with a mention of the bot and nothing else:
+servers, and `messages: { mention: 'only' }`, so a command starts with a mention of the bot, never a prefix:
 
 ::example{file="tutorial/app.ts" region="app"}
 
