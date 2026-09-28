@@ -384,6 +384,29 @@ describe('reactions, gateway events and user selects', () => {
     expect(result.steps[1]).toMatchObject({ ran: false, handlers: [], calls: [] })
   })
 
+  it("reaches a handler for a server's own emoji by its id, written as Discord formats it", async () => {
+    const source = `
+import { type MessageReaction } from 'discord.js'
+import { Controller, ReactionHandler } from 'meocord/decorator'
+@Controller()
+export class Party {
+  @ReactionHandler('<:party:123456789012345678>')
+  async party(reaction: MessageReaction) {
+    await reaction.message.reply('party ' + reaction.emoji.id)
+  }
+}
+`
+    const result = ok(
+      await run(source, [
+        { kind: 'reaction', emoji: '<:party:123456789012345678>', content: 'hi', action: 'add' },
+        { kind: 'reaction', emoji: '<:party:999999999999999999>', content: 'hi', action: 'add' },
+      ]),
+    )
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['Party.party'] })
+    expect(result.steps[0].calls).toEqual([{ method: 'reply', payload: 'party 123456789012345678' }])
+    expect(result.steps[1]).toMatchObject({ ran: false, handlers: [] })
+  })
+
   it('selects users by id, the caller among them by name', async () => {
     const result = ok(
       await run(

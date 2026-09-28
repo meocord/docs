@@ -71,7 +71,7 @@ describe('parseDispatchList', () => {
       ],
       ['userselect', 'dispatch step 1: userselect needs a customId'],
       ['userselect assign/7', 'dispatch step 1: a userselect step is `userselect <customId> <userId>,<userId>`'],
-      ['userselect assign/7 me', "dispatch: a user select menu's users are 1 to 25 snowflakes"],
+      ['userselect assign/7 me', "dispatch: a user select menu's users are 1 to 25 different snowflakes"],
       ['reaction', 'dispatch step 1: a reaction step is `reaction <emoji> on <message>`'],
       [
         'reaction ⭐ to hi',
@@ -92,7 +92,7 @@ describe('parseDispatchList', () => {
       ['as dm', 'dispatch: names no step to run'],
       [Array.from({ length: 21 }, () => 'button x').join('; '), 'dispatch: names 21 steps, over the 20 a run takes'],
       [`button ${'x'.repeat(101)}`, 'dispatch: a button names its customId'],
-      [`as name:${'x'.repeat(33)}; /ping`, "dispatch: the caller's username is up to 32 characters"],
+      [`as name:${'x'.repeat(33)}; /ping`, "dispatch: the caller's username is 1 to 32 characters"],
     ]
     for (const [text, reason] of cases) expect(parseDispatchList(text), text).toBe(reason)
   })
