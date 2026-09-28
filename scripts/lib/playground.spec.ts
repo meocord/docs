@@ -1,7 +1,17 @@
 import { build } from 'esbuild'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
+import { tmpdir } from 'os'
 import path from 'path'
 import { describe, expect, it } from 'vitest'
-import { contentName, nodeModulesPlugin, playgroundLines, READER_MODULES, runtimeEntry } from './playground'
+import {
+  checkInstalled,
+  contentName,
+  installedVersion,
+  nodeModulesPlugin,
+  playgroundLines,
+  READER_MODULES,
+  runtimeEntry,
+} from './playground'
 import type { VersionsConfig } from './versions'
 
 const config = (lines: VersionsConfig['lines']): VersionsConfig => ({
@@ -28,6 +38,38 @@ describe('playgroundLines', () => {
       "examples/4.1 pins no exact meocord version, which isn't a release of 4.1; the playground builds from that pin.",
     )
     expect(() => playgroundLines(lines, () => '4.0.0')).toThrow('examples/4.1 pins meocord 4.0.0')
+  })
+})
+
+describe('installedVersion', () => {
+  it("reads the version Node would resolve from a directory: its own node_modules first, then its parents'", () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'playground-installed-'))
+    const pkg = (dir: string, version: string) => {
+      mkdirSync(path.join(root, dir, 'node_modules', 'meocord'), { recursive: true })
+      writeFileSync(path.join(root, dir, 'node_modules', 'meocord', 'package.json'), JSON.stringify({ version }))
+    }
+    try {
+      mkdirSync(path.join(root, 'examples', '4.0'), { recursive: true })
+      pkg('.', '4.0.1')
+      pkg('examples/4.1', '4.1.0-beta.7')
+      expect(installedVersion('meocord', path.join(root, 'examples', '4.1'))).toBe('4.1.0-beta.7')
+      expect(installedVersion('meocord', path.join(root, 'examples', '4.0'))).toBe('4.0.1')
+      expect(installedVersion('discord.js', path.join(root, 'examples', '4.1'))).toBeUndefined()
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('checkInstalled', () => {
+  it('passes the pinned version, and refuses another or none, naming both', () => {
+    expect(() => checkInstalled('4.1', '4.1.0-beta.7', '4.1.0-beta.7')).not.toThrow()
+    expect(() => checkInstalled('4.1', '4.1.0-beta.7', '4.1.0-beta.6')).toThrow(
+      'examples/4.1 pins meocord 4.1.0-beta.7, but meocord 4.1.0-beta.6 is installed there; run bun install, then build the playground.',
+    )
+    expect(() => checkInstalled('4.1', '4.1.0-beta.7', undefined)).toThrow(
+      /pins meocord 4\.1\.0-beta\.7, but no meocord is/,
+    )
   })
 })
 

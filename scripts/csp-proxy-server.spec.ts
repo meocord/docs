@@ -3,10 +3,10 @@ import http from 'node:http'
 import type { AddressInfo, Socket } from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { brotliCompressSync } from 'node:zlib'
+import { brotliCompressSync, gzipSync } from 'node:zlib'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MARKER } from './csp-hash.mjs'
-import { acceptsBrotli, brotliCopyPath, createProxyServer, fail } from './csp-proxy-server.mjs'
+import { acceptsEncoding, assetPath, createProxyServer, fail } from './csp-proxy-server.mjs'
 
 const servers: http.Server[] = []
 
@@ -203,9 +203,10 @@ describe('fail', () => {
   })
 })
 
-describe('brotli copies', () => {
+describe('compressed copies', () => {
   const script = 'export const words = "' + 'the quick brown fox '.repeat(100) + '"\n'
   const brotli = brotliCompressSync(script)
+  const gzip = gzipSync(script)
   let root: string
 
   afterEach(() => rmSync(root, { recursive: true, force: true }))
@@ -265,23 +266,43 @@ describe('brotli copies', () => {
     expect(response.body.equals(brotli)).toBe(true)
   })
 
-  it('sends the search bundles and palette indexes from public the same way', async () => {
+  it('sends the search bundles, palette indexes and playground files from public the same way', async () => {
     const port = await serve({
       'public/_pagefind/4.1.abc/pagefind.js.br': brotli,
       'public/_pagefind/4.1.abc/pagefind.js': script,
       'public/palette/4.1.abc.json.br': brotli,
       'public/palette/4.1.abc.json': script,
+      'public/playground/swc.abc.wasm.br': brotli,
+      'public/playground/swc.abc.wasm': script,
     })
-    for (const url of ['/_pagefind/4.1.abc/pagefind.js', '/palette/4.1.abc.json']) {
+    for (const url of ['/_pagefind/4.1.abc/pagefind.js', '/palette/4.1.abc.json', '/playground/swc.abc.wasm']) {
       const response = await fetchRaw(port, url, { 'accept-encoding': 'br' })
       expect(response.headers['content-encoding'], url).toBe('br')
       expect(response.body.equals(brotli), url).toBe(true)
     }
   })
 
-  it('streams the source from Next to a client without brotli, or one that refuses it, still varying on it', async () => {
+  it('sends the gzip copy to a client that takes gzip and not brotli, with its own validator', async () => {
+    const port = await serve({
+      '.next/static/chunks/a.js': script,
+      '.next/static/chunks/a.js.br': brotli,
+      '.next/static/chunks/a.js.gz': gzip,
+    })
+    for (const accept of ['gzip, deflate', 'gzip, br;q=0']) {
+      const response = await fetchRaw(port, '/_next/static/chunks/a.js', { 'accept-encoding': accept })
+      expect(response.headers['content-encoding'], accept).toBe('gzip')
+      expect(response.headers['content-length'], accept).toBe(String(gzip.byteLength))
+      expect(response.headers.vary, accept).toBe('Accept-Encoding')
+      expect(response.headers.etag, accept).toBe('"abc-gz"')
+      expect(response.body.equals(gzip), accept).toBe(true)
+    }
+    const both = await fetchRaw(port, '/_next/static/chunks/a.js', { 'accept-encoding': 'gzip, deflate, br, zstd' })
+    expect(both.headers['content-encoding']).toBe('br')
+  })
+
+  it('streams the source from Next to a client that takes neither copy, still varying on it', async () => {
     const port = await serve({ '.next/static/chunks/a.js': script, '.next/static/chunks/a.js.br': brotli })
-    for (const accept of [undefined, 'gzip, deflate', 'gzip, br;q=0']) {
+    for (const accept of [undefined, 'gzip, deflate', 'gzip, br;q=0', 'identity']) {
       const response = await fetchRaw(port, '/_next/static/chunks/a.js', accept ? { 'accept-encoding': accept } : {})
       expect(response.headers['content-encoding'], accept).toBeUndefined()
       expect(response.headers.vary, accept).toBe('Accept-Encoding')
@@ -324,26 +345,31 @@ describe('brotli copies', () => {
   })
 })
 
-describe('acceptsBrotli', () => {
-  it('takes br listed with no weight or a positive one, and not at q=0 or absent', () => {
-    expect(acceptsBrotli('gzip, deflate, br, zstd')).toBe(true)
-    expect(acceptsBrotli('BR;q=0.5')).toBe(true)
-    expect(acceptsBrotli('br;q=0')).toBe(false)
-    expect(acceptsBrotli('gzip')).toBe(false)
-    expect(acceptsBrotli('brotli')).toBe(false)
-    expect(acceptsBrotli()).toBe(false)
+describe('acceptsEncoding', () => {
+  it('takes an encoding listed with no weight or a positive one, and not at q=0 or absent', () => {
+    expect(acceptsEncoding('gzip, deflate, br, zstd', 'br')).toBe(true)
+    expect(acceptsEncoding('BR;q=0.5', 'br')).toBe(true)
+    expect(acceptsEncoding('br;q=0', 'br')).toBe(false)
+    expect(acceptsEncoding('gzip', 'br')).toBe(false)
+    expect(acceptsEncoding('brotli', 'br')).toBe(false)
+    expect(acceptsEncoding(undefined, 'br')).toBe(false)
+    expect(acceptsEncoding('gzip, deflate', 'gzip')).toBe(true)
+    expect(acceptsEncoding('gzip;q=0, br', 'gzip')).toBe(false)
+    expect(acceptsEncoding('x-gzip', 'gzip')).toBe(false)
   })
 })
 
-describe('brotliCopyPath', () => {
-  it('maps the three asset paths under their roots, and nothing else', () => {
+describe('assetPath', () => {
+  it('maps the four asset paths under their roots, and nothing else', () => {
     const root = '/app'
-    expect(brotliCopyPath(root, '/_next/static/chunks/a.js?v=1')).toBe('/app/.next/static/chunks/a.js.br')
-    expect(brotliCopyPath(root, '/_pagefind/4.1.abc/pagefind.js')).toBe('/app/public/_pagefind/4.1.abc/pagefind.js.br')
-    expect(brotliCopyPath(root, '/palette/4.1.abc.json')).toBe('/app/public/palette/4.1.abc.json.br')
-    expect(brotliCopyPath(root, '/docs/4.1/defer')).toBeUndefined()
-    expect(brotliCopyPath(root, '/_next/static/')).toBeUndefined()
-    expect(brotliCopyPath(root, '/_next/static/../../etc/passwd')).toBeUndefined()
-    expect(brotliCopyPath(root, '/_next/static/%E0%A4%A.js')).toBeUndefined()
+    expect(assetPath(root, '/_next/static/chunks/a.js?v=1')).toBe('/app/.next/static/chunks/a.js')
+    expect(assetPath(root, '/_pagefind/4.1.abc/pagefind.js')).toBe('/app/public/_pagefind/4.1.abc/pagefind.js')
+    expect(assetPath(root, '/palette/4.1.abc.json')).toBe('/app/public/palette/4.1.abc.json')
+    expect(assetPath(root, '/playground/swc.abc.wasm')).toBe('/app/public/playground/swc.abc.wasm')
+    expect(assetPath(root, '/docs/4.1/defer')).toBeUndefined()
+    expect(assetPath(root, '/_next/static/')).toBeUndefined()
+    expect(assetPath(root, '/_next/static/../../etc/passwd')).toBeUndefined()
+    expect(assetPath(root, '/playground/..%2f..%2fsecret.js')).toBeUndefined()
+    expect(assetPath(root, '/_next/static/%E0%A4%A.js')).toBeUndefined()
   })
 })
