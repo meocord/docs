@@ -20,8 +20,9 @@ it, and the app class that lists the controller. This page builds `/greet`, whic
 ## When to use it
 
 Every command, button and form in a MeoCord bot follows this shape, so write this one first: the chapters after it add
-options, components and stages to the same three parts. To scaffold them instead, `npx meocord generate controller slash
-greeting` writes a controller, its builder and its spec, and [the CLI](guide:cli) lists every generator.
+options, components and stages to the same three parts. To scaffold them instead, run
+`npx meocord generate controller slash greeting`: it writes a controller, its builder and its spec, and
+[the CLI](guide:cli) lists every generator.
 
 ## Example
 
