@@ -75,7 +75,9 @@ The spec confirms, cancels, and makes `timeout()` reject as Discord would:
 
 To require a role too, apply the `RequireRoles` decorator built in
 [Guards](guide:guards#facts-about-the-handler) to the command. Pass role IDs, not names: the guard checks the
-member's roles by ID. Read the ID from the environment, such as `@RequireRoles(process.env.MOD_ROLE_ID!)`.
+member's roles by ID. Read it from the environment, such as
+`@RequireRoles(process.env.MODERATOR_ROLE_ID ?? '')`: the same `MODERATOR_ROLE_ID` the Guards page uses, so you set it
+once. An unset ID denies every call.
 
 ### A lasting log
 
