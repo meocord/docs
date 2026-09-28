@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDisplay, modelLayouts } from './api-layout.js'
+import { displays, formatDisplay, modelLayouts } from './api-layout.js'
 import { LAYOUT_WIDTH, layoutKey } from '../../src/lib/docs/api-layout.js'
 import type { Token } from '../../src/lib/docs/api-model.js'
 import { apiModel } from '../../src/lib/docs/api-site.js'
@@ -79,6 +79,20 @@ describe('formatDisplay', () => {
 })
 
 describe('modelLayouts', () => {
+  it("formats every long one-line display of the line's newest release: none is code Prettier can't read", async () => {
+    const newest = apiModel('4.1')!
+    const unread: string[] = []
+    const seen = new Set<string>()
+    for (const [form, display] of displays(newest)) {
+      // A display already over lines, such as an interface's call signatures, is drawn as it is
+      if (display.includes('\n') || display.length <= LAYOUT_WIDTH[form] || seen.has(layoutKey(form, display))) continue
+      seen.add(layoutKey(form, display))
+      if ((await formatDisplay(form, display)) === undefined) unread.push(`${form}: ${display}`)
+    }
+    expect(seen.size).toBeGreaterThan(100)
+    expect(unread).toEqual([])
+  }, 60_000)
+
   it('keys each long display by its form and text, and leaves out what fits', async () => {
     const layouts = await modelLayouts(model)
     const command = symbol('decorator', 'Command')
