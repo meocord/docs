@@ -12,13 +12,15 @@ const command = (name: string) => cliCommand(manifest, name)!
 const html = (nodes: ReturnType<typeof cliArticle>['nodes']) => renderToStaticMarkup(Div({ children: nodes }).render())
 
 describe('the CLI reference', () => {
-  it("writes each command's usage, and an example from the manifest alone: its arguments, and one real option", () => {
+  it("writes each command's usage, and an example from the manifest alone, with sample values", () => {
     expect(usageOf(command('build'))).toBe('meocord build [options]')
     expect(exampleInvocation(command('build'))).toBe('meocord build --dev')
-    expect(exampleInvocation(command('create'))).toBe('meocord create <app-name> --use-npm')
+    expect(exampleInvocation(command('create'))).toBe('meocord create my-bot')
     expect(exampleInvocation(command('register'))).toBe('meocord register --build')
     // A command that only groups others shows its first subcommand's, a required argument by its first choice
-    expect(exampleInvocation(command('generate'))).toBe('meocord generate controller button <name> --message')
+    expect(exampleInvocation(command('generate'))).toBe('meocord generate controller button Greeting')
+    const unknown = { ...command('create'), arguments: [{ ...command('create').arguments[0]!, name: 'region' }] }
+    expect(() => exampleInvocation(unknown)).toThrow("meocord create's example has no sample value for <region>")
     expect(usageOf(command('generate').commands[0])).toBe('meocord generate controller [options] <type> <name>')
   })
 
@@ -30,7 +32,7 @@ describe('the CLI reference', () => {
       .replace(/<[^>]+>/g, '')
       .replace(/&lt;|&#x3C;/g, '<')
       .replace(/&gt;/g, '>')
-    expect(text).toContain('meocord generate controller button <name> --message')
+    expect(text).toContain('meocord generate controller button Greeting')
     expect(markup).toContain('<h2 id="controller">meocord generate controller</h2>')
     expect(toc.map(entry => entry.id)).toEqual(command('generate').commands.map(subcommandAnchor))
   })

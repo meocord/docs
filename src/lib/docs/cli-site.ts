@@ -52,22 +52,34 @@ export function cliSection(line: string, manifest: CliManifest, version?: string
 /** An option as a reader types it: its long flag, or its short one. */
 const flagOf = (option: CliOption) => option.long ?? option.short ?? option.flags
 
+/** What an example gives an argument or an option's value, by its name, so every example runs as written. */
+const SAMPLE_VALUES: Readonly<Record<string, string>> = { 'app-name': 'my-bot', name: 'Greeting' }
+
+const sampleFor = (name: string, choices: readonly string[] | null, command: CliCommand): string => {
+  const sample = choices?.[0] ?? SAMPLE_VALUES[name]
+  if (sample === undefined)
+    throw new Error(
+      `meocord ${command.path.join(' ')}'s example has no sample value for <${name}>: add one to SAMPLE_VALUES.`,
+    )
+  return sample
+}
+
 /**
- * A command a reader can copy, from the manifest alone: its words, each required argument by its
- * first choice or its name, and one real option with the value it needs. A command that only groups
- * others shows its first subcommand's.
+ * A command a reader can copy and run, from the manifest alone: its words, each required argument by
+ * its first choice or a sample value, its mandatory options, and, for a command that takes no
+ * argument, one option. A command that only groups others shows its first subcommand's.
  */
 export function exampleInvocation(command: CliCommand): string {
   if (command.arguments.length === 0 && command.options.length === 0 && command.commands[0])
     return exampleInvocation(command.commands[0])
   const words = ['meocord', ...command.path]
-  for (const argument of command.arguments.filter(each => each.required))
-    words.push(argument.choices?.[0] ?? `<${argument.name}>`)
+  const required = command.arguments.filter(each => each.required)
+  for (const argument of required) words.push(sampleFor(argument.name, argument.choices, command))
   const value = (option: CliOption) =>
-    option.value ? [option.choices?.[0] ?? `<${option.value.name}>`] : ([] as string[])
-  const mandatory = command.options.filter(option => option.mandatory)
-  for (const option of mandatory) words.push(flagOf(option), ...value(option))
-  const shown = command.options.find(option => !option.mandatory && !option.negate)
+    option.value ? [sampleFor(option.value.name, option.choices, command)] : ([] as string[])
+  for (const option of command.options.filter(each => each.mandatory)) words.push(flagOf(option), ...value(option))
+  // An optional flag can depend on an argument's value, which the manifest doesn't record
+  const shown = required.length === 0 ? command.options.find(each => !each.mandatory && !each.negate) : undefined
   if (shown) words.push(flagOf(shown), ...value(shown))
   return words.join(' ')
 }
