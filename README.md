@@ -62,8 +62,8 @@ Every page is rendered once and served byte-identical to every reader, so it can
   level 9 beside each script, stylesheet, JSON and WebAssembly file under `.next/static`, `public/_pagefind`,
   `public/palette` and `public/playground` (`<file>.br` and `<file>.gz`, each only where it is smaller), then checks
   that every copy decompresses to its source; `bun run precompress -- --check` only checks. The CSP proxy sends them:
-  for `/_next/static/…`, `/_pagefind/…`, `/palette/…` and `/playground/…`, when the request's `Accept-Encoding`
-  allows `br`, or else `gzip`, and that copy exists, it answers with the copy's bytes, its `Content-Encoding` and
+  for `/_next/static/…`, `/_pagefind/…`, `/palette/…` and `/playground/…`, it picks the copy the request's
+  `Accept-Encoding` weights highest, `br` on a tie, and answers with that copy's bytes, its `Content-Encoding` and
   `Vary: Accept-Encoding`, keeping Next's `Content-Type` and cache headers; otherwise it streams the source from Next,
   as for any other path. Pages have no copy: the proxy writes each page's hashes into its `<head>` as it serves it.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
