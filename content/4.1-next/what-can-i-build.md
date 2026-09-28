@@ -34,7 +34,7 @@ answers it:
 
 ## Subcommands
 
-One command with several actions, such as `/settings view` and `/settings reset`, each routed to a handler of its own:
+One command with groups and subcommands, such as `/settings notify email`, each routed to a handler of its own:
 
 ::example{file="controllers/slash/settings.slash.controller.ts" region="controller"}
 
@@ -82,7 +82,7 @@ The bot suggests values for an option as the member types it:
 
 ## Message commands
 
-A member sends `!roll 2d6`, and the pattern hands the handler its values, typed:
+A member sends `!roll 20 for initiative`, and the pattern hands the handler its values, typed:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 

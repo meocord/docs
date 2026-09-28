@@ -4,7 +4,8 @@ import {
   GUIDE_PLAN,
   guidePath,
   readingOrder,
-  RESERVED_SLUGS,
+  reservedProblems,
+  routedSlugs,
   type GuideContext,
   type GuidePage,
 } from './guide'
@@ -312,10 +313,14 @@ describe('checkGuide', () => {
 })
 
 describe('the plan', () => {
-  it("takes none of the site's own paths: a page is its slug, or a slug in an appendix group's folder", () => {
-    const reserved = new Set<string>(RESERVED_SLUGS)
+  it("takes none of the site's own paths: the routed ones, read from the app, and the planned ones", () => {
+    expect(routedSlugs(process.cwd())).toEqual(expect.arrayContaining(['api', 'changelog', 'migrating', 'missing']))
+    expect(reservedProblems(process.cwd())).toEqual([])
+    expect(reservedProblems(process.cwd(), { ...GUIDE_PLAN, appendix: ['missing', 'playground'] })).toEqual([
+      'The Guide\'s plan has "missing", a path the site routes itself',
+      'The Guide\'s plan has "playground", a path the site routes itself',
+    ])
     const pages = Object.values(GUIDE_PLAN).flat()
-    expect(pages.filter(path => reserved.has(path))).toEqual([])
     expect(
       pages.filter(path => path.includes('/') && !['recipes', 'coming-from'].includes(path.split('/')[0]!)),
     ).toEqual([])

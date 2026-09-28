@@ -14,7 +14,7 @@ import {
   PROSE_WIDTH,
   type SiteSnapshot,
 } from './lib/content.js'
-import { checkGuide } from './lib/guide.js'
+import { checkGuide, reservedProblems } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
 import { literalCreates, PACKAGE_SPEC } from './lib/package-spec.js'
@@ -79,6 +79,8 @@ for (const { line, versions } of config.lines) {
 site.examples[EXAMPLE_SOURCE] = filesUnder(paths.examples(EXAMPLE_SOURCE))
 
 const problems = checkSite(site)
+// No Guide page may take a path the site routes itself, or will
+problems.push(...reservedProblems(ROOT))
 
 // Content says they, them and their: in every Markdown file's prose, and in the examples' comments
 for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
