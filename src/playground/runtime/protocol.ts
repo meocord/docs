@@ -121,6 +121,23 @@ const MAX_SNOWFLAKE = 2n ** 64n - 1n
 export const isSnowflake = (value: unknown): value is string =>
   typeof value === 'string' && SNOWFLAKE.test(value) && BigInt(value) <= MAX_SNOWFLAKE
 
+const CUSTOM_EMOJI = /^<(a?):(\w{2,32}):(\d{1,20})>$/
+
+/** A server's own emoji as Discord formats it, `<:name:id>` or `<a:name:id>`, by its parts; undefined for any other. */
+export function customEmoji(written: string): { name: string; id: string; animated: boolean } | undefined {
+  const match = CUSTOM_EMOJI.exec(written)
+  if (!match || !isSnowflake(match[3])) return undefined
+  return { name: match[2], id: match[3], animated: match[1] === 'a' }
+}
+
+/**
+ * An emoji as a reaction carries it: a Unicode emoji, or a server's own as Discord formats it. Anything else in
+ * angle brackets, and the bare `name:id` identifier, are forms Discord never sends.
+ */
+const isEmoji = (value: unknown): value is string =>
+  isText(value, { min: 1, max: 64 }) &&
+  (/^<.*>$/s.test(value) ? customEmoji(value) !== undefined : !/^(?:a:)?\w+:\d+$/.test(value))
+
 /**
  * A list of `min` to `max` strings, each passing `item`, or undefined when it isn't one. It is read by index,
  * so a hole is an item that fails; with `unique`, no string may come twice.
@@ -146,7 +163,8 @@ function parseDispatch(value: unknown): Dispatch | string {
       if (!isText(value.command, { min: 1, max: 100 })) return 'a slash dispatch names its command'
       if (value.options === undefined) return { kind: 'slash', command: value.command }
       if (!isRecord(value.options)) return "a slash dispatch's options are an object"
-      const options: Record<string, string | number | boolean> = {}
+      // With no prototype, so an option named `__proto__` is kept as one
+      const options: Record<string, string | number | boolean> = Object.create(null)
       for (const [name, option] of Object.entries(value.options)) {
         if (!isText(name, { min: 1, max: 32 })) return 'an option is named in 1 to 32 characters'
         if (!(isText(option) || typeof option === 'number' || typeof option === 'boolean'))
@@ -177,7 +195,8 @@ function parseDispatch(value: unknown): Dispatch | string {
     case 'modal': {
       if (!isCustomId(value.customId)) return 'a modal names its customId'
       if (!isRecord(value.fields)) return "a modal's fields are strings by custom ID"
-      const fields: Record<string, string> = {}
+      // With no prototype, so a field whose ID is `__proto__` is kept as one
+      const fields: Record<string, string> = Object.create(null)
       for (const [id, field] of Object.entries(value.fields)) {
         if (!isCustomId(id) || !isText(field)) return "a modal's fields are strings by custom ID"
         fields[id] = field
@@ -189,7 +208,7 @@ function parseDispatch(value: unknown): Dispatch | string {
         ? { kind: 'message', content: value.content }
         : 'a message has its content'
     case 'reaction': {
-      if (!isText(value.emoji, { min: 1, max: 64 })) return 'a reaction names its emoji'
+      if (!isEmoji(value.emoji)) return 'a reaction names its emoji, a Unicode one or <:name:id>'
       if (!isText(value.content, { max: 2000 })) return "a reaction's message has its content"
       if (value.action !== 'add' && value.action !== 'remove') return "a reaction's action is add or remove"
       return { kind: 'reaction', emoji: value.emoji, content: value.content, action: value.action }
