@@ -25,17 +25,18 @@ page shows one small bot both ways. The discord.js side is typechecked against d
 
 ## What maps to what
 
-| In a discord.js bot                                     | In MeoCord                                                                  |
-| ------------------------------------------------------- | --------------------------------------------------------------------------- |
-| A `SlashCommandBuilder`, sent with `REST` from a script | A `@CommandBuilder` class, registered when the bot starts                   |
-| The `interactionCreate` listener and its `if` chain     | `@Command` on a controller method; MeoCord routes to it                     |
-| Splitting `customId` by hand                            | A pattern such as `card/{ownerId}/refresh`, captured into an argument       |
-| A `messageCreate` listener that splits the content      | A [message command](guide:message-commands) pattern, such as `roll {sides}` |
-| Checks at the top of a handler                          | A [guard](guide:guards)                                                     |
-| A `Map` of timestamps                                   | [`@Cooldown`](guide:cooldowns)                                              |
-| `try`/`catch` around every handler                      | The built-in fallback, or an [exception filter](guide:exception-filters)    |
-| `client.on(Events.GuildMemberAdd, ...)`                 | [`@On('guildMemberAdd')`](guide:gateway-events) on a controller method      |
-| Modules you import and pass around                      | [Services](guide:services), injected by constructor                         |
+| In a discord.js bot                                     | In MeoCord                                                                                                |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| A `SlashCommandBuilder`, sent with `REST` from a script | A `@CommandBuilder` class, registered when the bot starts                                                 |
+| The `interactionCreate` listener and its `if` chain     | `@Command` on a controller method; MeoCord routes to it                                                   |
+| Splitting `customId` by hand                            | A pattern such as `card/{ownerId}/refresh`, captured into an argument                                     |
+| A `messageCreate` listener that splits the content      | A [message command](guide:message-commands) pattern, such as `roll {sides}`                               |
+| Checks at the top of a handler                          | A [guard](guide:guards)                                                                                   |
+| A `Map` of timestamps                                   | [`@Cooldown`](guide:cooldowns)                                                                            |
+| `try`/`catch` around every handler                      | The built-in fallback, or an [exception filter](guide:exception-filters)                                  |
+| A `catch` that replies to a message command             | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
+| `client.on(Events.GuildMemberAdd, ...)`                 | [`@On('guildMemberAdd')`](guide:gateway-events) on a controller method                                    |
+| Modules you import and pass around                      | [Services](guide:services), injected by constructor                                                       |
 
 ## A slash command
 
@@ -82,8 +83,11 @@ and a message that names the command but doesn't fit it gets the command's usage
 ## Errors
 
 The discord.js bot wraps its listener in `try`/`catch`, and decides there what the member sees. In MeoCord, an error
-a handler throws reaches its [exception filters](guide:exception-filters) first, then the built-in fallback, which
-logs it and answers an interaction privately. A filter answers an error of its own type in its own words:
+a handler throws reaches its [exception filters](guide:exception-filters) first, then the
+[built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it and tells the member something went
+wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, unless the app
+turns on [`dmOnError`](guide:message-commands#telling-the-author-privately). A filter answers an error of its own
+type in its own words:
 
 ::example{file="filters/unknown-account.filter.ts" region="filter"}
 
