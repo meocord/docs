@@ -5,14 +5,14 @@ chapter: start
 order: 4
 summary: What each file of a new project is for, where new code goes as a bot grows, and what the build writes.
 learn:
-  - Find your way around the files meocord create writes
+  - Find your way around the files the create command writes
   - Choose between grouping files by kind and by feature
   - Tell what the build writes to dist, and what the bot reads from it
 requires: [getting-started]
 api: [decorators/MeoCord, configuration/MeoCordConfig]
 ---
 
-`meocord create` writes a project laid out by kind: controllers in one folder, services in another. Nothing in it is
+The `create` command writes a project laid out by kind: controllers in one folder, services in another. Nothing in it is
 required by MeoCord except `meocord.config.ts` at the root and the entry point, `src/main.ts`; the folders are a
 convention `meocord generate` follows, and you can lay a bot out by feature instead.
 
@@ -23,7 +23,7 @@ with.
 
 ## Example
 
-The layout `meocord create` writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
+The layout the `create` command writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
 lockfile, and it makes the folder a git repository:
 
 ```text
