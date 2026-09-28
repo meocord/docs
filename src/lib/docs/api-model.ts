@@ -4,9 +4,11 @@ import type { VersionsManifest } from '@/lib/urls'
 import { shellIds } from '@/lib/page-ids'
 import { docsHref, entrySegment, memberAnchor, sectionSegment } from '@/lib/urls'
 
-type Declaration = JSONOutput.DeclarationReflection
+/** A declaration, and for a property the object its written type stands for, where api-generate kept one. */
+type Declaration = JSONOutput.DeclarationReflection & { resolvedType?: SomeType }
 type Signature = JSONOutput.SignatureReflection
-type Parameter = JSONOutput.ParameterReflection
+/** A parameter, and the object its written type stands for where api-generate kept one to list options from. */
+type Parameter = JSONOutput.ParameterReflection & { resolvedType?: SomeType }
 type SomeType = JSONOutput.SomeType
 type Comment = JSONOutput.Comment
 type CommentPart = JSONOutput.CommentDisplayPart
@@ -430,10 +432,11 @@ export class ApiModel {
       if (id) anchors.taken.add(id)
       return id
     }
-    for (const parameter of signature.parameters ?? []) {
+    for (const parameter of (signature.parameters ?? []) as Parameter[]) {
       params.push(this.#param(parameter, `${key}(${parameter.name})`))
-      // Its options, wherever its type declares them: inline, in an options interface, or both
-      const rows = this.#optionRows(parameter.type, parameter.name, true)
+      // Its options, wherever its type declares them: inline, in an options interface, or both; for a type
+      // written by a name the model can't expand, such as `ThemeOverride`, from the checker's expansion of it
+      const rows = this.#optionRows(parameter.resolvedType ?? parameter.type, parameter.name, true)
       // `@param options.seconds` documents a property for this function in particular: its row's text, or a row of its own
       const highlighted = parameter.type?.type === 'reference' ? parameter.type.highlightedProperties : undefined
       for (const [property, parts] of Object.entries(highlighted ?? {})) {
@@ -512,7 +515,7 @@ export class ApiModel {
     }
     if (type?.type === 'reflection') {
       if (type.declaration.signatures) return []
-      return (type.declaration.children ?? [])
+      return ((type.declaration.children ?? []) as Declaration[])
         .filter(property => SAFE_NAME.test(property.name))
         .flatMap(property => [
           {
@@ -524,7 +527,7 @@ export class ApiModel {
             description: this.#text(property.comment),
           },
           ...(nested
-            ? this.#optionRows(property.type, `${prefix}.${property.name}`).map(row => ({
+            ? this.#optionRows(property.resolvedType ?? property.type, `${prefix}.${property.name}`).map(row => ({
                 ...row,
                 anchorKey: row.anchorKey && `${property.name}-${row.anchorKey}`,
               }))
@@ -717,7 +720,9 @@ export class ApiModel {
         const args = type.typeArguments?.length
           ? [{ text: '<' }, ...join(type.typeArguments, ', ', 'top'), { text: '>' }]
           : []
-        return [{ text: type.name, href: location ? this.href(location) : undefined }, ...args]
+        // A member, such as an enum's, is named through its owner as it is written: `CommandType.MODAL_SUBMIT`
+        const name = location?.member && type.qualifiedName?.endsWith(`.${type.name}`) ? type.qualifiedName : type.name
+        return [{ text: name, href: location ? this.href(location) : undefined }, ...args]
       }
       case 'array':
         return [...this.type(type.elementType, 'operand'), { text: '[]' }]
@@ -784,8 +789,11 @@ export class ApiModel {
     const signature = declaration.signatures?.[0]
     if (signature) {
       const tokens: Token[] = [
-        // A constructor type, `new (...args: any[]) => T`, which a class satisfies and a function doesn't
-        ...(signature.kind === CONSTRUCTOR_SIGNATURE ? [{ text: 'new ' }] : []),
+        // A constructor type, `new (...args: any[]) => T`, which a class satisfies and a function doesn't;
+        // `abstract new` takes an abstract class too
+        ...(signature.kind === CONSTRUCTOR_SIGNATURE
+          ? [{ text: signature.flags?.isAbstract ? 'abstract new ' : 'new ' }]
+          : []),
         ...this.#typeParams(signature.typeParameters),
         ...this.#paramsCode(signature),
         { text: ' => ' },

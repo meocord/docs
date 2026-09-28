@@ -41,7 +41,7 @@
         },
         {
           "name": "rsbuild",
-          "type": "(config: RsbuildConfig) => any",
+          "type": "(config: RsbuildConfig) => RsbuildConfig | undefined",
           "required": false,
           "since": "4.0.0-beta.0",
           "summary": "Function to customize the Rsbuild configuration.\nAllows overriding and extending the default bundler setup for the application.\n\nRsbuild handles images, fonts, svg and media itself, so they need no rules;\n`output.distPath` controls where they land. Raw bundler rules go through `tools.rspack`,\nwhich takes a webpack-shaped config.",

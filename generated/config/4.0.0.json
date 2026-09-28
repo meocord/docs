@@ -42,7 +42,7 @@
         },
         {
           "name": "rsbuild",
-          "type": "(config: RsbuildConfig) => any",
+          "type": "(config: RsbuildConfig) => RsbuildConfig | undefined",
           "required": false,
           "since": "4.0.0-beta.0",
           "summary": "Customises the Rsbuild configuration the bot is built with.\n\nImages, fonts, svg and media need no rules. Raw bundler rules go through `tools.rspack`.",

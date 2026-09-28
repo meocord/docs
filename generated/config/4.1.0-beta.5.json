@@ -51,7 +51,7 @@
         },
         {
           "name": "logLevel",
-          "type": "'debug' | 'warn' | 'error' | 'log' | 'silent'",
+          "type": "'debug' | 'log' | 'warn' | 'error' | 'silent'",
           "required": false,
           "default": "`'debug'` while `NODE_ENV` is `development`, as under `meocord start --dev`, and\n  `'log'` otherwise",
           "since": "4.1.0-beta.5",
@@ -72,7 +72,7 @@
         },
         {
           "name": "rsbuild",
-          "type": "(config: RsbuildConfig) => any",
+          "type": "(config: RsbuildConfig) => RsbuildConfig | undefined",
           "required": false,
           "since": "4.0.0-beta.0",
           "summary": "Customises the Rsbuild configuration the bot is built with.\n\nImages, fonts, svg and media need no rules. Raw bundler rules go through `tools.rspack`.",
