@@ -164,6 +164,9 @@ const KINDS: Record<number, string> = {
 }
 export const kindName = (kind: number) => KINDS[kind] ?? 'declaration'
 
+/** TypeDoc's kind for a constructor type's signature. */
+const CONSTRUCTOR_SIGNATURE = 16384
+
 const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 
 /** A row of a parameter's options, with the name its anchor is made from once the rows are final. */
@@ -674,7 +677,12 @@ export class ApiModel {
     const tokens: Token[] = [{ text: '<' }]
     params.forEach((param, index) => {
       if (index > 0) tokens.push({ text: ', ' })
-      tokens.push({ text: param.name })
+      // Its modifiers as written: `const` infers a literal, `in` and `out` state its variance
+      const modifiers = [
+        ...(param.flags.isConst ? ['const'] : []),
+        ...(param.varianceModifier ? [param.varianceModifier] : []),
+      ]
+      tokens.push({ text: [...modifiers, param.name].join(' ') })
       if (param.type) tokens.push({ text: ' extends ' }, ...this.type(param.type))
       if (param.default) tokens.push({ text: ' = ' }, ...this.type(param.default))
     })
@@ -773,6 +781,8 @@ export class ApiModel {
     const signature = declaration.signatures?.[0]
     if (signature) {
       const tokens: Token[] = [
+        // A constructor type, `new (...args: any[]) => T`, which a class satisfies and a function doesn't
+        ...(signature.kind === CONSTRUCTOR_SIGNATURE ? [{ text: 'new ' }] : []),
         ...this.#typeParams(signature.typeParameters),
         ...this.#paramsCode(signature),
         { text: ' => ' },
