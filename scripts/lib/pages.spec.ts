@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { configPage, listPages, loadPage, migratingGuide, pagesDir, resolveExample } from './pages.js'
+import { listPages, loadPage, migratingGuide, pagesDir, resolveExample } from './pages.js'
 
 const root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-pages-'))
 afterAll(() => rmSync(root, { recursive: true, force: true }))
@@ -31,81 +31,18 @@ write(
   '---\nid: overview\ntitle: Overview\norder: 0\n---\n\nRun `npx {{meocord}} create`.\n',
 )
 write('content/4.0/draft.md', '---\nid: draft\ntitle: Draft\n---\n\nNot shown yet.\n')
-write(
-  'content/4.1/overview.md',
-  '---\nid: overview\ntitle: Overview\nsection: Start\norder: 0\nformerly: [features]\n---\n\nRun `npx {{meocord}} create`.\n',
-)
-write(
-  'content/4.1/guards.md',
-  '---\nid: guards\ntitle: Guards\nsection: Handling a call\norder: 10\nsince: 4.0.0\n---\n\nGuards.\n',
-)
-const reference = {
-  version: '4.1.0-beta.0',
-  groups: [
-    {
-      interface: 'MeoCordConfig',
-      summary: '',
-      options: [
-        { name: 'appName', type: 'string', required: false, since: '4.0.0', summary: 'Shown in logs.', examples: [] },
-      ],
-    },
-  ],
-}
-write('generated/config/4.1.0-beta.0.json', JSON.stringify(reference))
-write('generated/config/4.0.0.json', JSON.stringify({ ...reference, version: '4.0.0' }))
+write('content/4.1/guards.md', '---\nid: guards\ntitle: Guards\nchapter: pipeline\norder: 2\n---\n\nGuards.\n')
 write(
   'examples/4.1/src/guards/owner.guard.ts',
   "import { Guard } from 'meocord/decorator'\n\n// #region guard\n@Guard()\nexport class OwnerGuard {\n  // #region check\n  check() {}\n  // #endregion check\n}\n// #endregion guard\n",
 )
 
 describe('pagesDir, listPages and loadPage', () => {
-  it('reads a line from the folder its guides select, in sidebar order', () => {
+  it("reads a line's README pages, in sidebar order, and none for a line whose guides are authored", () => {
     expect(pagesDir('4.0', { root })).toBe(path.join(root, 'generated', 'readme', '4.0'))
     expect(listPages('4.0', { root }).map(page => page.slug)).toEqual(['overview', 'guards'])
-    expect(listPages('4.1', { root })).toEqual([
-      {
-        id: 'overview',
-        slug: 'overview',
-        title: 'Overview',
-        section: 'Start',
-        order: 0,
-        source: undefined,
-        since: undefined,
-        formerly: ['features'],
-      },
-      {
-        id: 'guards',
-        slug: 'guards',
-        title: 'Guards',
-        section: 'Handling a call',
-        order: 10,
-        source: undefined,
-        since: '4.0.0',
-        formerly: [],
-      },
-      {
-        id: 'config-reference',
-        slug: 'config-reference',
-        title: 'meocord.config.ts reference',
-        section: 'Reference',
-        order: 90,
-        source: 'config@4.1.0-beta.0',
-        since: undefined,
-        formerly: [],
-      },
-    ])
-  })
-
-  it('adds the configuration reference to an authored line only, from its newest version', () => {
-    expect(listPages('4.1', { root }).at(-1)).toMatchObject({
-      id: 'config-reference',
-      slug: 'config-reference',
-      section: 'Reference',
-      source: 'config@4.1.0-beta.0',
-    })
-    expect(loadPage('4.1', 'config-reference', { root })?.body).toContain('## appName')
-    expect(configPage('4.0', { root })).toBeUndefined()
-    expect(listPages('4.0', { root }).map(page => page.slug)).not.toContain('config-reference')
+    expect(listPages('4.1', { root })).toEqual([])
+    expect(loadPage('4.1', 'guards', { root })).toBeUndefined()
   })
 
   it('loads a shown page, and nothing for a page the line does not show or a slug that is not one', () => {
@@ -119,7 +56,6 @@ describe('pagesDir, listPages and loadPage', () => {
 
   it("writes the line's package spec for {{meocord}}: the package for the current line, its tag for a prerelease", () => {
     expect(loadPage('4.0', 'overview', { root })?.body).toBe('\nRun `npx meocord create`.\n')
-    expect(loadPage('4.1', 'overview', { root })?.body).toBe('\nRun `npx meocord@beta create`.\n')
     write('content/migrating/4.1.md', '# Migrating\n\n`npx {{meocord}} create`\n')
     expect(migratingGuide('4.1', { root })).toBe('# Migrating\n\n`npx meocord@beta create`\n')
   })

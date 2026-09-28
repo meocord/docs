@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { Token } from '@/lib/docs/api-model'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
@@ -97,9 +97,6 @@ function declared(): Map<string, string[]> {
 }
 
 describe('declarations', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
-  afterAll(() => vi.unstubAllEnvs())
-
   it("draw every public member and every function's overloads as the pinned version declares them", async () => {
     const { apiModel, apiSections } = await import('@/lib/docs/api-site')
     const model = apiModel('4.1', version)!

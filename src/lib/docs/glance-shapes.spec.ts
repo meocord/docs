@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { callShape } from '@/lib/docs/glance'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
@@ -76,7 +76,6 @@ function matches(shape: string, lists: Declared[][]): boolean {
 }
 
 describe('call shapes', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
   afterAll(() => vi.unstubAllEnvs())
 
   it("match what TypeScript parses from the pinned version's declarations, for every function and method", async () => {

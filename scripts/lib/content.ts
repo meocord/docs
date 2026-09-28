@@ -51,6 +51,8 @@ export interface Frontmatter {
   since?: string
   /** Ids the page had in earlier lines, so the version switcher lands on it from them. */
   formerly?: string[]
+  /** A Guide appendix page's group; a recipe's and a coming-from page's is part of its path. */
+  group?: string
 }
 
 export function parsePage(text: string): { frontmatter: Frontmatter; body: string } {
@@ -252,6 +254,25 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     if (link.member && !symbol.anchors.includes(link.member)) return `names no member of ${link.symbol}`
     return undefined
   }
+  // An authored line's pages by the path the site serves each at, its group's folder first for a recipe or a
+  // coming-from page, and by each old slug its front matter says redirects to it
+  const served = new Map<string, Map<string, string>>()
+  const servedAt = (line: string): Map<string, string> => {
+    if (!served.has(line)) {
+      const paths = new Map<string, string>()
+      for (const [file, text] of Object.entries(site.authored[line] ?? {})) {
+        const { frontmatter } = parsePage(text)
+        const id = frontmatter.id ?? file
+        const group =
+          frontmatter.group === 'recipes' || frontmatter.group === 'coming-from' ? frontmatter.group : undefined
+        paths.set(group ? `${group}/${id}` : id, file)
+        for (const old of frontmatter.formerly ?? []) if (!paths.has(old)) paths.set(old, file)
+      }
+      served.set(line, paths)
+    }
+    return served.get(line)!
+  }
+
   // The set the site shows for a line: its imported pages until its guides are authored
   const shown = (line: string): PageSet => (lines.get(line)?.guides === 'authored' ? 'authored' : 'readme')
 
@@ -335,11 +356,13 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
         continue
       }
       const set = from?.line === link.line ? from.set : shown(link.line)
-      if (!site[set][link.line]?.[link.slug]) {
+      const path = link.group ? `${link.group}/${link.slug}` : link.slug
+      const file = set === 'authored' ? servedAt(link.line).get(path) : path
+      if (!file || !site[set][link.line]?.[file]) {
         problems.push(`${where}: ${target} names no page of ${folder(set, link.line)}`)
         continue
       }
-      if (link.anchor && !anchorsOf(set, link.line, link.slug).has(link.anchor))
+      if (link.anchor && !anchorsOf(set, link.line, file).has(link.anchor))
         problems.push(`${where}: ${target} names no heading of that page`)
     }
   }
@@ -366,8 +389,9 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
           problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
       }
 
-      // The playground runs only where the Guide renders it; anywhere else it would show as bare text
-      if (/::playground\b/.test(withoutCode(body))) problems.push(`${where}: ::playground is a Guide directive`)
+      // The playground runs only in a Guide page; a page imported from a README would show it as bare text
+      if (set === 'readme' && /::playground\b/.test(withoutCode(body)))
+        problems.push(`${where}: ::playground is a Guide directive`)
 
       for (const match of withoutCode(body).matchAll(EXAMPLE)) {
         const attributes = Object.fromEntries(

@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 import App from '@src/app-beyond-commands'
 import { DiceMessageController } from '@src/controllers/message/dice.message.controller'
 
-// #region spec
 describe('DiceMessageController', () => {
   it('routes each message to the one handler that matches it', () => {
     expect(resolveRoute(App, { content: '!roll 20 for initiative' })).toMatchObject({
@@ -31,4 +30,3 @@ describe('DiceMessageController', () => {
     ).rejects.toBeInstanceOf(ValidationError)
   })
 })
-// #endregion spec

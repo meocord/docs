@@ -16,7 +16,6 @@ import { FeedbackService } from '@src/tutorial/feedback.service'
 import { FeedbackSettings } from '@src/tutorial/feedback.settings'
 import { ReviewController } from '@src/tutorial/review.controller'
 
-// #region spec
 describe('ReviewController', () => {
   const STAFF = '900'
 
@@ -105,4 +104,3 @@ describe('ReviewController', () => {
   })
   // #endregion step:exception-filters
 })
-// #endregion spec

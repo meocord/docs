@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { guideRendered } from '../scripts/lib/guide'
 import { axe } from './axe'
 
-// The coming-from pages, which only a build that renders the Guide has
-test.skip(!guideRendered('4.1'), 'the Guide renders only in a DOCS_NEXT=1 build')
+// The coming-from pages of the Guide
 
 const PAGES = [
   ['/docs/4.1/coming-from/discordjs', 'Coming from discord.js'],

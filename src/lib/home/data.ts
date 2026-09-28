@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { loadPage, resolveExample } from '../../../scripts/lib/pages'
-import { HOME_LINE } from '@/config/home'
+import { migratingGuide, resolveExample } from '../../../scripts/lib/pages'
+import { HOME_EXAMPLE, HOME_LINE } from '@/config/home'
 import { VERSIONS } from '@/config/versions'
-import { lowerMarkdown } from '@/lib/prose/lower'
+import { apiLandingHref } from '@/lib/docs/api-site'
+import { guideEntries, guidePageHref, resolveGuideLink } from '@/lib/docs/guide-site'
+import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
 /** One stage of the pipeline panel, in the order a call meets it. */
@@ -28,15 +30,6 @@ interface Recording {
   option: { name: string }
   member: Run
   blocked: Run
-  features: {
-    routing: { customId: string; handler: string | null; params: Record<string, string> | null }
-    cooldown: { command: string; refused: { name: string; message: string } | null }
-    validation: { command: string; refused: { name: string; message: string } | null }
-    presenter: {
-      command: string
-      answer: { embeds?: { title?: string; description?: string; color?: number }[]; flags?: number } | null
-    }
-  }
 }
 
 interface Run {
@@ -57,8 +50,6 @@ export interface PipelineDemo {
   blockedReply: string
   blockedError: string
 }
-
-const EXAMPLE_FILE = 'home/pipeline.slash.controller.ts'
 
 const NARRATION: Record<StageId, string> = {
   defer: 'Acknowledged at once, so a slow handler never runs out Discord’s three seconds.',
@@ -98,7 +89,7 @@ function recording(): Recording {
 /** The pipeline panel's data: the example's source, and what its recorded runs did at each stage. */
 export function pipelineDemo(): PipelineDemo {
   const rec = recording()
-  const source = resolveExample(HOME_LINE, EXAMPLE_FILE, 'home')
+  const source = resolveExample(HOME_LINE, HOME_EXAMPLE.file, HOME_EXAMPLE.region)
   const lines = source.split('\n')
   const note = (run: Run, stage: string) => run.events.find(event => event.stage === stage)?.note
   const skipped = 'not reached'
@@ -125,7 +116,7 @@ export function pipelineDemo(): PipelineDemo {
 
   return {
     source,
-    file: `src/${EXAMPLE_FILE}`,
+    file: `src/${HOME_EXAMPLE.file}`,
     command: rec.command,
     option: rec.option.name,
     stages,
@@ -135,149 +126,121 @@ export function pipelineDemo(): PipelineDemo {
   }
 }
 
-/** A claim on the home page, and the example region that makes it good. */
+/** A claim of the Why strip: what MeoCord does for a bot, and the Guide page that shows it. */
 export interface Claim {
   title: string
-  body: string
-  file: string
-  code: string
+  body: Lowered['nodes']
   href: string
 }
 
-const guide = (slug: string, anchor?: string) => docsHref({ kind: 'guide', line: HOME_LINE, slug, anchor }, VERSIONS)
+/**
+ * The Why strip's claims, each a headline, a line of Markdown, and the Guide page or section that shows
+ * it, written `guide:<path>[#<heading>]`; data.spec checks the Guide has every one.
+ */
+export const CLAIMS: readonly { title: string; body: string; guide: string }[] = [
+  {
+    title: 'One call answers Discord.',
+    body: '`respond()` tracks each answer as unanswered, deferred or replied, and makes the call Discord expects: reply, update, edit or follow-up.',
+    guide: 'guide:responses#how-it-works',
+  },
+  {
+    title: 'Tested as it runs.',
+    body: "`invoke` and `dispatch` run a handler through the bot's own pipeline, with mocks of discord.js's own classes.",
+    guide: 'guide:testing',
+  },
+  {
+    title: 'One pipeline, every call.',
+    body: 'Guards, interceptors, validation, cooldowns and exception filters run in a fixed order around every handler.',
+    guide: 'guide:how-a-call-runs',
+  },
+  {
+    title: 'Checked by the compiler.',
+    body: "A handler whose params don't fit its route or pattern fails to compile, and so does a catalog key the default catalog lacks.",
+    guide: 'guide:components#typed-params',
+  },
+]
 
-/** Why MeoCord, in three claims, each with the typechecked example that backs it. */
 export function claims(): Claim[] {
-  const claim = (title: string, body: string, file: string, region: string, href: string): Claim => ({
+  return CLAIMS.map(({ title, body, guide }) => ({
     title,
-    body,
-    file,
-    code: resolveExample(HOME_LINE, file, region),
-    href,
+    body: lowerMarkdown(body).nodes,
+    href: resolveGuideLink(HOME_LINE, guide),
+  }))
+}
+
+/** A kind of handler, as What you can build shows it: its section there, and the sentence that opens it. */
+export interface BuildKind {
+  title: string
+  href: string
+  lead: Lowered['nodes']
+}
+
+const BUILD_PAGE = 'what-can-i-build'
+
+/** Each kind of handler What you can build shows, in its order, linking its section there. */
+export function buildKinds(): BuildKind[] {
+  const entry = guideEntries(HOME_LINE).find(candidate => candidate.page.id === BUILD_PAGE)
+  if (!entry) throw new Error(`The home page lists the kinds of ${BUILD_PAGE}, which ${HOME_LINE}'s Guide lacks.`)
+  const sections = entry.body.split(/^## /m).slice(1)
+  const headings = lowerMarkdown(entry.body).headings.filter(heading => heading.depth === 2)
+  return sections.flatMap((section, index) => {
+    const heading = headings[index]
+    if (heading.title === 'Next steps') return []
+    // The section's first sentence, from the paragraph under its heading
+    const paragraph = section.split('\n\n')[1] ?? ''
+    const sentence = /^[\s\S]*?[.:](?=\s|$)/.exec(paragraph.replace(/\n/g, ' '))?.[0] ?? paragraph
+    return [
+      {
+        title: heading.title,
+        href: guidePageHref(HOME_LINE, entry.page, heading.id),
+        lead: lowerMarkdown(sentence.replace(/:$/, '.')).nodes,
+      },
+    ]
   })
-  return [
-    claim(
-      'A guard, not a router',
-      'Who may run a command is declared beside it. A guard that says no can say why, and the user is answered privately.',
-      'guards/owner.guard.ts',
-      'guard',
-      guide('guards'),
-    ),
-    claim(
-      'One answer, whatever the state',
-      'respond() knows whether the interaction was deferred or replied to, and makes the right Discord call, every time.',
-      'controllers/slash/profile.slash.controller.ts',
-      'respond',
-      guide('responses'),
-    ),
-    claim(
-      'Test the whole pipeline',
-      'invoke() runs a handler through everything dispatch runs around it: defer, guards, interceptors, pipes and filters.',
-      'controllers/slash/stages.slash.controller.spec.ts',
-      'spec',
-      guide('testing'),
-    ),
-  ]
 }
 
-/** The headings of what's new in the line, each linking to its section. */
-export function whatsNew(): { title: string; href: string }[] {
-  const page = loadPage(HOME_LINE, 'whats-new')
-  if (!page) return []
-  return lowerMarkdown(page.body)
-    .headings.filter(heading => heading.depth === 2)
-    .map(heading => ({ title: heading.title, href: guide('whats-new', heading.id) }))
-}
-
-/** The spec behind the testing claim, as Vitest reports it passing. */
-export function specReport(): { file: string; lines: string[] } {
-  const file = 'src/controllers/slash/stages.slash.controller.spec.ts'
-  const source = readFileSync(path.join(process.cwd(), 'examples', HOME_LINE, file), 'utf8')
-  const suite = /describe\('([^']+)'/.exec(source)?.[1] ?? ''
-  const tests = [...source.matchAll(/\bit\('([^']+)'/g)].map(match => match[1])
-  return { file, lines: tests.map(test => `${suite} › ${test}`) }
-}
-
-/** What a feature row shows the reader get, as the example's recorded call produced it. */
-export type FeatureResult =
-  | { kind: 'route'; customId: string; handler: string; params: Record<string, string> }
-  | { kind: 'private'; command: string; text: string }
-  | { kind: 'embed'; command: string; title: string; text: string; color: string; private: boolean }
-
-/** A feature row: the declaration, and what it does, recorded from the examples. */
-export interface Feature {
+/** One of the home page's doors: where a reader goes next, by what they came to do. */
+export interface Door {
   title: string
   body: string
-  file: string
-  code: string
-  href: string
-  result: FeatureResult
+  links: { title: string; href: string }[]
 }
 
-/** The feature rows, each pairing a typechecked example with the result its recorded call produced. */
-export function features(): Feature[] {
-  const { routing, cooldown, validation, presenter } = recording().features
-  const missing = (what: string): never => {
-    throw new Error(`.home-trace/trace.json has no ${what}; run bun run home:trace`)
+/** The three doors: learn from the Guide, look something up, or move from another version or framework. */
+export function doors(): Door[] {
+  const pages = guideEntries(HOME_LINE).map(({ page }) => page)
+  const page = (id: string) => pages.find(candidate => candidate.id === id)
+  const link = (id: string) => {
+    const found = page(id)
+    return found ? [{ title: found.title, href: guidePageHref(HOME_LINE, found) }] : []
   }
-  const embed = presenter.answer?.embeds?.[0] ?? missing('presenter answer')
-  const feature = (title: string, body: string, file: string, region: string, href: string, result: FeatureResult) => ({
-    title,
-    body,
-    file,
-    code: resolveExample(HOME_LINE, file, region),
-    href,
-    result,
-  })
+  const api = apiLandingHref(HOME_LINE)
   return [
-    feature(
-      'Routes with parameters',
-      'A button’s customId is a pattern. The values it captures reach the guard and the handler.',
-      'controllers/button/card.button.controller.ts',
-      'defer',
-      guide('component-routing'),
-      {
-        kind: 'route',
-        customId: routing.customId,
-        handler: routing.handler ?? missing('route'),
-        params: routing.params ?? missing('route params'),
-      },
-    ),
-    feature(
-      'Cooldowns that answer',
-      'Limits are declared on the handler. A call over the limit is refused privately, with how long to wait.',
-      'controllers/slash/daily.slash.controller.ts',
-      'cooldown',
-      guide('cooldowns'),
-      { kind: 'private', command: cooldown.command, text: cooldown.refused?.message ?? missing('cooldown refusal') },
-    ),
-    feature(
-      'Input checked by a schema',
-      'A schema checks the options before the handler runs, and the handler’s parameter is typed by it.',
-      'controllers/slash/remind.slash.controller.ts',
-      'validate',
-      guide('validation'),
-      {
-        kind: 'private',
-        command: validation.command,
-        text: validation.refused?.message ?? missing('validation refusal'),
-      },
-    ),
-    feature(
-      'Answers in your style',
-      'A presenter draws MeoCord’s own answers, errors and loading, so they look like the rest of your bot.',
-      'presenters/brand.presenter.ts',
-      'presenter',
-      guide('presenters'),
-      {
-        kind: 'embed',
-        command: presenter.command,
-        title: embed.title ?? '',
-        text: embed.description ?? '',
-        color: `#${(embed.color ?? 0).toString(16).padStart(6, '0')}`,
-        // Discord's ephemeral flag.
-        private: ((presenter.answer?.flags ?? 0) & 64) !== 0,
-      },
-    ),
+    {
+      title: 'Learn',
+      body: 'The Guide, in reading order: what a bot is made of, each kind of handler, the pipeline around it, testing and shipping.',
+      links: [...link(pages[0]?.id ?? ''), ...link('getting-started'), ...link('first-command')],
+    },
+    {
+      title: 'Look up',
+      body: 'Every public symbol, by kind, with its types and examples, and every CLI command with its options.',
+      links: [
+        ...(api ? [{ title: 'API reference', href: api }] : []),
+        { title: 'CLI', href: docsHref({ kind: 'api-index', line: HOME_LINE, section: 'cli' }, VERSIONS) },
+      ],
+    },
+    {
+      title: 'Migrate or compare',
+      body: `Moving to ${HOME_LINE} from an earlier MeoCord, or to MeoCord from another framework.`,
+      links: [
+        ...(migratingGuide(HOME_LINE) !== undefined
+          ? [{ title: `Migrating to ${HOME_LINE}`, href: docsHref({ kind: 'migrating', line: HOME_LINE }, VERSIONS) }]
+          : []),
+        ...link('whats-new'),
+        ...pages
+          .filter(candidate => candidate.group === 'coming-from')
+          .map(candidate => ({ title: candidate.title, href: guidePageHref(HOME_LINE, candidate) })),
+      ],
+    },
   ]
 }

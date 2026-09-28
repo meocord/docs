@@ -1,11 +1,8 @@
 import { deflateRawSync } from 'node:zlib'
 import { expect, type Page, test } from '@playwright/test'
-import { guideRendered } from '../scripts/lib/guide'
 import { axe } from './axe'
 
 const PAGE = '/docs/4.1/playground'
-
-test.skip(!guideRendered('4.1'), 'The playground renders only in a build with DOCS_NEXT=1')
 
 // By role, which leaves out a page Next keeps hidden after navigating away from it
 const code = (page: Page) => page.getByRole('textbox', { name: 'Code', exact: true })

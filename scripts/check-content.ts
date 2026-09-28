@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import type { ApiDocument } from './lib/api.js'
 import type { ChangelogDocument } from './lib/changelog.js'
-import type { ConfigDocument } from './lib/config-reference.js'
+import { CONFIG_REFERENCE_SLUG, type ConfigDocument } from './lib/config-reference.js'
 import { commentsOf } from './lib/comments.js'
 import {
   checkSite,
@@ -12,12 +12,25 @@ import {
   gendered,
   genderedInMarkdown,
   overlongLines,
+  pageAnchors,
   PROSE_WIDTH,
   type SiteSnapshot,
 } from './lib/content.js'
-import { checkGuide, reservedProblems } from './lib/guide.js'
+import {
+  checkGuide,
+  configReferenceText,
+  type Coverable,
+  guidePath,
+  guideTaken,
+  readGuide,
+  reservedProblems,
+  unembeddedRegions,
+} from './lib/guide.js'
+import { HOME_EXAMPLE, HOME_LINE } from '../src/config/home.js'
+import { unmappedPages, type LiveRoutes } from './lib/live-routes.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
+import { listPages, loadPage } from './lib/pages.js'
 import { literalCreates, PACKAGE_SPEC } from './lib/package-spec.js'
 import { pipelineStageProblems } from './lib/pipeline-tags.js'
 import { readVersions } from './lib/versions.js'
@@ -118,11 +131,32 @@ for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))
     for (const { line, length } of overlongLines(text))
       problems.push(`content/${file}:${line}: a line of ${length} characters; wrap prose at ${PROSE_WIDTH}`)
 
-// A line's Guide in the overhauled template, where one is being written: content/<line>-next/.
+// What a `covers` entry may name: each line's current pages, with their headings, and the pages it served
+const deployed = existsSync(paths.liveRoutes)
+  ? (JSON.parse(readFileSync(paths.liveRoutes, 'utf8')) as LiveRoutes).pages
+  : []
+const coverable: Coverable = {
+  lines: config.lines.map(entry => entry.line),
+  pages: Object.fromEntries(
+    config.lines.map(entry => [
+      entry.line,
+      Object.fromEntries(
+        entry.guides === 'authored'
+          ? readGuide(entry.line).map(({ page, body }) => [page.id, [...pageAnchors(body)]])
+          : listPages(entry.line).map(page => [page.id, [...pageAnchors(loadPage(entry.line, page.slug)?.body ?? '')]]),
+      ),
+    ]),
+  ),
+  deployed: Object.fromEntries(
+    config.lines.map(entry => [entry.line, deployed.filter(page => page.line === entry.line).map(page => page.id)]),
+  ),
+}
+
+// Each line's Guide, held to its template: content/<line>/.
 let guidePages = 0
 let plannedLinks = 0
 for (const line of config.lines) {
-  const dir = paths.guide(line.line)
+  const dir = paths.content(line.line)
   if (!existsSync(dir)) continue
   const files = Object.fromEntries(
     Object.entries(filesUnder(dir))
@@ -154,9 +188,45 @@ for (const line of config.lines) {
     examples: site.examples,
     apiSymbols,
     migratingAnchors: migrating ? new Set(markdownAnchors(migrating)) : undefined,
+    coverable,
+    generated: Object.fromEntries(
+      [[CONFIG_REFERENCE_SLUG, configReferenceText(line.line, config)]].filter(
+        (entry): entry is [string, string] => entry[1] !== undefined,
+      ),
+    ),
   })
   problems.push(...report.problems)
   plannedLinks += report.planned.length
+}
+// Every region of an examples folder is shown somewhere: by a Guide page, or by the site itself
+const guideBodies = (line: string) => readGuide(line).map(({ body }) => body)
+for (const line of config.lines.filter(entry => entry.guides === 'authored'))
+  problems.push(
+    ...unembeddedRegions(line.line, site.examples[line.line] ?? {}, guideBodies(line.line), {
+      shown: line.line === HOME_LINE ? [HOME_EXAMPLE] : [],
+    }),
+  )
+problems.push(
+  ...unembeddedRegions(
+    EXAMPLE_SOURCE,
+    site.examples[EXAMPLE_SOURCE] ?? {},
+    config.lines.filter(entry => entry.guides === 'authored').flatMap(entry => guideBodies(entry.line)),
+    { from: EXAMPLE_SOURCE },
+  ),
+)
+
+// Every page the deployed site serves for a line with a Guide has a Guide page that takes it over
+if (!existsSync(paths.liveRoutes))
+  problems.push(`${path.relative(ROOT, paths.liveRoutes)} is missing: run scripts/live-routes.ts`)
+else {
+  const guides = Object.fromEntries(
+    config.lines
+      .filter(line => line.guides === 'authored')
+      .map(({ line }) => [line, readGuide(line).map(({ page }) => ({ ...page, path: guidePath(page) }))]),
+  )
+  problems.push(
+    ...unmappedPages(JSON.parse(readFileSync(paths.liveRoutes, 'utf8')) as LiveRoutes, guides, guideTaken()),
+  )
 }
 if (problems.length > 0) {
   console.error(`${problems.length} content problem(s):\n  ${problems.join('\n  ')}`)

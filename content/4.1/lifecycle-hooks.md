@@ -1,47 +1,61 @@
 ---
 id: lifecycle-hooks
 title: Lifecycle hooks
-section: Beyond commands
-order: 52
+chapter: messages
+order: 5
+summary: Start work once the bot is online, and stop it cleanly before the bot shuts down.
+learn:
+  - Run code when the bot is ready, with `OnReady`
+  - Clean up before it stops, with `OnShutdown`
+  - Know the order hooks run in, and what happens when one fails
+requires: [services]
+api: [types/OnReady, types/OnShutdown]
 since: 4.1.0
 ---
 
-A controller or service does work once the bot is online, and cleans up before it stops, by implementing
-`OnReady` and `OnShutdown` from `meocord/interface`:
+A controller or service implements `OnReady` to do work once the bot is online, and `OnShutdown` to clean up
+before it stops. The hooks run in dependency order, so a database is connected before the scheduler that uses
+it, and closed after.
+
+## When to use it
+
+Use `onReady` for work that needs the client online: setting the bot's activity, starting a timer, warming a
+cache. Use `onShutdown` to stop that work: clear timers, flush metrics, close connections.
+
+For something to do in response to Discord, use [gateway events](guide:gateway-events) instead.
+
+## Example
 
 ::example{file="services/reminder.scheduler.ts" region="scheduler"}
 
-## Which classes
+## How it works
 
-Every controller and service the app binds: the ones listed in `@MeoCord({ controllers, services })`, and
-everything they depend on, including a service no handler has used yet. What `@MeoCord({ providers })`
-supplies gets them too, a value or a factory's result included, in the same dependency order; see
-[Providers](/docs/4.1/services#providers). [Observers](/docs/4.1/observers) get them too, so one that
-exports metrics or traces flushes them in `onShutdown`. Guards are created per call and get no hooks.
+Every controller and service the app binds gets hooks: those listed in `@MeoCord({ controllers, services })`,
+everything they depend on, and what `@MeoCord({ providers })` supplies. [Observers](guide:observers) get them
+too. Guards are created per call and get none.
 
 ## onReady
 
-`onReady` runs once the client is ready. It receives the client and `{ primary }`, which says whether this process
-should do one-off work: `true` for a bot running in one process, and with
-[process sharding](/docs/4.1/sharding#a-process-per-shard) only in the process running shard 0.
+`onReady` runs once the client is ready. It receives the client and `{ primary }`, which says whether this
+process should do one-off work: `true` for a bot in one process, and with
+[process sharding](guide:sharding) only in the process running shard 0.
 
-The hooks run one at a time, each class after the classes it injects, so a `DatabaseService` is ready before
-the scheduler that injects it. Classes with no dependency between them run in declaration order, the
-`services` first, then the `controllers`. Command registration runs alongside and never delays them. A hook
-still running after 10 seconds is named in a warning, and the hooks after it wait for it.
+The hooks run one at a time, each class after the classes it injects. Classes with no dependency between them
+run in declaration order: the `providers` first, then the `services`, the `controllers` and the observers.
+Command registration runs alongside and never delays them. A hook still running after 10 seconds is named in a
+warning, and the hooks after it wait for it.
 
 ## onShutdown
 
 `onShutdown` runs on SIGINT or SIGTERM, before the client is destroyed, in reverse order, so a class stops
 before the classes it uses. The bot waits for the whole sequence up to `shutdownTimeout` in
-[`meocord.config.ts`](/docs/4.1/configuration), 10 seconds by default, then shuts down whether or not it
-finished.
+[`meocord.config.ts`](guide:configuration), 10 seconds by default, then shuts down whether or not it finished.
 
-- A second signal more than a second after the first exits at once; one sooner is taken as the same request,
+- A second signal more than a second after the first exits at once. One sooner counts as the same request,
   since a terminal's Ctrl+C can arrive twice.
-- If the bot never became ready, because the login failed, say, no `onShutdown` hook runs.
-- A signal that arrives while the `onReady` hooks are still running shuts down only the classes whose
-  `onReady` finished, and those without one. No further `onReady` starts.
+- If the bot never became ready, because the login failed, no `onShutdown` hook runs.
+- A signal while the `onReady` hooks are still running shuts down only the classes whose `onReady` finished,
+  and those without one. No further `onReady` starts.
 
 ## Failures
 
@@ -50,6 +64,35 @@ depend on it still run theirs, with a warning naming the failed dependency.
 
 ## Testing
 
-The testing module does not run hooks. Call them directly, as the bot would:
+A hook is a method, so a unit test calls it as the bot would, with a client from `createMockClient`:
 
 ::example{file="services/reminder.scheduler.spec.ts" region="spec"}
+
+A [testing module](guide:testing) runs them in the bot's order: `await module.init({ ready: true })` runs every
+`onReady`, with a mock client and `{ primary: true }` unless `ready` names others, and `await module.close()`
+runs the `onShutdown` hooks, in reverse, of everything the module constructed. Every hook runs even when one
+throws; `init` or `close` then rejects with that error, or an `AggregateError` naming each hook that threw.
+
+## Gotchas
+
+- **One-off work runs on every shard.** With process sharding, check `primary` before work only one process
+  should do, such as posting a daily summary.
+- **A slow `onReady` holds up the rest.** Hooks run one at a time. Start long work without awaiting it, and
+  stop it in `onShutdown`.
+- **Work left running at shutdown.** A timer the class doesn't clear keeps running until the process exits.
+  Clear it in `onShutdown`.
+
+## Build it
+
+Once the bot is online, its profile says how to reach it: "Listening to /feedback".
+
+::example{file="tutorial/activity.service.ts" region="lifecycle-hooks"}
+
+Add `ActivityService` to `services` in the app. `onReady` runs once the client is ready, so `client.user`
+is there to set.
+
+## Next steps
+
+- [Gateway events](guide:gateway-events): handle what happens in Discord.
+- [Sharding](guide:sharding): run the bot across processes.
+- [Observers](guide:observers): export metrics and flush them at shutdown.

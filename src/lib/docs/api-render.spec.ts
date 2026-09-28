@@ -1,6 +1,6 @@
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { modelLayouts } from '../../../scripts/lib/api-layout'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
 import {
@@ -19,10 +19,15 @@ import { CODE_PALETTES } from '@/lib/prose/highlight'
 
 // A fixed release, so the layouts are checked against signatures that do not change with each sync.
 const model = apiModel('4.1', '4.1.0-beta.4')!
+// A symbol by the entry point it is imported from, wherever the line's API files it
+const symbolOf = (entry: string, name: string) => {
+  const location = model.locate(entry, name)!
+  return model.symbol(location.section, location.symbol)!
+}
 
 describe('apiArticle', () => {
   it('lists the sections and members in the table of contents, at their anchors', () => {
-    const { toc } = apiArticle(model.symbol('core', 'ShardContext')!)
+    const { toc } = apiArticle(symbolOf('core', 'ShardContext'))
     expect(toc.filter(entry => entry.depth === 2).map(entry => entry.id)).toEqual(['examples', 'members'])
     const members = toc.filter(entry => entry.depth === 3)
     expect(members.length).toBeGreaterThan(0)
@@ -30,7 +35,7 @@ describe('apiArticle', () => {
   })
 
   it('lists the Guide pages that teach it, after its reference, at an id of its own', () => {
-    const symbol = model.symbol('decorator', 'Cooldown')!
+    const symbol = symbolOf('decorator', 'Cooldown')
     const guide = [{ title: 'Cooldowns', href: '/docs/4.1/cooldowns' }]
     const { nodes, toc } = apiArticle(symbol, {}, guide)
     const markup = renderToStaticMarkup(Div({ children: nodes }).render())
@@ -43,7 +48,7 @@ describe('apiArticle', () => {
   })
 
   it('gives a function its parameters, returns and examples', () => {
-    const { toc } = apiArticle(model.symbol('decorator', 'Cooldown')!)
+    const { toc } = apiArticle(symbolOf('decorator', 'Cooldown'))
     // Its options under its parameters, from CooldownOptions
     expect(toc.map(entry => entry.id)).toEqual([
       'parameters',
@@ -58,7 +63,7 @@ describe('apiArticle', () => {
   })
 
   it('keeps a section anchor clear of a member with the same name', () => {
-    const symbol = { ...model.symbol('core', 'ShardContext')! }
+    const symbol = { ...symbolOf('core', 'ShardContext') }
     symbol.members = [{ ...symbol.members[0], name: 'members', anchor: 'members' }]
     symbol.anchors = ['members']
     const ids = apiArticle(symbol).toc.map(entry => entry.id)
@@ -70,7 +75,7 @@ describe('apiArticle', () => {
 describe('apiArticle code', async () => {
   const layouts = await modelLayouts(model)
   const html = (entry: string, name: string, withLayouts = layouts) =>
-    renderToStaticMarkup(Div({ children: apiArticle(model.symbol(entry, name)!, withLayouts).nodes }).render())
+    renderToStaticMarkup(Div({ children: apiArticle(symbolOf(entry, name), withLayouts).nodes }).render())
   const blocks = (markup: string) =>
     [...markup.matchAll(/<pre data-signature="true"[^>]*><code>([\s\S]*?)<\/code><\/pre>/g)].map(match =>
       match[1]
@@ -90,7 +95,7 @@ describe('apiArticle code', async () => {
 
   it('keeps the links in formatted code, and highlights it as a guide highlights code', () => {
     const markup = html('decorator', 'Command')
-    const href = model.href({ section: 'enum', symbol: 'CommandType' })
+    const href = model.href(model.locate('enum', 'CommandType')!)
     expect(markup).toContain(`<a href="${href}"><span style="--code-dark:`)
     expect(markup).toMatch(/<span style="--code-dark:#[0-9A-F]{6};--code-light:#[0-9A-F]{6}">Command<\/span>/)
   })
@@ -104,7 +109,7 @@ describe('apiArticle code', async () => {
   })
 
   it('draws markup in a type as text, and escapes its links', () => {
-    const symbol = model.symbol('decorator', 'Command')!
+    const symbol = symbolOf('decorator', 'Command')
     const hostile = {
       ...symbol,
       code: [
@@ -144,7 +149,7 @@ describe('apiArticle code', async () => {
   })
 
   it('leaves a blank line between overloads once any runs over lines', () => {
-    const symbol = model.symbol('decorator', 'Command')!
+    const symbol = symbolOf('decorator', 'Command')
     const twice = { ...symbol, code: [symbol.code[0], symbol.code[0]] }
     const markup = renderToStaticMarkup(Div({ children: apiArticle(twice, layouts).nodes }).render())
     expect(blocks(markup)[0]).toContain(') => void\n\nCommand<')
@@ -152,11 +157,12 @@ describe('apiArticle code', async () => {
 })
 
 describe('apiSidebar', () => {
-  it('follows the guides with one group per entry point, marking the current symbol, and heads no category', () => {
-    const current = model.href({ section: 'decorator', symbol: 'Cooldown' })
-    const groups = apiSidebar('4.1', model, current)
+  it('follows the guides with one group per entry point, where a line is arranged so, and heads no category', () => {
+    const byEntry = apiModel('4.0')!
+    const current = byEntry.href({ section: 'decorator', symbol: 'Command' })
+    const groups = apiSidebar('4.0', byEntry, current)
     const decorator = groups.find(group => group.title === 'meocord/decorator')!
-    expect(decorator.items.find(item => item.current)?.title).toBe('Cooldown')
+    expect(decorator.items.find(item => item.current)?.title).toBe('Command')
     expect(groups.findIndex(group => group.title.startsWith('meocord/'))).toBeGreaterThan(0)
     // beta.6's symbols carry categories, but an entry point lists them in source order
     const beta6 = apiSidebar('4.1', apiModel('4.1', undefined, 'entry')!)
@@ -165,8 +171,6 @@ describe('apiSidebar', () => {
 })
 
 describe('the API by kind', () => {
-  beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
-  afterAll(() => vi.unstubAllEnvs())
   const html = (nodes: ReturnType<typeof apiArticle>['nodes']) =>
     renderToStaticMarkup(Div({ children: nodes }).render())
 
@@ -234,9 +238,7 @@ describe('the API by kind', () => {
       '<p>Every command also takes <code>-h, --help</code>, which prints its usage, arguments and options, as <code>meocord help &lt;command&gt;</code> does.</p>',
     )
     // The index and kinds exist only where the API is arranged by kind
-    vi.stubEnv('DOCS_NEXT', '')
-    expect(renderApiIndex('4.1')).toBeUndefined()
-    vi.stubEnv('DOCS_NEXT', '1')
+    expect(renderApiIndex('4.0')).toBeUndefined()
   })
 
   it('says where an entry runs, after its description, each stage linked to its place in the figure', () => {
@@ -261,9 +263,7 @@ describe('the API by kind', () => {
     // No note without a tag, nor where the Guide, and so the figure, isn't rendered
     expect(runsAt('4.1', model.symbol('decorators', 'MeoCord')!)).toEqual([])
     expect(apiArticle(defer).toc.some(entry => entry.id === 'where-it-runs')).toBe(false)
-    vi.stubEnv('DOCS_NEXT', '')
-    expect(runsAt('4.1', defer)).toEqual([])
-    vi.stubEnv('DOCS_NEXT', '1')
+    expect(runsAt('4.0', defer)).toEqual([])
   })
 
   it("gives each option its row's anchor, and lists the options in the contents", () => {

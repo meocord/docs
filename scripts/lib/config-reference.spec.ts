@@ -180,7 +180,10 @@ describe('configReferencePage', () => {
   const page = configReferencePage('4.1', configReference('4.1.0-beta.0', project, since)!)
 
   it('writes one section per option, nested options below their option', () => {
-    expect(page).toMatch(/^---\nid: config-reference\n[\s\S]*source: config@4\.1\.0-beta\.0\n---\n/)
+    // An appendix page of the Guide, in its help group
+    expect(page).toMatch(
+      /^---\nid: config-reference\n[\s\S]*chapter: appendix\ngroup: help\n[\s\S]*source: config@4\.1\.0-beta\.0\n[\s\S]*---\n/,
+    )
     expect(page.match(/^#+ .+$/gm)).toEqual([
       '## discordToken',
       '## bundleDependencies',

@@ -63,7 +63,6 @@ describe('@Defer on a message with controls', () => {
   })
   // #endregion lock
 
-  // #region clicked
   it("with disable: 'clicked', locks only the button used", async () => {
     const interaction = clickOnCard('card/111/export')
 
@@ -76,5 +75,4 @@ describe('@Defer on a message with controls', () => {
       false,
     ])
   })
-  // #endregion clicked
 })

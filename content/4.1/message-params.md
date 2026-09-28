@@ -1,125 +1,159 @@
 ---
 id: message-params
-title: Message command params
-section: Beyond commands
-order: 50.6
+title: Typed params, flags and lists
+chapter: messages
+order: 2
+summary: Read numbers, members, lengths of time and options from a message command's words, checked before the handler runs.
+learn:
+  - Give a param a type, and receive the value
+  - Let a guard look at a member before anything is fetched
+  - Take flags and lists, and add a type of the app's own
+requires: [message-commands]
+api: [types/ParamsOf, types/ParamRefsOf, types/EntityRef, configuration/MessageParamType, responses/MessageUsageError]
 since: 4.1.0
 ---
 
-A [message command](/docs/4.1/message-commands)'s params can be more than words: a number, a member, one of a
-few choices or a type of the app's own, a flag given anywhere after the command, or a list. Each is read from
-the message before the handler runs, and a word that doesn't fit gets the command's
-[usage reply](/docs/4.1/message-commands#usage-errors).
+A param with a type, `{amount:int}`, gives the handler a number instead of the word the user typed. A word that
+is not a value of its type never reaches the handler: the user gets the command's usage, naming the param and
+what was wrong with it.
 
-## Typed params
+## When to use it
 
-A param can name a type, `{name:type}`. Its word is read as that type, and the handler receives a member
-or a number rather than text:
+Type a param whenever the handler needs more than text: an amount, a member to act on, a length of time. The
+check happens once, before any guard runs, so the handler doesn't parse or validate the word itself.
+
+For a rule about the value, such as "at most 100", use [`@Validate`](guide:validation) on the typed value.
+For words the command doesn't have in a fixed place, such as `--bots`, use a flag.
+
+## Example
 
 ::example{file="controllers/message/economy.message.controller.ts" region="typed"}
 
-| Type                        | Gives                     | Accepts                                                     |
-| --------------------------- | ------------------------- | ----------------------------------------------------------- |
-| none, or `string`           | `string`                  | A word, or "quoted words"                                   |
-| `int`, `number`             | `number`                  | `50`, `-3`; `number` also `2.5`                             |
-| `bool`                      | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                   |
-| `duration`                  | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                           |
-| `member`                    | `GuildMember`             | A mention or an ID, of a member of the message's server     |
-| `user`                      | `User`                    | A mention or an ID                                          |
-| `role`                      | `Role`                    | A mention, an ID or the role's name                         |
-| `channel`                   | `GuildBasedChannel`       | A mention or an ID                                          |
-| words, such as `on\|off`    | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set |
-| [your own](#your-own-types) | what its `parse` returns  | What its `parse` accepts                                    |
+`!pay @ana 25 for lunch` runs `pay` with Ana as a `GuildMember`, `25` as a number and `note` as the text
+after it. `!pay @ana lots` gets `amount: "lots" is not a valid whole number` in reply.
 
-The handler's params are checked against the pattern when the code compiles: a name the pattern does not
-have, a type its param's value does not fit, or an optional param declared as always there is an error.
-`ParamsOf<'pay {to:member} {amount:int}'>` from `meocord/interface` is the type a pattern gives. A param
-with no type is text that `@Validate` or a pipe may turn into anything, so it is not checked, and neither
-are params declared as `Record<string, string>`.
+## How it works
 
-A word that is not its type gets the command's [usage reply](/docs/4.1/message-commands#usage-errors), and so does
-a member who is not in the server. A command with a `member`, `role` or `channel` param works in servers only: sent
-in a DM, it is answered `This command works in a server only.`
+A message command's words are read in two steps around the [guards](guide:guards):
 
-### Optional params
+1. **Parse.** Before the guards, each word is read without asking Discord: numbers, words to choose from,
+   flags, and the shape of each mention or ID. A word of the wrong type gets the usage reply.
+2. **Fetch.** Once the guards let the call through, each member, user, role and channel the cache lacks is
+   fetched. The handler, `@Validate`, pipes and `@Cooldown({ by })` get the entities themselves.
 
-Several optional params may end a pattern. Each one that another follows takes a word only if the word
-fits its type, and is left out otherwise, so the word goes on to the next:
+So a caller the guards refuse costs no request to Discord. Each ID is fetched once, however many messages ask
+for it at the same time, and members go 100 to a request.
+
+## Types
+
+| Type                                 | Gives                     | Accepts                                                     |
+| ------------------------------------ | ------------------------- | ----------------------------------------------------------- |
+| none, or `string`                    | `string`                  | A word, or "quoted words"                                   |
+| `int`, `number`                      | `number`                  | `50`, `-3`; `number` also `2.5`                             |
+| `bool`                               | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                   |
+| `duration`                           | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                           |
+| `member`                             | `GuildMember`             | A mention or an ID, of a member of the message's server     |
+| `user`                               | `User`                    | A mention or an ID                                          |
+| `role`                               | `Role`                    | A mention, an ID or the role's name                         |
+| `channel`                            | `GuildBasedChannel`       | A mention or an ID                                          |
+| words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set |
+| your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                    |
+
+The handler's params are checked against the pattern when the code compiles. A name the pattern doesn't have,
+a type its value doesn't fit, or an optional param declared as always there is an error in the editor.
+[`ParamsOf`](api:types/ParamsOf) gives the type a pattern produces, for a helper that takes the same params.
+An untyped param is text that `@Validate` or a pipe may change, so it isn't checked.
+
+### Several optional params
+
+A pattern may end in several optional params. Each one that another follows takes a word only if the word
+fits its type, and is skipped otherwise, so the word goes on to the next:
 
 ::example{file="controllers/message/economy.message.controller.ts" region="optionals"}
 
-Whether a word fits is read from the word alone: a number, a length of time, one of the words to choose
-from, or the mention or ID a member, user, role or channel is given as. So an optional param that another
-follows needs a built-in type or words to choose from; text, or an app's own type, stops the bot at
-startup. The last optional param takes any word, and a word of the wrong type there gets the usage reply.
+Whether a word fits is read from the word alone, so an optional param that another follows needs a built-in
+type or words to choose from. Text, or an app's own type, there stops the bot at startup. The last optional
+takes any word.
 
-### Your own types
+## Guards see references
 
-An app adds types in `@MeoCord({ messages: { types } })`, and declares what each gives in
-`MessageParamTypes`, so a handler using one is typed:
-
-::example{file="message-types.ts" region="type"}
-
-::example{file="app-message-commands.ts" region="app"}
-
-`parse` returns the value, or `undefined` when the word is not one, which gets the usage reply built from the type's
-`label`: `accent: "blue" is not a valid hex colour`. For a label in each server's language, give the type a `labelKey`
-instead: see [MeoCord's own texts](/docs/4.1/localisation#meocords-own-texts). It runs before the guards, so it must not
-call Discord. A type for something that has to be fetched returns an `EntityRef`, as the built-in entity types do, and
-is resolved once the guards let the call through.
-
-## Flags
-
-A flag, `{--name}`, may be given anywhere after the command's first word, apart from the words the pattern
-matches. Without a type it is `true` when given and `false` when not; with one, `{--name:type}`, it takes a
-value, `--name=value`, and is required unless it ends in `?`:
-
-::example{file="controllers/message/moderation.message.controller.ts" region="flags"}
-
-- A value with spaces goes in quotes, `--note="buy milk"`. A flag given twice takes its last value, and
-  `--bots=no` gives `false`.
-- A flag the command does not have, and a typed flag left out or given no value, get the usage reply:
-  `--all is not an option of this command`.
-- A flag before the command's first word, as in `!--bots purge 5`, is not read, and the message names no
-  command. A pattern that begins with a param has no command word, so its flags may come anywhere.
-- Words in quotes are never flags, so `"--bots"` stays text. A pattern without flags reads `--bots` as an
-  ordinary word, and a rest takes the message's text without its flags, keeping its own spacing and line
-  breaks.
-- A flag's name starts with a letter, then letters, digits or `_`. `{--9lives}` stops the bot at startup,
-  since a message could not give it.
-
-## Lists
-
-A typed rest, `{name:type...}`, is a list: each remaining word, or "quoted words", becomes a value of the
-type. `{name...}` with no type stays the rest of the message as text:
-
-::example{file="controllers/message/moderation.message.controller.ts" region="lists"}
-
-An item that is not a value of its type gets the usage reply. The members a list names are fetched
-together, as typed params are.
-
-## Guards and what they see
-
-A command's params reach the [guards](/docs/4.1/guards) before anything is fetched from Discord. Numbers,
-choices, flags and the shape of each ID are read first, without a request. The guards then see each member,
-user, role and channel as an `EntityRef`: its `id`, the entity itself as `cached` when discord.js already
-has it, and `resolve()` to fetch it. `ParamRefsOf<'pattern'>` from `meocord/interface` types the params that
-way:
+Before the fetch, a guard gets each member, user, role and channel as an
+[`EntityRef`](api:types/EntityRef): its `id`, the entity as `cached` when discord.js already has it, and
+`resolve()` to fetch it. [`ParamRefsOf`](api:types/ParamRefsOf) types a guard's params from the pattern:
 
 ::example{file="guards/outranks-target.guard.ts" region="guard"}
 
-- **A caller the guards refuse costs no request,** however many IDs the message names. Once the guards let
-  the call through, whatever the cache lacks is fetched, and the handler, `@Validate`, pipes and
-  `@Cooldown({ by })` get the entities themselves.
-- **Each ID is fetched once,** however many messages and guards ask for it at the same time, so a guard's
-  `resolve()` and the fetch after the guards share one request.
-- **Much is never fetched.** A mentioned member arrives with the message, and roles and a server's
-  channels are cached with the `Guilds` intent.
-- **A caller on cooldown costs no request either.** The handler's cooldowns without `by` are checked
-  before anything is fetched. A cooldown with `by` keys on the fetched params, so it is checked when it is
-  counted.
+Put the cheap checks first. A caller without the permission is refused here without a single request, and
+`resolve()` is only called for a caller who might pass. Whatever `resolve()` fetched is reused for the handler.
 
-A guard that throws `GuardDeniedError`, and a message `@Validate` refuses, are answered with the reason, as a
-usage error is, and the reply is deleted after the same time. A guard that returns `false` denies silently.
-A guard on a handler for every message, or on an `@On` handler, only filters what it takes, so its denial
-gets no reply.
+## Flags
+
+A flag, `{--name}`, may be given anywhere after the command's word. Without a type it is `true` when given and
+`false` when not. With one, `{--name:type}`, it takes a value, `--name=value`, and is required unless it ends
+in `?`:
+
+::example{file="controllers/message/moderation.message.controller.ts" region="flags"}
+
+- A value with spaces goes in quotes: `--note="buy milk"`. A flag given twice takes its last value. An untyped
+  flag also takes `yes`, `no`, `on`, `off`, `true` or `false`, so `--bots=no` gives `false`.
+- A flag the command doesn't have gets the usage reply: `--all is not an option of this command`. So does a typed
+  flag left out, `--from is missing`, or given no value, `--from needs a value, such as --from=<from>`.
+- A flag before the command's first word, as in `!--bots purge 5`, isn't read, and the message names no command. A
+  pattern that begins with a param has no command word, so its flags may come anywhere.
+- Words in quotes are never flags, so `"--bots"` stays text. A command with no flags reads `--bots` as an ordinary
+  word. A rest takes the message's text without its flags, keeping its own spacing and line breaks.
+- A flag's name starts with a letter, then letters, digits or `_`. `{--9lives}` stops the bot as it loads, since a
+  message couldn't give it; see [Errors at startup](guide:message-commands#errors-at-startup).
+
+## Lists
+
+A typed rest, `{name:type...}`, is a list: each word, or "quoted words", becomes a value of the type:
+
+::example{file="controllers/message/moderation.message.controller.ts" region="lists"}
+
+The members a list names are fetched together, in one request. `{name...}` with no type stays the rest of
+the message as text, with its own spacing and line breaks.
+
+## A type of your own
+
+An app adds types in `@MeoCord({ messages: { types } })`. A type has a `label`, the noun the usage reply
+names it by, and a `parse` that returns the value, or `undefined` for a word that isn't one. Declare what it
+gives in `MessageParamTypes` so handlers using it are typed:
+
+::example{file="message-types.ts" region="type"}
+
+Then `{accent:color}` in a pattern gives the handler a number, and a word such as `blue` gets
+`accent: "blue" is not a valid hex colour` in reply.
+
+## Testing
+
+`module.dispatch(message)` reads params as the bot does. Members the message's server caches resolve without
+a request, so build the guild with them:
+
+::example{file="controllers/message/economy.message.controller.spec.ts" region="spec"}
+
+## Gotchas
+
+- **A member param in a DM.** A command with a `member`, `role` or `channel` param works in a server only,
+  and a DM is answered that way. The help listing says so too, with no `scope` needed.
+- **A member who left.** A `member` param for someone not in the server is answered only to a caller the
+  guards let through, so a refused caller learns nothing about the server.
+- **`{amount:int}` and `@Validate`.** The type runs first. A schema that expects the word as a string gets a
+  number.
+
+## Build it
+
+Members ask the bot where their feedback stands: `@Feedback status 3` says whether feedback #3 is open,
+approved or rejected, and `--details` quotes what it said.
+
+::example{file="tutorial/feedback.message.controller.ts" region="message-params"}
+
+`{id:int}` gives the handler a number, so `@Feedback status lots` is answered with the usage and
+`"lots" is not a valid whole number`. `{--details}` is `true` only when the message gives it. Feedback that
+doesn't exist gets its own answer, from the same `FeedbackNotFoundError` the review buttons meet.
+
+## Next steps
+
+- [Reactions and other messages](guide:reactions): act on reactions, and on every message.
+- [Validation and pipes](guide:validation): set rules on a typed value.
+- [Guards](guide:guards): refuse a caller, and tell them why.

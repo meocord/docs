@@ -144,26 +144,29 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 for (const width of [1440, 2560]) {
-  test(`every row's code reads whole, without sideways scrolling, at ${width}px`, async ({ page }) => {
+  test(`the start commands read whole, without sideways scrolling, at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
+    // The pane shown of each step's code: an install command has one per package manager
     const hidden = await page
-      .locator('[data-row] [data-code] pre')
-      .evaluateAll(pres => pres.map(pre => pre.scrollWidth - pre.clientWidth))
-    expect(hidden.length).toBeGreaterThan(4)
+      .locator('[data-steps] [data-code] pre')
+      .evaluateAll(pres => pres.filter(pre => pre.clientWidth > 0).map(pre => pre.scrollWidth - pre.clientWidth))
+    expect(hidden).toHaveLength(3)
     expect(hidden.every(width => width === 0)).toBe(true)
   })
 }
 
-test('copying a row’s wrapped code keeps its lines, blank ones too', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.setViewportSize({ width: 1440, height: 900 })
+test('each kind of handler opens its section of What you can build, and each door its pages', async ({ page }) => {
   await page.goto('/')
-  const frame = page.locator('section[aria-labelledby="features"] [data-code]').nth(2)
-  await frame.locator('[data-copy]').click()
-  const source = (await frame.locator('pre code').textContent())!.replace(/\n$/, '')
-  expect(source).toContain('\n\n')
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(source)
+  const tiles = page.locator('[data-tile]')
+  await expect(tiles).toHaveCount(10)
+  await tiles.first().click()
+  await expect(page).toHaveURL(/\/docs\/4\.1\/what-can-i-build#slash-commands$/)
+  await expect(page.getByRole('heading', { level: 2, name: 'Slash commands' })).toBeInViewport()
+  await page.goBack()
+  const doors = page.locator('[data-door]')
+  await expect(doors.locator('h3')).toHaveText(['Learn', 'Look up', 'Migrate or compare'])
+  await expect(doors.nth(1).getByRole('link', { name: 'API reference' })).toHaveAttribute('href', '/docs/4.1/api')
 })
 
 const VIEWPORTS = [
@@ -225,9 +228,9 @@ test.describe('the sections below the panel, drawn as the reader nears them', ()
     { width: 1280, height: 800 },
     { width: 390, height: 844 },
   ]) {
-    test(`a link to #features or #testing lands on its heading, at ${viewport.width} px`, async ({ page }) => {
+    test(`a link to #why or #doors lands on its heading, at ${viewport.width} px`, async ({ page }) => {
       await page.setViewportSize(viewport)
-      for (const id of ['features', 'testing']) {
+      for (const id of ['why', 'doors']) {
         await page.goto(`/#${id}`)
         const heading = page.locator(`h2#${id}`)
         await expect(heading).toBeInViewport()
@@ -248,19 +251,17 @@ test.describe('the sections below the panel, drawn as the reader nears them', ()
     )
     expect(visibility).toEqual([
       ['pipeline-title', 'visible'],
+      ['build', 'auto'],
       ['why', 'auto'],
-      ['features', 'auto'],
-      ['start', 'auto'],
-      ['testing', 'auto'],
-      ['new', 'auto'],
+      ['doors', 'auto'],
     ])
-    await expect(page.getByRole('heading', { level: 2, name: 'Tested the way it runs' })).toBeAttached()
-    await expect(page.locator('section[aria-labelledby="testing"]')).not.toBeInViewport()
+    await expect(page.getByRole('heading', { level: 2, name: 'Where to go next' })).toBeAttached()
+    await expect(page.locator('section[aria-labelledby="doors"]')).not.toBeInViewport()
     // The browser's own find matches text it has not drawn yet: the match is the section's heading.
     const found = await page.evaluate(() => {
-      const hit = (window as unknown as { find(text: string): boolean }).find('Tested the way it runs')
+      const hit = (window as unknown as { find(text: string): boolean }).find('Where to go next')
       return hit ? (window.getSelection()?.anchorNode?.parentElement?.closest('h2')?.id ?? null) : null
     })
-    expect(found).toBe('testing')
+    expect(found).toBe('doors')
   })
 })

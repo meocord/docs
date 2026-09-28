@@ -1,28 +1,30 @@
 import { expect, test } from '@playwright/test'
-import { guidePath, guideRendered, readGuide } from '../scripts/lib/guide'
+import { guidePath, readGuide } from '../scripts/lib/guide'
 import { paths } from '../scripts/lib/layout'
 import { listPages } from '../scripts/lib/pages'
 import { readVersions } from '../scripts/lib/versions'
 import { axe } from './axe'
 
-// Every page written for the site, read from the content itself, so a new page is covered the day it lands:
-// a line's Guide where the build renders it (DOCS_NEXT=1), its authored pages otherwise, and for a line whose
-// guides come from its README, the pages taken from it, which render the same way
+// Every page written for the site, read from the content itself, so a new page is covered the day it lands: a
+// line's Guide where its guides are authored, and for a line whose guides come from its README, the pages taken
+// from it, which render the same way
 const LINES = readVersions(paths.versions).lines
-const PAGES = LINES.flatMap(line =>
-  guideRendered(line.line)
-    ? readGuide(line.line).map(({ page }) => ({ path: `/docs/${line.line}/${guidePath(page)}`, title: page.title }))
-    : listPages(line.line).map(page => ({ path: `/docs/${line.line}/${page.slug}`, title: page.title })),
-)
+const GUIDES = LINES.filter(line => line.guides === 'authored').map(line => ({
+  line: line.line,
+  pages: readGuide(line.line),
+}))
+const PAGES = [
+  ...GUIDES.flatMap(({ line, pages }) =>
+    pages.map(({ page }) => ({ path: `/docs/${line}/${guidePath(page)}`, title: page.title })),
+  ),
+  ...LINES.filter(line => line.guides === 'readme').flatMap(line =>
+    listPages(line.line).map(page => ({ path: `/docs/${line.line}/${page.slug}`, title: page.title })),
+  ),
+]
 
-// A DOCS_NEXT=1 build exists to test the Guide: one that renders none, its folder gone or renamed, would
-// otherwise pass on the authored pages, every Guide spec skipped
-test('a DOCS_NEXT=1 build renders a Guide for some line', () => {
-  test.skip(process.env.DOCS_NEXT !== '1', 'only a DOCS_NEXT=1 build renders the Guide')
-  expect(
-    LINES.filter(line => guideRendered(line.line)).map(line => line.line),
-    'no line has content/<line>-next',
-  ).not.toEqual([])
+// A line whose Guide folder is missing or renamed would otherwise leave this spec with no page of it to test
+test('every line whose guides are authored has Guide pages', () => {
+  expect(GUIDES.filter(guide => guide.pages.length === 0).map(guide => `content/${guide.line}`)).toEqual([])
 })
 
 for (const { path, title } of PAGES) {

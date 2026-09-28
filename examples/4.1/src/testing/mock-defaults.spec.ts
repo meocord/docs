@@ -13,7 +13,6 @@ import { createMockChannel, createMockClient, createMockGuild, createMockInterac
 import { describe, expect, it } from 'vitest'
 
 describe('mock defaults', () => {
-  // #region locales
   it('gives an interaction the user’s locale, and the server’s only in a server', () => {
     const inDm = createMockInteraction(ChatInputCommandInteraction)
     const inServer = createMockInteraction(ButtonInteraction, { guildId: '1' })
@@ -21,7 +20,6 @@ describe('mock defaults', () => {
     expect([inDm.locale, inDm.guildLocale]).toEqual([Locale.EnglishUS, null])
     expect(inServer.guildLocale).toBe(Locale.EnglishUS)
   })
-  // #endregion locales
 
   // #region promises
   it('resolves methods that return a promise in discord.js to something to work with', async () => {

@@ -1,7 +1,6 @@
 import { Inject, Service } from 'meocord/decorator'
 import { WEATHER_SETTINGS, type WeatherSettings, WeatherSource } from '@src/services/weather/weather.source'
 
-// #region service
 @Service()
 export class WeatherService {
   constructor(
@@ -16,4 +15,3 @@ export class WeatherService {
     return `${city}: ${await this.source.temperature(city)}${unit}`
   }
 }
-// #endregion service

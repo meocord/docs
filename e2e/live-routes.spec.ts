@@ -1,0 +1,61 @@
+import { readFileSync } from 'node:fs'
+import { expect, test, type APIRequestContext } from '@playwright/test'
+import { paths } from '../scripts/lib/layout'
+import type { LiveRoutes } from '../scripts/lib/live-routes'
+
+// Every URL the deployed site answers still answers: a page, or at most two redirects that end at one
+const ROUTES = JSON.parse(readFileSync(paths.liveRoutes, 'utf8')) as LiveRoutes
+const MAX_HOPS = 2
+const CHUNK = 250
+
+/** Where a URL ends, following its redirects by hand, or the problem when it ends anywhere but a page. */
+async function follow(request: APIRequestContext, start: string): Promise<{ end: string } | { problem: string }> {
+  const seen = [start]
+  let url = start
+  for (;;) {
+    const response = await request.get(url, { maxRedirects: 0 })
+    const status = response.status()
+    if (status === 200) return { end: url }
+    const location = response.headers()['location']
+    if (status < 300 || status >= 400 || !location) return { problem: `${seen.join(' → ')} answers ${status}` }
+    url = new URL(location, new URL(url, 'http://site')).pathname
+    if (seen.includes(url)) return { problem: `${[...seen, url].join(' → ')} loops` }
+    seen.push(url)
+    if (seen.length - 1 > MAX_HOPS) return { problem: `${seen.join(' → ')} takes more than ${MAX_HOPS} redirects` }
+  }
+}
+
+async function problemOf(request: APIRequestContext, start: string): Promise<string | undefined> {
+  const answer = await follow(request, start)
+  return 'problem' in answer ? answer.problem : undefined
+}
+
+// A deployed redirect still ends at a page, and one that sent a reader to the topic's page never
+// sends them to a page saying the line lacks it
+test(`the ${ROUTES.redirects.length} deployed redirects, from ${ROUTES.commit.slice(0, 7)}, still end at their topic`, async ({
+  request,
+}) => {
+  const problems: string[] = []
+  for (const { source, destination } of ROUTES.redirects) {
+    const answer = await follow(request, source)
+    if ('problem' in answer) problems.push(answer.problem)
+    else if (answer.end.includes('/missing/') && !destination.includes('/missing/'))
+      problems.push(`${source} went to ${destination}, and now to ${answer.end}`)
+  }
+  expect(problems).toEqual([])
+})
+
+for (let at = 0; at < ROUTES.paths.length; at += CHUNK) {
+  const chunk = ROUTES.paths.slice(at, at + CHUNK)
+  test(`the deployed URLs ${at + 1}–${at + chunk.length} of ${ROUTES.paths.length}, from ${ROUTES.commit.slice(0, 7)}, still answer`, async ({
+    request,
+  }) => {
+    const problems: string[] = []
+    // A few at a time, as a crawler would ask
+    for (let next = 0; next < chunk.length; next += 8) {
+      const answers = await Promise.all(chunk.slice(next, next + 8).map(path => problemOf(request, path)))
+      problems.push(...answers.filter((problem): problem is string => problem !== undefined))
+    }
+    expect(problems).toEqual([])
+  })
+}

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound } from 'next/navigation'
-import { guideMeta, pageParams } from '@/lib/docs/site'
+import { notFound, permanentRedirect } from 'next/navigation'
+import { guideMeta, movedPageHref, pageParams } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -33,5 +33,9 @@ async function guide(line: string, slug: string) {
 
 export default async function GuidePage({ params }: Params) {
   const { line, slug } = await params
-  return (await guide(line, slug.join('/'))) ?? notFound()
+  const page = await guide(line, slug.join('/'))
+  if (page) return page
+  // An old page's slug, which its page's `formerly` names, sent to where the page is now
+  const moved = movedPageHref(line, slug.join('/'))
+  return moved ? permanentRedirect(moved) : notFound()
 }

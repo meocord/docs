@@ -1,11 +1,8 @@
 import { expect, type Page, test } from '@playwright/test'
-import { guideRendered } from '../scripts/lib/guide'
 import { axe } from './axe'
 
 // The Guide page that embeds a playground: components.md's typed route params, the counter button
 const PAGE = '/docs/4.1/components'
-
-test.skip(!guideRendered('4.1'), 'The Guide renders only in a build with DOCS_NEXT=1')
 
 const embed = (page: Page) => page.locator('[data-playground-embed]').first()
 const run = (page: Page) => embed(page).getByRole('button', { name: 'Run' })

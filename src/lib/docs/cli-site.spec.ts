@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import type { CliCommand, CliManifest } from '../../../scripts/lib/cli'
 import { cliArticle, renderCliPage } from '@/lib/docs/api-render'
 import { cliParams } from '@/lib/docs/api-site'
@@ -54,7 +54,6 @@ describe('the CLI reference', () => {
   })
 
   describe('where the API is arranged by kind', () => {
-    beforeAll(() => vi.stubEnv('DOCS_NEXT', '1'))
     afterAll(() => vi.unstubAllEnvs())
 
     it('has a page for every command in the manifest and none for a command it lacks, every subcommand anchored', () => {

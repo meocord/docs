@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderGuide } from '@/lib/docs/render'
-import { guidePage, lines, pageParams, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
+import { guidePage, linePageWithId, lines, pageParams, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
 
 // These read the repository's real versions.json and pages: 4.0 is current, 4.1 in prerelease.
 describe('the docs site data', () => {
@@ -30,13 +30,31 @@ describe('the docs site data', () => {
   })
 
   it('keeps the page when switching lines, and says so on a line without it', () => {
-    const { current, options } = versionChoices('4.0', 'guards')
+    const page = (id: string, formerly: string[] = []) => ({ page: { id, formerly }, line: '4.0' })
+    const { current, options } = versionChoices('4.0', page('guards'))
     expect(current).toMatchObject({ label: '4.0', href: '/docs/latest/guards' })
     expect(options.find(option => option.label === '4.1')?.href).toBe('/docs/4.1/guards')
-    expect(versionChoices('4.0', 'no-such-page').options.find(option => option.label === '4.1')?.href).toBe(
+    expect(versionChoices('4.0', page('no-such-page')).options.find(option => option.label === '4.1')?.href).toBe(
       '/docs/4.1/missing/no-such-page',
     )
     expect(versionChoices('4.0').current.href).toBe('/docs/latest')
+  })
+
+  it("finds a line's page on the same topic by the ids a Guide page covers, both ways", () => {
+    const to = (line: string, from: string, id: string) =>
+      versionChoices(from, { page: linePageWithId(from, id)!, line: from }).options.find(
+        option => option.label === line,
+      )?.href
+    expect(to('4.0', '4.1', 'slash-commands')).toBe('/docs/latest/command-types')
+    expect(to('4.0', '4.1', 'context-menus')).toBe('/docs/latest/command-types')
+    expect(to('4.0', '4.1', 'components')).toBe('/docs/latest/command-parameters')
+    expect(to('4.0', '4.1', 'cli')).toBe('/docs/latest/cli-reference')
+    expect(to('4.0', '4.1', 'testing-recipes')).toBe('/docs/latest/testing')
+    // Where several pages cover one id, the first in reading order is the one
+    expect(to('4.1', '4.0', 'command-types')).toBe('/docs/4.1/slash-commands')
+    expect(to('4.0', '4.1', 'services')).toBe('/docs/4.0/missing/services')
+    // A page covering a section lands on it
+    expect(to('4.0', '4.1', 'eslint')).toBe('/docs/latest/configuration#eslint')
   })
 
   it('lowers a page with its breadcrumbs, headings and canonical URL', () => {

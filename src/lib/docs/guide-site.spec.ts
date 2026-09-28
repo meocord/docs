@@ -5,11 +5,19 @@ import { describe, expect, it, vi } from 'vitest'
 
 // A Guide of four pages in a scratch root: two chapters in reading order, and a recipe apart.
 const root = mkdtempSync(path.join(tmpdir(), 'guide-site-'))
-mkdirSync(path.join(root, 'content', '4.1-next'), { recursive: true })
+mkdirSync(path.join(root, 'content', '4.1'), { recursive: true })
 const lines = [{ line: '4.1', status: 'prerelease', guides: 'authored', versions: ['4.1.0-beta.7'] }]
-writeFileSync(path.join(root, 'versions.json'), JSON.stringify({ package: 'meocord', since: '4.1.0-beta.0', lines }))
+writeFileSync(
+  path.join(root, 'versions.json'),
+  JSON.stringify({
+    package: 'meocord',
+    since: '4.1.0-beta.0',
+    provenance: { issuer: 'https://token.actions.githubusercontent.com' },
+    lines,
+  }),
+)
 const write = (id: string, frontmatter: string, body: string) =>
-  writeFileSync(path.join(root, 'content', '4.1-next', `${id}.md`), `---\nid: ${id}\n${frontmatter}\n---\n\n${body}\n`)
+  writeFileSync(path.join(root, 'content', '4.1', `${id}.md`), `---\nid: ${id}\n${frontmatter}\n---\n\n${body}\n`)
 const learn = 'learn: [One thing, Another]'
 write(
   'guards',
@@ -30,7 +38,6 @@ const frames: Record<string, string> = { '4.1': '/playground/4.1.0-beta.7.012345
 vi.mock('@/lib/docs/playground-site', () => ({ playgroundFrame: (line: string) => frames[line] }))
 
 vi.stubEnv('MEOCORD_DOCS_ROOT', root)
-vi.stubEnv('DOCS_NEXT', '1')
 const { guideEnabled, guideEntries, guidePagesTeaching, guideSidebar, guideTabs, guideView, resolveGuideLink } =
   await import('@/lib/docs/guide-site')
 const { guideArticle } = await import('@/lib/docs/render')
@@ -38,7 +45,7 @@ const { Div } = await import('@meonode/ui')
 const { renderToStaticMarkup } = await import('react-dom/server')
 
 describe('the Guide', () => {
-  it('is rendered where DOCS_NEXT is set and the line has one, in reading order, invalid pages left out', () => {
+  it('is rendered for a line whose guides are authored, in reading order, invalid pages left out', () => {
     expect(guideEnabled('4.1')).toBe(true)
     expect(guideEnabled('4.0')).toBe(false)
     expect(guideEntries('4.1').map(entry => entry.page.id)).toEqual([

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
-import { listPages } from '../../../../scripts/lib/pages'
-import { guideMeta, lines } from '@/lib/docs/site'
+import { guideMeta, linePages, lines } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -19,7 +18,7 @@ export function generateStaticParams() {
 
 // A line lands on its first page, which stays canonical at its own URL.
 function landing(line: string) {
-  return listPages(line)[0]?.slug
+  return linePages(line)[0]?.path
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

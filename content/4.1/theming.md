@@ -1,8 +1,27 @@
 ---
 id: theming
 title: Theming
-section: Answering Discord
-order: 23.5
+chapter: structure
+order: 3
+summary: Give every answer your bot sends its colours and emojis by role, set once and changed where you need to.
+learn:
+  - Set a theme for the app and change it for a controller or a handler
+  - Read the theme in handlers, services and presenters
+  - Look up a theme per server and per user
+  - Add tokens of your own and test a themed bot
+requires: [responses, presenters]
+api:
+  [
+    decorators/UseTheme,
+    responses/useTheme,
+    responses/bindTheme,
+    utilities/ThemeCache,
+    types/MeoCordTheme,
+    configuration/RootTheme,
+    configuration/ThemeOverride,
+    testing/createMockTheme,
+    testing/withTheme,
+  ]
 since: 4.1.0
 ---
 
@@ -38,8 +57,8 @@ A theme is resolved for each call before anything runs, and it stays the same fo
 only what it changes, over the one beneath it:
 
 1. MeoCord's defaults;
-2. [`@MeoCord({ theme })`](/docs/4.1/api/decorator/MeoCord), the app's theme;
-3. [`@UseTheme`](/docs/4.1/api/decorator/UseTheme) on each class, from a base class down to the controller;
+2. [`@MeoCord({ theme })`](api:decorators/MeoCord#theme), the app's theme;
+3. [`@UseTheme`](api:decorators/UseTheme) on each class, from a base class down to the controller;
 4. `@UseTheme` on the handler;
 5. the server's theme, then the user's, from [`themeFor`](#per-server-and-per-user).
 
@@ -55,13 +74,13 @@ A theme has three groups of roles:
 | Group     | Roles                                                        | A value is                                                                               |
 | --------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | `colors`  | `primary`, `neutral`, `success`, `warning`, `danger`, `info` | a colour discord.js accepts: `'#7680F4'`, `0x7680f4`, `[118, 128, 244]` or a colour name |
-| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>` or `<a:name:id>`                   |
+| `emojis`  | `loading`, `success`, `warning`, `danger`, `info`            | a unicode emoji, or a custom one written `<:name:id>`, or `<a:name:id>` when animated    |
 | `buttons` | `primary`, `neutral`, `success`, `danger`                    | `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`                                |
 
 `warning` is for what the user can fix, such as a refused or invalid call. `danger` is a fault in the bot. MeoCord
 checks every token where it's set; see [Valid tokens](#valid-tokens).
 
-## Defaults
+### Defaults
 
 | Role      | Colour    | Emoji | Button style            |
 | --------- | --------- | ----- | ----------------------- |
@@ -75,10 +94,10 @@ checks every token where it's set; see [Valid tokens](#valid-tokens).
 
 The colours keep the hues of 4.0's `Theme`, with their lightness moved until each gives at least 3:1 against every
 surface an embed's stripe or a container's accent sits on in Discord's light, dark, darker and midnight themes: the
-contrast WCAG 2.1 asks of a graphic that carries meaning. A test holds every default to it, so a default that changes
-still reads on light and dark alike.
+contrast WCAG 2.1 asks of a graphic that carries meaning. A test in MeoCord holds every default to it, so a default
+that changes still reads on light and dark alike.
 
-## Valid tokens
+### Valid tokens
 
 - **A colour** is a 6-digit hex string such as `'#7680F4'`, with or without `#`; a whole number from `0` to
   `0xFFFFFF`; an `[r, g, b]` tuple of whole numbers from 0 to 255; or a discord.js colour name such as `'Blurple'`. A
@@ -94,12 +113,12 @@ Each problem is named with its key path and what to give instead, such as
 checked whatever roles an app added to them; a group of the app's own is the app's to check.
 
 A theme set in code is checked where it's declared. A bad token in `@MeoCord({ theme })` or `@UseTheme` stops the bot
-before it logs in, and the message names where it was set, then each token it refuses, as in
+before it logs in. The message names where the theme was set, then each token it refuses, as in
 `ShopController.refund: @UseTheme: the theme has 1 problem:` followed by `theme.emojis.loading: …`.
 
 ## Reading the theme
 
-[`useTheme()`](/docs/4.1/api/common/useTheme) returns the theme of the running call, with every role present. It works
+[`useTheme()`](api:responses/useTheme) returns the theme of the running call, with every role present. It works
 anywhere the call runs: in the handler, in a service or a presenter it calls, and in a timer or a promise it starts.
 A guard, an interceptor or a filter reads the same theme as `context.getTheme()`.
 
@@ -109,27 +128,26 @@ an app has started.
 ### Collectors and listeners
 
 A collector's `collect` callback, or a `client.on(...)` listener, is called by its emitter, outside the call that
-set it up. `respond(click)` there still takes the app's theme and the server's, but not the handler's `@UseTheme`. To
-keep the handler's, wrap the callback in [`bindTheme`](/docs/4.1/api/common/bindTheme):
+set it up. `respond(click)` there still takes the app's theme, with the server's and the user's over it, but not the
+handler's `@UseTheme`. To keep the handler's, wrap the callback in [`bindTheme`](api:responses/bindTheme):
 
 ::example{file="controllers/slash/vote.slash.controller.ts" region="bind"}
 
 ## What respond() themes
 
 An embed with no `color`, and a Components V2 container with no `accent_color`, sent through
-[`respond()`](/docs/4.1/responses), take the theme's `primary`. A colour you set is kept, `0` included. MeoCord's own
-views, the loading view and error answers, are styled by the [presenter](/docs/4.1/presenters), which gets the theme and
+[`respond()`](guide:responses), take the theme's `primary`. A colour you set is kept, `0` included. MeoCord's own
+views, the loading view and error answers, are styled by the [presenter](guide:presenters), which gets the theme and
 the error's tone.
 
 To send one message as written, pass `{ fill: false }` as the second argument to `send()`, `edit()` or
 `followUp()`, as `/banner` does above. The next message is filled again. What you send around `respond()`, with
 `interaction.reply()`, is never touched.
 
-## Replies to messages
-
-MeoCord answers a message in plain text, which a theme leaves as it is. With
-`@MeoCord({ messages: { replyEmoji: true } })` each of those replies begins with the call's `emojis.warning`: see
-[Replies with the theme's emoji](/docs/4.1/message-commands#replies-with-the-themes-emoji).
+MeoCord's replies to a message are plain text, which a theme leaves as it is: a usage error, a guard's or validation's
+reason, and a `UserError`'s message. With `@MeoCord({ messages: { replyEmoji: true } })` each of them begins with the
+call's `emojis.warning`, as do the direct messages of `dmOnError` and `dmOnCooldown`, and the built-in help with its
+`emojis.info`: see [Usage errors](guide:message-commands#usage-errors).
 
 ## Per server and per user
 
@@ -164,19 +182,20 @@ your root theme, naming each.
 ## Testing a themed bot
 
 A testing module runs each call in its theme, as the bot does. Give the module a theme with `overrideTheme`, and
-compare against [`createMockTheme()`](/docs/4.1/api/testing/createMockTheme), a whole theme with MeoCord's defaults:
+compare against [`createMockTheme()`](api:testing/createMockTheme), a whole theme with MeoCord's defaults:
 
 ::example{file="controllers/slash/store.slash.controller.spec.ts" region="spec"}
 
-To run a service in a theme without a module, use
-[`withTheme(theme, fn)`](/docs/4.1/api/testing/withTheme).
+To run a service in a theme without a module, use `withTheme(theme, fn)`. See
+[Mocks](guide:mocks) for both.
 
 ## From the Theme class
 
 `Theme` from `meocord/common` still works, and it's deprecated. Each of its colours reads the matching role of the
 call's theme, and `errorColor` is `danger`. Read the theme with `useTheme()` in new code, and set colours in
-`@MeoCord({ theme })`. The [migration guide](/docs/4.1/migrating#theme-is-deprecated-and-its-colours-changed) lists
-the old values if you want to keep them.
+`@MeoCord({ theme })`. The
+[migration guide](guide:migrating#theme-is-deprecated-and-its-colours-changed)
+lists the old values if you want to keep them.
 
 ## Gotchas
 
@@ -188,3 +207,27 @@ the old values if you want to keep them.
   `row.toObject()` or `{ ...row }`.
 - **A `user` resolver runs for every message a message handler takes.** Keep it cheap; its result is cached per
   user.
+
+## Build it
+
+The feedback bot's review posts have no colour, and every verdict takes MeoCord's default primary. Give the bot a
+colour of its own:
+
+::example{file="tutorial/app.ts" region="step:theming"}
+
+The review post is sent with `channel.send`, not `respond()`, so it reads the theme itself:
+
+::example{file="tutorial/feedback.controller.ts" region="step:theming"}
+
+Colour each verdict by what it means, and give the review buttons a loading emoji of their own:
+
+::example{file="tutorial/review.controller.ts" region="step:theming"}
+
+Submit a report, then approve one and reject another: the post arrives in the bot's colour, an approval turns it
+green and a rejection grey, and 📝 shows while each is saved.
+
+## Next steps
+
+- [Presenters](guide:presenters): style MeoCord's loading and error views from the theme and the error's tone.
+- [Answering with respond()](guide:responses): what `respond()` sends, and where the theme fills it.
+- [Mocks](guide:mocks): themes, and everything else a test builds.

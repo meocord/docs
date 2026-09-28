@@ -48,6 +48,9 @@ export function parseStored(href: string, lines: readonly string[]): { target: D
     target = { kind: 'missing', line, id: parts[1] }
   } else if (parts.length === 1 && parts[0] !== '') {
     target = { kind: 'guide', line, slug: parts[0], anchor }
+  } else if (parts.length === 2 && (parts[0] === 'recipes' || parts[0] === 'coming-from') && parts[1] !== '') {
+    // A recipe or coming-from page of the Guide, served under its group
+    target = { kind: 'guide', line, slug: parts[1], anchor, group: parts[0] }
   } else {
     return { problem: 'names no page' }
   }
