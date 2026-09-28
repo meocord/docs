@@ -21,6 +21,16 @@ describe('proxy', () => {
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow')
   })
 
+  it("lets the playground's sandboxed frame read its runtime and compiler, and nothing else", () => {
+    for (const path of ['/playground/4.1.0-beta.7.0123456789.js', '/playground/swc.abcdef0123.wasm']) {
+      const response = proxy(request(path))
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*')
+      expect(response.headers.get('Content-Security-Policy')).toBe(STATIC_FILE_CSP)
+    }
+    for (const path of ['/docs/4.1/defer', '/palette/4.1.0123456789.json', '/icon-32.png'])
+      expect(proxy(request(path)).headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+
   it('answers next with a 307 that carries the site headers and the query', () => {
     const response = proxy(request('/docs/next/guides/defer?tab=bun'))
     expect(response.status).toBe(307)

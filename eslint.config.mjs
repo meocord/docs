@@ -30,6 +30,9 @@ export default defineConfig([
     'public/_pagefind/**',
     'public/palette/**',
     '.search/**',
+    // The playground's runtimes, built by `bun run playground:build`
+    'public/playground/**',
+    '.playground/**',
     '.api-layout/**',
     'coverage/**',
     'playwright-report/**',

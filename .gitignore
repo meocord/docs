@@ -20,6 +20,9 @@ CLAUDE.md
 /public/_pagefind/
 /public/palette/
 /.search/
+# The playground's runtimes and their manifest, by `bun run playground:build`
+/public/playground/
+/.playground/
 # The reference's formatted code, by `bun run api:layout`
 /.api-layout/
 # The home page's recorded demo, by `bun run home:trace`

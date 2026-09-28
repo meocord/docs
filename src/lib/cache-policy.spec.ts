@@ -71,3 +71,19 @@ describe('search assets', () => {
     expect(isInertPath('/docs/4.1/guards')).toBe(false)
   })
 })
+
+describe('playground assets', () => {
+  it('caches a hashed runtime and the compiler as immutable, under the flat-deny policy', () => {
+    expect(pathKind('/playground/4.1.0-beta.7.0123456789.js')).toBe('playground')
+    expect(pathKind('/playground/4.1.0.abcdef0123.js')).toBe('playground')
+    expect(pathKind('/playground/swc.abcdef0123.wasm')).toBe('playground')
+    expect(cacheControlFor('/playground/swc.abcdef0123.wasm')).toBe(IMMUTABLE)
+    expect(isInertPath('/playground/4.1.0-beta.7.0123456789.js')).toBe(true)
+  })
+
+  it('treats anything else under /playground as a page, never as immutable', () => {
+    expect(pathKind('/playground/runtime.js')).toBe('page')
+    expect(pathKind('/playground/4.1.0-beta.7.0123456789.js.map')).toBe('page')
+    expect(pathKind('/playground/swc.xyz.wasm')).toBe('page')
+  })
+})

@@ -4,6 +4,8 @@ const STATIC_FILE = /\.(?:ico|png|jpe?g|gif|webp|avif|svg|webmanifest|woff2?|ttf
 /** A line's search bundle and palette index, under paths that carry the hash of their bytes. */
 const SEARCH_BUNDLE = /^\/_pagefind\/\d+\.\d+\.[0-9a-f]{10}\//
 const PALETTE = /^\/palette\/\d+\.\d+\.[0-9a-f]{10}\.json$/
+/** A line's playground runtime and the compiler it runs with, under paths that carry the hash of their bytes. */
+const PLAYGROUND = /^\/playground\/(?:\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?|swc)\.[0-9a-f]{10}\.(?:js|wasm)$/
 
 /** A year: the path changes whenever the bytes do. */
 export const IMMUTABLE = 'public, max-age=31536000, immutable'
@@ -20,13 +22,15 @@ export const STATIC_FILE_CSP = "default-src 'none'; base-uri 'none'; frame-ances
 /**
  * What kind of response a path is, for its cache and security headers. A search bundle keeps the
  * document policy, since Pagefind's worker runs WebAssembly under the policy it is served with; a
- * palette index is data and gets the flat-deny policy, as files do.
+ * palette index is data and gets the flat-deny policy, as files do. A playground runtime is loaded into a
+ * Worker, which takes its policy from the frame that starts it, so it gets the flat-deny policy too.
  */
-export type PathKind = 'search-bundle' | 'palette' | 'file' | 'versioned-page' | 'page'
+export type PathKind = 'search-bundle' | 'palette' | 'playground' | 'file' | 'versioned-page' | 'page'
 
 export function pathKind(pathname: string): PathKind {
   if (SEARCH_BUNDLE.test(pathname)) return 'search-bundle'
   if (PALETTE.test(pathname)) return 'palette'
+  if (PLAYGROUND.test(pathname)) return 'playground'
   if (STATIC_FILE.test(pathname)) return 'file'
   const [, section, version] = pathname.split('/')
   if (section === 'docs' && version && version !== 'latest' && version !== 'next') return 'versioned-page'
@@ -38,6 +42,7 @@ export function cacheControlFor(pathname: string): string {
   switch (pathKind(pathname)) {
     case 'search-bundle':
     case 'palette':
+    case 'playground':
       return IMMUTABLE
     case 'file':
       return NAMED_FILE
@@ -51,7 +56,15 @@ export function cacheControlFor(pathname: string): string {
 /** Whether a path gets the flat-deny policy: files and data that nothing runs from. */
 export function isInertPath(pathname: string): boolean {
   const kind = pathKind(pathname)
-  return kind === 'file' || kind === 'palette'
+  return kind === 'file' || kind === 'palette' || kind === 'playground'
+}
+
+/**
+ * Whether a path is read from the playground's sandboxed frame, whose origin is opaque: its runtime and the
+ * compiler's WebAssembly, fetched across origins, so they allow any origin to read them. Nothing else does.
+ */
+export function isPlaygroundAsset(pathname: string): boolean {
+  return pathKind(pathname) === 'playground'
 }
 
 /**
