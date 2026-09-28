@@ -2,6 +2,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
+import type { ApiDocument } from './lib/api.js'
 import type { ChangelogDocument } from './lib/changelog.js'
 import type { ConfigDocument } from './lib/config-reference.js'
 import { commentsOf } from './lib/comments.js'
@@ -74,7 +75,7 @@ for (const { line, versions } of config.lines) {
     if (api) {
       site.apis.add(version)
       // An API page links each @pipeline stage to its place in the figure on How a call runs
-      problems.push(...pipelineStageProblems(JSON.parse(api), version))
+      problems.push(...pipelineStageProblems(JSON.parse(api) as ApiDocument, version))
     }
     const reference = readIf(paths.config(version))
     site.configs[version] = reference ? (JSON.parse(reference) as ConfigDocument) : undefined
