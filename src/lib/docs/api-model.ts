@@ -21,6 +21,8 @@ export interface ApiParam {
   name: string
   /** The id of its row, for a property of an options parameter on the symbol's own page: `i18n`. */
   anchor?: string
+  /** A property of an options parameter, `options.ephemeral`, rather than a parameter of the signature's own. */
+  option?: true
   type: Token[]
   optional: boolean
   defaultValue?: string
@@ -435,7 +437,13 @@ export class ApiModel {
         else rows.push({ name, anchorKey: property, type: [], optional: false, description: this.#parts(parts) })
       }
       // Anchors once the rows are final, so a merged row takes one
-      params.push(...rows.map(({ anchorKey, ...row }) => ({ ...row, anchor: anchorKey && anchor(anchorKey) })))
+      params.push(
+        ...rows.map(({ anchorKey, ...row }) => ({
+          ...row,
+          anchor: anchorKey && anchor(anchorKey),
+          option: true as const,
+        })),
+      )
     }
     const returns = signature.comment?.blockTags?.find(tag => tag.tag === '@returns')
     const returnsType = signature.type && signature.kind !== 16384 ? this.type(signature.type) : undefined
