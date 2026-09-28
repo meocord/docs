@@ -100,22 +100,19 @@ describe('playground assets', () => {
 })
 
 describe('playgroundFrameCsp', () => {
-  it("sandboxes the frame and limits its scripts and requests to the playground's files, by the site's host", () => {
+  it("sandboxes the frame and limits its scripts and requests to the playground's files, by the site's origin exactly", () => {
     expect(playgroundFrameCsp('https://meocord.dev').split('; ')).toEqual([
       'sandbox allow-scripts',
       "default-src 'none'",
-      "script-src https://meocord.dev/playground/ http://meocord.dev/playground/ 'unsafe-eval' 'wasm-unsafe-eval'",
+      "script-src https://meocord.dev/playground/ 'unsafe-eval' 'wasm-unsafe-eval'",
       'worker-src blob:',
-      'connect-src https://meocord.dev/playground/ http://meocord.dev/playground/',
-      'frame-ancestors https://meocord.dev http://meocord.dev',
+      'connect-src https://meocord.dev/playground/',
+      'frame-ancestors https://meocord.dev',
       "base-uri 'none'",
       "form-action 'none'",
     ])
-    // The scheme the request came in on doesn't matter: behind the edge it is always http
-    expect(playgroundFrameCsp('http://meocord.dev')).toBe(playgroundFrameCsp('https://meocord.dev'))
-    expect(playgroundFrameCsp('http://localhost:4100')).toContain(
-      'frame-ancestors https://localhost:4100 http://localhost:4100;',
-    )
+    expect(playgroundFrameCsp('http://localhost:4100')).toContain('frame-ancestors http://localhost:4100;')
+    expect(playgroundFrameCsp('https://meocord.dev')).not.toContain('http://')
   })
 
   it('denies everything for an origin a policy cannot name', () => {
