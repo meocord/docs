@@ -27,6 +27,8 @@ export interface PipelineStage {
   guide: string
   api?: string
   around?: readonly PipelineStage[]
+  /** What the stage does for particular kinds, where that differs: shown in place of `what` once a kind is picked. */
+  byKind?: readonly { kinds: readonly HandlerKind[]; what: string }[]
 }
 
 /** The stages of a call, in the order they run, as MeoCord's dispatch runs them. */
@@ -137,9 +139,28 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'fallback',
         name: 'The built-in fallback',
-        what: "Answer what no filter handled: a refusal or a user's mistake in its own words, anything else as a generic error. An autocomplete's menu is closed, and a reaction's or an event's error is only logged.",
+        what: 'Answer or log what no filter handled, as the kind of handler allows: pick one to see how.',
         kinds: EVERY,
         guide: 'guide:exception-filters#the-built-in-fallback',
+        byKind: [
+          {
+            kinds: ['command', 'component'],
+            what: "Answer a refusal, a cooldown or a user's mistake privately, in its own words or MeoCord's, and anything else as a generic error.",
+          },
+          { kinds: ['autocomplete'], what: 'Log the error and close the menu.' },
+          {
+            kinds: ['message'],
+            what: "Reply with the command's usage, or why a guard or validation refused it, and to a user's mistake; skip a cooldown; log anything else.",
+          },
+          {
+            kinds: ['message-listener'],
+            what: "Reply to a user's mistake; skip a refusal or a cooldown; log anything else.",
+          },
+          {
+            kinds: ['reaction', 'event'],
+            what: "Reply to a user's mistake where there's a message to reply to, and log anything else.",
+          },
+        ],
       },
     ],
   },
@@ -179,7 +200,10 @@ function stageItem(stage: PipelineStage, href: (url: string) => string): NodeIns
                 }),
               ]
             : []),
-          P(stage.what, { key: 'what' }),
+          P(stage.what, { key: 'what', 'data-what': true }),
+          ...(stage.byKind ?? []).map(({ kinds, what }) =>
+            P(what, { key: kinds.join('-'), 'data-kinds': kinds.join(' ') }),
+          ),
         ],
       }),
       ...(stage.around ? [Ol({ key: 'around', children: stage.around.map(inner => stageItem(inner, href)) })] : []),
