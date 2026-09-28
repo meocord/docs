@@ -27,10 +27,30 @@ export const CHAPTERS = [
 export type ChapterId = (typeof CHAPTERS)[number]['id']
 
 /**
- * The site's own paths under `/docs/<line>/`, which no Guide page may take: the API, the changelog, the
- * migration guide, the appendix groups' folders and the playground.
+ * Paths under `/docs/<line>/` the site will route, which no Guide page may take before they land: the
+ * playground. The routed ones are read from the app's folders, by `routedSlugs`.
  */
-export const RESERVED_SLUGS = ['api', 'changelog', 'migrating', 'recipes', 'coming-from', 'playground'] as const
+export const PLANNED_ROUTES = ['playground'] as const
+
+/**
+ * The paths under `/docs/<line>/` the site already routes, from src/app/docs/[line]/'s folders, and the
+ * appendix groups' folders, which a Guide page's own path can't start with either.
+ */
+export function routedSlugs(root: string): string[] {
+  const routes = readdirSync(path.join(root, 'src', 'app', 'docs', '[line]'), { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !entry.name.startsWith('['))
+    .map(entry => entry.name)
+  return [...routes, 'recipes', 'coming-from']
+}
+
+/** Guide paths that take one of the site's own: a routed path, or a planned one. */
+export function reservedProblems(root: string, plan = GUIDE_PLAN): string[] {
+  const reserved = new Set([...routedSlugs(root), ...PLANNED_ROUTES])
+  return Object.values(plan)
+    .flat()
+    .filter(page => reserved.has(page))
+    .map(page => `The Guide's plan has "${page}", a path the site routes itself`)
+}
 
 /**
  * The Guide as approved: every page's path, by chapter. It is the one list of the Guide's slugs; a page
