@@ -28,3 +28,24 @@ for (const path of PAGES) {
     expect(serious).toEqual([])
   })
 }
+
+// Landmarks at any impact, at a width that draws every pane: each complementary pane named apart
+const LANDMARK_RULES = [
+  'landmark-unique',
+  'landmark-one-main',
+  'landmark-complementary-is-top-level',
+  'landmark-no-duplicate-banner',
+  'landmark-no-duplicate-contentinfo',
+  'landmark-no-duplicate-main',
+]
+
+for (const path of PAGES) {
+  test(`${path} names each of its landmarks apart`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(path)
+    const { violations } = await new AxeBuilder({ page }).withRules(LANDMARK_RULES).analyze()
+    expect(
+      violations.map(violation => `${violation.id}: ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`),
+    ).toEqual([])
+  })
+}

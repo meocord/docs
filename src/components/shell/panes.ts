@@ -16,6 +16,8 @@ type WithCss<P> = Omit<NonNullable<P>, 'css'> & { css?: ThemedCSSObject }
 export const SidebarPane = ({ css, ...props }: WithCss<Parameters<typeof Aside>[0]> = {}) =>
   Aside({
     'data-sidebar': true,
+    // Named, as the window's other complementary pane is, so a landmark list tells them apart
+    'aria-label': 'Sidebar',
     display: 'flex',
     flexDirection: 'column',
     width: 'theme.layout.sidebar',
