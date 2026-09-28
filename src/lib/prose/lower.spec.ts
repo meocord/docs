@@ -64,6 +64,15 @@ describe('lowerMarkdown', () => {
       html('::playground{file="live.ts" region="count" dispatch="button counter/1"}', { playground, example }),
     ).toBe('<div><div data-playground="true"></div></div>')
     expect(seen).toEqual([{ file: 'live.ts', region: 'count', dispatch: 'button counter/1' }])
+    const asked: unknown[] = []
+    html('::playground{file="other.ts" from="compare" dispatch="/ping"}', {
+      example: (...args: unknown[]) => {
+        asked.push(args)
+        return ''
+      },
+    })
+    // Only the file and region reach the example's resolver
+    expect(asked).toEqual([['other.ts', undefined, undefined]])
     for (const options of [{ playground, example }, { example }]) {
       const out = html('::playground{file="other.ts" region="count" dispatch="/ping"}', options)
       expect(out).toContain('<figure data-code="true">')

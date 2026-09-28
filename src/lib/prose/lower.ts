@@ -120,7 +120,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           node.children.length === 1 && node.children[0].type === 'text'
             ? EXAMPLE.exec(node.children[0].value.trim())
             : null
-        if (directive) return lowerExample(directive[1], key)
+        if (directive) return lowerExample(attributesOf(directive[1]), key)
         const playground =
           node.children.length === 1 && node.children[0].type === 'text'
             ? PLAYGROUND.exec(node.children[0].value.trim())
@@ -221,8 +221,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
     return /^https?:\/\//i.test(node.url) ? A({ key, href: node.url, children: text }) : text
   }
 
-  function lowerExample(attributes: string, key: number) {
-    const values = attributesOf(attributes)
+  function lowerExample(values: Record<string, string>, key: number) {
     if (!values.file || !options.example) return ''
     return codeFrame(options.example(values.file, values.region, values.from), 'ts', { key, file: values.file })
   }
@@ -233,7 +232,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       values.file && values.dispatch !== undefined
         ? options.playground?.({ file: values.file, region: values.region, dispatch: values.dispatch }, key)
         : undefined
-    return drawn ?? lowerExample(written, key)
+    return drawn ?? lowerExample({ file: values.file, ...(values.region && { region: values.region }) }, key)
   }
 
   function lowerTable(table: MdTable, key: number) {

@@ -170,8 +170,13 @@ describe('checkSite', () => {
         'id: a\ntitle: A',
         '::playground{file="guards/owner.guard.ts" dispatch="/ping"}\n\n```text\n::playground{file="x.ts"}\n```',
       ),
+      b: page('id: b\ntitle: B', 'Run it: ::playground{file="x.ts" dispatch="/ping"}, or see `::playground`.'),
+      c: page('id: c\ntitle: C', 'Written as `::playground{…}` in the Guide.'),
     }
-    expect(checkSite(withAuthored(pages))).toEqual(['content/4.1/a.md: ::playground is a Guide directive'])
+    expect(checkSite(withAuthored(pages))).toEqual([
+      'content/4.1/a.md: ::playground is a Guide directive',
+      'content/4.1/b.md: ::playground is a Guide directive',
+    ])
   })
 
   it('reads an ::example from examples/compare with from="compare", and refuses other sources', () => {

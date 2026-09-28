@@ -7,7 +7,7 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
-import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
+import { EXAMPLE_SOURCE, fenceLanguages, hasRegion, markdownLinks, pageAnchors, withoutCode } from './content'
 import { withPackageSpec } from './package-spec'
 import type { VersionsConfig } from './versions'
 import { memberAnchor } from '../../src/lib/urls'
@@ -415,12 +415,15 @@ function checkExamples(where: string, body: string, context: GuideContext, probl
     }
     const source = context.examples[folder]?.[`src/${attributes.file}`]
     if (source === undefined) problems.push(`${where}: examples/${folder}/src/${attributes.file} does not exist`)
-    else if (
-      attributes.region &&
-      !(source.includes(`// #region ${attributes.region}\n`) && source.includes(`// #endregion ${attributes.region}`))
-    )
+    else if (attributes.region && !hasRegion(source, attributes.region))
       problems.push(`${where}: examples/${folder}/src/${attributes.file} has no region "${attributes.region}"`)
   }
+  // Lowered only as a paragraph of its own; anywhere else it would show as its text
+  const lines = withoutCode(body).split('\n')
+  const blank = (at: number) => (lines[at] ?? '').trim() === ''
+  for (const [at, line] of lines.entries())
+    if (/::playground\b/.test(line) && !(/^::playground\{[^}]*\}\s*$/.test(line) && blank(at - 1) && blank(at + 1)))
+      problems.push(`${where}: a ::playground stands alone in its paragraph, not in "${line.trimEnd()}"`)
   for (const match of withoutCode(body).matchAll(PLAYGROUND)) checkPlayground(where, match[1], context, problems)
 }
 
@@ -442,10 +445,7 @@ function checkPlayground(where: string, written: string, context: GuideContext, 
   const source = context.examples[context.line]?.[`src/${attributes.file}`]
   if (source === undefined) problems.push(`${where}: ${file} does not exist`)
   else {
-    if (
-      attributes.region &&
-      !(source.includes(`// #region ${attributes.region}\n`) && source.includes(`// #endregion ${attributes.region}`))
-    )
+    if (attributes.region && !hasRegion(source, attributes.region))
       problems.push(`${where}: ${file} has no region "${attributes.region}"`)
     const outside = outsideModules(source)
     if (outside.length > 0)
