@@ -79,7 +79,8 @@ Without it, the bot prints `'debug'` in development, as under `meocord start --d
 
 To change the level for one run, without a rebuild, set `MEOCORD_LOG_LEVEL`. It wins over `logLevel`, ignores letter
 case, so `DEBUG` works, and can be set in `.env`. An unknown value is ignored, with a warning. `logLevel` applies to
-the built bot; the CLI's own output and your tests read only the variable.
+the built bot; the CLI's own output and your tests read only the variable. The level is read once, when the first
+line is logged, so a busy bot never looks it up again, and setting the variable from code after that changes nothing.
 
 ```bash
 MEOCORD_LOG_LEVEL=debug node dist/main.js
