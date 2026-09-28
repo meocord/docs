@@ -249,6 +249,35 @@ describe('option rows', () => {
     expect(rows).toEqual(written)
   })
 
+  it("list every interface's members in its declaration's order", async () => {
+    // Each interface's own members as declared, an overload's name once
+    const declared = new Map<string, string[]>()
+    for (const file of declarationFiles(path.join(pkgDir, 'dist', 'types'))) {
+      const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
+      const visit = (node: ts.Node) => {
+        if (ts.isInterfaceDeclaration(node)) {
+          const names = node.members.flatMap(member => (member.name ? [member.name.getText(source)] : []))
+          declared.set(node.name.text, [...new Set([...(declared.get(node.name.text) ?? []), ...names])])
+        }
+        ts.forEachChild(node, visit)
+      }
+      visit(source)
+    }
+    const { apiModel, apiSections } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    let compared = 0
+    for (const section of apiSections(model))
+      for (const listing of section.symbols) {
+        const symbol = model.symbol(section.slug, listing.name)
+        const own = symbol?.kind === 'interface' ? declared.get(symbol.name) : undefined
+        if (!symbol || !own) continue
+        const drawn = symbol.members.map(member => member.name).filter(name => own.includes(name))
+        expect(drawn, symbol.name).toEqual(own.filter(name => drawn.includes(name)))
+        compared += 1
+      }
+    expect(compared).toBeGreaterThan(50)
+  })
+
   it("list the theme's roles for a parameter written by the name of a computed type", async () => {
     const { apiModel } = await import('@/lib/docs/api-site')
     const model = apiModel('4.1', version)!
