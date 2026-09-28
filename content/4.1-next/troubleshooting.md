@@ -84,7 +84,7 @@ refusing the connection, so the bot stopped before login with the cause. Fix wha
 - **The client hasn't caught up.** Server commands appear at once; global ones can take a while to reach every
   client. Reloading Discord, with Ctrl+R or Cmd+R, refreshes the command list.
 
-A command you removed that still shows is a leftover in a scope this configuration no longer registers to. The bot
+A command you removed that still shows is a leftover in a scope this configuration doesn't register to. The bot
 warns "… command(s) are still registered … which this configuration does not register to", and
 `commands.clearOther` removes them.
 
