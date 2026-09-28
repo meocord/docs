@@ -387,7 +387,15 @@ function checkCallouts(where: string, body: string, problems: string[]): void {
   }
 }
 
+/** The figures a page can draw with `::figure{name="…"}`; src/lib/docs/figures.ts draws each. */
+export const GUIDE_FIGURES = ['pipeline'] as const
+
 function checkExamples(where: string, body: string, context: GuideContext, problems: string[]): void {
+  for (const match of withoutCode(body).matchAll(/^::figure\{([^}]*)\}\s*$/gm)) {
+    const name = /^name="([\w-]+)"$/.exec(match[1].trim())?.[1]
+    if (!name || !(GUIDE_FIGURES as readonly string[]).includes(name))
+      problems.push(`${where}: ::figure{${match[1]}} names no figure; a page can draw ${GUIDE_FIGURES.join(', ')}`)
+  }
   for (const match of withoutCode(body).matchAll(EXAMPLE)) {
     const attributes = Object.fromEntries(
       [...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]),

@@ -37,9 +37,12 @@ export interface LowerOptions {
   href?: (url: string) => string
   /** The code an `::example{file="…" region="…" from="…"}` directive embeds. */
   example?: (file: string, region?: string, from?: string) => string
+  /** The figure a `::figure{name="…"}` directive draws, such as the pipeline; nothing when it has none by that name. */
+  figure?: (name: string, key: number) => NodeInstance | undefined
 }
 
 const EXAMPLE = /^::example\{([^}]*)\}$/
+const FIGURE = /^::figure\{name="([\w-]+)"\}$/
 
 const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
 const ALERTS = {
@@ -83,6 +86,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
             ? EXAMPLE.exec(node.children[0].value.trim())
             : null
         if (directive) return lowerExample(directive[1], key)
+        const figure =
+          node.children.length === 1 && node.children[0].type === 'text'
+            ? FIGURE.exec(node.children[0].value.trim())
+            : null
+        if (figure) return options.figure?.(figure[1], key) ?? ''
         return P(children(node), { key })
       }
       case 'heading': {
