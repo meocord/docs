@@ -2489,18 +2489,16 @@
             "flags": {},
             "children": [
              {
-              "id": 103,
-              "name": "activities",
+              "id": 101,
+              "name": "controllers",
               "variant": "declaration",
               "kind": 1024,
-              "flags": {
-               "isOptional": true
-              },
+              "flags": {},
               "comment": {
                "summary": [
                 {
                  "kind": "text",
-                 "text": "Optional activities for the bot."
+                 "text": "The list of controllers to be registered."
                 }
                ]
               },
@@ -2508,12 +2506,9 @@
                "type": "array",
                "elementType": {
                 "type": "reference",
-                "target": {
-                 "packageName": "discord.js",
-                 "qualifiedName": "ActivityOptions"
-                },
-                "name": "ActivityOptions",
-                "package": "discord.js"
+                "target": 581,
+                "name": "ServiceIdentifier",
+                "qualifiedName": "unknown"
                }
               }
              },
@@ -2542,16 +2537,18 @@
               }
              },
              {
-              "id": 101,
-              "name": "controllers",
+              "id": 103,
+              "name": "activities",
               "variant": "declaration",
               "kind": 1024,
-              "flags": {},
+              "flags": {
+               "isOptional": true
+              },
               "comment": {
                "summary": [
                 {
                  "kind": "text",
-                 "text": "The list of controllers to be registered."
+                 "text": "Optional activities for the bot."
                 }
                ]
               },
@@ -2559,9 +2556,12 @@
                "type": "array",
                "elementType": {
                 "type": "reference",
-                "target": 581,
-                "name": "ServiceIdentifier",
-                "qualifiedName": "unknown"
+                "target": {
+                 "packageName": "discord.js",
+                 "qualifiedName": "ActivityOptions"
+                },
+                "name": "ActivityOptions",
+                "package": "discord.js"
                }
               }
              },
@@ -2596,9 +2596,9 @@
              {
               "title": "Properties",
               "children": [
-               103,
-               102,
                101,
+               102,
+               103,
                104
               ]
              }
@@ -4101,17 +4101,6 @@
         }
        },
        {
-        "id": 233,
-        "name": "methodName",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
         "id": 232,
         "name": "optionName",
         "variant": "declaration",
@@ -4139,6 +4128,17 @@
          "type": "intrinsic",
          "name": "string"
         }
+       },
+       {
+        "id": 233,
+        "name": "methodName",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
        }
       ],
       "groups": [
@@ -4146,8 +4146,8 @@
         "title": "Properties",
         "children": [
          231,
-         233,
-         232
+         232,
+         233
         ]
        }
       ]
@@ -4299,6 +4299,17 @@
       },
       "children": [
        {
+        "id": 255,
+        "name": "methodName",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
         "id": 256,
         "name": "builder",
         "variant": "declaration",
@@ -4339,34 +4350,16 @@
         }
        },
        {
-        "id": 259,
-        "name": "dynamicParams",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "reference",
-          "target": 254,
-          "name": "T",
-          "package": "meocord",
-          "qualifiedName": "CommandMetadata.T",
-          "refersToTypeParameter": true
-         }
-        }
-       },
-       {
-        "id": 255,
-        "name": "methodName",
+        "id": 257,
+        "name": "type",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
-         "type": "intrinsic",
-         "name": "string"
+         "type": "reference",
+         "target": 582,
+         "name": "CommandType",
+         "package": "meocord"
         }
        },
        {
@@ -4385,6 +4378,26 @@
          },
          "name": "RegExp",
          "package": "typescript"
+        }
+       },
+       {
+        "id": 259,
+        "name": "dynamicParams",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "reference",
+          "target": 254,
+          "name": "T",
+          "package": "meocord",
+          "qualifiedName": "CommandMetadata.T",
+          "refersToTypeParameter": true
+         }
         }
        },
        {
@@ -4431,31 +4444,18 @@
          "type": "intrinsic",
          "name": "number"
         }
-       },
-       {
-        "id": 257,
-        "name": "type",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "reference",
-         "target": 582,
-         "name": "CommandType",
-         "package": "meocord"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         256,
-         259,
          255,
+         256,
+         257,
          258,
-         260,
-         257
+         259,
+         260
         ]
        }
       ],
@@ -4711,6 +4711,25 @@
         }
        },
        {
+        "id": 268,
+        "name": "discordToken",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The Discord bot token used for authenticating with the Discord API."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
         "id": 269,
         "name": "bundleDependencies",
         "variant": "declaration",
@@ -4801,25 +4820,6 @@
         "type": {
          "type": "intrinsic",
          "name": "boolean"
-        }
-       },
-       {
-        "id": 268,
-        "name": "discordToken",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The Discord bot token used for authenticating with the Discord API."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -5007,8 +5007,8 @@
         "title": "Properties",
         "children": [
          267,
-         269,
          268,
+         269,
          270,
          271
         ]
@@ -5030,27 +5030,6 @@
        ]
       },
       "children": [
-       {
-        "id": 280,
-        "name": "action",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The action performed on the reaction, such as adding or removing it."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 593,
-         "name": "ReactionHandlerAction",
-         "package": "meocord"
-        }
-       },
        {
         "id": 279,
         "name": "user",
@@ -5088,14 +5067,35 @@
           }
          ]
         }
+       },
+       {
+        "id": 280,
+        "name": "action",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The action performed on the reaction, such as adding or removing it."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 593,
+         "name": "ReactionHandlerAction",
+         "package": "meocord"
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         280,
-         279
+         279,
+         280
         ]
        }
       ]
@@ -6317,20 +6317,12 @@
       "flags": {},
       "children": [
        {
-        "id": 436,
-        "name": "focused",
+        "id": 434,
+        "name": "subcommandGroup",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
          "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The option the user is currently typing, for autocomplete interactions."
-          }
-         ]
         },
         "type": {
          "type": "union",
@@ -6369,12 +6361,20 @@
         }
        },
        {
-        "id": 434,
-        "name": "subcommandGroup",
+        "id": 436,
+        "name": "focused",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
          "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The option the user is currently typing, for autocomplete interactions."
+          }
+         ]
         },
         "type": {
          "type": "union",
@@ -6395,9 +6395,9 @@
        {
         "title": "Properties",
         "children": [
-         436,
+         434,
          435,
-         434
+         436
         ]
        }
       ],
@@ -6648,223 +6648,43 @@
         }
        },
        {
-        "id": 520,
-        "name": "getMockName",
+        "id": 490,
+        "name": "mockReturnValue",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 521,
-          "name": "getMockName",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "type": {
-           "type": "intrinsic",
-           "name": "string"
-          }
-         }
-        ]
-       },
-       {
-        "id": 514,
-        "name": "mockClear",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 515,
-          "name": "mockClear",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 508,
-        "name": "mockImplementation",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 509,
-          "name": "mockImplementation",
+          "id": 491,
+          "name": "mockReturnValue",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 510,
-            "name": "fn",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 511,
-        "name": "mockImplementationOnce",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 512,
-          "name": "mockImplementationOnce",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 513,
-            "name": "fn",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 522,
-        "name": "mockName",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 523,
-          "name": "mockName",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 524,
-            "name": "name",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "intrinsic",
-             "name": "string"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 502,
-        "name": "mockRejectedValue",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 503,
-          "name": "mockRejectedValue",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 504,
+            "id": 492,
             "name": "value",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "intrinsic",
-             "name": "unknown"
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "ReturnType"
+             },
+             "typeArguments": [
+              {
+               "type": "reference",
+               "target": 475,
+               "name": "T",
+               "package": "meocord",
+               "qualifiedName": "MockInstance.T",
+               "refersToTypeParameter": true
+              }
+             ],
+             "name": "ReturnType",
+             "package": "typescript"
             }
            }
           ],
@@ -6888,63 +6708,46 @@
         ]
        },
        {
-        "id": 505,
-        "name": "mockRejectedValueOnce",
+        "id": 493,
+        "name": "mockReturnValueOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 506,
-          "name": "mockRejectedValueOnce",
+          "id": 494,
+          "name": "mockReturnValueOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 507,
+            "id": 495,
             "name": "value",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "intrinsic",
-             "name": "unknown"
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "ReturnType"
+             },
+             "typeArguments": [
+              {
+               "type": "reference",
+               "target": 475,
+               "name": "T",
+               "package": "meocord",
+               "qualifiedName": "MockInstance.T",
+               "refersToTypeParameter": true
+              }
+             ],
+             "name": "ReturnType",
+             "package": "typescript"
             }
            }
           ],
-          "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 516,
-        "name": "mockReset",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 517,
-          "name": "mockReset",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
           "type": {
            "type": "reference",
            "target": 555,
@@ -7107,6 +6910,258 @@
         ]
        },
        {
+        "id": 502,
+        "name": "mockRejectedValue",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 503,
+          "name": "mockRejectedValue",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 504,
+            "name": "value",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "intrinsic",
+             "name": "unknown"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 505,
+        "name": "mockRejectedValueOnce",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 506,
+          "name": "mockRejectedValueOnce",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 507,
+            "name": "value",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "intrinsic",
+             "name": "unknown"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 508,
+        "name": "mockImplementation",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 509,
+          "name": "mockImplementation",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 510,
+            "name": "fn",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 511,
+        "name": "mockImplementationOnce",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 512,
+          "name": "mockImplementationOnce",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 513,
+            "name": "fn",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 514,
+        "name": "mockClear",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 515,
+          "name": "mockClear",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 516,
+        "name": "mockReset",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 517,
+          "name": "mockReset",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "type": {
+           "type": "reference",
+           "target": 555,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 475,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
         "id": 518,
         "name": "mockRestore",
         "variant": "declaration",
@@ -7139,103 +7194,48 @@
         ]
        },
        {
-        "id": 490,
-        "name": "mockReturnValue",
+        "id": 520,
+        "name": "getMockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 491,
-          "name": "mockReturnValue",
+          "id": 521,
+          "name": "getMockName",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
-          "parameters": [
-           {
-            "id": 492,
-            "name": "value",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "ReturnType"
-             },
-             "typeArguments": [
-              {
-               "type": "reference",
-               "target": 475,
-               "name": "T",
-               "package": "meocord",
-               "qualifiedName": "MockInstance.T",
-               "refersToTypeParameter": true
-              }
-             ],
-             "name": "ReturnType",
-             "package": "typescript"
-            }
-           }
-          ],
           "type": {
-           "type": "reference",
-           "target": 555,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 475,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
+           "type": "intrinsic",
+           "name": "string"
           }
          }
         ]
        },
        {
-        "id": 493,
-        "name": "mockReturnValueOnce",
+        "id": 522,
+        "name": "mockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 494,
-          "name": "mockReturnValueOnce",
+          "id": 523,
+          "name": "mockName",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 495,
-            "name": "value",
+            "id": 524,
+            "name": "name",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "ReturnType"
-             },
-             "typeArguments": [
-              {
-               "type": "reference",
-               "target": 475,
-               "name": "T",
-               "package": "meocord",
-               "qualifiedName": "MockInstance.T",
-               "refersToTypeParameter": true
-              }
-             ],
-             "name": "ReturnType",
-             "package": "typescript"
+             "type": "intrinsic",
+             "name": "string"
             }
            }
           ],
@@ -7270,19 +7270,19 @@
        {
         "title": "Methods",
         "children": [
-         520,
-         514,
-         508,
-         511,
-         522,
-         502,
-         505,
-         516,
+         490,
+         493,
          496,
          499,
+         502,
+         505,
+         508,
+         511,
+         514,
+         516,
          518,
-         490,
-         493
+         520,
+         522
         ]
        }
       ],
@@ -7491,6 +7491,53 @@
         }
        },
        {
+        "id": 552,
+        "name": "results",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Return / throw result from each call, in order."
+          }
+         ]
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "reference",
+          "target": 533,
+          "typeArguments": [
+           {
+            "type": "reference",
+            "target": {
+             "packageName": "typescript",
+             "qualifiedName": "ReturnType"
+            },
+            "typeArguments": [
+             {
+              "type": "reference",
+              "target": 538,
+              "name": "T",
+              "package": "meocord",
+              "qualifiedName": "MockState.T",
+              "refersToTypeParameter": true
+             }
+            ],
+            "name": "ReturnType",
+            "package": "typescript"
+           }
+          ],
+          "name": "MockResult",
+          "package": "meocord"
+         }
+        }
+       },
+       {
         "id": 553,
         "name": "instances",
         "variant": "declaration",
@@ -7558,53 +7605,6 @@
          "name": "Parameters",
          "package": "typescript"
         }
-       },
-       {
-        "id": 552,
-        "name": "results",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Return / throw result from each call, in order."
-          }
-         ]
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "reference",
-          "target": 533,
-          "typeArguments": [
-           {
-            "type": "reference",
-            "target": {
-             "packageName": "typescript",
-             "qualifiedName": "ReturnType"
-            },
-            "typeArguments": [
-             {
-              "type": "reference",
-              "target": 538,
-              "name": "T",
-              "package": "meocord",
-              "qualifiedName": "MockState.T",
-              "refersToTypeParameter": true
-             }
-            ],
-            "name": "ReturnType",
-            "package": "typescript"
-           }
-          ],
-          "name": "MockResult",
-          "package": "meocord"
-         }
-        }
        }
       ],
       "groups": [
@@ -7612,9 +7612,9 @@
         "title": "Properties",
         "children": [
          551,
+         552,
          553,
-         554,
-         552
+         554
         ]
        }
       ],

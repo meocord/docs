@@ -14,20 +14,20 @@
           "examples": []
         },
         {
+          "name": "discordToken",
+          "type": "string",
+          "required": true,
+          "since": "4.0.0-beta.0",
+          "summary": "The Discord bot token. Read it from the environment rather than committing it.",
+          "examples": []
+        },
+        {
           "name": "bundleDependencies",
           "type": "boolean",
           "required": false,
           "default": "`false`",
           "since": "4.0.0-beta.0",
           "summary": "Bundles everything the bot needs into `dist`, so it runs without `node_modules`.\n\nNative addons such as `sharp` are copied with their platform binary into `dist/node_modules`.\nA build with native addons only starts on the platform it was built on.",
-          "examples": []
-        },
-        {
-          "name": "discordToken",
-          "type": "string",
-          "required": true,
-          "since": "4.0.0-beta.0",
-          "summary": "The Discord bot token. Read it from the environment rather than committing it.",
           "examples": []
         },
         {

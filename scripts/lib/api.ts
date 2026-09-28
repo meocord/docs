@@ -277,6 +277,22 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     if (declaration && ts.isParameter(declaration) && !ts.isIdentifier(declaration.name))
       bindings.set(reflection, bindingText(declaration.name))
   })
+  // TypeDoc lists members alphabetically. An interface's and an object type's read as they are declared, the
+  // order their author chose, `controllers` and `clientOptions` first in @MeoCord's options; a reflection's
+  // id is the order it was made in, which is its declaration's. After TypeDoc's own grouping, at -100.
+  app.converter.on(
+    Converter.EVENT_RESOLVE_END,
+    context => {
+      const byId = (a: { id: number }, b: { id: number }) => a.id - b.id
+      for (const reflection of Object.values(context.project.reflections)) {
+        if (!(reflection instanceof DeclarationReflection)) continue
+        if (!reflection.kindOf(ReflectionKind.Interface | ReflectionKind.TypeLiteral)) continue
+        reflection.children?.sort(byId)
+        for (const group of reflection.groups ?? []) group.children.sort(byId)
+      }
+    },
+    -200,
+  )
   app.converter.on(Converter.EVENT_RESOLVE_END, () => {
     for (const [reflection, binding] of bindings) if (reflection.name === '__namedParameters') reflection.name = binding
   })
