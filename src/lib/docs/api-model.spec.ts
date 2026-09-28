@@ -49,10 +49,10 @@ describe('ApiModel', () => {
     // CooldownOptions' members, each once, in the interface's order, with its type
     expect(signature.params.map(param => param.name)).toEqual([
       'options',
-      'options.bypass',
-      'options.per',
       'options.seconds',
       'options.uses',
+      'options.per',
+      'options.bypass',
     ])
     const uses = signature.params.find(param => param.name === 'options.uses')!
     expect(uses.description).toBe('Calls allowed within the window. Defaults to `1`.')

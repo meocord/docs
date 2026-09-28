@@ -17,46 +17,8 @@ const declarationFiles = (dir: string): string[] =>
         : [],
   )
 
-/**
- * An object type's members in one order at every depth: TypeDoc lists them alphabetically, a declaration in
- * its own order, and which comes first is no part of the type.
- */
-function sortedMembers(code: string): string {
-  let out = ''
-  for (let index = 0; index < code.length; index += 1) {
-    if (code[index] !== '{') {
-      out += code[index]
-      continue
-    }
-    let depth = 0
-    let end = index
-    for (; end < code.length; end += 1) {
-      if (code[end] === '{') depth += 1
-      if (code[end] === '}' && --depth === 0) break
-    }
-    const members: string[] = []
-    let current = ''
-    let nesting = 0
-    const inner = sortedMembers(code.slice(index + 1, end))
-    for (const [at, char] of [...inner].entries()) {
-      if ('<[{'.includes(char)) nesting += 1
-      // An arrow's `>` closes nothing
-      if (']}'.includes(char) || (char === '>' && inner[at - 1] !== '=')) nesting -= 1
-      if (char === ';' && nesting === 0) {
-        members.push(current)
-        current = ''
-      } else current += char
-    }
-    if (current) members.push(current)
-    out += `{${members.sort().join(';')}}`
-    index = end
-  }
-  return out
-}
-
-/** Code compared by its words and symbols: spacing, grouping parentheses, a last `;` in braces and member order aside. */
-const normal = (code: string) =>
-  sortedMembers(code.replace(/\s+/g, '').replace(/[()]/g, '').replace(/;}/g, '}').replace(/"/g, "'"))
+/** Code compared by its words and symbols: spacing, grouping parentheses and a last `;` in braces aside. */
+const normal = (code: string) => code.replace(/\s+/g, '').replace(/[()]/g, '').replace(/;}/g, '}').replace(/"/g, "'")
 
 /** Each generic function's and method's type parameter lists, by `name` or `Owner.method`, as written. */
 function declaredTypeParams(): Map<string, string[][]> {
@@ -260,6 +222,31 @@ describe('option rows', () => {
     const meocord = model.symbol('decorators', 'MeoCord')!
     const guards = meocord.signatures[0]!.params.find(param => param.name === 'options.guards')!
     expect(text(guards.type)).toContain('[K in keyof G]')
+  })
+
+  it("follow the declaration's order, as @MeoCord's options do", async () => {
+    // @MeoCord's options object as its declaration orders it
+    let written: string[] = []
+    for (const file of declarationFiles(path.join(pkgDir, 'dist', 'types'))) {
+      const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
+      const visit = (node: ts.Node) => {
+        const options =
+          ts.isFunctionDeclaration(node) && node.name?.text === 'MeoCord' ? node.parameters[0]?.type : undefined
+        if (options && ts.isTypeLiteralNode(options))
+          written = options.members.flatMap(member =>
+            member.name && ts.isIdentifier(member.name) ? [member.name.text] : [],
+          )
+        ts.forEachChild(node, visit)
+      }
+      visit(source)
+    }
+    const { apiModel } = await import('@/lib/docs/api-site')
+    const meocord = apiModel('4.1', version)!.symbol('decorators', 'MeoCord')!
+    const rows = meocord.signatures[0]!.params.filter(param => param.option && param.name.split('.').length === 2).map(
+      param => param.name.slice('options.'.length),
+    )
+    expect(written.slice(0, 2)).toEqual(['controllers', 'clientOptions'])
+    expect(rows).toEqual(written)
   })
 
   it("list the theme's roles for a parameter written by the name of a computed type", async () => {

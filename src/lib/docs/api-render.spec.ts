@@ -47,11 +47,11 @@ describe('apiArticle', () => {
     // Its options under its parameters, from CooldownOptions
     expect(toc.map(entry => entry.id)).toEqual([
       'parameters',
-      'by',
-      'bypass',
-      'per',
       'seconds',
       'uses',
+      'per',
+      'bypass',
+      'by',
       'returns',
       'examples',
     ])

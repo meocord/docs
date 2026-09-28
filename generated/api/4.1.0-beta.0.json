@@ -3758,25 +3758,6 @@
       },
       "children": [
        {
-        "id": 1552,
-        "name": "botInstalled",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether the bot itself is present where the interaction happened: a server that installed the\napp, or a direct message with the bot. Only then can it use the channel API; it says nothing about\nthe bot's permissions in the channel."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
-        }
-       },
-       {
         "id": 1551,
         "name": "where",
         "variant": "declaration",
@@ -3827,14 +3808,33 @@
           }
          ]
         }
+       },
+       {
+        "id": 1552,
+        "name": "botInstalled",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether the bot itself is present where the interaction happened: a server that installed the\napp, or a direct message with the bot. Only then can it use the channel API; it says nothing about\nthe bot's permissions in the channel."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1552,
-         1551
+         1551,
+         1552
         ]
        }
       ]
@@ -4210,6 +4210,29 @@
         }
        },
        {
+        "id": 1575,
+        "name": "state",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Where the answer stands, re-read from the interaction so answers made around this state count."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 1572,
+         "name": "ResponsePhase",
+         "package": "meocord"
+        }
+       },
+       {
         "id": 1576,
         "name": "message",
         "variant": "declaration",
@@ -4353,29 +4376,6 @@
         }
        },
        {
-        "id": 1575,
-        "name": "state",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Where the answer stands, re-read from the interaction so answers made around this state count."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 1572,
-         "name": "ResponsePhase",
-         "package": "meocord"
-        }
-       },
-       {
         "id": 1584,
         "name": "acknowledge",
         "variant": "declaration",
@@ -4471,346 +4471,6 @@
         ]
        },
        {
-        "id": 1603,
-        "name": "delete",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1604,
-          "name": "delete",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Deletes the answer: the reply, or for a component deferred without a reply of its own, its message."
-            }
-           ]
-          },
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "intrinsic",
-             "name": "void"
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1597,
-        "name": "edit",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1598,
-          "name": "edit",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Edits the answer, routed as "
-            },
-            {
-             "kind": "code",
-             "text": "`send()`"
-            },
-            {
-             "kind": "text",
-             "text": " is: an edit once the interaction is answered."
-            }
-           ],
-           "blockTags": [
-            {
-             "tag": "@returns",
-             "content": [
-              {
-               "kind": "text",
-               "text": "The edited message, when Discord returns it."
-              }
-             ]
-            }
-           ]
-          },
-          "parameters": [
-           {
-            "id": 1599,
-            "name": "payload",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "comment": {
-             "summary": [
-              {
-               "kind": "text",
-               "text": "Text, or edit options."
-              }
-             ]
-            },
-            "type": {
-             "type": "reference",
-             "target": 1562,
-             "name": "ResponseEditPayload",
-             "package": "meocord"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "union",
-             "types": [
-              {
-               "type": "reference",
-               "target": {
-                "packageName": "discord.js",
-                "qualifiedName": "Message"
-               },
-               "typeArguments": [
-                {
-                 "type": "intrinsic",
-                 "name": "boolean"
-                }
-               ],
-               "name": "Message",
-               "package": "discord.js"
-              },
-              {
-               "type": "intrinsic",
-               "name": "undefined"
-              }
-             ]
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1608,
-        "name": "error",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1609,
-          "name": "error",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Presents an error, styled by the application's presenter, and never throws; a delivery failure is\nlogged at debug level.\n\n- Unanswered: a private reply.\n- A command whose reply is deferred: "
-            },
-            {
-             "kind": "code",
-             "text": "`'reply'`"
-            },
-            {
-             "kind": "text",
-             "text": " edits that reply into the error; "
-            },
-            {
-             "kind": "code",
-             "text": "`'private'`"
-            },
-            {
-             "kind": "text",
-             "text": " edits a\n  private deferral into it, and deletes a public one, then follows up privately.\n- A component on a private (ephemeral) message: the error is added to that message, where it fits.\n- Otherwise: a private follow-up, never an edit of the message the user clicked."
-            }
-           ]
-          },
-          "parameters": [
-           {
-            "id": 1610,
-            "name": "error",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "comment": {
-             "summary": [
-              {
-               "kind": "text",
-               "text": "The error, handed to the presenter so it can style it by kind."
-              }
-             ]
-            },
-            "type": {
-             "type": "intrinsic",
-             "name": "unknown"
-            }
-           },
-           {
-            "id": 1611,
-            "name": "options",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {
-             "isOptional": true
-            },
-            "comment": {
-             "summary": [
-              {
-               "kind": "text",
-               "text": "What the user is told, and who sees it."
-              }
-             ]
-            },
-            "type": {
-             "type": "reference",
-             "target": 1565,
-             "name": "ResponseErrorOptions",
-             "package": "meocord"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "intrinsic",
-             "name": "void"
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1600,
-        "name": "followUp",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1601,
-          "name": "followUp",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Sends another message after the answer. Before any answer it is the first reply. While a command's\nreply is deferred and nothing is sent yet, Discord turns a follow-up into the deferred reply and\nignores its flags, so it is sent as that edit; a private follow-up on a public deferral deletes the\ndeferral first and is sent privately."
-            }
-           ],
-           "blockTags": [
-            {
-             "tag": "@returns",
-             "content": [
-              {
-               "kind": "text",
-               "text": "The message sent, when Discord returns it."
-              }
-             ]
-            }
-           ]
-          },
-          "parameters": [
-           {
-            "id": 1602,
-            "name": "payload",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "comment": {
-             "summary": [
-              {
-               "kind": "text",
-               "text": "Text, or reply options; "
-              },
-              {
-               "kind": "code",
-               "text": "`Ephemeral`"
-              },
-              {
-               "kind": "text",
-               "text": " makes the follow-up private."
-              }
-             ]
-            },
-            "type": {
-             "type": "reference",
-             "target": 1569,
-             "name": "ResponsePayload",
-             "package": "meocord"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "union",
-             "types": [
-              {
-               "type": "reference",
-               "target": {
-                "packageName": "discord.js",
-                "qualifiedName": "Message"
-               },
-               "typeArguments": [
-                {
-                 "type": "intrinsic",
-                 "name": "boolean"
-                }
-               ],
-               "name": "Message",
-               "package": "discord.js"
-              },
-              {
-               "type": "intrinsic",
-               "name": "undefined"
-              }
-             ]
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
         "id": 1591,
         "name": "lock",
         "variant": "declaration",
@@ -4864,96 +4524,6 @@
              },
              "name": "ResponseLockOptions",
              "package": "meocord"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "intrinsic",
-             "name": "void"
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1605,
-        "name": "modal",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1606,
-          "name": "modal",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Shows a modal. A modal must be the interaction's first response, so this throws once the\ninteraction is acknowledged, rather than failing at Discord."
-            }
-           ]
-          },
-          "parameters": [
-           {
-            "id": 1607,
-            "name": "modal",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "comment": {
-             "summary": [
-              {
-               "kind": "text",
-               "text": "The modal to show."
-              }
-             ]
-            },
-            "type": {
-             "type": "union",
-             "types": [
-              {
-               "type": "reference",
-               "target": {
-                "packageName": "@discordjs/util",
-                "qualifiedName": "JSONEncodable"
-               },
-               "typeArguments": [
-                {
-                 "type": "reference",
-                 "target": {
-                  "packageName": "discord-api-types",
-                  "qualifiedName": "APIModalInteractionResponseCallbackData"
-                 },
-                 "name": "APIModalInteractionResponseCallbackData",
-                 "package": "discord-api-types"
-                }
-               ],
-               "name": "JSONEncodable",
-               "package": "@discordjs/util"
-              },
-              {
-               "type": "reference",
-               "target": {
-                "packageName": "discord.js",
-                "qualifiedName": "ModalComponentData"
-               },
-               "name": "ModalComponentData",
-               "package": "discord.js"
-              }
-             ]
             }
            }
           ],
@@ -5107,6 +4677,436 @@
           }
          }
         ]
+       },
+       {
+        "id": 1597,
+        "name": "edit",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1598,
+          "name": "edit",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Edits the answer, routed as "
+            },
+            {
+             "kind": "code",
+             "text": "`send()`"
+            },
+            {
+             "kind": "text",
+             "text": " is: an edit once the interaction is answered."
+            }
+           ],
+           "blockTags": [
+            {
+             "tag": "@returns",
+             "content": [
+              {
+               "kind": "text",
+               "text": "The edited message, when Discord returns it."
+              }
+             ]
+            }
+           ]
+          },
+          "parameters": [
+           {
+            "id": 1599,
+            "name": "payload",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "comment": {
+             "summary": [
+              {
+               "kind": "text",
+               "text": "Text, or edit options."
+              }
+             ]
+            },
+            "type": {
+             "type": "reference",
+             "target": 1562,
+             "name": "ResponseEditPayload",
+             "package": "meocord"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "union",
+             "types": [
+              {
+               "type": "reference",
+               "target": {
+                "packageName": "discord.js",
+                "qualifiedName": "Message"
+               },
+               "typeArguments": [
+                {
+                 "type": "intrinsic",
+                 "name": "boolean"
+                }
+               ],
+               "name": "Message",
+               "package": "discord.js"
+              },
+              {
+               "type": "intrinsic",
+               "name": "undefined"
+              }
+             ]
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1600,
+        "name": "followUp",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1601,
+          "name": "followUp",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Sends another message after the answer. Before any answer it is the first reply. While a command's\nreply is deferred and nothing is sent yet, Discord turns a follow-up into the deferred reply and\nignores its flags, so it is sent as that edit; a private follow-up on a public deferral deletes the\ndeferral first and is sent privately."
+            }
+           ],
+           "blockTags": [
+            {
+             "tag": "@returns",
+             "content": [
+              {
+               "kind": "text",
+               "text": "The message sent, when Discord returns it."
+              }
+             ]
+            }
+           ]
+          },
+          "parameters": [
+           {
+            "id": 1602,
+            "name": "payload",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "comment": {
+             "summary": [
+              {
+               "kind": "text",
+               "text": "Text, or reply options; "
+              },
+              {
+               "kind": "code",
+               "text": "`Ephemeral`"
+              },
+              {
+               "kind": "text",
+               "text": " makes the follow-up private."
+              }
+             ]
+            },
+            "type": {
+             "type": "reference",
+             "target": 1569,
+             "name": "ResponsePayload",
+             "package": "meocord"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "union",
+             "types": [
+              {
+               "type": "reference",
+               "target": {
+                "packageName": "discord.js",
+                "qualifiedName": "Message"
+               },
+               "typeArguments": [
+                {
+                 "type": "intrinsic",
+                 "name": "boolean"
+                }
+               ],
+               "name": "Message",
+               "package": "discord.js"
+              },
+              {
+               "type": "intrinsic",
+               "name": "undefined"
+              }
+             ]
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1603,
+        "name": "delete",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1604,
+          "name": "delete",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Deletes the answer: the reply, or for a component deferred without a reply of its own, its message."
+            }
+           ]
+          },
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "intrinsic",
+             "name": "void"
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1605,
+        "name": "modal",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1606,
+          "name": "modal",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Shows a modal. A modal must be the interaction's first response, so this throws once the\ninteraction is acknowledged, rather than failing at Discord."
+            }
+           ]
+          },
+          "parameters": [
+           {
+            "id": 1607,
+            "name": "modal",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "comment": {
+             "summary": [
+              {
+               "kind": "text",
+               "text": "The modal to show."
+              }
+             ]
+            },
+            "type": {
+             "type": "union",
+             "types": [
+              {
+               "type": "reference",
+               "target": {
+                "packageName": "@discordjs/util",
+                "qualifiedName": "JSONEncodable"
+               },
+               "typeArguments": [
+                {
+                 "type": "reference",
+                 "target": {
+                  "packageName": "discord-api-types",
+                  "qualifiedName": "APIModalInteractionResponseCallbackData"
+                 },
+                 "name": "APIModalInteractionResponseCallbackData",
+                 "package": "discord-api-types"
+                }
+               ],
+               "name": "JSONEncodable",
+               "package": "@discordjs/util"
+              },
+              {
+               "type": "reference",
+               "target": {
+                "packageName": "discord.js",
+                "qualifiedName": "ModalComponentData"
+               },
+               "name": "ModalComponentData",
+               "package": "discord.js"
+              }
+             ]
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "intrinsic",
+             "name": "void"
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1608,
+        "name": "error",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1609,
+          "name": "error",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Presents an error, styled by the application's presenter, and never throws; a delivery failure is\nlogged at debug level.\n\n- Unanswered: a private reply.\n- A command whose reply is deferred: "
+            },
+            {
+             "kind": "code",
+             "text": "`'reply'`"
+            },
+            {
+             "kind": "text",
+             "text": " edits that reply into the error; "
+            },
+            {
+             "kind": "code",
+             "text": "`'private'`"
+            },
+            {
+             "kind": "text",
+             "text": " edits a\n  private deferral into it, and deletes a public one, then follows up privately.\n- A component on a private (ephemeral) message: the error is added to that message, where it fits.\n- Otherwise: a private follow-up, never an edit of the message the user clicked."
+            }
+           ]
+          },
+          "parameters": [
+           {
+            "id": 1610,
+            "name": "error",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "comment": {
+             "summary": [
+              {
+               "kind": "text",
+               "text": "The error, handed to the presenter so it can style it by kind."
+              }
+             ]
+            },
+            "type": {
+             "type": "intrinsic",
+             "name": "unknown"
+            }
+           },
+           {
+            "id": 1611,
+            "name": "options",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {
+             "isOptional": true
+            },
+            "comment": {
+             "summary": [
+              {
+               "kind": "text",
+               "text": "What the user is told, and who sees it."
+              }
+             ]
+            },
+            "type": {
+             "type": "reference",
+             "target": 1565,
+             "name": "ResponseErrorOptions",
+             "package": "meocord"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "intrinsic",
+             "name": "void"
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
        }
       ],
       "groups": [
@@ -5114,22 +5114,22 @@
         "title": "Properties",
         "children": [
          1574,
+         1575,
          1576,
-         1577,
-         1575
+         1577
         ]
        },
        {
         "title": "Methods",
         "children": [
          1584,
-         1603,
-         1597,
-         1608,
-         1600,
          1591,
+         1594,
+         1597,
+         1600,
+         1603,
          1605,
-         1594
+         1608
         ]
        }
       ]
@@ -9498,6 +9498,36 @@
       },
       "children": [
        {
+        "id": 85,
+        "name": "kind",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "literal",
+         "value": "autocomplete"
+        }
+       },
+       {
+        "id": 86,
+        "name": "name",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The command path, followed by the option name when the handler completes one option only."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
         "id": 87,
         "name": "controller",
         "variant": "declaration",
@@ -9529,17 +9559,6 @@
         }
        },
        {
-        "id": 85,
-        "name": "kind",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "literal",
-         "value": "autocomplete"
-        }
-       },
-       {
         "id": 88,
         "name": "method",
         "variant": "declaration",
@@ -9563,25 +9582,6 @@
          "type": "reference",
          "target": -1,
          "name": "HandlerEntryBase.method"
-        }
-       },
-       {
-        "id": 86,
-        "name": "name",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The command path, followed by the option name when the handler completes one option only."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -9889,10 +9889,10 @@
        {
         "title": "Properties",
         "children": [
-         87,
          85,
-         88,
-         86
+         86,
+         87,
+         88
         ]
        },
        {
@@ -9931,29 +9931,14 @@
       },
       "children": [
        {
-        "id": 107,
-        "name": "command",
+        "id": 104,
+        "name": "kind",
         "variant": "declaration",
         "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The registered command's JSON, the top-level command's for a subcommand."
-          }
-         ]
-        },
+        "flags": {},
         "type": {
-         "type": "reference",
-         "target": {
-          "packageName": "discord-api-types",
-          "qualifiedName": "RESTPostAPIApplicationCommandsJSONBody"
-         },
-         "name": "RESTPostAPIApplicationCommandsJSONBody",
-         "package": "discord-api-types"
+         "type": "literal",
+         "value": "command"
         }
        },
        {
@@ -9983,6 +9968,88 @@
          "target": 1777,
          "name": "CommandType",
          "package": "meocord"
+        }
+       },
+       {
+        "id": 106,
+        "name": "name",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The command's name, or a subcommand's full path such as "
+          },
+          {
+           "kind": "code",
+           "text": "`settings notify email`"
+          },
+          {
+           "kind": "text",
+           "text": "."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
+        "id": 107,
+        "name": "command",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The registered command's JSON, the top-level command's for a subcommand."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": {
+          "packageName": "discord-api-types",
+          "qualifiedName": "RESTPostAPIApplicationCommandsJSONBody"
+         },
+         "name": "RESTPostAPIApplicationCommandsJSONBody",
+         "package": "discord-api-types"
+        }
+       },
+       {
+        "id": 108,
+        "name": "description",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The command's description, a subcommand's own for a subcommand; "
+          },
+          {
+           "kind": "code",
+           "text": "`undefined`"
+          },
+          {
+           "kind": "text",
+           "text": " for a context menu command."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -10017,46 +10084,6 @@
         }
        },
        {
-        "id": 108,
-        "name": "description",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The command's description, a subcommand's own for a subcommand; "
-          },
-          {
-           "kind": "code",
-           "text": "`undefined`"
-          },
-          {
-           "kind": "text",
-           "text": " for a context menu command."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 104,
-        "name": "kind",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "literal",
-         "value": "command"
-        }
-       },
-       {
         "id": 110,
         "name": "method",
         "variant": "declaration",
@@ -10080,33 +10107,6 @@
          "type": "reference",
          "target": -1,
          "name": "HandlerEntryBase.method"
-        }
-       },
-       {
-        "id": 106,
-        "name": "name",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The command's name, or a subcommand's full path such as "
-          },
-          {
-           "kind": "code",
-           "text": "`settings notify email`"
-          },
-          {
-           "kind": "text",
-           "text": "."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -10414,13 +10414,13 @@
        {
         "title": "Properties",
         "children": [
-         107,
-         105,
-         109,
-         108,
          104,
-         110,
-         106
+         105,
+         106,
+         107,
+         108,
+         109,
+         110
         ]
        },
        {
@@ -10459,6 +10459,17 @@
       },
       "children": [
        {
+        "id": 126,
+        "name": "kind",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "literal",
+         "value": "component"
+        }
+       },
+       {
         "id": 127,
         "name": "commandType",
         "variant": "declaration",
@@ -10485,6 +10496,33 @@
          "target": 1777,
          "name": "CommandType",
          "package": "meocord"
+        }
+       },
+       {
+        "id": 128,
+        "name": "name",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The customId pattern, such as "
+          },
+          {
+           "kind": "code",
+           "text": "`profile/{uid}`"
+          },
+          {
+           "kind": "text",
+           "text": "."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -10519,17 +10557,6 @@
         }
        },
        {
-        "id": 126,
-        "name": "kind",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "literal",
-         "value": "component"
-        }
-       },
-       {
         "id": 130,
         "name": "method",
         "variant": "declaration",
@@ -10553,33 +10580,6 @@
          "type": "reference",
          "target": -1,
          "name": "HandlerEntryBase.method"
-        }
-       },
-       {
-        "id": 128,
-        "name": "name",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The customId pattern, such as "
-          },
-          {
-           "kind": "code",
-           "text": "`profile/{uid}`"
-          },
-          {
-           "kind": "text",
-           "text": "."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -10887,11 +10887,11 @@
        {
         "title": "Properties",
         "children": [
-         127,
-         129,
          126,
-         130,
-         128
+         127,
+         128,
+         129,
+         130
         ]
        },
        {
@@ -10946,37 +10946,6 @@
       },
       "children": [
        {
-        "id": 149,
-        "name": "controller",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The controller or service declaring the handler."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": {
-          "packageName": "meocord",
-          "qualifiedName": "HandlerClass"
-         },
-         "name": "HandlerClass",
-         "package": "meocord"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.controller"
-        }
-       },
-       {
         "id": 146,
         "name": "kind",
         "variant": "declaration",
@@ -10985,32 +10954,6 @@
         "type": {
          "type": "literal",
          "value": "event"
-        }
-       },
-       {
-        "id": 150,
-        "name": "method",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The name of the handler method."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -11058,6 +11001,63 @@
         "type": {
          "type": "intrinsic",
          "name": "boolean"
+        }
+       },
+       {
+        "id": 149,
+        "name": "controller",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The controller or service declaring the handler."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": {
+          "packageName": "meocord",
+          "qualifiedName": "HandlerClass"
+         },
+         "name": "HandlerClass",
+         "package": "meocord"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.controller"
+        }
+       },
+       {
+        "id": 150,
+        "name": "method",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The name of the handler method."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -11365,11 +11365,11 @@
        {
         "title": "Properties",
         "children": [
-         149,
          146,
-         150,
          147,
-         148
+         148,
+         149,
+         150
         ]
        },
        {
@@ -11418,6 +11418,31 @@
       },
       "children": [
        {
+        "id": 168,
+        "name": "kind",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Only handlers of this kind."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 167,
+         "name": "K",
+         "package": "meocord",
+         "qualifiedName": "HandlerFilter.K",
+         "refersToTypeParameter": true
+        }
+       },
+       {
         "id": 169,
         "name": "controller",
         "variant": "declaration",
@@ -11442,39 +11467,14 @@
          "name": "HandlerClass",
          "package": "meocord"
         }
-       },
-       {
-        "id": 168,
-        "name": "kind",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Only handlers of this kind."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 167,
-         "name": "K",
-         "package": "meocord",
-         "qualifiedName": "HandlerFilter.K",
-         "refersToTypeParameter": true
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         169,
-         168
+         168,
+         169
         ]
        }
       ],
@@ -11524,37 +11524,6 @@
       },
       "children": [
        {
-        "id": 174,
-        "name": "controller",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The controller or service declaring the handler."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": {
-          "packageName": "meocord",
-          "qualifiedName": "HandlerClass"
-         },
-         "name": "HandlerClass",
-         "package": "meocord"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.controller"
-        }
-       },
-       {
         "id": 172,
         "name": "kind",
         "variant": "declaration",
@@ -11563,32 +11532,6 @@
         "type": {
          "type": "literal",
          "value": "message"
-        }
-       },
-       {
-        "id": 175,
-        "name": "method",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The name of the handler method."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -11625,6 +11568,63 @@
            "name": "undefined"
           }
          ]
+        }
+       },
+       {
+        "id": 174,
+        "name": "controller",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The controller or service declaring the handler."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": {
+          "packageName": "meocord",
+          "qualifiedName": "HandlerClass"
+         },
+         "name": "HandlerClass",
+         "package": "meocord"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.controller"
+        }
+       },
+       {
+        "id": 175,
+        "name": "method",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The name of the handler method."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -11932,10 +11932,10 @@
        {
         "title": "Properties",
         "children": [
-         174,
          172,
-         175,
-         173
+         173,
+         174,
+         175
         ]
        },
        {
@@ -11974,6 +11974,17 @@
       },
       "children": [
        {
+        "id": 191,
+        "name": "kind",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "literal",
+         "value": "modal"
+        }
+       },
+       {
         "id": 192,
         "name": "commandType",
         "variant": "declaration",
@@ -11984,6 +11995,25 @@
          "target": 1787,
          "name": "CommandType.MODAL_SUBMIT",
          "package": "meocord"
+        }
+       },
+       {
+        "id": 193,
+        "name": "name",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The customId pattern."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -12018,17 +12048,6 @@
         }
        },
        {
-        "id": 191,
-        "name": "kind",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "literal",
-         "value": "modal"
-        }
-       },
-       {
         "id": 195,
         "name": "method",
         "variant": "declaration",
@@ -12052,25 +12071,6 @@
          "type": "reference",
          "target": -1,
          "name": "HandlerEntryBase.method"
-        }
-       },
-       {
-        "id": 193,
-        "name": "name",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The customId pattern."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -12378,11 +12378,11 @@
        {
         "title": "Properties",
         "children": [
-         192,
-         194,
          191,
-         195,
-         193
+         192,
+         193,
+         194,
+         195
         ]
        },
        {
@@ -12429,37 +12429,6 @@
       },
       "children": [
        {
-        "id": 213,
-        "name": "controller",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The controller or service declaring the handler."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": {
-          "packageName": "meocord",
-          "qualifiedName": "HandlerClass"
-         },
-         "name": "HandlerClass",
-         "package": "meocord"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.controller"
-        }
-       },
-       {
         "id": 211,
         "name": "kind",
         "variant": "declaration",
@@ -12468,32 +12437,6 @@
         "type": {
          "type": "literal",
          "value": "reaction"
-        }
-       },
-       {
-        "id": 214,
-        "name": "method",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isInherited": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The name of the handler method."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        },
-        "inheritedFrom": {
-         "type": "reference",
-         "target": -1,
-         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -12530,6 +12473,63 @@
            "name": "undefined"
           }
          ]
+        }
+       },
+       {
+        "id": 213,
+        "name": "controller",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The controller or service declaring the handler."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": {
+          "packageName": "meocord",
+          "qualifiedName": "HandlerClass"
+         },
+         "name": "HandlerClass",
+         "package": "meocord"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.controller"
+        }
+       },
+       {
+        "id": 214,
+        "name": "method",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isInherited": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The name of the handler method."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        },
+        "inheritedFrom": {
+         "type": "reference",
+         "target": -1,
+         "name": "HandlerEntryBase.method"
         }
        },
        {
@@ -12837,10 +12837,10 @@
        {
         "title": "Properties",
         "children": [
-         213,
          211,
-         214,
-         212
+         212,
+         213,
+         214
         ]
        },
        {
@@ -13035,17 +13035,6 @@
           "flags": {},
           "children": [
            {
-            "id": 232,
-            "name": "ok",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {},
-            "type": {
-             "type": "literal",
-             "value": true
-            }
-           },
-           {
             "id": 231,
             "name": "shardIds",
             "variant": "declaration",
@@ -13057,6 +13046,17 @@
               "type": "intrinsic",
               "name": "number"
              }
+            }
+           },
+           {
+            "id": 232,
+            "name": "ok",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {},
+            "type": {
+             "type": "literal",
+             "value": true
             }
            },
            {
@@ -13078,8 +13078,8 @@
            {
             "title": "Properties",
             "children": [
-             232,
              231,
+             232,
              233
             ]
            }
@@ -13096,14 +13096,17 @@
           "flags": {},
           "children": [
            {
-            "id": 237,
-            "name": "error",
+            "id": 235,
+            "name": "shardIds",
             "variant": "declaration",
             "kind": 1024,
             "flags": {},
             "type": {
-             "type": "intrinsic",
-             "name": "string"
+             "type": "array",
+             "elementType": {
+              "type": "intrinsic",
+              "name": "number"
+             }
             }
            },
            {
@@ -13118,17 +13121,14 @@
             }
            },
            {
-            "id": 235,
-            "name": "shardIds",
+            "id": 237,
+            "name": "error",
             "variant": "declaration",
             "kind": 1024,
             "flags": {},
             "type": {
-             "type": "array",
-             "elementType": {
-              "type": "intrinsic",
-              "name": "number"
-             }
+             "type": "intrinsic",
+             "name": "string"
             }
            }
           ],
@@ -13136,9 +13136,9 @@
            {
             "title": "Properties",
             "children": [
-             237,
+             235,
              236,
-             235
+             237
             ]
            }
           ]
@@ -13225,8 +13225,8 @@
       },
       "children": [
        {
-        "id": 761,
-        "name": "after",
+        "id": 757,
+        "name": "ephemeral",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -13236,21 +13236,34 @@
          "summary": [
           {
            "kind": "text",
-           "text": "How long "
-          },
-          {
-           "kind": "code",
-           "text": "`'auto'`"
-          },
-          {
-           "kind": "text",
-           "text": " waits before acknowledging, in milliseconds."
+           "text": "Makes a command's deferred reply private."
           }
          ]
         },
         "type": {
          "type": "intrinsic",
-         "name": "number"
+         "name": "boolean"
+        }
+       },
+       {
+        "id": 758,
+        "name": "suppressNotifications",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Sends new messages without notifying: the first reply, when there was time to answer before deferring, and follow-ups."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
         }
        },
        {
@@ -13285,27 +13298,6 @@
            "value": "none"
           }
          ]
-        }
-       },
-       {
-        "id": 757,
-        "name": "ephemeral",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Makes a command's deferred reply private."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
         }
        },
        {
@@ -13359,8 +13351,8 @@
         }
        },
        {
-        "id": 758,
-        "name": "suppressNotifications",
+        "id": 761,
+        "name": "after",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -13370,13 +13362,21 @@
          "summary": [
           {
            "kind": "text",
-           "text": "Sends new messages without notifying: the first reply, when there was time to answer before deferring, and follow-ups."
+           "text": "How long "
+          },
+          {
+           "kind": "code",
+           "text": "`'auto'`"
+          },
+          {
+           "kind": "text",
+           "text": " waits before acknowledging, in milliseconds."
           }
          ]
         },
         "type": {
          "type": "intrinsic",
-         "name": "boolean"
+         "name": "number"
         }
        }
       ],
@@ -13384,11 +13384,11 @@
        {
         "title": "Properties",
         "children": [
-         761,
-         759,
          757,
+         758,
+         759,
          760,
-         758
+         761
         ]
        }
       ]
@@ -15653,18 +15653,16 @@
             "flags": {},
             "children": [
              {
-              "id": 470,
-              "name": "activities",
+              "id": 468,
+              "name": "controllers",
               "variant": "declaration",
               "kind": 1024,
-              "flags": {
-               "isOptional": true
-              },
+              "flags": {},
               "comment": {
                "summary": [
                 {
                  "kind": "text",
-                 "text": "Activities the bot rotates through, if any."
+                 "text": "Controllers to register."
                 }
                ]
               },
@@ -15672,12 +15670,9 @@
                "type": "array",
                "elementType": {
                 "type": "reference",
-                "target": {
-                 "packageName": "discord.js",
-                 "qualifiedName": "ActivityOptions"
-                },
-                "name": "ActivityOptions",
-                "package": "discord.js"
+                "target": 1732,
+                "name": "ServiceIdentifier",
+                "qualifiedName": "unknown"
                }
               }
              },
@@ -15714,16 +15709,47 @@
               }
              },
              {
-              "id": 468,
-              "name": "controllers",
+              "id": 470,
+              "name": "activities",
               "variant": "declaration",
               "kind": 1024,
-              "flags": {},
+              "flags": {
+               "isOptional": true
+              },
               "comment": {
                "summary": [
                 {
                  "kind": "text",
-                 "text": "Controllers to register."
+                 "text": "Activities the bot rotates through, if any."
+                }
+               ]
+              },
+              "type": {
+               "type": "array",
+               "elementType": {
+                "type": "reference",
+                "target": {
+                 "packageName": "discord.js",
+                 "qualifiedName": "ActivityOptions"
+                },
+                "name": "ActivityOptions",
+                "package": "discord.js"
+               }
+              }
+             },
+             {
+              "id": 471,
+              "name": "services",
+              "variant": "declaration",
+              "kind": 1024,
+              "flags": {
+               "isOptional": true
+              },
+              "comment": {
+               "summary": [
+                {
+                 "kind": "text",
+                 "text": "Services to register that no controller depends on."
                 }
                ]
               },
@@ -15738,8 +15764,8 @@
               }
              },
              {
-              "id": 548,
-              "name": "cooldownStore",
+              "id": 472,
+              "name": "guards",
               "variant": "declaration",
               "kind": 1024,
               "flags": {
@@ -15749,64 +15775,330 @@
                "summary": [
                 {
                  "kind": "text",
-                 "text": "Where "
+                 "text": "Guards run before every dispatched handler, ahead of the controller's and\n  the method's own guards: guard classes, or "
                 },
                 {
                  "kind": "code",
-                 "text": "`@Cooldown`"
+                 "text": "`{ provide, params? }`"
                 },
                 {
                  "kind": "text",
-                 "text": " counts calls, in place of this process's memory: a\n  class extending "
-                },
-                {
-                 "kind": "code",
-                 "text": "`CooldownStore`"
-                },
-                {
-                 "kind": "text",
-                 "text": ", resolved like a service so it can inject its client."
+                 "text": ". A controller method called\n  directly runs only its own guards."
                 }
                ]
               },
               "type": {
-               "type": "reflection",
-               "declaration": {
-                "id": 552,
-                "name": "__type",
-                "variant": "declaration",
-                "kind": 512,
-                "flags": {},
-                "signatures": [
+               "type": "array",
+               "elementType": {
+                "type": "union",
+                "types": [
                  {
-                  "id": 553,
-                  "name": "__type",
-                  "variant": "signature",
-                  "kind": 16384,
-                  "flags": {},
-                  "parameters": [
-                   {
-                    "id": 554,
-                    "name": "args",
-                    "variant": "param",
-                    "kind": 32768,
-                    "flags": {
-                     "isRest": true
-                    },
-                    "type": {
-                     "type": "array",
-                     "elementType": {
-                      "type": "intrinsic",
-                      "name": "any"
+                  "type": "reflection",
+                  "declaration": {
+                   "id": 485,
+                   "name": "__type",
+                   "variant": "declaration",
+                   "kind": 512,
+                   "flags": {},
+                   "signatures": [
+                    {
+                     "id": 486,
+                     "name": "__type",
+                     "variant": "signature",
+                     "kind": 16384,
+                     "flags": {},
+                     "parameters": [
+                      {
+                       "id": 487,
+                       "name": "args",
+                       "variant": "param",
+                       "kind": 32768,
+                       "flags": {
+                        "isRest": true
+                       },
+                       "type": {
+                        "type": "array",
+                        "elementType": {
+                         "type": "intrinsic",
+                         "name": "any"
+                        }
+                       }
+                      }
+                     ],
+                     "type": {
+                      "type": "reference",
+                      "target": 866,
+                      "name": "GuardInterface",
+                      "package": "meocord"
                      }
                     }
-                   }
-                  ],
-                  "type": {
-                   "type": "reference",
-                   "target": 1639,
-                   "name": "CooldownStore",
-                   "package": "meocord"
+                   ]
+                  }
+                 },
+                 {
+                  "type": "reflection",
+                  "declaration": {
+                   "id": 488,
+                   "name": "__type",
+                   "variant": "declaration",
+                   "kind": 65536,
+                   "flags": {},
+                   "children": [
+                    {
+                     "id": 489,
+                     "name": "provide",
+                     "variant": "declaration",
+                     "kind": 1024,
+                     "flags": {},
+                     "type": {
+                      "type": "reflection",
+                      "declaration": {
+                       "id": 493,
+                       "name": "__type",
+                       "variant": "declaration",
+                       "kind": 512,
+                       "flags": {},
+                       "signatures": [
+                        {
+                         "id": 494,
+                         "name": "__type",
+                         "variant": "signature",
+                         "kind": 16384,
+                         "flags": {},
+                         "parameters": [
+                          {
+                           "id": 495,
+                           "name": "args",
+                           "variant": "param",
+                           "kind": 32768,
+                           "flags": {
+                            "isRest": true
+                           },
+                           "type": {
+                            "type": "array",
+                            "elementType": {
+                             "type": "intrinsic",
+                             "name": "any"
+                            }
+                           }
+                          }
+                         ],
+                         "type": {
+                          "type": "reference",
+                          "target": 866,
+                          "name": "GuardInterface",
+                          "package": "meocord"
+                         }
+                        }
+                       ]
+                      }
+                     }
+                    },
+                    {
+                     "id": 496,
+                     "name": "params",
+                     "variant": "declaration",
+                     "kind": 1024,
+                     "flags": {
+                      "isOptional": true
+                     },
+                     "type": {
+                      "type": "reference",
+                      "target": {
+                       "packageName": "typescript",
+                       "qualifiedName": "Record"
+                      },
+                      "typeArguments": [
+                       {
+                        "type": "intrinsic",
+                        "name": "string"
+                       },
+                       {
+                        "type": "intrinsic",
+                        "name": "any"
+                       }
+                      ],
+                      "name": "Record",
+                      "package": "typescript"
+                     }
+                    }
+                   ],
+                   "groups": [
+                    {
+                     "title": "Properties",
+                     "children": [
+                      489,
+                      496
+                     ]
+                    }
+                   ]
+                  }
+                 }
+                ]
+               }
+              }
+             },
+             {
+              "id": 497,
+              "name": "interceptors",
+              "variant": "declaration",
+              "kind": 1024,
+              "flags": {
+               "isOptional": true
+              },
+              "comment": {
+               "summary": [
+                {
+                 "kind": "text",
+                 "text": "Interceptors run around every dispatched handler except autocomplete,\n  outside the controller's and the method's own. A controller method called directly runs none."
+                }
+               ]
+              },
+              "type": {
+               "type": "array",
+               "elementType": {
+                "type": "union",
+                "types": [
+                 {
+                  "type": "reflection",
+                  "declaration": {
+                   "id": 510,
+                   "name": "__type",
+                   "variant": "declaration",
+                   "kind": 512,
+                   "flags": {},
+                   "signatures": [
+                    {
+                     "id": 511,
+                     "name": "__type",
+                     "variant": "signature",
+                     "kind": 16384,
+                     "flags": {},
+                     "parameters": [
+                      {
+                       "id": 512,
+                       "name": "args",
+                       "variant": "param",
+                       "kind": 32768,
+                       "flags": {
+                        "isRest": true
+                       },
+                       "type": {
+                        "type": "array",
+                        "elementType": {
+                         "type": "intrinsic",
+                         "name": "any"
+                        }
+                       }
+                      }
+                     ],
+                     "type": {
+                      "type": "reference",
+                      "target": 871,
+                      "name": "InterceptorInterface",
+                      "package": "meocord"
+                     }
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "type": "reflection",
+                  "declaration": {
+                   "id": 513,
+                   "name": "__type",
+                   "variant": "declaration",
+                   "kind": 65536,
+                   "flags": {},
+                   "children": [
+                    {
+                     "id": 514,
+                     "name": "provide",
+                     "variant": "declaration",
+                     "kind": 1024,
+                     "flags": {},
+                     "type": {
+                      "type": "reflection",
+                      "declaration": {
+                       "id": 518,
+                       "name": "__type",
+                       "variant": "declaration",
+                       "kind": 512,
+                       "flags": {},
+                       "signatures": [
+                        {
+                         "id": 519,
+                         "name": "__type",
+                         "variant": "signature",
+                         "kind": 16384,
+                         "flags": {},
+                         "parameters": [
+                          {
+                           "id": 520,
+                           "name": "args",
+                           "variant": "param",
+                           "kind": 32768,
+                           "flags": {
+                            "isRest": true
+                           },
+                           "type": {
+                            "type": "array",
+                            "elementType": {
+                             "type": "intrinsic",
+                             "name": "any"
+                            }
+                           }
+                          }
+                         ],
+                         "type": {
+                          "type": "reference",
+                          "target": 871,
+                          "name": "InterceptorInterface",
+                          "package": "meocord"
+                         }
+                        }
+                       ]
+                      }
+                     }
+                    },
+                    {
+                     "id": 521,
+                     "name": "params",
+                     "variant": "declaration",
+                     "kind": 1024,
+                     "flags": {
+                      "isOptional": true
+                     },
+                     "type": {
+                      "type": "reference",
+                      "target": {
+                       "packageName": "typescript",
+                       "qualifiedName": "Record"
+                      },
+                      "typeArguments": [
+                       {
+                        "type": "intrinsic",
+                        "name": "string"
+                       },
+                       {
+                        "type": "intrinsic",
+                        "name": "any"
+                       }
+                      ],
+                      "name": "Record",
+                      "package": "typescript"
+                     }
+                    }
+                   ],
+                   "groups": [
+                    {
+                     "title": "Properties",
+                     "children": [
+                      514,
+                      521
+                     ]
+                    }
+                   ]
                   }
                  }
                 ]
@@ -15901,34 +16193,6 @@
                    "flags": {},
                    "children": [
                     {
-                     "id": 546,
-                     "name": "params",
-                     "variant": "declaration",
-                     "kind": 1024,
-                     "flags": {
-                      "isOptional": true
-                     },
-                     "type": {
-                      "type": "reference",
-                      "target": {
-                       "packageName": "typescript",
-                       "qualifiedName": "Record"
-                      },
-                      "typeArguments": [
-                       {
-                        "type": "intrinsic",
-                        "name": "string"
-                       },
-                       {
-                        "type": "intrinsic",
-                        "name": "any"
-                       }
-                      ],
-                      "name": "Record",
-                      "package": "typescript"
-                     }
-                    },
-                    {
                      "id": 539,
                      "name": "provide",
                      "variant": "declaration",
@@ -15983,106 +16247,9 @@
                        ]
                       }
                      }
-                    }
-                   ],
-                   "groups": [
+                    },
                     {
-                     "title": "Properties",
-                     "children": [
-                      546,
-                      539
-                     ]
-                    }
-                   ]
-                  }
-                 }
-                ]
-               }
-              }
-             },
-             {
-              "id": 472,
-              "name": "guards",
-              "variant": "declaration",
-              "kind": 1024,
-              "flags": {
-               "isOptional": true
-              },
-              "comment": {
-               "summary": [
-                {
-                 "kind": "text",
-                 "text": "Guards run before every dispatched handler, ahead of the controller's and\n  the method's own guards: guard classes, or "
-                },
-                {
-                 "kind": "code",
-                 "text": "`{ provide, params? }`"
-                },
-                {
-                 "kind": "text",
-                 "text": ". A controller method called\n  directly runs only its own guards."
-                }
-               ]
-              },
-              "type": {
-               "type": "array",
-               "elementType": {
-                "type": "union",
-                "types": [
-                 {
-                  "type": "reflection",
-                  "declaration": {
-                   "id": 485,
-                   "name": "__type",
-                   "variant": "declaration",
-                   "kind": 512,
-                   "flags": {},
-                   "signatures": [
-                    {
-                     "id": 486,
-                     "name": "__type",
-                     "variant": "signature",
-                     "kind": 16384,
-                     "flags": {},
-                     "parameters": [
-                      {
-                       "id": 487,
-                       "name": "args",
-                       "variant": "param",
-                       "kind": 32768,
-                       "flags": {
-                        "isRest": true
-                       },
-                       "type": {
-                        "type": "array",
-                        "elementType": {
-                         "type": "intrinsic",
-                         "name": "any"
-                        }
-                       }
-                      }
-                     ],
-                     "type": {
-                      "type": "reference",
-                      "target": 866,
-                      "name": "GuardInterface",
-                      "package": "meocord"
-                     }
-                    }
-                   ]
-                  }
-                 },
-                 {
-                  "type": "reflection",
-                  "declaration": {
-                   "id": 488,
-                   "name": "__type",
-                   "variant": "declaration",
-                   "kind": 65536,
-                   "flags": {},
-                   "children": [
-                    {
-                     "id": 496,
+                     "id": 546,
                      "name": "params",
                      "variant": "declaration",
                      "kind": 1024,
@@ -16108,64 +16275,14 @@
                       "name": "Record",
                       "package": "typescript"
                      }
-                    },
-                    {
-                     "id": 489,
-                     "name": "provide",
-                     "variant": "declaration",
-                     "kind": 1024,
-                     "flags": {},
-                     "type": {
-                      "type": "reflection",
-                      "declaration": {
-                       "id": 493,
-                       "name": "__type",
-                       "variant": "declaration",
-                       "kind": 512,
-                       "flags": {},
-                       "signatures": [
-                        {
-                         "id": 494,
-                         "name": "__type",
-                         "variant": "signature",
-                         "kind": 16384,
-                         "flags": {},
-                         "parameters": [
-                          {
-                           "id": 495,
-                           "name": "args",
-                           "variant": "param",
-                           "kind": 32768,
-                           "flags": {
-                            "isRest": true
-                           },
-                           "type": {
-                            "type": "array",
-                            "elementType": {
-                             "type": "intrinsic",
-                             "name": "any"
-                            }
-                           }
-                          }
-                         ],
-                         "type": {
-                          "type": "reference",
-                          "target": 866,
-                          "name": "GuardInterface",
-                          "package": "meocord"
-                         }
-                        }
-                       ]
-                      }
-                     }
                     }
                    ],
                    "groups": [
                     {
                      "title": "Properties",
                      "children": [
-                      496,
-                      489
+                      539,
+                      546
                      ]
                     }
                    ]
@@ -16221,8 +16338,8 @@
               }
              },
              {
-              "id": 497,
-              "name": "interceptors",
+              "id": 548,
+              "name": "cooldownStore",
               "variant": "declaration",
               "kind": 1024,
               "flags": {
@@ -16232,155 +16349,64 @@
                "summary": [
                 {
                  "kind": "text",
-                 "text": "Interceptors run around every dispatched handler except autocomplete,\n  outside the controller's and the method's own. A controller method called directly runs none."
+                 "text": "Where "
+                },
+                {
+                 "kind": "code",
+                 "text": "`@Cooldown`"
+                },
+                {
+                 "kind": "text",
+                 "text": " counts calls, in place of this process's memory: a\n  class extending "
+                },
+                {
+                 "kind": "code",
+                 "text": "`CooldownStore`"
+                },
+                {
+                 "kind": "text",
+                 "text": ", resolved like a service so it can inject its client."
                 }
                ]
               },
               "type": {
-               "type": "array",
-               "elementType": {
-                "type": "union",
-                "types": [
+               "type": "reflection",
+               "declaration": {
+                "id": 552,
+                "name": "__type",
+                "variant": "declaration",
+                "kind": 512,
+                "flags": {},
+                "signatures": [
                  {
-                  "type": "reflection",
-                  "declaration": {
-                   "id": 510,
-                   "name": "__type",
-                   "variant": "declaration",
-                   "kind": 512,
-                   "flags": {},
-                   "signatures": [
-                    {
-                     "id": 511,
-                     "name": "__type",
-                     "variant": "signature",
-                     "kind": 16384,
-                     "flags": {},
-                     "parameters": [
-                      {
-                       "id": 512,
-                       "name": "args",
-                       "variant": "param",
-                       "kind": 32768,
-                       "flags": {
-                        "isRest": true
-                       },
-                       "type": {
-                        "type": "array",
-                        "elementType": {
-                         "type": "intrinsic",
-                         "name": "any"
-                        }
-                       }
-                      }
-                     ],
-                     "type": {
-                      "type": "reference",
-                      "target": 871,
-                      "name": "InterceptorInterface",
-                      "package": "meocord"
-                     }
-                    }
-                   ]
-                  }
-                 },
-                 {
-                  "type": "reflection",
-                  "declaration": {
-                   "id": 513,
-                   "name": "__type",
-                   "variant": "declaration",
-                   "kind": 65536,
-                   "flags": {},
-                   "children": [
-                    {
-                     "id": 521,
-                     "name": "params",
-                     "variant": "declaration",
-                     "kind": 1024,
-                     "flags": {
-                      "isOptional": true
-                     },
-                     "type": {
-                      "type": "reference",
-                      "target": {
-                       "packageName": "typescript",
-                       "qualifiedName": "Record"
-                      },
-                      "typeArguments": [
-                       {
-                        "type": "intrinsic",
-                        "name": "string"
-                       },
-                       {
-                        "type": "intrinsic",
-                        "name": "any"
-                       }
-                      ],
-                      "name": "Record",
-                      "package": "typescript"
-                     }
+                  "id": 553,
+                  "name": "__type",
+                  "variant": "signature",
+                  "kind": 16384,
+                  "flags": {},
+                  "parameters": [
+                   {
+                    "id": 554,
+                    "name": "args",
+                    "variant": "param",
+                    "kind": 32768,
+                    "flags": {
+                     "isRest": true
                     },
-                    {
-                     "id": 514,
-                     "name": "provide",
-                     "variant": "declaration",
-                     "kind": 1024,
-                     "flags": {},
-                     "type": {
-                      "type": "reflection",
-                      "declaration": {
-                       "id": 518,
-                       "name": "__type",
-                       "variant": "declaration",
-                       "kind": 512,
-                       "flags": {},
-                       "signatures": [
-                        {
-                         "id": 519,
-                         "name": "__type",
-                         "variant": "signature",
-                         "kind": 16384,
-                         "flags": {},
-                         "parameters": [
-                          {
-                           "id": 520,
-                           "name": "args",
-                           "variant": "param",
-                           "kind": 32768,
-                           "flags": {
-                            "isRest": true
-                           },
-                           "type": {
-                            "type": "array",
-                            "elementType": {
-                             "type": "intrinsic",
-                             "name": "any"
-                            }
-                           }
-                          }
-                         ],
-                         "type": {
-                          "type": "reference",
-                          "target": 871,
-                          "name": "InterceptorInterface",
-                          "package": "meocord"
-                         }
-                        }
-                       ]
-                      }
+                    "type": {
+                     "type": "array",
+                     "elementType": {
+                      "type": "intrinsic",
+                      "name": "any"
                      }
                     }
-                   ],
-                   "groups": [
-                    {
-                     "title": "Properties",
-                     "children": [
-                      521,
-                      514
-                     ]
-                    }
-                   ]
+                   }
+                  ],
+                  "type": {
+                   "type": "reference",
+                   "target": 1639,
+                   "name": "CooldownStore",
+                   "package": "meocord"
                   }
                  }
                 ]
@@ -16454,48 +16480,22 @@
                 ]
                }
               }
-             },
-             {
-              "id": 471,
-              "name": "services",
-              "variant": "declaration",
-              "kind": 1024,
-              "flags": {
-               "isOptional": true
-              },
-              "comment": {
-               "summary": [
-                {
-                 "kind": "text",
-                 "text": "Services to register that no controller depends on."
-                }
-               ]
-              },
-              "type": {
-               "type": "array",
-               "elementType": {
-                "type": "reference",
-                "target": 1732,
-                "name": "ServiceIdentifier",
-                "qualifiedName": "unknown"
-               }
-              }
              }
             ],
             "groups": [
              {
               "title": "Properties",
               "children": [
-               470,
-               469,
                468,
-               548,
-               522,
+               469,
+               470,
+               471,
                472,
-               547,
                497,
-               555,
-               471
+               522,
+               547,
+               548,
+               555
               ]
              }
             ]
@@ -18064,34 +18064,6 @@
                "flags": {},
                "children": [
                 {
-                 "id": 691,
-                 "name": "params",
-                 "variant": "declaration",
-                 "kind": 1024,
-                 "flags": {
-                  "isOptional": true
-                 },
-                 "type": {
-                  "type": "reference",
-                  "target": {
-                   "packageName": "typescript",
-                   "qualifiedName": "Record"
-                  },
-                  "typeArguments": [
-                   {
-                    "type": "intrinsic",
-                    "name": "string"
-                   },
-                   {
-                    "type": "intrinsic",
-                    "name": "any"
-                   }
-                  ],
-                  "name": "Record",
-                  "package": "typescript"
-                 }
-                },
-                {
                  "id": 684,
                  "name": "provide",
                  "variant": "declaration",
@@ -18146,14 +18118,42 @@
                    ]
                   }
                  }
+                },
+                {
+                 "id": 691,
+                 "name": "params",
+                 "variant": "declaration",
+                 "kind": 1024,
+                 "flags": {
+                  "isOptional": true
+                 },
+                 "type": {
+                  "type": "reference",
+                  "target": {
+                   "packageName": "typescript",
+                   "qualifiedName": "Record"
+                  },
+                  "typeArguments": [
+                   {
+                    "type": "intrinsic",
+                    "name": "string"
+                   },
+                   {
+                    "type": "intrinsic",
+                    "name": "any"
+                   }
+                  ],
+                  "name": "Record",
+                  "package": "typescript"
+                 }
                 }
                ],
                "groups": [
                 {
                  "title": "Properties",
                  "children": [
-                  691,
-                  684
+                  684,
+                  691
                  ]
                 }
                ]
@@ -18479,34 +18479,6 @@
                "flags": {},
                "children": [
                 {
-                 "id": 727,
-                 "name": "params",
-                 "variant": "declaration",
-                 "kind": 1024,
-                 "flags": {
-                  "isOptional": true
-                 },
-                 "type": {
-                  "type": "reference",
-                  "target": {
-                   "packageName": "typescript",
-                   "qualifiedName": "Record"
-                  },
-                  "typeArguments": [
-                   {
-                    "type": "intrinsic",
-                    "name": "string"
-                   },
-                   {
-                    "type": "intrinsic",
-                    "name": "any"
-                   }
-                  ],
-                  "name": "Record",
-                  "package": "typescript"
-                 }
-                },
-                {
                  "id": 720,
                  "name": "provide",
                  "variant": "declaration",
@@ -18555,14 +18527,42 @@
                    ]
                   }
                  }
+                },
+                {
+                 "id": 727,
+                 "name": "params",
+                 "variant": "declaration",
+                 "kind": 1024,
+                 "flags": {
+                  "isOptional": true
+                 },
+                 "type": {
+                  "type": "reference",
+                  "target": {
+                   "packageName": "typescript",
+                   "qualifiedName": "Record"
+                  },
+                  "typeArguments": [
+                   {
+                    "type": "intrinsic",
+                    "name": "string"
+                   },
+                   {
+                    "type": "intrinsic",
+                    "name": "any"
+                   }
+                  ],
+                  "name": "Record",
+                  "package": "typescript"
+                 }
                 }
                ],
                "groups": [
                 {
                  "title": "Properties",
                  "children": [
-                  727,
-                  720
+                  720,
+                  727
                  ]
                 }
                ]
@@ -19911,17 +19911,6 @@
         }
        },
        {
-        "id": 810,
-        "name": "methodName",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
         "id": 809,
         "name": "optionName",
         "variant": "declaration",
@@ -19949,6 +19938,17 @@
          "type": "intrinsic",
          "name": "string"
         }
+       },
+       {
+        "id": 810,
+        "name": "methodName",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
        }
       ],
       "groups": [
@@ -19956,8 +19956,8 @@
         "title": "Properties",
         "children": [
          808,
-         810,
-         809
+         809,
+         810
         ]
        }
       ]
@@ -20261,6 +20261,17 @@
       },
       "children": [
        {
+        "id": 837,
+        "name": "methodName",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
         "id": 838,
         "name": "builder",
         "variant": "declaration",
@@ -20301,6 +20312,37 @@
         }
        },
        {
+        "id": 839,
+        "name": "type",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "reference",
+         "target": 1777,
+         "name": "CommandType",
+         "package": "meocord"
+        }
+       },
+       {
+        "id": 840,
+        "name": "regex",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "type": {
+         "type": "reference",
+         "target": {
+          "packageName": "typescript",
+          "qualifiedName": "RegExp"
+         },
+         "name": "RegExp",
+         "package": "typescript"
+        }
+       },
+       {
         "id": 841,
         "name": "dynamicParams",
         "variant": "declaration",
@@ -20318,6 +20360,43 @@
           "qualifiedName": "CommandMetadata.T",
           "refersToTypeParameter": true
          }
+        }
+       },
+       {
+        "id": 842,
+        "name": "specificity",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "How specific this pattern is; the highest wins when several routes match one customId, so\n"
+          },
+          {
+           "kind": "code",
+           "text": "`gi-profile/summary/{ownerId}/{uid}`"
+          },
+          {
+           "kind": "text",
+           "text": " beats "
+          },
+          {
+           "kind": "code",
+           "text": "`gi-profile/{uuid}/{uid}`"
+          },
+          {
+           "kind": "text",
+           "text": " whatever the declaration order."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "number"
         }
        },
        {
@@ -20360,98 +20439,19 @@
           ]
          }
         }
-       },
-       {
-        "id": 837,
-        "name": "methodName",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 840,
-        "name": "regex",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "type": {
-         "type": "reference",
-         "target": {
-          "packageName": "typescript",
-          "qualifiedName": "RegExp"
-         },
-         "name": "RegExp",
-         "package": "typescript"
-        }
-       },
-       {
-        "id": 842,
-        "name": "specificity",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "How specific this pattern is; the highest wins when several routes match one customId, so\n"
-          },
-          {
-           "kind": "code",
-           "text": "`gi-profile/summary/{ownerId}/{uid}`"
-          },
-          {
-           "kind": "text",
-           "text": " beats "
-          },
-          {
-           "kind": "code",
-           "text": "`gi-profile/{uuid}/{uid}`"
-          },
-          {
-           "kind": "text",
-           "text": " whatever the declaration order."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "number"
-        }
-       },
-       {
-        "id": 839,
-        "name": "type",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "reference",
-         "target": 1777,
-         "name": "CommandType",
-         "package": "meocord"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         838,
-         841,
-         843,
          837,
+         838,
+         839,
          840,
+         841,
          842,
-         839
+         843
         ]
        }
       ],
@@ -20499,6 +20499,131 @@
        ]
       },
       "children": [
+       {
+        "id": 845,
+        "name": "guilds",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Guilds to register every command to instead of globally. Unset or empty registers globally.\nA builder's own "
+          },
+          {
+           "kind": "code",
+           "text": "`guilds`"
+          },
+          {
+           "kind": "text",
+           "text": " option takes precedence for its command."
+          }
+         ]
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "intrinsic",
+          "name": "string"
+         }
+        }
+       },
+       {
+        "id": 846,
+        "name": "developmentGuild",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "A guild that receives every command, and nothing else does, while "
+          },
+          {
+           "kind": "code",
+           "text": "`NODE_ENV`"
+          },
+          {
+           "kind": "text",
+           "text": " is "
+          },
+          {
+           "kind": "code",
+           "text": "`development`"
+          },
+          {
+           "kind": "text",
+           "text": " —\nas under "
+          },
+          {
+           "kind": "code",
+           "text": "`meocord start --dev`"
+          },
+          {
+           "kind": "text",
+           "text": ". Ignored in production."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
+        "id": 847,
+        "name": "register",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether the bot registers its commands when it starts. Set "
+          },
+          {
+           "kind": "code",
+           "text": "`false`"
+          },
+          {
+           "kind": "text",
+           "text": " to register only with\n"
+          },
+          {
+           "kind": "code",
+           "text": "`meocord register`"
+          },
+          {
+           "kind": "text",
+           "text": ", from CI for instance."
+          }
+         ],
+         "blockTags": [
+          {
+           "tag": "@defaultValue",
+           "content": [
+            {
+             "kind": "code",
+             "text": "`true`"
+            }
+           ]
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
+        }
+       },
        {
         "id": 848,
         "name": "clearOther",
@@ -20570,141 +20695,16 @@
          "type": "intrinsic",
          "name": "boolean"
         }
-       },
-       {
-        "id": 846,
-        "name": "developmentGuild",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "A guild that receives every command, and nothing else does, while "
-          },
-          {
-           "kind": "code",
-           "text": "`NODE_ENV`"
-          },
-          {
-           "kind": "text",
-           "text": " is "
-          },
-          {
-           "kind": "code",
-           "text": "`development`"
-          },
-          {
-           "kind": "text",
-           "text": " —\nas under "
-          },
-          {
-           "kind": "code",
-           "text": "`meocord start --dev`"
-          },
-          {
-           "kind": "text",
-           "text": ". Ignored in production."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 845,
-        "name": "guilds",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Guilds to register every command to instead of globally. Unset or empty registers globally.\nA builder's own "
-          },
-          {
-           "kind": "code",
-           "text": "`guilds`"
-          },
-          {
-           "kind": "text",
-           "text": " option takes precedence for its command."
-          }
-         ]
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "intrinsic",
-          "name": "string"
-         }
-        }
-       },
-       {
-        "id": 847,
-        "name": "register",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether the bot registers its commands when it starts. Set "
-          },
-          {
-           "kind": "code",
-           "text": "`false`"
-          },
-          {
-           "kind": "text",
-           "text": " to register only with\n"
-          },
-          {
-           "kind": "code",
-           "text": "`meocord register`"
-          },
-          {
-           "kind": "text",
-           "text": ", from CI for instance."
-          }
-         ],
-         "blockTags": [
-          {
-           "tag": "@defaultValue",
-           "content": [
-            {
-             "kind": "code",
-             "text": "`true`"
-            }
-           ]
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         848,
-         846,
          845,
-         847
+         846,
+         847,
+         848
         ]
        }
       ]
@@ -20732,6 +20732,91 @@
        ]
       },
       "children": [
+       {
+        "id": 850,
+        "name": "seconds",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The window's length."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "number"
+        }
+       },
+       {
+        "id": 851,
+        "name": "uses",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Calls allowed within the window."
+          }
+         ],
+         "blockTags": [
+          {
+           "tag": "@defaultValue",
+           "content": [
+            {
+             "kind": "code",
+             "text": "`1`"
+            }
+           ]
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "number"
+        }
+       },
+       {
+        "id": 852,
+        "name": "per",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whose calls are counted together."
+          }
+         ],
+         "blockTags": [
+          {
+           "tag": "@defaultValue",
+           "content": [
+            {
+             "kind": "code",
+             "text": "`'user'`"
+            }
+           ]
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 1500,
+         "name": "CooldownScope",
+         "package": "meocord"
+        }
+       },
        {
         "id": 853,
         "name": "bypass",
@@ -20806,101 +20891,16 @@
           ]
          }
         }
-       },
-       {
-        "id": 852,
-        "name": "per",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whose calls are counted together."
-          }
-         ],
-         "blockTags": [
-          {
-           "tag": "@defaultValue",
-           "content": [
-            {
-             "kind": "code",
-             "text": "`'user'`"
-            }
-           ]
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 1500,
-         "name": "CooldownScope",
-         "package": "meocord"
-        }
-       },
-       {
-        "id": 850,
-        "name": "seconds",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The window's length."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "number"
-        }
-       },
-       {
-        "id": 851,
-        "name": "uses",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Calls allowed within the window."
-          }
-         ],
-         "blockTags": [
-          {
-           "tag": "@defaultValue",
-           "content": [
-            {
-             "kind": "code",
-             "text": "`1`"
-            }
-           ]
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "number"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         853,
-         852,
          850,
-         851
+         851,
+         852,
+         853
         ]
        }
       ]
@@ -21610,61 +21610,6 @@
       },
       "children": [
        {
-        "id": 879,
-        "name": "registerCommands",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 880,
-          "name": "registerCommands",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "Registers the application's commands with Discord, where "
-            },
-            {
-             "kind": "code",
-             "text": "`meocord.config.ts`"
-            },
-            {
-             "kind": "text",
-             "text": "'s "
-            },
-            {
-             "kind": "code",
-             "text": "`commands`"
-            },
-            {
-             "kind": "text",
-             "text": " says.\nA failure is logged rather than thrown."
-            }
-           ]
-          },
-          "type": {
-           "type": "reference",
-           "target": {
-            "packageName": "typescript",
-            "qualifiedName": "Promise"
-           },
-           "typeArguments": [
-            {
-             "type": "intrinsic",
-             "name": "void"
-            }
-           ],
-           "name": "Promise",
-           "package": "typescript"
-          }
-         }
-        ]
-       },
-       {
         "id": 877,
         "name": "start",
         "variant": "declaration",
@@ -21722,14 +21667,69 @@
           }
          }
         ]
+       },
+       {
+        "id": 879,
+        "name": "registerCommands",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 880,
+          "name": "registerCommands",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "Registers the application's commands with Discord, where "
+            },
+            {
+             "kind": "code",
+             "text": "`meocord.config.ts`"
+            },
+            {
+             "kind": "text",
+             "text": "'s "
+            },
+            {
+             "kind": "code",
+             "text": "`commands`"
+            },
+            {
+             "kind": "text",
+             "text": " says.\nA failure is logged rather than thrown."
+            }
+           ]
+          },
+          "type": {
+           "type": "reference",
+           "target": {
+            "packageName": "typescript",
+            "qualifiedName": "Promise"
+           },
+           "typeArguments": [
+            {
+             "type": "intrinsic",
+             "name": "void"
+            }
+           ],
+           "name": "Promise",
+           "package": "typescript"
+          }
+         }
+        ]
        }
       ],
       "groups": [
        {
         "title": "Methods",
         "children": [
-         879,
-         877
+         877,
+         879
         ]
        }
       ]
@@ -21781,6 +21781,25 @@
           {
            "kind": "text",
            "text": "Shown as a prefix on every log line. Omitted when unset."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
+        "id": 883,
+        "name": "discordToken",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The Discord bot token. Read it from the environment rather than committing it."
           }
          ]
         },
@@ -21851,59 +21870,6 @@
         "type": {
          "type": "intrinsic",
          "name": "boolean"
-        }
-       },
-       {
-        "id": 895,
-        "name": "commands",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Where the bot registers its application commands, and whether it does so at startup."
-          }
-         ],
-         "blockTags": [
-          {
-           "tag": "@defaultValue",
-           "content": [
-            {
-             "kind": "code",
-             "text": "```ts\nEvery command registered globally, each time the bot starts.\n```"
-            }
-           ]
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 844,
-         "name": "CommandRegistrationConfig",
-         "package": "meocord"
-        }
-       },
-       {
-        "id": 883,
-        "name": "discordToken",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The Discord bot token. Read it from the environment rather than committing it."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
         }
        },
        {
@@ -22181,6 +22147,80 @@
         }
        },
        {
+        "id": 894,
+        "name": "shutdownTimeout",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "How long, in milliseconds, shutdown waits for the "
+          },
+          {
+           "kind": "code",
+           "text": "`onShutdown`"
+          },
+          {
+           "kind": "text",
+           "text": " hooks before destroying the client\nanyway. The limit covers every hook together, not each one."
+          }
+         ],
+         "blockTags": [
+          {
+           "tag": "@defaultValue",
+           "content": [
+            {
+             "kind": "code",
+             "text": "`10_000`"
+            }
+           ]
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "number"
+        }
+       },
+       {
+        "id": 895,
+        "name": "commands",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Where the bot registers its application commands, and whether it does so at startup."
+          }
+         ],
+         "blockTags": [
+          {
+           "tag": "@defaultValue",
+           "content": [
+            {
+             "kind": "code",
+             "text": "```ts\nEvery command registered globally, each time the bot starts.\n```"
+            }
+           ]
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 844,
+         "name": "CommandRegistrationConfig",
+         "package": "meocord"
+        }
+       },
+       {
         "id": 896,
         "name": "sharding",
         "variant": "declaration",
@@ -22221,46 +22261,6 @@
          "name": "ShardingConfig",
          "package": "meocord"
         }
-       },
-       {
-        "id": 894,
-        "name": "shutdownTimeout",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "How long, in milliseconds, shutdown waits for the "
-          },
-          {
-           "kind": "code",
-           "text": "`onShutdown`"
-          },
-          {
-           "kind": "text",
-           "text": " hooks before destroying the client\nanyway. The limit covers every hook together, not each one."
-          }
-         ],
-         "blockTags": [
-          {
-           "tag": "@defaultValue",
-           "content": [
-            {
-             "kind": "code",
-             "text": "`10_000`"
-            }
-           ]
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "number"
-        }
        }
       ],
       "groups": [
@@ -22268,14 +22268,14 @@
         "title": "Properties",
         "children": [
          882,
-         884,
-         895,
          883,
+         884,
          885,
          886,
          887,
-         896,
-         894
+         894,
+         895,
+         896
         ]
        }
       ]
@@ -22786,25 +22786,6 @@
       },
       "children": [
        {
-        "id": 914,
-        "name": "error",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The error being answered, so a presenter can style it by kind."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "unknown"
-        }
-       },
-       {
         "id": 913,
         "name": "message",
         "variant": "declaration",
@@ -22822,14 +22803,33 @@
          "type": "intrinsic",
          "name": "string"
         }
+       },
+       {
+        "id": 914,
+        "name": "error",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The error being answered, so a presenter can style it by kind."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "unknown"
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         914,
-         913
+         913,
+         914
         ]
        }
       ]
@@ -22857,27 +22857,6 @@
        ]
       },
       "children": [
-       {
-        "id": 917,
-        "name": "action",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether the reaction was added or removed."
-          }
-         ]
-        },
-        "type": {
-         "type": "reference",
-         "target": 1788,
-         "name": "ReactionHandlerAction",
-         "package": "meocord"
-        }
-       },
        {
         "id": 916,
         "name": "user",
@@ -22915,14 +22894,35 @@
           }
          ]
         }
+       },
+       {
+        "id": 917,
+        "name": "action",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether the reaction was added or removed."
+          }
+         ]
+        },
+        "type": {
+         "type": "reference",
+         "target": 1788,
+         "name": "ReactionHandlerAction",
+         "package": "meocord"
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         917,
-         916
+         916,
+         917
         ]
        }
       ]
@@ -23144,6 +23144,59 @@
       },
       "children": [
        {
+        "id": 925,
+        "name": "loading",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 926,
+          "name": "loading",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "comment": {
+           "summary": [
+            {
+             "kind": "text",
+             "text": "The view shown while a handler under "
+            },
+            {
+             "kind": "code",
+             "text": "`@Defer`"
+            },
+            {
+             "kind": "text",
+             "text": " works."
+            }
+           ]
+          },
+          "parameters": [
+           {
+            "id": 927,
+            "name": "context",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "reference",
+             "target": 920,
+             "name": "ResponseContext",
+             "package": "meocord"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 932,
+           "name": "ResponseView",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
         "id": 928,
         "name": "error",
         "variant": "declaration",
@@ -23200,67 +23253,14 @@
           }
          }
         ]
-       },
-       {
-        "id": 925,
-        "name": "loading",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 926,
-          "name": "loading",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "comment": {
-           "summary": [
-            {
-             "kind": "text",
-             "text": "The view shown while a handler under "
-            },
-            {
-             "kind": "code",
-             "text": "`@Defer`"
-            },
-            {
-             "kind": "text",
-             "text": " works."
-            }
-           ]
-          },
-          "parameters": [
-           {
-            "id": 927,
-            "name": "context",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": 920,
-             "name": "ResponseContext",
-             "package": "meocord"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 932,
-           "name": "ResponseView",
-           "package": "meocord"
-          }
-         }
-        ]
        }
       ],
       "groups": [
        {
         "title": "Methods",
         "children": [
-         928,
-         925
+         925,
+         928
         ]
        }
       ]
@@ -23280,6 +23280,46 @@
        ]
       },
       "children": [
+       {
+        "id": 933,
+        "name": "text",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The main text."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
+        "id": 934,
+        "name": "title",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "A heading above the text."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
        {
         "id": 935,
         "name": "color",
@@ -23304,6 +23344,27 @@
          },
          "name": "ColorResolvable",
          "package": "discord.js"
+        }
+       },
+       {
+        "id": 936,
+        "name": "emoji",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "An emoji shown before the text, and on the clicked button while it loads."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -23359,78 +23420,17 @@
           ]
          }
         }
-       },
-       {
-        "id": 936,
-        "name": "emoji",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "An emoji shown before the text, and on the clicked button while it loads."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 933,
-        "name": "text",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The main text."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 934,
-        "name": "title",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "A heading above the text."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         935,
-         937,
-         936,
          933,
-         934
+         934,
+         935,
+         936,
+         937
         ]
        }
       ]
@@ -23494,8 +23494,8 @@
       },
       "children": [
        {
-        "id": 941,
-        "name": "development",
+        "id": 939,
+        "name": "shards",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -23505,23 +23505,15 @@
          "summary": [
           {
            "kind": "text",
-           "text": "Whether "
+           "text": "How many shards to run: a number, or "
           },
           {
            "kind": "code",
-           "text": "`mode: 'process'`"
+           "text": "`'auto'`"
           },
           {
            "kind": "text",
-           "text": " also applies under "
-          },
-          {
-           "kind": "code",
-           "text": "`meocord start --dev`"
-          },
-          {
-           "kind": "text",
-           "text": ". Off by default, so the\ndevelopment watcher restarts one process and never leaves shards behind."
+           "text": " for the count Discord recommends."
           }
          ],
          "blockTags": [
@@ -23530,15 +23522,24 @@
            "content": [
             {
              "kind": "code",
-             "text": "`false`"
+             "text": "`'auto'`"
             }
            ]
           }
          ]
         },
         "type": {
-         "type": "intrinsic",
-         "name": "boolean"
+         "type": "union",
+         "types": [
+          {
+           "type": "intrinsic",
+           "name": "number"
+          },
+          {
+           "type": "literal",
+           "value": "auto"
+          }
+         ]
         }
        },
        {
@@ -23595,8 +23596,8 @@
         }
        },
        {
-        "id": 939,
-        "name": "shards",
+        "id": 941,
+        "name": "development",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -23606,15 +23607,23 @@
          "summary": [
           {
            "kind": "text",
-           "text": "How many shards to run: a number, or "
+           "text": "Whether "
           },
           {
            "kind": "code",
-           "text": "`'auto'`"
+           "text": "`mode: 'process'`"
           },
           {
            "kind": "text",
-           "text": " for the count Discord recommends."
+           "text": " also applies under "
+          },
+          {
+           "kind": "code",
+           "text": "`meocord start --dev`"
+          },
+          {
+           "kind": "text",
+           "text": ". Off by default, so the\ndevelopment watcher restarts one process and never leaves shards behind."
           }
          ],
          "blockTags": [
@@ -23623,24 +23632,15 @@
            "content": [
             {
              "kind": "code",
-             "text": "`'auto'`"
+             "text": "`false`"
             }
            ]
           }
          ]
         },
         "type": {
-         "type": "union",
-         "types": [
-          {
-           "type": "intrinsic",
-           "name": "number"
-          },
-          {
-           "type": "literal",
-           "value": "auto"
-          }
-         ]
+         "type": "intrinsic",
+         "name": "boolean"
         }
        }
       ],
@@ -23648,9 +23648,9 @@
        {
         "title": "Properties",
         "children": [
-         941,
+         939,
          940,
-         939
+         941
         ]
        }
       ]
@@ -23905,76 +23905,53 @@
       },
       "children": [
        {
-        "id": 1763,
-        "name": "types",
+        "id": 1754,
+        "name": "version",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
-         "isOptional": true,
          "isReadonly": true
         },
         "comment": {
          "summary": [
           {
            "kind": "text",
-           "text": "Type information only; never present at runtime."
+           "text": "The version of the specification, which is "
+          },
+          {
+           "kind": "code",
+           "text": "`1`"
+          },
+          {
+           "kind": "text",
+           "text": "."
           }
          ]
         },
         "type": {
-         "type": "reflection",
-         "declaration": {
-          "id": 1767,
-          "name": "__type",
-          "variant": "declaration",
-          "kind": 65536,
-          "flags": {},
-          "children": [
-           {
-            "id": 1768,
-            "name": "input",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isReadonly": true
-            },
-            "type": {
-             "type": "reference",
-             "target": 1752,
-             "name": "Input",
-             "package": "meocord",
-             "qualifiedName": "StandardSchemaV1Props.Input",
-             "refersToTypeParameter": true
-            }
-           },
-           {
-            "id": 1769,
-            "name": "output",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isReadonly": true
-            },
-            "type": {
-             "type": "reference",
-             "target": 1753,
-             "name": "Output",
-             "package": "meocord",
-             "qualifiedName": "StandardSchemaV1Props.Output",
-             "refersToTypeParameter": true
-            }
-           }
-          ],
-          "groups": [
-           {
-            "title": "Properties",
-            "children": [
-             1768,
-             1769
-            ]
-           }
-          ]
-         }
+         "type": "literal",
+         "value": 1
+        }
+       },
+       {
+        "id": 1755,
+        "name": "vendor",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The library the schema comes from."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -24075,53 +24052,76 @@
         }
        },
        {
-        "id": 1755,
-        "name": "vendor",
+        "id": 1763,
+        "name": "types",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
+         "isOptional": true,
          "isReadonly": true
         },
         "comment": {
          "summary": [
           {
            "kind": "text",
-           "text": "The library the schema comes from."
+           "text": "Type information only; never present at runtime."
           }
          ]
         },
         "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
-        "id": 1754,
-        "name": "version",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The version of the specification, which is "
-          },
-          {
-           "kind": "code",
-           "text": "`1`"
-          },
-          {
-           "kind": "text",
-           "text": "."
-          }
-         ]
-        },
-        "type": {
-         "type": "literal",
-         "value": 1
+         "type": "reflection",
+         "declaration": {
+          "id": 1767,
+          "name": "__type",
+          "variant": "declaration",
+          "kind": 65536,
+          "flags": {},
+          "children": [
+           {
+            "id": 1768,
+            "name": "input",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isReadonly": true
+            },
+            "type": {
+             "type": "reference",
+             "target": 1752,
+             "name": "Input",
+             "package": "meocord",
+             "qualifiedName": "StandardSchemaV1Props.Input",
+             "refersToTypeParameter": true
+            }
+           },
+           {
+            "id": 1769,
+            "name": "output",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isReadonly": true
+            },
+            "type": {
+             "type": "reference",
+             "target": 1753,
+             "name": "Output",
+             "package": "meocord",
+             "qualifiedName": "StandardSchemaV1Props.Output",
+             "refersToTypeParameter": true
+            }
+           }
+          ],
+          "groups": [
+           {
+            "title": "Properties",
+            "children": [
+             1768,
+             1769
+            ]
+           }
+          ]
+         }
         }
        }
       ],
@@ -24129,10 +24129,10 @@
        {
         "title": "Properties",
         "children": [
-         1763,
-         1756,
+         1754,
          1755,
-         1754
+         1756,
+         1763
         ]
        }
       ],
@@ -24888,20 +24888,6 @@
           "flags": {},
           "children": [
            {
-            "id": 1773,
-            "name": "issues",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isOptional": true,
-             "isReadonly": true
-            },
-            "type": {
-             "type": "intrinsic",
-             "name": "undefined"
-            }
-           },
-           {
             "id": 1772,
             "name": "value",
             "variant": "declaration",
@@ -24916,14 +24902,28 @@
              "package": "meocord",
              "refersToTypeParameter": true
             }
+           },
+           {
+            "id": 1773,
+            "name": "issues",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isOptional": true,
+             "isReadonly": true
+            },
+            "type": {
+             "type": "intrinsic",
+             "name": "undefined"
+            }
            }
           ],
           "groups": [
            {
             "title": "Properties",
             "children": [
-             1773,
-             1772
+             1772,
+             1773
             ]
            }
           ]
@@ -26805,20 +26805,12 @@
       "flags": {},
       "children": [
        {
-        "id": 1218,
-        "name": "focused",
+        "id": 1216,
+        "name": "subcommandGroup",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
          "isOptional": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The option the user is currently typing, for autocomplete interactions."
-          }
-         ]
         },
         "type": {
          "type": "union",
@@ -26857,12 +26849,20 @@
         }
        },
        {
-        "id": 1216,
-        "name": "subcommandGroup",
+        "id": 1218,
+        "name": "focused",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
          "isOptional": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The option the user is currently typing, for autocomplete interactions."
+          }
+         ]
         },
         "type": {
          "type": "union",
@@ -26883,9 +26883,9 @@
        {
         "title": "Properties",
         "children": [
-         1218,
+         1216,
          1217,
-         1216
+         1218
         ]
        }
       ],
@@ -27370,8 +27370,8 @@
         }
        },
        {
-        "id": 1261,
-        "name": "cooldowns",
+        "id": 1257,
+        "name": "methodName",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -27381,52 +27381,13 @@
          "summary": [
           {
            "kind": "text",
-           "text": "The handler's cooldowns, the controller's first, with their defaults filled in."
+           "text": "The handler method's name."
           }
          ]
         },
         "type": {
-         "type": "typeOperator",
-         "operator": "readonly",
-         "target": {
-          "type": "array",
-          "elementType": {
-           "type": "reference",
-           "target": 1295,
-           "name": "InspectedCooldown",
-           "package": "meocord"
-          }
-         }
-        }
-       },
-       {
-        "id": 1260,
-        "name": "filters",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The exception filters for the handler, in the order they are tried: the method's, then the\ncontroller's, then global ones."
-          }
-         ]
-        },
-        "type": {
-         "type": "typeOperator",
-         "operator": "readonly",
-         "target": {
-          "type": "array",
-          "elementType": {
-           "type": "reference",
-           "target": 1300,
-           "name": "InspectedFilter",
-           "package": "meocord"
-          }
-         }
+         "type": "intrinsic",
+         "name": "string"
         }
        },
        {
@@ -27490,8 +27451,8 @@
         }
        },
        {
-        "id": 1257,
-        "name": "methodName",
+        "id": 1260,
+        "name": "filters",
         "variant": "declaration",
         "kind": 1024,
         "flags": {
@@ -27501,13 +27462,52 @@
          "summary": [
           {
            "kind": "text",
-           "text": "The handler method's name."
+           "text": "The exception filters for the handler, in the order they are tried: the method's, then the\ncontroller's, then global ones."
           }
          ]
         },
         "type": {
-         "type": "intrinsic",
-         "name": "string"
+         "type": "typeOperator",
+         "operator": "readonly",
+         "target": {
+          "type": "array",
+          "elementType": {
+           "type": "reference",
+           "target": 1300,
+           "name": "InspectedFilter",
+           "package": "meocord"
+          }
+         }
+        }
+       },
+       {
+        "id": 1261,
+        "name": "cooldowns",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The handler's cooldowns, the controller's first, with their defaults filled in."
+          }
+         ]
+        },
+        "type": {
+         "type": "typeOperator",
+         "operator": "readonly",
+         "target": {
+          "type": "array",
+          "elementType": {
+           "type": "reference",
+           "target": 1295,
+           "name": "InspectedCooldown",
+           "package": "meocord"
+          }
+         }
         }
        },
        {
@@ -27860,11 +27860,11 @@
         "title": "Properties",
         "children": [
          1250,
-         1261,
-         1260,
+         1257,
          1258,
          1259,
-         1257
+         1260,
+         1261
         ]
        },
        {
@@ -27910,42 +27910,6 @@
       },
       "children": [
        {
-        "id": 1299,
-        "name": "bypass",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether it exempts some callers."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
-        }
-       },
-       {
-        "id": 1298,
-        "name": "per",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "type": {
-         "type": "reference",
-         "target": 1500,
-         "name": "CooldownScope",
-         "package": "meocord"
-        }
-       },
-       {
         "id": 1296,
         "name": "seconds",
         "variant": "declaration",
@@ -27970,16 +27934,52 @@
          "type": "intrinsic",
          "name": "number"
         }
+       },
+       {
+        "id": 1298,
+        "name": "per",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "type": {
+         "type": "reference",
+         "target": 1500,
+         "name": "CooldownScope",
+         "package": "meocord"
+        }
+       },
+       {
+        "id": 1299,
+        "name": "bypass",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether it exempts some callers."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1299,
-         1298,
          1296,
-         1297
+         1297,
+         1298,
+         1299
         ]
        }
       ]
@@ -28109,6 +28109,33 @@
       },
       "children": [
        {
+        "id": 1340,
+        "name": "ran",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether the handler ran; "
+          },
+          {
+           "kind": "code",
+           "text": "`false`"
+          },
+          {
+           "kind": "text",
+           "text": " when a guard denied the call or an interceptor skipped it."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
+        }
+       },
+       {
         "id": 1341,
         "name": "error",
         "variant": "declaration",
@@ -28136,41 +28163,14 @@
          "type": "intrinsic",
          "name": "unknown"
         }
-       },
-       {
-        "id": 1340,
-        "name": "ran",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether the handler ran; "
-          },
-          {
-           "kind": "code",
-           "text": "`false`"
-          },
-          {
-           "kind": "text",
-           "text": " when a guard denied the call or an interceptor skipped it."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1341,
-         1340
+         1340,
+         1341
         ]
        }
       ]
@@ -28237,223 +28237,43 @@
         }
        },
        {
-        "id": 1402,
-        "name": "getMockName",
+        "id": 1372,
+        "name": "mockReturnValue",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 1403,
-          "name": "getMockName",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "type": {
-           "type": "intrinsic",
-           "name": "string"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1396,
-        "name": "mockClear",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1397,
-          "name": "mockClear",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1390,
-        "name": "mockImplementation",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1391,
-          "name": "mockImplementation",
+          "id": 1373,
+          "name": "mockReturnValue",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 1392,
-            "name": "fn",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1393,
-        "name": "mockImplementationOnce",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1394,
-          "name": "mockImplementationOnce",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 1395,
-            "name": "fn",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1404,
-        "name": "mockName",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1405,
-          "name": "mockName",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 1406,
-            "name": "name",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "intrinsic",
-             "name": "string"
-            }
-           }
-          ],
-          "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1384,
-        "name": "mockRejectedValue",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1385,
-          "name": "mockRejectedValue",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
-          "parameters": [
-           {
-            "id": 1386,
+            "id": 1374,
             "name": "value",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "intrinsic",
-             "name": "unknown"
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "ReturnType"
+             },
+             "typeArguments": [
+              {
+               "type": "reference",
+               "target": 1357,
+               "name": "T",
+               "package": "meocord",
+               "qualifiedName": "MockInstance.T",
+               "refersToTypeParameter": true
+              }
+             ],
+             "name": "ReturnType",
+             "package": "typescript"
             }
            }
           ],
@@ -28477,63 +28297,46 @@
         ]
        },
        {
-        "id": 1387,
-        "name": "mockRejectedValueOnce",
+        "id": 1375,
+        "name": "mockReturnValueOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 1388,
-          "name": "mockRejectedValueOnce",
+          "id": 1376,
+          "name": "mockReturnValueOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 1389,
+            "id": 1377,
             "name": "value",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "intrinsic",
-             "name": "unknown"
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "ReturnType"
+             },
+             "typeArguments": [
+              {
+               "type": "reference",
+               "target": 1357,
+               "name": "T",
+               "package": "meocord",
+               "qualifiedName": "MockInstance.T",
+               "refersToTypeParameter": true
+              }
+             ],
+             "name": "ReturnType",
+             "package": "typescript"
             }
            }
           ],
-          "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
-          }
-         }
-        ]
-       },
-       {
-        "id": 1398,
-        "name": "mockReset",
-        "variant": "declaration",
-        "kind": 2048,
-        "flags": {},
-        "signatures": [
-         {
-          "id": 1399,
-          "name": "mockReset",
-          "variant": "signature",
-          "kind": 4096,
-          "flags": {},
           "type": {
            "type": "reference",
            "target": 1437,
@@ -28696,6 +28499,258 @@
         ]
        },
        {
+        "id": 1384,
+        "name": "mockRejectedValue",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1385,
+          "name": "mockRejectedValue",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 1386,
+            "name": "value",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "intrinsic",
+             "name": "unknown"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1387,
+        "name": "mockRejectedValueOnce",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1388,
+          "name": "mockRejectedValueOnce",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 1389,
+            "name": "value",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "intrinsic",
+             "name": "unknown"
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1390,
+        "name": "mockImplementation",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1391,
+          "name": "mockImplementation",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 1392,
+            "name": "fn",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1393,
+        "name": "mockImplementationOnce",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1394,
+          "name": "mockImplementationOnce",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "parameters": [
+           {
+            "id": 1395,
+            "name": "fn",
+            "variant": "param",
+            "kind": 32768,
+            "flags": {},
+            "type": {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           }
+          ],
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1396,
+        "name": "mockClear",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1397,
+          "name": "mockClear",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
+        "id": 1398,
+        "name": "mockReset",
+        "variant": "declaration",
+        "kind": 2048,
+        "flags": {},
+        "signatures": [
+         {
+          "id": 1399,
+          "name": "mockReset",
+          "variant": "signature",
+          "kind": 4096,
+          "flags": {},
+          "type": {
+           "type": "reference",
+           "target": 1437,
+           "typeArguments": [
+            {
+             "type": "reference",
+             "target": 1357,
+             "name": "T",
+             "package": "meocord",
+             "qualifiedName": "MockInstance.T",
+             "refersToTypeParameter": true
+            }
+           ],
+           "name": "MockedFunction",
+           "package": "meocord"
+          }
+         }
+        ]
+       },
+       {
         "id": 1400,
         "name": "mockRestore",
         "variant": "declaration",
@@ -28728,103 +28783,48 @@
         ]
        },
        {
-        "id": 1372,
-        "name": "mockReturnValue",
+        "id": 1402,
+        "name": "getMockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 1373,
-          "name": "mockReturnValue",
+          "id": 1403,
+          "name": "getMockName",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
-          "parameters": [
-           {
-            "id": 1374,
-            "name": "value",
-            "variant": "param",
-            "kind": 32768,
-            "flags": {},
-            "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "ReturnType"
-             },
-             "typeArguments": [
-              {
-               "type": "reference",
-               "target": 1357,
-               "name": "T",
-               "package": "meocord",
-               "qualifiedName": "MockInstance.T",
-               "refersToTypeParameter": true
-              }
-             ],
-             "name": "ReturnType",
-             "package": "typescript"
-            }
-           }
-          ],
           "type": {
-           "type": "reference",
-           "target": 1437,
-           "typeArguments": [
-            {
-             "type": "reference",
-             "target": 1357,
-             "name": "T",
-             "package": "meocord",
-             "qualifiedName": "MockInstance.T",
-             "refersToTypeParameter": true
-            }
-           ],
-           "name": "MockedFunction",
-           "package": "meocord"
+           "type": "intrinsic",
+           "name": "string"
           }
          }
         ]
        },
        {
-        "id": 1375,
-        "name": "mockReturnValueOnce",
+        "id": 1404,
+        "name": "mockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 1376,
-          "name": "mockReturnValueOnce",
+          "id": 1405,
+          "name": "mockName",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 1377,
-            "name": "value",
+            "id": 1406,
+            "name": "name",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "ReturnType"
-             },
-             "typeArguments": [
-              {
-               "type": "reference",
-               "target": 1357,
-               "name": "T",
-               "package": "meocord",
-               "qualifiedName": "MockInstance.T",
-               "refersToTypeParameter": true
-              }
-             ],
-             "name": "ReturnType",
-             "package": "typescript"
+             "type": "intrinsic",
+             "name": "string"
             }
            }
           ],
@@ -28859,19 +28859,19 @@
        {
         "title": "Methods",
         "children": [
-         1402,
-         1396,
-         1390,
-         1393,
-         1404,
-         1384,
-         1387,
-         1398,
+         1372,
+         1375,
          1378,
          1381,
+         1384,
+         1387,
+         1390,
+         1393,
+         1396,
+         1398,
          1400,
-         1372,
-         1375
+         1402,
+         1404
         ]
        }
       ],
@@ -29080,6 +29080,53 @@
         }
        },
        {
+        "id": 1434,
+        "name": "results",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isReadonly": true
+        },
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Return / throw result from each call, in order."
+          }
+         ]
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "reference",
+          "target": 1415,
+          "typeArguments": [
+           {
+            "type": "reference",
+            "target": {
+             "packageName": "typescript",
+             "qualifiedName": "ReturnType"
+            },
+            "typeArguments": [
+             {
+              "type": "reference",
+              "target": 1420,
+              "name": "T",
+              "package": "meocord",
+              "qualifiedName": "MockState.T",
+              "refersToTypeParameter": true
+             }
+            ],
+            "name": "ReturnType",
+            "package": "typescript"
+           }
+          ],
+          "name": "MockResult",
+          "package": "meocord"
+         }
+        }
+       },
+       {
         "id": 1435,
         "name": "instances",
         "variant": "declaration",
@@ -29147,53 +29194,6 @@
          "name": "Parameters",
          "package": "typescript"
         }
-       },
-       {
-        "id": 1434,
-        "name": "results",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isReadonly": true
-        },
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Return / throw result from each call, in order."
-          }
-         ]
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "reference",
-          "target": 1415,
-          "typeArguments": [
-           {
-            "type": "reference",
-            "target": {
-             "packageName": "typescript",
-             "qualifiedName": "ReturnType"
-            },
-            "typeArguments": [
-             {
-              "type": "reference",
-              "target": 1420,
-              "name": "T",
-              "package": "meocord",
-              "qualifiedName": "MockState.T",
-              "refersToTypeParameter": true
-             }
-            ],
-            "name": "ReturnType",
-            "package": "typescript"
-           }
-          ],
-          "name": "MockResult",
-          "package": "meocord"
-         }
-        }
        }
       ],
       "groups": [
@@ -29201,9 +29201,9 @@
         "title": "Properties",
         "children": [
          1433,
+         1434,
          1435,
-         1436,
-         1434
+         1436
         ]
        }
       ],
@@ -29339,6 +29339,25 @@
         }
        },
        {
+        "id": 1452,
+        "name": "method",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "The name of the handler method."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "string"
+        }
+       },
+       {
         "id": 1453,
         "name": "handler",
         "variant": "declaration",
@@ -29403,25 +29422,6 @@
         }
        },
        {
-        "id": 1452,
-        "name": "method",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "The name of the handler method."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "string"
-        }
-       },
-       {
         "id": 1460,
         "name": "params",
         "variant": "declaration",
@@ -29469,8 +29469,8 @@
         "title": "Properties",
         "children": [
          1451,
-         1453,
          1452,
+         1453,
          1460
         ]
        }
@@ -29509,61 +29509,6 @@
        ]
       },
       "children": [
-       {
-        "id": 1464,
-        "name": "calls",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Every Discord call made through "
-          },
-          {
-           "kind": "code",
-           "text": "`respond()`"
-          },
-          {
-           "kind": "text",
-           "text": ", in order, with the payload it sent."
-          }
-         ]
-        },
-        "type": {
-         "type": "typeOperator",
-         "operator": "readonly",
-         "target": {
-          "type": "array",
-          "elementType": {
-           "type": "reference",
-           "target": 1558,
-           "name": "ResponseCall",
-           "package": "meocord"
-          }
-         }
-        }
-       },
-       {
-        "id": 1463,
-        "name": "sent",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "comment": {
-         "summary": [
-          {
-           "kind": "text",
-           "text": "Whether anything the user can see was sent: a reply, an update, an edit or a follow-up."
-          }
-         ]
-        },
-        "type": {
-         "type": "intrinsic",
-         "name": "boolean"
-        }
-       },
        {
         "id": 1462,
         "name": "state",
@@ -29608,15 +29553,70 @@
          "name": "ResponsePhase",
          "package": "meocord"
         }
+       },
+       {
+        "id": 1463,
+        "name": "sent",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Whether anything the user can see was sent: a reply, an update, an edit or a follow-up."
+          }
+         ]
+        },
+        "type": {
+         "type": "intrinsic",
+         "name": "boolean"
+        }
+       },
+       {
+        "id": 1464,
+        "name": "calls",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "comment": {
+         "summary": [
+          {
+           "kind": "text",
+           "text": "Every Discord call made through "
+          },
+          {
+           "kind": "code",
+           "text": "`respond()`"
+          },
+          {
+           "kind": "text",
+           "text": ", in order, with the payload it sent."
+          }
+         ]
+        },
+        "type": {
+         "type": "typeOperator",
+         "operator": "readonly",
+         "target": {
+          "type": "array",
+          "elementType": {
+           "type": "reference",
+           "target": 1558,
+           "name": "ResponseCall",
+           "package": "meocord"
+          }
+         }
+        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1464,
+         1462,
          1463,
-         1462
+         1464
         ]
        }
       ]
@@ -29637,6 +29637,19 @@
       },
       "children": [
        {
+        "id": 1466,
+        "name": "type",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {},
+        "type": {
+         "type": "reference",
+         "target": 1233,
+         "name": "ComponentCommandType",
+         "package": "meocord"
+        }
+       },
+       {
         "id": 1467,
         "name": "patterns",
         "variant": "declaration",
@@ -29655,27 +29668,14 @@
           }
          ]
         }
-       },
-       {
-        "id": 1466,
-        "name": "type",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {},
-        "type": {
-         "type": "reference",
-         "target": 1233,
-         "name": "ComponentCommandType",
-         "package": "meocord"
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1467,
-         1466
+         1466,
+         1467
         ]
        }
       ]
@@ -29687,6 +29687,77 @@
       "kind": 256,
       "flags": {},
       "children": [
+       {
+        "id": 1469,
+        "name": "controllers",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "reflection",
+          "declaration": {
+           "id": 1473,
+           "name": "__type",
+           "variant": "declaration",
+           "kind": 512,
+           "flags": {},
+           "signatures": [
+            {
+             "id": 1474,
+             "name": "__type",
+             "variant": "signature",
+             "kind": 16384,
+             "flags": {},
+             "parameters": [
+              {
+               "id": 1475,
+               "name": "args",
+               "variant": "param",
+               "kind": 32768,
+               "flags": {
+                "isRest": true
+               },
+               "type": {
+                "type": "array",
+                "elementType": {
+                 "type": "intrinsic",
+                 "name": "any"
+                }
+               }
+              }
+             ],
+             "type": {
+              "type": "intrinsic",
+              "name": "any"
+             }
+            }
+           ]
+          }
+         }
+        }
+       },
+       {
+        "id": 1476,
+        "name": "providers",
+        "variant": "declaration",
+        "kind": 1024,
+        "flags": {
+         "isOptional": true
+        },
+        "type": {
+         "type": "array",
+         "elementType": {
+          "type": "reference",
+          "target": 1448,
+          "name": "Provider",
+          "package": "meocord"
+         }
+        }
+       },
        {
         "id": 1477,
         "name": "app",
@@ -29816,86 +29887,15 @@
           ]
          }
         }
-       },
-       {
-        "id": 1469,
-        "name": "controllers",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "reflection",
-          "declaration": {
-           "id": 1473,
-           "name": "__type",
-           "variant": "declaration",
-           "kind": 512,
-           "flags": {},
-           "signatures": [
-            {
-             "id": 1474,
-             "name": "__type",
-             "variant": "signature",
-             "kind": 16384,
-             "flags": {},
-             "parameters": [
-              {
-               "id": 1475,
-               "name": "args",
-               "variant": "param",
-               "kind": 32768,
-               "flags": {
-                "isRest": true
-               },
-               "type": {
-                "type": "array",
-                "elementType": {
-                 "type": "intrinsic",
-                 "name": "any"
-                }
-               }
-              }
-             ],
-             "type": {
-              "type": "intrinsic",
-              "name": "any"
-             }
-            }
-           ]
-          }
-         }
-        }
-       },
-       {
-        "id": 1476,
-        "name": "providers",
-        "variant": "declaration",
-        "kind": 1024,
-        "flags": {
-         "isOptional": true
-        },
-        "type": {
-         "type": "array",
-         "elementType": {
-          "type": "reference",
-          "target": 1448,
-          "name": "Provider",
-          "package": "meocord"
-         }
-        }
        }
       ],
       "groups": [
        {
         "title": "Properties",
         "children": [
-         1477,
          1469,
-         1476
+         1476,
+         1477
         ]
        }
       ]
@@ -30682,34 +30682,6 @@
           "flags": {},
           "children": [
            {
-            "id": 1312,
-            "name": "params",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isOptional": true
-            },
-            "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "Record"
-             },
-             "typeArguments": [
-              {
-               "type": "intrinsic",
-               "name": "string"
-              },
-              {
-               "type": "intrinsic",
-               "name": "any"
-              }
-             ],
-             "name": "Record",
-             "package": "typescript"
-            }
-           },
-           {
             "id": 1305,
             "name": "provide",
             "variant": "declaration",
@@ -30764,14 +30736,42 @@
               ]
              }
             }
+           },
+           {
+            "id": 1312,
+            "name": "params",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isOptional": true
+            },
+            "type": {
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "Record"
+             },
+             "typeArguments": [
+              {
+               "type": "intrinsic",
+               "name": "string"
+              },
+              {
+               "type": "intrinsic",
+               "name": "any"
+              }
+             ],
+             "name": "Record",
+             "package": "typescript"
+            }
            }
           ],
           "groups": [
            {
             "title": "Properties",
             "children": [
-             1312,
-             1305
+             1305,
+             1312
             ]
            }
           ]
@@ -30858,34 +30858,6 @@
           "flags": {},
           "children": [
            {
-            "id": 1325,
-            "name": "params",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isOptional": true
-            },
-            "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "Record"
-             },
-             "typeArguments": [
-              {
-               "type": "intrinsic",
-               "name": "string"
-              },
-              {
-               "type": "intrinsic",
-               "name": "any"
-              }
-             ],
-             "name": "Record",
-             "package": "typescript"
-            }
-           },
-           {
             "id": 1318,
             "name": "provide",
             "variant": "declaration",
@@ -30934,14 +30906,42 @@
               ]
              }
             }
+           },
+           {
+            "id": 1325,
+            "name": "params",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isOptional": true
+            },
+            "type": {
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "Record"
+             },
+             "typeArguments": [
+              {
+               "type": "intrinsic",
+               "name": "string"
+              },
+              {
+               "type": "intrinsic",
+               "name": "any"
+              }
+             ],
+             "name": "Record",
+             "package": "typescript"
+            }
            }
           ],
           "groups": [
            {
             "title": "Properties",
             "children": [
-             1325,
-             1318
+             1318,
+             1325
             ]
            }
           ]
@@ -31028,34 +31028,6 @@
           "flags": {},
           "children": [
            {
-            "id": 1338,
-            "name": "params",
-            "variant": "declaration",
-            "kind": 1024,
-            "flags": {
-             "isOptional": true
-            },
-            "type": {
-             "type": "reference",
-             "target": {
-              "packageName": "typescript",
-              "qualifiedName": "Record"
-             },
-             "typeArguments": [
-              {
-               "type": "intrinsic",
-               "name": "string"
-              },
-              {
-               "type": "intrinsic",
-               "name": "any"
-              }
-             ],
-             "name": "Record",
-             "package": "typescript"
-            }
-           },
-           {
             "id": 1331,
             "name": "provide",
             "variant": "declaration",
@@ -31104,14 +31076,42 @@
               ]
              }
             }
+           },
+           {
+            "id": 1338,
+            "name": "params",
+            "variant": "declaration",
+            "kind": 1024,
+            "flags": {
+             "isOptional": true
+            },
+            "type": {
+             "type": "reference",
+             "target": {
+              "packageName": "typescript",
+              "qualifiedName": "Record"
+             },
+             "typeArguments": [
+              {
+               "type": "intrinsic",
+               "name": "string"
+              },
+              {
+               "type": "intrinsic",
+               "name": "any"
+              }
+             ],
+             "name": "Record",
+             "package": "typescript"
+            }
            }
           ],
           "groups": [
            {
             "title": "Properties",
             "children": [
-             1338,
-             1331
+             1331,
+             1338
             ]
            }
           ]
@@ -34121,17 +34121,6 @@
             "flags": {},
             "children": [
              {
-              "id": 1214,
-              "name": "customId",
-              "variant": "declaration",
-              "kind": 1024,
-              "flags": {},
-              "type": {
-               "type": "intrinsic",
-               "name": "string"
-              }
-             },
-             {
               "id": 1213,
               "name": "type",
               "variant": "declaration",
@@ -34143,14 +34132,25 @@
                "name": "ComponentCommandType",
                "package": "meocord"
               }
+             },
+             {
+              "id": 1214,
+              "name": "customId",
+              "variant": "declaration",
+              "kind": 1024,
+              "flags": {},
+              "type": {
+               "type": "intrinsic",
+               "name": "string"
+              }
              }
             ],
             "groups": [
              {
               "title": "Properties",
               "children": [
-               1214,
-               1213
+               1213,
+               1214
               ]
              }
             ]
