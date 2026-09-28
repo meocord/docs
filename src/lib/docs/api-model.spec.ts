@@ -330,6 +330,22 @@ describe('ApiModel option rows on beta.7', () => {
     expect(by.some(param => !param.optional && param.description !== '')).toBe(true)
   })
 
+  it('anchors an option by the signatures declaring it: plain in the first, numbered in each after', () => {
+    const anchors = byKind
+      .symbol('decorators', 'Cooldown')!
+      .signatures.map(signature => signature.params.filter(param => param.anchor).map(param => param.anchor))
+    expect(anchors.length).toBeGreaterThan(1)
+    expect(anchors[0]).toContain('by')
+    expect(anchors[1]).toContain('by-2')
+    expect(anchors.flat().filter(anchor => anchor!.endsWith('-option'))).toEqual([])
+    // A signature without options doesn't take the plain anchors from the one that has them
+    const hidden = byKind
+      .symbol('decorators', 'MessageHandler')!
+      .signatures.flatMap(signature => signature.params)
+      .find(param => param.name === 'options.hidden')!
+    expect(hidden.anchor).toBe('hidden')
+  })
+
   it("gives an option named like one of the window's ids an anchor of its own, not none", () => {
     const content = byKind
       .symbol('testing', 'createMockMessage')!
