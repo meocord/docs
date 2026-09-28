@@ -557,12 +557,23 @@ export function apiKindArticle(model: ApiModel, section: string): { nodes: Child
   const kind = apiSections(model).find(candidate => candidate.slug === section)
   if (!kind) return undefined
   const toc: TocEntry[] = []
-  // The CLI's page opens with how it is run, and the options every command takes
+  // The CLI's page opens with how it is run, the program's own options, and the help every command has, which
+  // the manifest leaves out as help itself does
   const manifest = section === CLI_SECTION ? cliManifest(model.version ?? lineVersions(model.line)[0]) : undefined
   const intro: Child[] = manifest
     ? [
         ...shellBlock(['meocord', manifest.usage].filter(Boolean).join(' '), 'usage'),
         ...(manifest.options.length > 0 ? [cliOptionsTable(manifest.options, 'options')] : []),
+        P(
+          [
+            'Every command also takes ',
+            Code('-h, --help', { key: 'help' }),
+            ', which prints its usage, arguments and options, as ',
+            Code('meocord help <command>', { key: 'help-command' }),
+            ' does.',
+          ],
+          { key: 'help' },
+        ),
       ]
     : []
   return {
