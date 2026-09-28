@@ -51,7 +51,7 @@
         },
         {
           "name": "logLevel",
-          "type": "'error' | 'debug' | 'log' | 'warn' | 'silent'",
+          "type": "'debug' | 'warn' | 'error' | 'log' | 'silent'",
           "required": false,
           "default": "`'debug'` while `NODE_ENV` is `development`, as under `meocord start --dev`, and\n  `'log'` otherwise",
           "since": "4.1.0-beta.5",

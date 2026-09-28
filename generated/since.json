@@ -356,7 +356,7 @@
   "meocord/common:MessageUsageError.constructor": {
     "since": "4.1.0-beta.5"
   },
-  "meocord/common:MessageUsageError.constructor(__namedParameters)": {
+  "meocord/common:MessageUsageError.constructor({ serverOnly, dmOnly, quiet })": {
     "since": "4.1.0-beta.5"
   },
   "meocord/common:MessageUsageError.constructor(issues)": {
