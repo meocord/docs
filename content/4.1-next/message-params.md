@@ -129,7 +129,7 @@ a request, so build the guild with them:
 ## Gotchas
 
 - **A member param in a DM.** A command with a `member`, `role` or `channel` param works in a server only,
-  and a DM is answered that way. Set `scope: 'guild'` to say so in a help listing too.
+  and a DM is answered that way. The help listing says so too, with no `scope` needed.
 - **A member who left.** A `member` param for someone not in the server is answered only to a caller the
   guards let through, so a refused caller learns nothing about the server.
 - **`{amount:int}` and `@Validate`.** The type runs first. A schema that expects the word as a string gets a

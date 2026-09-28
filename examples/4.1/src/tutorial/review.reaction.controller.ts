@@ -9,7 +9,7 @@ import { t } from '@src/tutorial/i18n'
 // #endregion step:localisation
 
 // #region reactions
-// Staff decide feedback by reacting to the bot's filing reply, which names it as #3: ✅ approves, ❌ rejects
+// Staff decide feedback by reacting to a reply of the bot's that names it as #3: ✅ approves, ❌ rejects
 @Controller()
 export class ReviewReactionController {
   constructor(
@@ -35,7 +35,7 @@ export class ReviewReactionController {
     // MeoCord fetched the message before this ran, so its author and text are there
     const { message } = reaction
     const { guild } = message
-    // Only a reaction added to the bot's own filing reply counts, and only from the staff
+    // Only a reaction added to the bot's own reply counts, such as its filing reply, and only from the staff
     if (action !== ReactionHandlerAction.ADD || !guild || message.author?.id !== message.client.user.id) return
     const member = await guild.members.fetch(user.id)
     if (!member.roles.cache.has(this.settings.staffRoleId)) return
