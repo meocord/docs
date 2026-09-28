@@ -15,8 +15,10 @@ describe('playgroundEmbed', () => {
   it('shows the region, a hidden Run button and the inputs, and carries the whole file and its inputs for the runner', () => {
     const out = html(() => FRAME)
     expect(out).toContain(`data-playground-src="${FRAME}"`)
-    expect(out).toMatch(/<button type="button" hidden="" data-playground-run="true">Run<\/button>/)
-    expect(out).toContain('Dispatches <code>as dm; button counter/41</code>')
+    expect(out).toMatch(
+      /<button type="button" hidden="" data-playground-run="true" aria-describedby="playground-inputs-0">Run<\/button>/,
+    )
+    expect(out).toContain('<span id="playground-inputs-0">Dispatches <code>as dm; button counter/41</code></span>')
     expect(out).toContain('aria-live="polite"')
     const request = JSON.parse(
       /data-playground-request="([^"]*)"/

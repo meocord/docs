@@ -54,7 +54,10 @@ test('loads nothing of the playground until Run, then runs the example and shows
 
 test('runs again from the keyboard, announcing the result, with the frame out of reach', async ({ page }) => {
   await page.goto(PAGE)
+  // The live region is in the tree before its first result, and the button is told apart by its inputs
   await expect(output(page)).toHaveAttribute('aria-live', 'polite')
+  expect(await output(page).evaluate(el => getComputedStyle(el).display)).not.toBe('none')
+  await expect(run(page)).toHaveAccessibleDescription('Dispatches button counter/41')
   await run(page).focus()
   await page.keyboard.press('Enter')
   await expect(output(page)).toContainText('CounterButtonController.count', { timeout: 30_000 })
