@@ -91,13 +91,15 @@ for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'examples')
         problems.push(`examples/${file}:${line}: "${word}" is a gendered pronoun; write they, them or their`)
 
 // A create command installs the line its page documents: {{meocord}}, not a package spec written out.
-// Migration guides are left alone, since they name the commands of releases before theirs.
-for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))
-  if (file.endsWith('.md') && !file.startsWith('migrating/'))
-    for (const { line, command } of literalCreates(text))
-      problems.push(
-        `content/${file}:${line}: "${command}" names the package itself; write "${PACKAGE_SPEC} create", which installs this line`,
-      )
+// Migration guides are left alone, since they name the commands of releases before theirs; imported
+// READMEs are written with the placeholder, and `bun run commands:check` checks the built site.
+for (const folder of ['content', 'generated/readme'])
+  for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, folder))))
+    if (file.endsWith('.md') && !file.startsWith('migrating/'))
+      for (const { line, command } of literalCreates(text))
+        problems.push(
+          `${folder}/${file}:${line}: "${command}" names the package itself; write "${PACKAGE_SPEC} create", which installs this line`,
+        )
 
 // Prose wraps at PROSE_WIDTH in every Markdown file of content/, the Guide and migration guides included
 for (const [file, text] of Object.entries(filesUnder(path.join(ROOT, 'content'))))

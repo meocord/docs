@@ -1,12 +1,10 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { loadPage, resolveExample } from '../../../scripts/lib/pages'
+import { HOME_LINE } from '@/config/home'
 import { VERSIONS } from '@/config/versions'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
-
-/** The line the home page draws its examples from. */
-export const HOME_LINE = '4.1'
 
 /** One stage of the pipeline panel, in the order a call meets it. */
 export type StageId = 'defer' | 'guard' | 'interceptor:before' | 'pipe' | 'handler' | 'interceptor:after' | 'respond'

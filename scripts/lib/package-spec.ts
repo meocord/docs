@@ -63,3 +63,8 @@ export function literalCreates(text: string): { line: number; command: string }[
     command: match[0].replace(/\s+/g, ' '),
   }))
 }
+
+/** A text's create commands written with the package itself, rewritten to the placeholder: for imported pages. */
+export function withPlaceholder(text: string): string {
+  return text.replace(LITERAL_CREATE, `${PACKAGE_SPEC} create`)
+}

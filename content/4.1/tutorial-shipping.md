@@ -10,7 +10,7 @@ The last step is to configure the bot for a real server, build it for production
 
 ## Configure it
 
-The bot reads three values from the environment. Put them in `.env`, which `{{meocord}} create` ignores in git:
+The bot reads three values from the environment. Put them in `.env`, which the `create` command ignores in git:
 
 ```dotenv
 DISCORD_TOKEN=your-bot-token

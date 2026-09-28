@@ -59,6 +59,7 @@ exact version is listed under `provenance.integrityOnly`, which a reviewer adds 
 | `bun run versions:sync`                      | Adds each published version the site lacks, verified, and updates `bun.lock` for its example pin      |
 | `bun run api:generate <version...>`          | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
 | `bun run content:check`                      | Checks front matter, examples, links and anchors, and that every version has its generated data       |
+| `bun run commands:check`                     | After a build: every create command a reader gets installs its page's line                            |
 | `bun run examples:check [line...]`           | Typechecks each line's examples against its pinned meocord                                            |
 | `bun run content:backport <sha> --to <line>` | Applies a commit's change to one line's guides to another line, on a branch of its own                |
 
@@ -72,10 +73,14 @@ from a README keep the README's code blocks as they were published.
 
 A page writes the package a reader runs as `{{meocord}}`: `npx {{meocord}} create my-bot`. The site writes
 the spec that installs the page's line: `meocord` for the current line, its tag for a line in prerelease
-(`meocord@beta`), and its newest version for any other. `content:check` refuses a create command written
-with the package itself, outside the migration guides; inside a project, `npx meocord` runs the installed
-one, so only `create` needs it. `versions:sync` fails when the registry's `latest`, or a prerelease line's
-tag, points at another line's version.
+(`meocord@beta`), and its newest version for any other. A README's create commands are imported with the
+placeholder too. `content:check` refuses a create command written with the package itself, outside the
+migration guides; inside a project, `npx meocord` runs the installed one, so only `create` needs it. After
+each build, `commands:check` reads the built pages, the search index and the palette, and fails on a create
+command that doesn't install its page's line, wherever its text came from. Changelogs, migration guides and
+the API reference, which name past releases' commands or are the package's own, are left alone.
+`versions:sync` fails when the registry's `latest`, or a prerelease line's tag, points at another line's
+version.
 
 ## The release bot
 
