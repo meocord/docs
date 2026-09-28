@@ -29,8 +29,8 @@ describe('cheat sheets', () => {
     expect(callShape('bind', signature([param('this'), param('value', { defaultValue: '1', optional: true })]))).toBe(
       'bind(value?)',
     )
-    expect(callShape('MessageUsageError', signature([param('usage'), param('__namedParameters')]))).toBe(
-      'MessageUsageError(usage, { … })',
+    expect(callShape('MessageUsageError', signature([param('usage'), param('{ quiet }', { optional: true })]))).toBe(
+      'MessageUsageError(usage, { quiet }?)',
     )
     expect(callShape('delete', signature([]))).toBe('delete()')
   })

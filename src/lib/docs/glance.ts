@@ -55,12 +55,12 @@ export function glanceSection(line: string): ApiSection {
 /**
  * How a signature is called: its name and its own parameters, as the model records them from TypeScript,
  * with `...` on a rest parameter and `?` on an optional or defaulted one: `send(payload, options?)`. An
- * options parameter's rows and a `this` parameter aren't arguments, and a destructured one reads `{ … }`.
+ * options parameter's rows and a `this` parameter aren't arguments; a destructured one reads as it binds.
  */
 export function callShape(name: string, signature: ApiSignature): string {
   const params = signature.params
     .filter(param => !param.option && param.name !== 'this')
-    .map(param => `${param.name === '__namedParameters' ? '{ … }' : param.name}${param.optional ? '?' : ''}`)
+    .map(param => `${param.name}${param.optional ? '?' : ''}`)
   return `${name}(${params.join(', ')})`
 }
 
