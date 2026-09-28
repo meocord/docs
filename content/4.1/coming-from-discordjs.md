@@ -61,7 +61,10 @@ In discord.js, the client, its listeners and the error handling are wired up tog
 ::example{from="compare" file="discordjs/bot.ts" region="client"}
 
 In MeoCord, an event is a decorated method, and the app class lists the controllers and client options.
-Errors a handler throws reach the built-in fallback, which logs them and answers the member privately:
+Errors a handler throws reach the [built-in fallback](/docs/4.1/exception-filters#the-built-in-fallback), which logs
+them and tells the member something went wrong: privately, or in the reply a public `@Defer` started. A message
+command's error is logged only, unless the app turns on
+[`dmOnError`](/docs/4.1/message-commands#telling-the-author-privately):
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
