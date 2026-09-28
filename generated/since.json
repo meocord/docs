@@ -1837,6 +1837,12 @@
   "meocord/interface:MessageCommandOptions.deleteUsageRepliesAfter": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:MessageCommandOptions.dmOnCooldown": {
+    "since": "4.1.0-beta.8"
+  },
+  "meocord/interface:MessageCommandOptions.dmOnError": {
+    "since": "4.1.0-beta.8"
+  },
   "meocord/interface:MessageCommandOptions.help": {
     "since": "4.1.0-beta.6"
   },
@@ -2344,6 +2350,9 @@
   "meocord/testing:createMockChannel(Class)": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:createMockChannel(props)": {
+    "since": "4.1.0-beta.8"
+  },
   "meocord/testing:createMockClient": {
     "since": "4.0.0-beta.0"
   },
@@ -2637,6 +2646,12 @@
   },
   "meocord/testing:MockGuildOverrides.members": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/testing:MockGuildOverrides.name": {
+    "since": "4.1.0-beta.8"
+  },
+  "meocord/testing:MockGuildOverrides.preferredLocale": {
+    "since": "4.1.0-beta.8"
   },
   "meocord/testing:MockGuildOverrides.roles": {
     "since": "4.1.0-beta.5"
