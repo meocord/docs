@@ -383,6 +383,8 @@ export const Prose = createNode('article', {
       border: 'none',
       background: 'none',
     },
+    // A stage's words for one kind show once that kind is picked, in place of its words for any
+    '& [data-pipeline] [data-stage] p[data-kinds]': { display: 'none' },
     // A kind of handler picked shows only the stages it runs; a frame it skips keeps what it wraps, unframed
     ...Object.fromEntries(
       HANDLER_KINDS.flatMap(({ id }) => {
@@ -392,6 +394,8 @@ export const Prose = createNode('article', {
           [`${picked} li${skipped}:not([data-frame])`, { display: 'none' }],
           [`${picked} li[data-frame]${skipped}`, { padding: 0, border: 'none' }],
           [`${picked} li[data-frame]${skipped} > [data-stage]`, { display: 'none' }],
+          [`${picked} [data-stage] p[data-kinds~="${id}"]`, { display: 'block' }],
+          [`${picked} [data-stage]:has(p[data-kinds~="${id}"]) > p[data-what]`, { display: 'none' }],
         ]
       }),
     ),

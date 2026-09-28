@@ -54,6 +54,13 @@ describe('the pipeline figure', () => {
     ])
   })
 
+  it("gives the fallback's words for every kind of handler, once each", () => {
+    const fallback = everyStage().find(stage => stage.id === 'fallback')!
+    const covered = fallback.byKind!.flatMap(entry => entry.kinds)
+    expect([...covered].sort()).toEqual(HANDLER_KINDS.map(kind => kind.id).sort())
+    expect(new Set(covered).size).toBe(covered.length)
+  })
+
   it('draws each stage in order, the ones a stage wraps inside it, with a choice of handler', () => {
     const markup = figure()
     expect(markup.match(/<input type="radio" name="pipeline-kind"/g)).toHaveLength(HANDLER_KINDS.length + 1)
