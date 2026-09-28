@@ -23,7 +23,7 @@ import {
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
-import { VERSIONS } from '@/config/versions'
+import { specFor, VERSIONS } from '@/config/versions'
 import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
 import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
@@ -493,9 +493,16 @@ export function apiKindArticle(model: ApiModel, section: string): { nodes: Child
   }
 }
 
-/** A shell command as a code block, highlighted and copyable as a guide's is. */
-const shellBlock = (command: string, key: string): Child[] => [
-  Div({ key, children: lowerMarkdown(`\`\`\`sh\n${command}\n\`\`\``).nodes }),
+/**
+ * A shell command as a code block, highlighted and copyable as a guide's is. An example a reader runs
+ * carries its command in `data-example`, which commands:check reads on the built page.
+ */
+const shellBlock = (command: string, key: string, example = false): Child[] => [
+  Div({
+    key,
+    ...(example ? { 'data-example': command } : {}),
+    children: lowerMarkdown(`\`\`\`sh\n${command}\n\`\`\``).nodes,
+  }),
 ]
 
 /** A value from the CLI's manifest as code: a default or a choice. */
@@ -566,7 +573,7 @@ function cliOptionsTable(options: CliOption[], key: string) {
 }
 
 /** One command's details: what it does, how it is run, an example, its arguments and options, under `level` headings. */
-function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string): Child[] {
+function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string, spec: string): Child[] {
   const heading = (title: string) => Node(level, { key: `${key}-${title}`, children: title })
   const out: Child[] = [
     ...(command.aliases.length > 0
@@ -590,7 +597,7 @@ function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string): C
     heading('Usage'),
     ...shellBlock(usageOf(command), `${key}-usage`),
     heading('Example'),
-    ...shellBlock(exampleInvocation(command), `${key}-example`),
+    ...shellBlock(exampleInvocation(command, spec), `${key}-example`, true),
   ]
   if (command.arguments.length > 0)
     out.push(heading('Arguments'), cliArgumentsTable(command.arguments, `${key}-arguments`))
@@ -603,14 +610,20 @@ function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string): C
   return out
 }
 
-/** A top-level command's page: its details, then each subcommand's, at its own anchor. */
-export function cliArticle(command: CliCommand): { nodes: Child[]; toc: TocEntry[] } {
+/** A top-level command's page: its details, then each subcommand's, at its own anchor; `spec` is the package its `create` example runs. */
+export function cliArticle(command: CliCommand, spec: string): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
-  const nodes: Child[] = [H1(`meocord ${command.name}`, { key: 'title' }), ...commandDetails(command, 'h3', 'command')]
+  const nodes: Child[] = [
+    H1(`meocord ${command.name}`, { key: 'title' }),
+    ...commandDetails(command, 'h3', 'command', spec),
+  ]
   for (const sub of command.commands) {
     const id = subcommandAnchor(sub)
     toc.push({ id, title: sub.name, depth: 2 })
-    nodes.push(H2(`meocord ${sub.path.join(' ')}`, { key: `sub-${id}`, id }), ...commandDetails(sub, 'h3', `sub-${id}`))
+    nodes.push(
+      H2(`meocord ${sub.path.join(' ')}`, { key: `sub-${id}`, id }),
+      ...commandDetails(sub, 'h3', `sub-${id}`, spec),
+    )
   }
   return { nodes, toc }
 }
@@ -621,7 +634,7 @@ export function renderCliPage(line: string, name: string, version?: string) {
   const manifest = model?.scheme.by === 'kind' ? cliManifest(version ?? lineVersions(line)[0]) : undefined
   const command = manifest && cliCommand(manifest, name)
   if (!model || !command) return undefined
-  const { nodes, toc } = cliArticle(command)
+  const { nodes, toc } = cliArticle(command, specFor(line, version))
   const trail = apiCrumbs(line, model, CLI_SECTION)
   return Window({
     crumbs: [trail[0], ...(version ? [{ title: version }] : []), ...trail.slice(1), { title: command.name }],

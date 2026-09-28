@@ -14,18 +14,26 @@ const html = (nodes: ReturnType<typeof cliArticle>['nodes']) => renderToStaticMa
 describe('the CLI reference', () => {
   it("writes each command's usage, and an example from the manifest alone, with sample values", () => {
     expect(usageOf(command('build'))).toBe('meocord build [options]')
-    expect(exampleInvocation(command('build'))).toBe('meocord build --dev')
-    expect(exampleInvocation(command('create'))).toBe('meocord create my-bot')
-    expect(exampleInvocation(command('register'))).toBe('meocord register --build')
+    expect(exampleInvocation(command('build'), 'meocord@beta')).toBe('meocord build --dev')
+    // `create` runs outside a project, so it runs the package that installs the page's version
+    expect(exampleInvocation(command('create'), 'meocord@beta')).toBe('npx meocord@beta create my-bot')
+    expect(exampleInvocation(command('create'), 'meocord@4.1.0-beta.7')).toBe('npx meocord@4.1.0-beta.7 create my-bot')
+    expect(exampleInvocation(command('register'), 'meocord@beta')).toBe('meocord register --build')
     // A command that only groups others shows its first subcommand's, a required argument by its first choice
-    expect(exampleInvocation(command('generate'))).toBe('meocord generate controller button Greeting')
+    expect(exampleInvocation(command('generate'), 'meocord@beta')).toBe('meocord generate controller button Greeting')
     const unknown = { ...command('create'), arguments: [{ ...command('create').arguments[0]!, name: 'region' }] }
-    expect(() => exampleInvocation(unknown)).toThrow("meocord create's example has no sample value for <region>")
+    expect(() => exampleInvocation(unknown, 'meocord@beta')).toThrow(
+      "meocord create's example has no sample value for <region>",
+    )
     expect(usageOf(command('generate').commands[0])).toBe('meocord generate controller [options] <type> <name>')
   })
 
   it("draws a command's page with its example, and each subcommand at its anchor", () => {
-    const { nodes, toc } = cliArticle(command('generate'))
+    // The example a reader copies carries its command for commands:check; the usage beside it doesn't
+    const create = html(cliArticle(command('create'), 'meocord@beta').nodes)
+    expect(create).toContain('data-example="npx meocord@beta create my-bot"')
+    expect(create.match(/data-example=/g)).toHaveLength(1)
+    const { nodes, toc } = cliArticle(command('generate'), 'meocord@beta')
     const markup = html(nodes)
     // The example as a reader copies it: the highlighted runs' text
     const text = markup
@@ -48,7 +56,7 @@ describe('the CLI reference', () => {
       expect(pages).toEqual(manifest.commands.map(each => each.name))
       const everySub = (each: CliCommand): string[] => each.commands.flatMap(sub => [sub.name, ...everySub(sub)])
       for (const each of manifest.commands) {
-        const ids = cliArticle(each).toc.map(entry => entry.id)
+        const ids = cliArticle(each, 'meocord@beta').toc.map(entry => entry.id)
         expect(ids).toEqual(everySub(each).map(name => name.toLowerCase()))
       }
       expect(renderCliPage('4.1', 'deploy')).toBeUndefined()

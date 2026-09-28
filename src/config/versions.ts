@@ -16,5 +16,9 @@ export const VERSIONS: VersionsManifest = {
 /** The line in force, which the site addresses as `latest`. */
 export const CURRENT_LINE = VERSIONS.lines.find(entry => entry.status === 'current')?.line ?? VERSIONS.lines[0].line
 
-/** The package spec that installs a line's newest version, as a reader runs it: `meocord@beta` for a line in beta. */
-export const specFor = (line: string): string => packageSpec(manifest as VersionsConfig, line)
+/**
+ * The package spec a reader runs to install a line's newest version, `meocord@beta` for a line in beta;
+ * with `version`, that version's.
+ */
+export const specFor = (line: string, version?: string): string =>
+  version ? `${manifest.package}@${version}` : packageSpec(manifest as VersionsConfig, line)
