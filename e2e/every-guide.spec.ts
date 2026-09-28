@@ -6,8 +6,9 @@ import { readVersions } from '../scripts/lib/versions'
 import { axe } from './axe'
 
 // Every page written for the site, read from the content itself, so a new page is covered the day it lands:
-// a line's Guide where the build renders it (DOCS_NEXT=1), and its authored pages otherwise
-const LINES = readVersions(paths.versions).lines.filter(line => line.guides === 'authored')
+// a line's Guide where the build renders it (DOCS_NEXT=1), its authored pages otherwise, and for a line whose
+// guides come from its README, the pages taken from it, which render the same way
+const LINES = readVersions(paths.versions).lines
 const PAGES = LINES.flatMap(line =>
   guideRendered(line.line)
     ? readGuide(line.line).map(({ page }) => ({ path: `/docs/${line.line}/${guidePath(page)}`, title: page.title }))

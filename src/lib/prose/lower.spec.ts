@@ -89,6 +89,35 @@ describe('lowerMarkdown', () => {
     expect(out).not.toContain('::example')
   })
 
+  it("drops a README's row of badges from another site, which the page's policy can't load", () => {
+    const badges = [
+      '[![npm version](https://img.shields.io/npm/v/meocord.svg)](https://www.npmjs.com/package/meocord)',
+      '[![CI](https://github.com/meocord/meocord/actions/workflows/release.yml/badge.svg)](https://github.com/meocord/meocord/actions)',
+      '![node](https://img.shields.io/node/v/meocord)',
+    ].join('\n')
+    const out = html(`Before.\n\n${badges}\n\nAfter.`)
+    expect(out).toBe('<div><p>Before.</p><p>After.</p></div>')
+    // A row of the site's own images stays
+    expect(html('[![a](/a.svg)](/a) ![b](data:image/png;base64,AA==)')).toContain('<img src="/a.svg"')
+  })
+
+  it('draws an image from another site as its alt text, linked to it, and never loads it', () => {
+    expect(html('See ![the diagram](https://example.test/d.png) here.')).toBe(
+      '<div><p>See <a href="https://example.test/d.png">the diagram</a> here.</p></div>',
+    )
+    // Inside a link, the alt text alone, so no link sits within a link
+    expect(html('[Docs ![logo](https://example.test/l.png)](/docs)')).toBe(
+      '<div><p><a href="/docs">Docs logo</a></p></div>',
+    )
+    // A source that isn't the web is text only, never a link to follow
+    expect(html('Look: ![x](javascript:void) and ![](//cdn.test/y.png).')).toBe(
+      '<div><p>Look: x and //cdn.test/y.png.</p></div>',
+    )
+    expect(html('![logo](/logo.svg) ![dot](data:image/png;base64,AA==)')).toBe(
+      '<div><p><img src="/logo.svg" alt="logo" loading="lazy"/> <img src="data:image/png;base64,AA==" alt="dot" loading="lazy"/></p></div>',
+    )
+  })
+
   it('titles a heading from its text, images and breaks included', () => {
     expect(lowerMarkdown('## A ![b](/b.png) c').headings[0].title).toBe('A  c')
   })
