@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
+import semver from 'semver'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { Packument } from './registry.js'
 import type { VersionsConfig } from './versions.js'
@@ -31,9 +32,14 @@ function packVersion(version: string): Uint8Array {
 }
 
 const tarballs: Record<string, Uint8Array> = {}
+// Tagged as a release publishes: `latest` the newest stable version, and each prerelease id its newest
+const distTags = (versions: string[]) =>
+  Object.fromEntries(
+    [...versions].sort(semver.compare).map(version => [String(semver.prerelease(version)?.[0] ?? 'latest'), version]),
+  )
 const registry = (versions: string[]): Packument => ({
   name: 'meocord',
-  'dist-tags': {},
+  'dist-tags': distTags(versions),
   versions: Object.fromEntries(
     versions.map(version => {
       tarballs[version] ??= packVersion(version)
@@ -144,6 +150,17 @@ describe('sync', () => {
     expect(missingVersions(second.config, registry(['9.0.0-beta.0', '9.0.0']))).toEqual([])
     expect(syncSummary(second)).toContain('Adds `9.0.0`')
   }, 60_000)
+
+  it("refuses a registry whose tag would install another line's version, before fetching anything", async () => {
+    const packument = registry(['9.0.0-beta.0', '9.1.0-beta.0'])
+    packument['dist-tags'].beta = '9.0.0-beta.0'
+    const fetch = vi.fn(fakeFetch)
+
+    await expect(sync(first.config, { ...deps([]), packument, fetch })).rejects.toThrow(
+      `9.1's pages run meocord@beta, but the registry's "beta" tag points at 9.0.0-beta.0`,
+    )
+    expect(fetch).not.toHaveBeenCalled()
+  })
 
   it('refuses a version whose tarball does not match its integrity', async () => {
     const packument = registry(['9.0.0'])

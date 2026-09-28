@@ -24,7 +24,7 @@ Each page adds one part:
 
 ## Before you start
 
-You need a project from `npx meocord create`, as in [Getting started](/docs/4.1/getting-started), and a
+You need a project from `npx {{meocord}} create`, as in [Getting started](/docs/4.1/getting-started), and a
 Discord server where you can create a channel and a role. The examples keep every file in one folder,
 `src/tutorial`. In your bot, the layout from [Project structure](/docs/4.1/project-structure) works just as
 well.

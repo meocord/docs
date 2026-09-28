@@ -28,7 +28,7 @@ a whole controller, or the entire bot.
   CI with `meocord register`.
 - **Testing:** `MeoCordTestingModule` runs a handler through its whole pipeline with no Discord connection,
   and the mocks behave like the real discord.js classes.
-- **A CLI:** `meocord create` starts a project, `meocord generate` scaffolds controllers, services and the
+- **A CLI:** `{{meocord}} create` starts a project, `meocord generate` scaffolds controllers, services and the
   rest, each with a spec, and `meocord build` and `meocord start` build with Rsbuild.
 
 ## Where to go next

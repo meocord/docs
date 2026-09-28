@@ -71,6 +71,13 @@ Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard
 has no TypeScript code fence: its TypeScript is in an example, where it is typechecked. Pages imported
 from a README keep the README's code blocks as they were published.
 
+A page writes the package a reader runs as `{{meocord}}`: `npx {{meocord}} create my-bot`. The site writes
+the spec that installs the page's line: `meocord` for the current line, its tag for a line in prerelease
+(`meocord@beta`), and its newest version for any other. `content:check` refuses a create command written
+with the package itself, outside the migration guides; inside a project, `npx meocord` runs the installed
+one, so only `create` needs it. `versions:sync` fails when the registry's `latest`, or a prerelease line's
+tag, points at another line's version.
+
 ## The release bot
 
 `.github/workflows/sync-versions.yml` runs `versions:sync` hourly and on demand, and opens a pull request

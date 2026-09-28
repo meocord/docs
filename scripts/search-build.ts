@@ -16,7 +16,7 @@ import type { ApiDocument } from './lib/api.js'
 import type { ChangelogDocument } from './lib/changelog.js'
 import { guideRendered, readGuide } from './lib/guide.js'
 import { paths, ROOT } from './lib/layout.js'
-import { listPages, loadPage, resolveExample } from './lib/pages.js'
+import { listPages, loadPage, migratingGuide, resolveExample } from './lib/pages.js'
 import {
   apiDocuments,
   changelogDocuments,
@@ -86,9 +86,7 @@ for (const line of config.lines) {
       })
 
   const documents: SearchDocument[] = [...guides]
-  const migrating = existsSync(paths.migrating(line.line))
-    ? readFileSync(paths.migrating(line.line), 'utf8')
-    : undefined
+  const migrating = migratingGuide(line.line, { root: ROOT })
   if (migrating) documents.push(migratingDocument(line.line, migrating, config))
 
   const newestFirst = [...line.versions].sort(semver.rcompare)

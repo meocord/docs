@@ -8,6 +8,8 @@ import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { EXAMPLE_SOURCE, fenceLanguages, markdownLinks, pageAnchors, withoutCode } from './content'
+import { withPackageSpec } from './package-spec'
+import type { VersionsConfig } from './versions'
 import { memberAnchor } from '../../src/lib/urls'
 
 /** The Guide's chapters, in reading order, then the appendices. */
@@ -119,9 +121,12 @@ export interface GuidePage {
   formerly: string[]
 }
 
-/** Where a line's Guide is written, below the repository root (the tests point it at a scratch directory). */
-export function guideFolder(line: string, root = process.env.MEOCORD_DOCS_ROOT ?? process.cwd()): string {
-  return path.join(root, 'content', `${line}-next`)
+/** The repository root the Guide is read from (the tests point it at a scratch directory). */
+const docsRoot = (root?: string) => root ?? process.env.MEOCORD_DOCS_ROOT ?? process.cwd()
+
+/** Where a line's Guide is written, below the repository root. */
+export function guideFolder(line: string, root?: string): string {
+  return path.join(docsRoot(root), 'content', `${line}-next`)
 }
 
 /** Whether the site renders a line's Guide: in a build with DOCS_NEXT=1, for a line that has one. */
@@ -162,10 +167,12 @@ export function readingOrder(pages: GuidePage[]): GuidePage[] {
 export function readGuide(line: string, root?: string): { page: GuidePage; body: string }[] {
   const dir = guideFolder(line, root)
   if (!existsSync(dir)) return []
+  const config = JSON.parse(readFileSync(path.join(docsRoot(root), 'versions.json'), 'utf8')) as VersionsConfig
   const read = readdirSync(dir)
     .filter(file => file.endsWith('.md'))
     .flatMap(file => {
-      const { page, body } = readGuidePage(file.replace(/\.md$/, ''), readFileSync(path.join(dir, file), 'utf8'))
+      const text = withPackageSpec(readFileSync(path.join(dir, file), 'utf8'), config, line)
+      const { page, body } = readGuidePage(file.replace(/\.md$/, ''), text)
       return page ? [{ page, body }] : []
     })
   return readingOrder(read.map(entry => entry.page)).map(page => read.find(entry => entry.page === page)!)
