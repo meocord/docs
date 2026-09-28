@@ -2458,6 +2458,18 @@
   "meocord/testing:findRouteConflicts(app)": {
     "since": "4.0.0-beta.5"
   },
+  "meocord/testing:FromAppOptions": {
+    "since": "4.1.0-beta.7"
+  },
+  "meocord/testing:FromAppOptions.controllers": {
+    "since": "4.1.0-beta.7"
+  },
+  "meocord/testing:FromAppOptions.observers": {
+    "since": "4.1.0-beta.7"
+  },
+  "meocord/testing:FromAppOptions.providers": {
+    "since": "4.1.0-beta.7"
+  },
   "meocord/testing:getResponse": {
     "since": "4.1.0-beta.0"
   },
@@ -2584,6 +2596,15 @@
   "meocord/testing:MeoCordTestingModule.create(options)": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:MeoCordTestingModule.fromApp": {
+    "since": "4.1.0-beta.7"
+  },
+  "meocord/testing:MeoCordTestingModule.fromApp(app)": {
+    "since": "4.1.0-beta.7"
+  },
+  "meocord/testing:MeoCordTestingModule.fromApp(options)": {
+    "since": "4.1.0-beta.7"
+  },
   "meocord/testing:MessageToResolve": {
     "since": "4.1.0-beta.4"
   },
@@ -2706,6 +2727,9 @@
   },
   "meocord/testing:MockMessageOverrides.content": {
     "since": "4.1.0-beta.1"
+  },
+  "meocord/testing:MockMessageOverrides.editedTimestamp": {
+    "since": "4.1.0-beta.7"
   },
   "meocord/testing:MockMessageOverrides.embeds": {
     "since": "4.1.0-beta.1"
@@ -2858,6 +2882,9 @@
   "meocord/testing:TestingModule.constructor(providers)": {
     "since": "4.1.0-beta.3"
   },
+  "meocord/testing:TestingModule.constructor(services)": {
+    "since": "4.1.0-beta.7"
+  },
   "meocord/testing:TestingModule.dispatch": {
     "since": "4.1.0-beta.5"
   },
@@ -2917,6 +2944,9 @@
   },
   "meocord/testing:TestingModuleBuilder.constructor(options)": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:TestingModuleBuilder.constructor(wiring)": {
+    "since": "4.1.0-beta.7"
   },
   "meocord/testing:TestingModuleBuilder.overrideFilter": {
     "since": "4.1.0-beta.0"
