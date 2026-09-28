@@ -1,13 +1,19 @@
 import { expect, test } from '@playwright/test'
+import { guidePath, guideRendered, readGuide } from '../scripts/lib/guide'
 import { paths } from '../scripts/lib/layout'
 import { listPages } from '../scripts/lib/pages'
 import { readVersions } from '../scripts/lib/versions'
 import { axe } from './axe'
 
-// Every page written for the site, read from the content itself, so a new page is covered the day it lands
+// Every page written for the site, read from the content itself, so a new page is covered the day it lands:
+// a line's Guide where the build renders it (DOCS_NEXT=1), and its authored pages otherwise
 const PAGES = readVersions(paths.versions)
   .lines.filter(line => line.guides === 'authored')
-  .flatMap(line => listPages(line.line).map(page => ({ path: `/docs/${line.line}/${page.slug}`, title: page.title })))
+  .flatMap(line =>
+    guideRendered(line.line)
+      ? readGuide(line.line).map(({ page }) => ({ path: `/docs/${line.line}/${guidePath(page)}`, title: page.title }))
+      : listPages(line.line).map(page => ({ path: `/docs/${line.line}/${page.slug}`, title: page.title })),
+  )
 
 for (const { path, title } of PAGES) {
   test(`${path} renders its title, with no console error and no serious accessibility violation`, async ({ page }) => {
