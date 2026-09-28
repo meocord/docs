@@ -1,4 +1,5 @@
 import { stagesNamed } from '../../src/lib/docs/pipeline.js'
+import type { ApiDocument } from './api.js'
 
 interface Node {
   name?: string
@@ -8,10 +9,10 @@ interface Node {
 }
 
 /**
- * Every `@pipeline` tag in a version's generated API whose stage isn't one of the pipeline figure's,
- * wherever the tag sits, named by the symbols that lead to it.
+ * Every `@pipeline` tag in a version's generated API, `generated/api/<version>.json` as written, whose
+ * stage isn't one of the pipeline figure's, wherever the tag sits, named by the symbols that lead to it.
  */
-export function pipelineStageProblems(doc: unknown, version: string): string[] {
+export function pipelineStageProblems(doc: ApiDocument, version: string): string[] {
   const problems: string[] = []
   const visit = (node: unknown, names: string[]) => {
     if (!node || typeof node !== 'object') return
@@ -37,6 +38,6 @@ export function pipelineStageProblems(doc: unknown, version: string): string[] {
     const inside = typeof name === 'string' && name !== names.at(-1) ? [...names, name] : names
     for (const value of Object.values(node)) visit(value, inside)
   }
-  visit((doc as { children?: unknown }).children, [])
+  visit(doc.project.children, [])
   return problems
 }
