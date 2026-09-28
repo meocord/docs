@@ -8,6 +8,8 @@ export interface PlaygroundLine {
   version: string
   /** A classic script under a path that carries the hash of its bytes. */
   runtime: string
+  /** The sandboxed document the page embeds, which runs this runtime in a Worker. */
+  frame: string
   /** Its gzipped size, what the first Run downloads before the compiler. */
   gzip: number
 }
@@ -39,7 +41,7 @@ export function readPlaygroundManifest(root = process.cwd()): PlaygroundManifest
 export function playgroundFor(
   manifest: PlaygroundManifest | undefined,
   line: string,
-): { runtime: string; swc: string; version: string } | undefined {
+): { frame: string; runtime: string; swc: string; version: string } | undefined {
   const entry = manifest?.lines.find(each => each.line === line)
-  return entry && manifest && { runtime: entry.runtime, swc: manifest.swc, version: entry.version }
+  return entry && manifest && { frame: entry.frame, runtime: entry.runtime, swc: manifest.swc, version: entry.version }
 }

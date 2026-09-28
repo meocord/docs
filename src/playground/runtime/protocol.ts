@@ -9,6 +9,8 @@ export const MAX_SOURCE_LENGTH = 64_000
 export const MAX_STEPS = 20
 /** The largest result a run posts back, as JSON, beyond which its payloads are cut. */
 export const MAX_RESULT_LENGTH = 256_000
+/** How long a run may take once it starts, in milliseconds, before the frame stops its Worker. */
+export const RUN_TIME_LIMIT = 5_000
 
 /** Who an interaction or a message comes from, and where. */
 export interface Caller {
@@ -54,10 +56,18 @@ export interface Step {
   calls: RecordedCall[]
 }
 
+export const LOG_LEVELS = ['log', 'info', 'warn', 'error', 'debug'] as const
+
 export interface LogLine {
-  level: 'log' | 'info' | 'warn' | 'error' | 'debug'
+  level: (typeof LOG_LEVELS)[number]
   text: string
 }
+
+/**
+ * Where a run that failed stopped: its request, compiling, loading or building the module, as the Worker
+ * reports it; `timeout` and `runtime` when the frame stopped the Worker or the Worker could not start.
+ */
+export const FAILED_STAGES = ['request', 'compile', 'load', 'module', 'timeout', 'runtime'] as const
 
 export type RunResult =
   | { type: 'result'; id: number; ok: true; steps: Step[]; logs: LogLine[]; truncated?: true }
@@ -65,13 +75,24 @@ export type RunResult =
       type: 'result'
       id: number
       ok: false
-      stage: 'request' | 'compile' | 'load' | 'module'
+      stage: (typeof FAILED_STAGES)[number]
       message: string
       logs: LogLine[]
     }
 
+/** What the frame posts to the page: that it is ready for a run, then each run's result. */
+export type FrameMessage = { type: 'ready' } | RunResult
+
+/** What the Worker posts as it starts a run, its compiler ready: the frame's time limit starts then. */
+export interface RunStarted {
+  type: 'started'
+  id: number
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const isId = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value)
 
 const isText = (value: unknown, max = 4000): value is string => typeof value === 'string' && value.length <= max
 
@@ -116,7 +137,7 @@ function parseDispatch(value: unknown): Dispatch | string {
  */
 export function parseRunRequest(data: unknown): RunRequest | string {
   if (!isRecord(data) || data.type !== 'run') return 'not a run request'
-  if (typeof data.id !== 'number' || !Number.isSafeInteger(data.id)) return 'a run request has a numeric id'
+  if (!isId(data.id)) return 'a run request has a numeric id'
   if (!isText(data.source, MAX_SOURCE_LENGTH))
     return `the code is over ${MAX_SOURCE_LENGTH.toLocaleString('en')} characters, the most a run takes`
   if (!Array.isArray(data.dispatch) || data.dispatch.length > MAX_STEPS)
@@ -144,3 +165,87 @@ export function parseRunRequest(data: unknown): RunRequest | string {
   }
   return request
 }
+
+function parseLogs(value: unknown): LogLine[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const logs: LogLine[] = []
+  for (const line of value) {
+    if (!isRecord(line) || !LOG_LEVELS.includes(line.level as LogLine['level']) || typeof line.text !== 'string')
+      return undefined
+    logs.push({ level: line.level as LogLine['level'], text: line.text })
+  }
+  return logs
+}
+
+function parseStep(value: unknown): Step | undefined {
+  if (!isRecord(value) || typeof value.ran !== 'boolean') return undefined
+  const input = parseDispatch(value.input)
+  if (typeof input === 'string') return undefined
+  if (!Array.isArray(value.handlers) || !value.handlers.every(each => typeof each === 'string')) return undefined
+  const { error } = value
+  if (error !== undefined && !(isRecord(error) && typeof error.name === 'string' && typeof error.message === 'string'))
+    return undefined
+  if (!Array.isArray(value.calls)) return undefined
+  const calls: RecordedCall[] = []
+  for (const call of value.calls) {
+    if (!isRecord(call) || typeof call.method !== 'string') return undefined
+    if (call.error !== undefined && typeof call.error !== 'string') return undefined
+    calls.push({
+      method: call.method,
+      ...(call.payload !== undefined && { payload: call.payload }),
+      ...(call.error !== undefined && { error: call.error }),
+    })
+  }
+  return {
+    input,
+    ran: value.ran,
+    handlers: [...value.handlers],
+    ...(error !== undefined && { error: { name: error.name as string, message: error.message as string } }),
+    calls,
+  }
+}
+
+/**
+ * A result for the run `id` from whatever the Worker posted, or undefined when it isn't one. The reader's
+ * code runs in that Worker and can post too, so a result is rebuilt from the fields a result has, its
+ * payloads as plain JSON, and one past the size a run posts is refused.
+ */
+export function parseRunResult(data: unknown, id: number): RunResult | undefined {
+  if (!isRecord(data) || data.type !== 'result' || data.id !== id || typeof data.ok !== 'boolean') return undefined
+  const logs = parseLogs(data.logs)
+  if (!logs) return undefined
+  let result: RunResult
+  if (data.ok) {
+    if (!Array.isArray(data.steps) || data.steps.length > MAX_STEPS) return undefined
+    const steps: Step[] = []
+    for (const each of data.steps) {
+      const step = parseStep(each)
+      if (!step) return undefined
+      steps.push(step)
+    }
+    if (data.truncated !== undefined && data.truncated !== true) return undefined
+    result = { type: 'result', id, ok: true, steps, logs, ...(data.truncated && { truncated: true }) }
+  } else {
+    if (!FAILED_STAGES.includes(data.stage as (typeof FAILED_STAGES)[number]) || typeof data.message !== 'string')
+      return undefined
+    result = {
+      type: 'result',
+      id,
+      ok: false,
+      stage: data.stage as (typeof FAILED_STAGES)[number],
+      message: data.message,
+      logs,
+    }
+  }
+  let json: string
+  try {
+    json = JSON.stringify(result)
+  } catch {
+    return undefined
+  }
+  return json.length <= MAX_RESULT_LENGTH ? (JSON.parse(json) as RunResult) : undefined
+}
+
+/** Whether the Worker posted that it started the run `id`. */
+export const isRunStarted = (data: unknown, id: number): data is RunStarted =>
+  isRecord(data) && data.type === 'started' && data.id === id

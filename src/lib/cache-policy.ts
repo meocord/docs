@@ -4,8 +4,11 @@ const STATIC_FILE = /\.(?:ico|png|jpe?g|gif|webp|avif|svg|webmanifest|woff2?|ttf
 /** A line's search bundle and palette index, under paths that carry the hash of their bytes. */
 const SEARCH_BUNDLE = /^\/_pagefind\/\d+\.\d+\.[0-9a-f]{10}\//
 const PALETTE = /^\/palette\/\d+\.\d+\.[0-9a-f]{10}\.json$/
-/** A line's playground runtime and the compiler it runs with, under paths that carry the hash of their bytes. */
-const PLAYGROUND = /^\/playground\/(?:\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?|swc)\.[0-9a-f]{10}\.(?:js|wasm)$/
+/** A line's playground runtime, the frame's script and the compiler, under paths that carry the hash of their bytes. */
+const PLAYGROUND =
+  /^\/playground\/(?:(?:\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?|frame)\.[0-9a-f]{10}\.js|swc\.[0-9a-f]{10}\.wasm)$/
+/** A line's playground frame, the document the page embeds, under a path that carries the hash of its bytes. */
+const PLAYGROUND_FRAME = /^\/playground\/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\.[0-9a-f]{10}\.html$/
 
 /** A year: the path changes whenever the bytes do. */
 export const IMMUTABLE = 'public, max-age=31536000, immutable'
@@ -19,18 +22,51 @@ export const MOVING_PAGE = 'public, s-maxage=3600, stale-while-revalidate=86400'
 /** The policy files a flat-deny CSP, since nothing in them runs. */
 export const STATIC_FILE_CSP = "default-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 
+/** An origin as a policy can name it: a scheme, a host and a port, nothing a header could be split on. */
+const ORIGIN = /^https?:\/\/[a-z0-9.-]+(?::\d{1,5})?$/i
+
+/**
+ * The playground frame's policy. `sandbox` gives the frame an opaque origin wherever it is loaded, so the
+ * reader's code reaches no page, storage or cookie of the site. Scripts and requests are limited to the
+ * playground's own files, and only the site may embed the frame. Each source names the site's host, since
+ * WebKit matches no `'self'` in a sandboxed document, over `https` and `http` both: behind the edge the
+ * request says `http` whatever the reader used, Chromium matches an `http` source to no `https` URL there,
+ * and WebKit's Worker matches no source without a scheme. The Worker the frame starts from a blob inherits
+ * the policy. `'unsafe-eval'` runs the compiled code and `'wasm-unsafe-eval'` the compiler. An origin that
+ * can't be named gets the flat-deny policy.
+ */
+export function playgroundFrameCsp(origin: string): string {
+  if (!ORIGIN.test(origin)) return STATIC_FILE_CSP
+  const { host } = new URL(origin)
+  const site = `https://${host} http://${host}`
+  const files = `https://${host}/playground/ http://${host}/playground/`
+  return [
+    'sandbox allow-scripts',
+    "default-src 'none'",
+    `script-src ${files} 'unsafe-eval' 'wasm-unsafe-eval'`,
+    'worker-src blob:',
+    `connect-src ${files}`,
+    `frame-ancestors ${site}`,
+    "base-uri 'none'",
+    "form-action 'none'",
+  ].join('; ')
+}
+
 /**
  * What kind of response a path is, for its cache and security headers. A search bundle keeps the
  * document policy, since Pagefind's worker runs WebAssembly under the policy it is served with; a
  * palette index is data and gets the flat-deny policy, as files do. A playground runtime is loaded into a
- * Worker, which takes its policy from the frame that starts it, so it gets the flat-deny policy too.
+ * Worker, which takes its policy from the frame that starts it, so it gets the flat-deny policy too; the
+ * frame gets its own.
  */
-export type PathKind = 'search-bundle' | 'palette' | 'playground' | 'file' | 'versioned-page' | 'page'
+export type PathKind =
+  'search-bundle' | 'palette' | 'playground' | 'playground-frame' | 'file' | 'versioned-page' | 'page'
 
 export function pathKind(pathname: string): PathKind {
   if (SEARCH_BUNDLE.test(pathname)) return 'search-bundle'
   if (PALETTE.test(pathname)) return 'palette'
   if (PLAYGROUND.test(pathname)) return 'playground'
+  if (PLAYGROUND_FRAME.test(pathname)) return 'playground-frame'
   if (STATIC_FILE.test(pathname)) return 'file'
   const [, section, version] = pathname.split('/')
   if (section === 'docs' && version && version !== 'latest' && version !== 'next') return 'versioned-page'
@@ -43,6 +79,7 @@ export function cacheControlFor(pathname: string): string {
     case 'search-bundle':
     case 'palette':
     case 'playground':
+    case 'playground-frame':
       return IMMUTABLE
     case 'file':
       return NAMED_FILE

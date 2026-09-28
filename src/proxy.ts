@@ -5,6 +5,8 @@ import {
   cacheControlFor,
   isInertPath,
   isPlaygroundAsset,
+  pathKind,
+  playgroundFrameCsp,
   prereleaseRedirect,
   STATIC_FILE_CSP,
 } from '@/lib/cache-policy'
@@ -32,6 +34,13 @@ const DOCUMENT_CSP = [
 ].join('; ')
 
 /**
+ * The origin a reader asked for: the Host header, which a cache keys on, with the request's scheme. Next
+ * sits behind the CSP hop, so its own URL names the port that hop forwards to.
+ */
+const siteOrigin = (request: NextRequest) =>
+  `${request.nextUrl.protocol}//${request.headers.get('host') ?? request.nextUrl.host}`
+
+/**
  * Cache and security headers for every page and public file. Set here rather than in next.config.ts:
  * a response that passes through the proxy is dynamic to Next, and a Cache-Control from `headers()`
  * would be overwritten for every path this matches.
@@ -52,7 +61,14 @@ export function proxy(request: NextRequest) {
     return response
   }
   response.headers.set('Cache-Control', cacheControlFor(pathname))
-  response.headers.set('Content-Security-Policy', isInertPath(pathname) ? STATIC_FILE_CSP : DOCUMENT_CSP)
+  response.headers.set(
+    'Content-Security-Policy',
+    pathKind(pathname) === 'playground-frame'
+      ? playgroundFrameCsp(siteOrigin(request))
+      : isInertPath(pathname)
+        ? STATIC_FILE_CSP
+        : DOCUMENT_CSP,
+  )
   if (isPlaygroundAsset(pathname)) response.headers.set('Access-Control-Allow-Origin', '*')
   return response
 }

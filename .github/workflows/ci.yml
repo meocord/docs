@@ -109,7 +109,8 @@ jobs:
           test "$markers" -gt 0
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
       - run: bun run budget:js
-      - run: bun --bun x playwright install --with-deps chromium
+      # Firefox and WebKit run the playground's frame, whose isolation each engine enforces itself
+      - run: bun --bun x playwright install --with-deps chromium firefox webkit
       # Everything but the timed runs, which have runners of their own below
       - run: bun run test:e2e --grep-invert @performance
       # Every docs route under next dev: its validation errors never reach the production build

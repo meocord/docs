@@ -2,7 +2,7 @@ import path from 'node:path'
 import ts from 'typescript'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { MAX_RESULT_LENGTH, type Dispatch, type LogLine, type RunResult } from './protocol'
-import { type ModuleMap, runPlayground } from './run'
+import { fitted, type ModuleMap, runPlayground } from './run'
 
 // The 4.1 line's pinned packages, as the playground's runtime bundles them
 const pinned = path.resolve(__dirname, '../../../examples/4.1/node_modules')
@@ -297,4 +297,50 @@ export class Big {
     expect(JSON.stringify(result).length).toBeLessThanOrEqual(MAX_RESULT_LENGTH)
     expect(result.steps[0].calls[0].payload).toMatch(/^\[cut: [\d,]+ characters\]$/)
   })
+})
+
+describe('fitted', () => {
+  it('cuts long log lines and messages, and keeps the last logs, when a result is over the limit', () => {
+    const logs = Array.from({ length: 300 }, (_, index) => ({
+      level: 'log' as const,
+      text: `${index} ${'z'.repeat(5000)}`,
+    }))
+    const failure = fitted({ type: 'result', id: 1, ok: false, stage: 'load', message: 'm'.repeat(10_000), logs })
+    expect(JSON.stringify(failure).length).toBeLessThanOrEqual(MAX_RESULT_LENGTH)
+    expect(failure).toMatchObject({
+      ok: false,
+      stage: 'load',
+      message: expect.stringMatching(/… \[cut: 10,000 characters\]$/),
+    })
+    expect(failure.logs).toHaveLength(100)
+    expect(failure.logs[0].text).toMatch(/^200 z+… \[cut: 5,004 characters\]$/)
+  })
+
+  it('leaves a result that fits as it is, and fails one that cannot be cut to fit', () => {
+    const small = { type: 'result' as const, id: 1, ok: true as const, steps: [], logs: [] }
+    expect(fitted(small)).toBe(small)
+    const handlers = Array.from({ length: 2000 }, (_, index) => `Controller${index}.${'h'.repeat(100)}`)
+    const step = { input: { kind: 'button' as const, customId: 'x' }, ran: true, handlers, calls: [] }
+    expect(fitted({ ...small, steps: [step, step] })).toMatchObject({
+      ok: false,
+      stage: 'runtime',
+      message: expect.stringContaining('dispatch fewer inputs'),
+    })
+  })
+})
+
+it('clips an error message a handler throws, so one step never fills the result', async () => {
+  const source = `
+import { Command, Controller } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+@Controller()
+export class Loud {
+  @Command('loud', CommandType.BUTTON)
+  loud() {
+    throw new Error('a'.repeat(50_000))
+  }
+}
+`
+  const result = ok(await run(source, [{ kind: 'button', customId: 'loud' }]))
+  expect(result.steps[0].error?.message).toMatch(/^a{2000}… \[cut: 50,000 characters\]$/)
 })

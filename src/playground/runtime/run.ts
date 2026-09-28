@@ -50,8 +50,16 @@ interface TestingModule {
 /** The specifiers a reader may import, which every run names when it refuses another. */
 const allowed = (modules: ModuleMap) => Object.keys(modules).sort().join(', ')
 
+/** The longest log line, error message or payload a result carries whole. */
+const CLIP = 2000
+
+const clip = (text: string) =>
+  text.length > CLIP ? `${text.slice(0, CLIP)}… [cut: ${text.length.toLocaleString('en')} characters]` : text
+
 const describeError = (error: unknown): { name: string; message: string } =>
-  error instanceof Error ? { name: error.name, message: error.message } : { name: 'Error', message: String(error) }
+  error instanceof Error
+    ? { name: clip(String(error.name)), message: clip(String(error.message)) }
+    : { name: 'Error', message: clip(String(error)) }
 
 /** A value as JSON: bigints as strings, functions left out, a repeated object named rather than walked again. */
 function toJson(value: unknown): unknown {
@@ -137,17 +145,38 @@ function callsOf(dispatch: Dispatch, input: Record<string, unknown>, testing: Te
   return (reply?.mock.calls ?? []).map(args => ({ method: 'reply', payload: toJson(args[0]) }))
 }
 
-/** A result that fits the posting limit: each payload that makes it too long is cut, and the result says so. */
-function capped(result: Extract<RunResult, { ok: true }>): RunResult {
-  if (JSON.stringify(result).length <= MAX_RESULT_LENGTH) return result
-  const steps = result.steps.map(step => ({
-    ...step,
-    calls: step.calls.map(call => {
-      const length = JSON.stringify(call.payload ?? null).length
-      return length > 2000 ? { ...call, payload: `[cut: ${length.toLocaleString('en')} characters]` } : call
-    }),
-  }))
-  return { ...result, steps, logs: result.logs.slice(-200), truncated: true }
+/**
+ * A result that fits the posting limit: each payload, message and log line that makes it too long is cut,
+ * then the calls past a step's first 20 and the logs before the last 100, and the result says so. One
+ * still too long is a failure the reader can act on.
+ */
+export function fitted(result: RunResult): RunResult {
+  const fits = (each: RunResult) => JSON.stringify(each).length <= MAX_RESULT_LENGTH
+  if (fits(result)) return result
+  const logs = result.logs.slice(-100).map(line => ({ ...line, text: clip(line.text) }))
+  const cut: RunResult = result.ok
+    ? {
+        ...result,
+        steps: result.steps.map(step => ({
+          ...step,
+          calls: step.calls.slice(0, 20).map(call => {
+            const length = JSON.stringify(call.payload ?? null).length
+            return length > CLIP ? { ...call, payload: `[cut: ${length.toLocaleString('en')} characters]` } : call
+          }),
+        })),
+        logs,
+        truncated: true,
+      }
+    : { ...result, message: clip(result.message), logs }
+  if (fits(cut)) return cut
+  return {
+    type: 'result',
+    id: result.id,
+    ok: false,
+    stage: 'runtime',
+    message: `The run's result is over ${MAX_RESULT_LENGTH.toLocaleString('en')} characters even cut down: dispatch fewer inputs, or answer with less.`,
+    logs: [],
+  }
 }
 
 /**
@@ -160,14 +189,8 @@ export async function runPlayground(
   request: RunRequest,
   { modules, compile, logs }: RunEnvironment,
 ): Promise<RunResult> {
-  const failed = (stage: 'compile' | 'load' | 'module', error: unknown): RunResult => ({
-    type: 'result',
-    id: request.id,
-    ok: false,
-    stage,
-    message: describeError(error).message,
-    logs,
-  })
+  const failed = (stage: 'compile' | 'load' | 'module', error: unknown): RunResult =>
+    fitted({ type: 'result', id: request.id, ok: false, stage, message: describeError(error).message, logs })
 
   let code: string
   try {
@@ -243,5 +266,5 @@ export async function runPlayground(
   } finally {
     await testingModule.close().catch(() => undefined)
   }
-  return capped({ type: 'result', id: request.id, ok: true, steps, logs })
+  return fitted({ type: 'result', id: request.id, ok: true, steps, logs })
 }

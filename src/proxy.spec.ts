@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
 import { proxy } from '@/proxy'
-import { STATIC_FILE_CSP, VERSIONED_PAGE } from '@/lib/cache-policy'
+import { IMMUTABLE, playgroundFrameCsp, STATIC_FILE_CSP, VERSIONED_PAGE } from '@/lib/cache-policy'
 
 const request = (path: string) => new NextRequest(new URL(path, 'https://docs.test'))
 
@@ -27,8 +27,27 @@ describe('proxy', () => {
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*')
       expect(response.headers.get('Content-Security-Policy')).toBe(STATIC_FILE_CSP)
     }
-    for (const path of ['/docs/4.1/defer', '/palette/4.1.0123456789.json', '/icon-32.png'])
+    for (const path of [
+      '/docs/4.1/defer',
+      '/palette/4.1.0123456789.json',
+      '/icon-32.png',
+      '/playground/4.1.0-beta.7.0123456789.html',
+    ])
       expect(proxy(request(path)).headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+
+  it("serves the playground's frame under its sandboxed policy, naming the origin the request came to", () => {
+    const response = proxy(request('/playground/4.1.0-beta.7.0123456789.html'))
+    expect(response.headers.get('Content-Security-Policy')).toBe(playgroundFrameCsp('https://docs.test'))
+    expect(response.headers.get('Content-Security-Policy')).toContain('sandbox allow-scripts')
+    expect(response.headers.get('Cache-Control')).toBe(IMMUTABLE)
+  })
+
+  it("names the host the reader asked for in the frame's policy, not the port Next listens on", () => {
+    const behind = new NextRequest(new URL('/playground/4.1.0-beta.7.0123456789.html', 'http://127.0.0.1:3001'), {
+      headers: { host: 'meocord.dev' },
+    })
+    expect(proxy(behind).headers.get('Content-Security-Policy')).toBe(playgroundFrameCsp('http://meocord.dev'))
   })
 
   it('answers next with a 307 that carries the site headers and the query', () => {

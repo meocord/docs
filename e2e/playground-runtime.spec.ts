@@ -44,7 +44,8 @@ async function startRuntime(page: Page, origin: string): Promise<string[]> {
       const boot = `self.__playground = { wasm: ${JSON.stringify(origin + swc)} }; importScripts(${JSON.stringify(origin + runtime)})`
       const worker = new Worker(URL.createObjectURL(new Blob([boot], { type: 'text/javascript' })))
       const waiting = new Map<number, (result: unknown) => void>()
-      worker.onmessage = event => waiting.get(event.data.id)?.(event.data)
+      // The Worker says when each run starts, for the frame's time limit; the result comes after
+      worker.onmessage = event => event.data.type === 'result' && waiting.get(event.data.id)?.(event.data)
       Object.assign(window, {
         __run: (request: { id: number }) =>
           new Promise(resolve => waiting.set(request.id, resolve)).finally(() => waiting.delete(request.id)),
