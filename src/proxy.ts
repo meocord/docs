@@ -1,7 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { DOC_ALIASES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE } from '@/config/site'
-import { cacheControlFor, isInertPath, prereleaseRedirect, STATIC_FILE_CSP } from '@/lib/cache-policy'
+import {
+  cacheControlFor,
+  isInertPath,
+  isPlaygroundAsset,
+  prereleaseRedirect,
+  STATIC_FILE_CSP,
+} from '@/lib/cache-policy'
 
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
@@ -47,6 +53,7 @@ export function proxy(request: NextRequest) {
   }
   response.headers.set('Cache-Control', cacheControlFor(pathname))
   response.headers.set('Content-Security-Policy', isInertPath(pathname) ? STATIC_FILE_CSP : DOCUMENT_CSP)
+  if (isPlaygroundAsset(pathname)) response.headers.set('Access-Control-Allow-Origin', '*')
   return response
 }
 

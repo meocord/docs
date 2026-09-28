@@ -14,6 +14,8 @@ export default defineConfig({
         'src/config/**',
         'src/app/**/route.ts',
         'src/proxy.ts',
+        'src/playground/runtime/run.ts',
+        'src/playground/runtime/protocol.ts',
         'scripts/csp-hash.mjs',
         'scripts/csp-proxy-server.mjs',
         'scripts/process-tree.mjs',
