@@ -64,8 +64,8 @@ describe('the feedback bot in chat', () => {
   })
   // #endregion step:localisation
 
-  // A ✅ on the bot's own filing reply, from a member holding the given roles
-  async function react(emoji: string, ...roles: string[]) {
+  // A reaction to a reply of the bot's, from a member holding the given roles; its filing reply unless given
+  async function react(emoji: string, roles: string[], content?: string) {
     const { id } = module
       .get(FeedbackService)
       .add({ authorId: '1', locale: Locale.EnglishUS, about: 'idea', details: 'Themes' })
@@ -74,7 +74,7 @@ describe('the feedback bot in chat', () => {
       roles: { cache: new Collection(roles.map(role => [role, { id: role }])) } as never,
     })
     reviewed.members.fetch.mockResolvedValue(member as never)
-    const filed = createMockMessage({ guild: reviewed, content: `Filed as feedback #${id}. Thank you!` })
+    const filed = createMockMessage({ guild: reviewed, content: content ?? `Filed as feedback #${id}. Thank you!` })
     filed.author = filed.client.user as never
     const reaction = createMockInteraction(MessageReaction, { message: filed, emoji: { name: emoji } as never })
     const user = createMockInteraction(User, { id: '222', username: 'grace', bot: false })
@@ -84,16 +84,21 @@ describe('the feedback bot in chat', () => {
   }
 
   it("decides feedback from a staff member's reaction to the bot's filing reply", async () => {
-    const approved = await react('✅', STAFF)
+    const approved = await react('✅', [STAFF])
     expect(module.get(FeedbackService).get(approved.id).status).toBe('approved')
     expect(reply(approved.filed)).toBe(`Feedback #${approved.id} is approved.`)
 
-    const rejected = await react('❌', STAFF)
+    const rejected = await react('❌', [STAFF])
     expect(module.get(FeedbackService).get(rejected.id).status).toBe('rejected')
   })
 
+  it('ignores a reaction to a reply that names feedback the bot does not hold', async () => {
+    const { filed } = await react('✅', [STAFF], 'There is no feedback #999.')
+    expect(filed.reply).not.toHaveBeenCalled()
+  })
+
   it('leaves feedback open when someone without the staff role reacts', async () => {
-    const { id, filed } = await react('✅')
+    const { id, filed } = await react('✅', [])
     expect(module.get(FeedbackService).get(id).status).toBe('open')
     expect(filed.reply).not.toHaveBeenCalled()
   })
