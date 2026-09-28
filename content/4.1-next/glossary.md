@@ -52,12 +52,15 @@ once. See [Registering commands](guide:slash-commands#registering-commands).
 **Exception filter.** A class that handles the errors of the types it names, from any stage of a call or from the
 handler. See [Exception filters](guide:exception-filters).
 
-**Fallback.** What answers an error no exception filter handles. An unexpected error is logged, and after an
-interaction the user gets a generic message; after a message, a reaction or an event, it is only logged. It also
-answers a component no route takes, "Command not found!". See
+**Fallback.** What answers an error no exception filter handles. After an interaction, the user gets a generic
+message and the error is logged. After a message, a usage error, a guard's reason and a `UserError` are replied to,
+and an unexpected error is logged, and told to the author in a direct message only with `dmOnError`. It also answers
+a component no route takes, "Command not found!". See
 [The built-in fallback](guide:exception-filters#the-built-in-fallback).
 
-**Guard.** A class that decides whether a handler runs. A new one is made for every call. See [Guards](guide:guards).
+**Guard.** A class that decides whether a handler runs. A new one is made for every call, unless it's bound: supplied
+by a provider, listed in `services` or injected by another class, in which case every call shares one instance. See
+[Guards](guide:guards).
 
 **Handler.** A method MeoCord calls for a command, component, autocomplete request, message, reaction or event.
 
@@ -128,5 +131,6 @@ locale you give it. Given to `@MeoCord({ i18n })`, it translates MeoCord's own t
 **Typed param.** A param whose pattern names its type, such as `{count:int}`, so the handler receives the value
 rather than its text. See [Typed params](guide:components#typed-params).
 
-**`UserError`.** An error for the user's own mistake, shown only to the user who made the call, and not logged as a
-fault. See [Exception filters and UserError](guide:exception-filters).
+**`UserError`.** An error for the user's own mistake, not logged as a fault. After an interaction it's shown only to the
+user who made the call; after a message it's a reply that doesn't ping the author. See
+[Exception filters and UserError](guide:exception-filters).

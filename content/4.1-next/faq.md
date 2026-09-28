@@ -33,9 +33,10 @@ MeoCord makes the client from `@MeoCord({ clientOptions })`, and anything discor
 ## Where does state live?
 
 In services. A controller or service is made once and shared by every call, so a `Map` on a service holds across
-calls, and so do interceptors, exception filters, pipes and observers. A guard is made for each call, so it keeps
-nothing between them. State that must survive a restart, or be shared between shard processes, belongs in a database
-that a service wraps. See [What lives how long](guide:overview#what-lives-how-long).
+calls, and so do interceptors, exception filters, pipes and observers. A guard is made for each call and keeps
+nothing between them, unless it's bound: supplied by a provider, listed in `services` or injected by another class,
+in which case every call shares one instance. State that must survive a restart, or be shared between shard
+processes, belongs in a database that a service wraps. See [What lives how long](guide:overview#what-lives-how-long).
 
 ## Does MeoCord include a database?
 

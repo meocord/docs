@@ -25,6 +25,10 @@ check. Every release's notes are in the [changelog](guide:changelog).
   errors in whatever form the interaction's state allows. See [Responses](guide:responses).
 - **`@Defer()`** acknowledges an interaction first, so slow stages and handlers never miss Discord's three seconds,
   and locks a message's controls while the handler works. See [@Defer](guide:defer).
+- **Errors after a reply or a deferral** are answered too, where 4.0 left them unanswered. See
+  [the upgrade note](guide:migrating#errors-after-a-reply-or-deferral-are-answered).
+- **An unanswered handler** is named in a warning in development, once, so "The application did not respond" has a
+  cause to look for. See [Responses](guide:responses#gotchas).
 - **Presenters** decide how MeoCord's own answers look: the loading view, error answers and the built-in `!help`. See
   [Presenters](guide:presenters).
 - **Themes** name the colours, emojis and button styles those answers use by what they mean. `Theme` is deprecated,
@@ -39,17 +43,25 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 
 - **Guards** can be global, in `@MeoCord({ guards })`, read typed facts about the handler through `ExecutionContext`,
   and throw `GuardDeniedError` to tell the user why. See [Guards](guide:guards).
+- **Stage params**: a guard, interceptor, filter or pipe can declare the params it takes, and each
+  `{ provide, params }` given for it is checked against them when the code compiles. See
+  [Settings for one use](guide:guards#settings-for-one-use).
 - **Interceptors** run around a handler, for timing, logging, caching or mapping errors. See
   [Interceptors](guide:interceptors).
 - **Exception filters** decide what the user is told when a call throws, and **`UserError`** tells the user about
-  their own mistake, privately. See [Exception filters and UserError](guide:exception-filters).
+  their own mistake: privately after an interaction, and in a reply that doesn't ping after a message. See
+  [Exception filters and UserError](guide:exception-filters).
 - **Validation and pipes** check a handler's input against any Standard Schema and turn it into what the handler
   wants. See [Validation and pipes](guide:validation).
 - **`@Cooldown`** limits how often a handler runs, per user, channel, server, everyone, or a value of the call with
-  `by`. Counts can live in the shard manager, Redis or a database of your own. See [Cooldowns](guide:cooldowns) and
-  [Cooldown stores](guide:recipes/cooldown-stores).
+  `by`. Counts can live in the shard manager, Redis or a database of your own, and `cooldownStoreFailure` decides
+  whether a call is refused or allowed while the store is down. See [Cooldowns](guide:cooldowns),
+  [When the store fails](guide:cooldowns#when-the-store-fails) and [Cooldown stores](guide:recipes/cooldown-stores).
 - **Observers** are told as each call starts and once it settles, with how it ended and how long it took, for metrics,
   audit logs and tracing. See [Observers](guide:observers).
+- **Custom decorators**: `createMetadata` makes a typed fact about a handler that guards read through
+  `ExecutionContext`, and `applyDecorators` combines decorators into one. See
+  [Custom decorators](guide:custom-decorators).
 - **Class stages** on a controller cover the handlers its subclasses declare, and class guards cover its autocomplete
   handlers. See [the upgrade notes](guide:migrating#class-guards-now-cover-inherited-handlers).
 
@@ -61,10 +73,13 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **Context menus** type the interaction a handler receives from its builder. See
   [Context menus](guide:context-menus).
 - **Message commands**: `@MessageHandler('roll {sides:int}')` matches a message word by word after a prefix or a
-  mention, with typed params, flags, aliases, usage replies and a built-in `!help`. A message command can tell its
-  author about an error or a cooldown in a direct message, with `messages.dmOnError` and `messages.dmOnCooldown`. See
-  [Message commands](guide:message-commands) and [Message params](guide:message-params).
-- **Reactions** route by emoji name or id, and never reach a handler from a bot. See [Reactions](guide:reactions).
+  mention, with typed params, flags, aliases, usage replies and a built-in `!help`. Keywords match in any case, and
+  only the most specific pattern runs; see
+  [the upgrade note](guide:migrating#message-keywords-match-in-any-case-and-only-one-runs). A message command can
+  tell its author about an error or a cooldown in a direct message, with `messages.dmOnError` and
+  `messages.dmOnCooldown`. See [Message commands](guide:message-commands) and [Message params](guide:message-params).
+- **Reactions** route by emoji name or id, and never reach a handler from a bot; see
+  [the upgrade note](guide:migrating#reactions-from-bots-reach-no-handler) and [Reactions](guide:reactions).
 - **Gateway events** with `@On` and `@Once`, through the same pipeline. See [Gateway events](guide:gateway-events).
 - **Lifecycle hooks**: `onReady` and `onShutdown`, in dependency order. See [Lifecycle hooks](guide:lifecycle-hooks).
 - **Providers** supply values, classes and async factories under a token, injected with `@Inject(token)`. See
@@ -75,7 +90,9 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 ## Building and shipping
 
 - **Command registration** is configurable: globally or to servers, to a development server under `--dev`, at startup
-  or only with `meocord register`. See [Registering commands](guide:slash-commands#registering-commands).
+  or only with `meocord register`. A builder that throws stops registration rather than dropping its command; see
+  [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration) and
+  [Registering commands](guide:slash-commands#registering-commands).
 - **Sharding**, in one process or a process per shard, with `ShardContext.call` to reach every shard. See
   [Sharding](guide:sharding).
 - **Self-contained builds** pack native addons into `dist`, and run on Bun as on Node.js. `optionalExternals` covers
@@ -83,7 +100,10 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **`logLevel`** in `meocord.config.ts`, or `MEOCORD_LOG_LEVEL` for one run, sets which lines the logger prints. See
   [Logging](guide:configuration#logging).
 - **Mistakes MeoCord refuses as the bot loads**, such as an invalid pattern or two handlers for one command, are
-  reported as one line that names the class and method, and the bot exits 1.
+  reported as one line that names the class and method, and the bot exits 1. Two handlers of one command, or two
+  component handlers with the same pattern, are among them; see
+  [the upgrade notes](guide:migrating#two-handlers-of-one-command-stop-the-bot) and
+  [the other](guide:migrating#two-component-handlers-with-the-same-customid-pattern-stop-the-bot).
 - **`start --dev`** rebuilds and restarts on changes to the source, `meocord.config.ts` and `tsconfig.json`, one bot
   at a time. See [The CLI](guide:cli#development-and-production).
 - **Import cycles** are a lint warning in `meocord/eslint`. See [ESLint](guide:eslint#import-cycles).
@@ -92,6 +112,8 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 
 - **`invoke` and `dispatch`** run a handler through everything the bot runs around it, and `getResponse` reports what
   it sent. See [Invoke and dispatch](guide:invoke-and-dispatch).
+- **`inspectHandler`** lists what a handler ends up with, in the order it runs. See
+  [How a call runs](guide:how-a-call-runs).
 - **`MeoCordTestingModule.fromApp(App)`** builds a module from the whole app, wired as the bot wires it. See
   [Testing the whole app](guide:testing#testing-the-whole-app).
 - **Lifecycle hooks and gateway events** run in a test with `module.init()` and `module.emit()`. See

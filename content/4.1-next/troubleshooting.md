@@ -21,9 +21,8 @@ or the bot's log shows.
 names `DISCORD_TOKEN`. See [Environment variables](guide:configuration#environment-variables).
 
 **"Discord refused the bot token."** Discord refused the token at login, so `start()` rejects and the process exits
-
-1. Copy the token again from the Developer Portal, under your application, Bot, then Reset Token. Resetting it
-   there makes the old one stop working.
+with code 1. Copy the token again from the Developer Portal, under your application, Bot, then Reset Token.
+Resetting it there makes the old one stop working.
 
 **"Discord refused the privileged intents the bot requests (…)"** `clientOptions.intents` asks for
 `GuildMembers`, `GuildPresences` or `MessageContent`, and the application hasn't enabled them. Enable each one the
@@ -62,23 +61,32 @@ Fix what it names. The common ones:
   no provider supplies. Add a provider for it to `@MeoCord({ providers })`, or to the testing module's `providers`
   in a test. See [Providers](guide:services#providers).
 - **"`Class`: two classes have this name"** With process sharding, `ShardContext.call` finds a service in another
-  shard by its class name, so every controller and service needs a name of its own. In any mode, two classes of one
-  name are refused when either uses `@Cooldown` or `@Once`, which tell classes apart by name. Rename one.
+  shard by its class name, so every controller and service needs a name of its own. Rename one.
 - **A builder that fails.** A command's builder runs as its class loads, so a name Discord refuses, such as one
   with a capital letter or a space, stops the bot there, naming the builder and the command. See
   [Your first command](guide:first-command#gotchas).
 
+### Other startup errors
+
+The generated `main.ts` logs these as "Error during startup:" with the error, and the process exits 1.
+
 **"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
 refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
 [Providers](guide:services#providers).
+
+**"Two classes are named …, and @Cooldown and @Once tell classes apart by name, so they would share counts."** In
+any mode, two classes of one name are refused when either uses `@Cooldown` or `@Once`. Rename one of the classes.
 
 ## A command doesn't show up in Discord
 
 - **It was registered somewhere else.** Under `meocord start --dev` with `commands.developmentGuild` set, every
   command goes to that server only. Otherwise commands go globally, or to `commands.guilds`. See
   [Registering commands](guide:slash-commands#registering-commands).
-- **Registration didn't run.** With `commands.register: false`, only `meocord register` registers. A failed
-  registration is logged, and the bot stays online.
+- **Registration didn't run.** With `commands.register: false`, only `meocord register` registers. A builder whose
+  `toJSON()` throws, such as a slash command without a description, stops that start's registration with an error
+  naming it, and no command is sent; see
+  [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration). A failed registration is
+  logged, and the bot stays online.
 - **The bot isn't in the server with the right scope.** An invite must include the `applications.commands` scope as
   well as `bot`.
 - **The client hasn't caught up.** Server commands appear at once; global ones can take a while to reach every
