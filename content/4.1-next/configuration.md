@@ -52,7 +52,7 @@ it was built with, until the next `meocord build --prod`.
 | `discordToken`       | none    | The bot token. Read it from the environment rather than writing it here.                                              |
 | `appName`            | none    | Starts every log line.                                                                                                |
 | `logLevel`           | `'log'` | The least severe line the bot prints; `'debug'` in development. See [Logging](#logging).                              |
-| `sourceMappedStacks` | `true`  | Stack traces name your source files and lines, not the bundle's.                                                      |
+| `sourceMappedStacks` | `true`  | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                   |
 | `shutdownTimeout`    | `10000` | Milliseconds shutdown waits for the `onShutdown` hooks, all of them together.                                         |
 | `commands`           | global  | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                    |
 | `sharding`           | none    | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                            |
@@ -85,8 +85,24 @@ the built bot; the CLI's own output and your tests read only the variable.
 MEOCORD_LOG_LEVEL=debug node dist/main.js
 ```
 
-`sourceMappedStacks` maps each stack trace through the source map the build writes, so an error points into
-`src/`. Set it to `false` when an error tracker, such as one you upload source maps to, does the mapping itself.
+### Stack traces
+
+A stack trace names your source, such as `src/services/profile.service.ts:42:11`, not the bundle, on Node and Bun
+alike. The build writes `dist/main.js.map` beside the bundle, in development and production, and:
+
+- `meocord start` runs Node with `--enable-source-maps`, so Node maps each stack itself. The shard processes it
+  starts inherit the flag.
+- A bundle started any other way, with `node dist/main.js` in a Docker `CMD`, under pm2, or with Bun, which applies
+  no source map to a bundle, maps its stacks through `Error.prepareStackTrace`. The map is read the first time a stack
+  needs it, and each frame keeps the runtime's format, `at fn (/abs/path/src/file.ts:line:col)`, so a tool that parses
+  `error.stack` reads it as before.
+- A hook already set on `Error.prepareStackTrace`, such as a preloaded error tracker's, receives the mapped call
+  sites. One set later replaces MeoCord's unless it calls the hook it found.
+- Bun reports a call's column further along than Node does. In a minified production bundle, a frame for a call can
+  map to the statement just before it, one line up; the frame that threw maps exactly.
+
+Set `sourceMappedStacks: false` when an error tracker applies uploaded source maps to the bundle's own positions, or
+you ship a source mapper of your own. `meocord start` then passes no flag, and the bundle installs no hook.
 
 ## Environment variables
 
