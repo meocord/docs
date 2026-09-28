@@ -58,7 +58,7 @@ import { WelcomeController } from '@src/tutorial/welcome.controller'
     // #endregion step:reactions
   },
   // #region step:message-commands
-  // A message command starts with a mention of the bot, and nothing else
+  // A message command starts with a mention of the bot, never a prefix
   messages: { mention: 'only' },
   // #endregion step:message-commands
   // #region step:presenters
