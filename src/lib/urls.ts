@@ -31,8 +31,11 @@ export type DocsTarget =
   | { kind: 'migrating'; line: string; anchor?: string }
   /** The page shown for a page id a line does not have. */
   | { kind: 'missing'; line: string; id: string }
+  /** A line's playground; `code` is a share link's fragment, which carries code and inputs to it. */
+  | { kind: 'playground'; line: string; code?: string }
 
 const LINE = /^\d+\.\d+$/
+const SHARED = /^v\d+\.[\w-]+$/
 const VERSION = /^(\d+)\.(\d+)\.\d+(?:-[0-9A-Za-z.-]+)?$/
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
 const ENTRY = /^(?:meocord\/)?([a-z][a-z0-9-]*)$/
@@ -138,6 +141,9 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
 
     case 'missing':
       return `/docs/${target.line}/missing/${check(target.id, SLUG, 'page id')}`
+
+    case 'playground':
+      return `/docs/${segment}/playground${target.code === undefined ? '' : `#${check(target.code, SHARED, 'share code')}`}`
   }
 }
 

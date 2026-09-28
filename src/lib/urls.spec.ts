@@ -99,6 +99,14 @@ describe('docsHref', () => {
     expect(docsHref({ kind: 'line', line: '4.0' }, STABLE)).toBe('/docs/4.0')
   })
 
+  it("builds a line's playground URL, with the code a share link carries", () => {
+    expect(docsHref({ kind: 'playground', line: '4.1' }, BETA)).toBe('/docs/4.1/playground')
+    expect(docsHref({ kind: 'playground', line: '4.1', code: 'v1.abc-_9' }, BETA)).toBe(
+      '/docs/4.1/playground#v1.abc-_9',
+    )
+    expect(() => docsHref({ kind: 'playground', line: '4.1', code: 'v1.a b' }, BETA)).toThrow('not a valid share code')
+  })
+
   it('builds migrating and missing-page URLs', () => {
     expect(docsHref({ kind: 'migrating', line: '4.0', anchor: 'from-3x' }, BETA)).toBe('/docs/latest/migrating#from-3x')
     expect(docsHref({ kind: 'migrating', line: '4.1' }, BETA)).toBe('/docs/4.1/migrating')

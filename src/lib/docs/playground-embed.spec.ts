@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { playgroundEmbed } from '@/lib/docs/playground-embed'
+import { decodeShared } from '@/playground/share'
 
 const FRAME = '/playground/4.1.0-beta.7.0123456789.html'
 const directive = {
@@ -12,7 +13,7 @@ const html = (frameOf: (line: string) => string | undefined) =>
   renderToStaticMarkup(playgroundEmbed('4.1', directive, 0, { frameOf }).render())
 
 describe('playgroundEmbed', () => {
-  it('shows the region, a hidden Run button and the inputs, and carries the whole file and its inputs for the runner', () => {
+  it('shows the region, a hidden Run button and the inputs, and carries the whole file and its inputs for the runner', async () => {
     const out = html(() => FRAME)
     expect(out).toContain(`data-playground-src="${FRAME}"`)
     expect(out).toMatch(
@@ -20,6 +21,8 @@ describe('playgroundEmbed', () => {
     )
     expect(out).toContain('<span id="playground-inputs-0">Dispatches <code>as dm; button counter/41</code></span>')
     expect(out).toContain('aria-live="polite"')
+    const open = /<a href="([^"]*)" hidden="" data-playground-open="true">Open in playground<\/a>/.exec(out)
+    expect(open?.[1]).toMatch(/^\/docs\/4\.1\/playground#v1\.[\w-]+$/)
     const request = JSON.parse(
       /data-playground-request="([^"]*)"/
         .exec(out)![1]
@@ -34,6 +37,11 @@ describe('playgroundEmbed', () => {
     expect(request.source).not.toContain('#region')
     expect(request.dispatch).toEqual([{ kind: 'button', customId: 'counter/41' }])
     expect(request.caller).toEqual({ inGuild: false })
+    // The link carries the same code, and the inputs as written
+    expect(await decodeShared(open![1].split('#')[1])).toEqual({
+      source: request.source,
+      dispatch: 'as dm; button counter/41',
+    })
   })
 
   it("is the code frame alone, marked, without the line's runtime", () => {

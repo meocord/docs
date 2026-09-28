@@ -12,7 +12,8 @@ const FRAME = /^\/playground\/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\.[0-9a-f]{10}\.h
 /** The problems with the playgrounds in one built page's HTML; `publicDir` is where its frames are served from. */
 export function playgroundProblems(file: string, html: string, publicDir: string): string[] {
   const problems: string[] = []
-  const embeds = html.match(/\bdata-playground-embed=/g)?.length ?? 0
+  // Each embed names its line's frame, and so does the playground page
+  const embeds = playgroundCount(html)
   const unavailable = html.match(/\bdata-playground-unavailable=/g)?.length ?? 0
   const frames = [...html.matchAll(/\bdata-playground-src="([^"]*)"/g)].map(match => match[1])
   if (unavailable > 0)
@@ -29,5 +30,7 @@ export function playgroundProblems(file: string, html: string, publicDir: string
   return problems
 }
 
-/** How many playgrounds a built page embeds. */
-export const playgroundCount = (html: string) => html.match(/\bdata-playground-embed=/g)?.length ?? 0
+/** How many playgrounds a built page has: its embeds, and the playground page's own. */
+export function playgroundCount(html: string): number {
+  return html.match(/\bdata-playground-(?:embed|page)=/g)?.length ?? 0
+}

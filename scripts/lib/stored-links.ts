@@ -40,6 +40,8 @@ export function parseStored(href: string, lines: readonly string[]): { target: D
     target = { kind: 'changelog', line, version: parts[1] }
   } else if (parts[0] === 'migrating' && parts.length === 1) {
     target = { kind: 'migrating', line, anchor }
+  } else if (parts[0] === 'playground' && parts.length === 1) {
+    target = { kind: 'playground', line, code: anchor }
   } else if (parts[0] === 'missing' && parts.length === 2) {
     target = { kind: 'missing', line, id: parts[1] }
   } else if (parts.length === 1 && parts[0] !== '') {

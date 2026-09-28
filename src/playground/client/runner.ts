@@ -82,17 +82,22 @@ function openChannel(frame: string): Promise<Channel> {
   })
 }
 
-/** Runs the playground `embed` holds, showing progress on its Run button and the result in its output. */
-export async function runEmbed(embed: HTMLElement, button: HTMLButtonElement): Promise<void> {
-  const output = embed.querySelector<HTMLElement>('[data-playground-output]')
-  const frame = embed.dataset.playgroundSrc
-  if (!output || !frame || button.getAttribute('aria-busy') === 'true') return
+/**
+ * Runs `request` in the line's frame at `frame`, showing progress on `button` and the result in `output`.
+ * A press while a run is under way is ignored.
+ */
+export async function runRequest(
+  frame: string,
+  request: PageRequest,
+  output: HTMLElement,
+  button: HTMLButtonElement,
+): Promise<void> {
+  if (button.getAttribute('aria-busy') === 'true') return
   const label = button.textContent
   button.setAttribute('aria-busy', 'true')
   button.textContent = 'Running…'
   showStatus(output, 'Running…')
   try {
-    const request = JSON.parse(embed.dataset.playgroundRequest ?? '') as PageRequest
     let channel = channels.get(frame)
     if (!channel) channels.set(frame, (channel = openChannel(frame)))
     showResult(output, await (await channel).run(request))
@@ -102,4 +107,12 @@ export async function runEmbed(embed: HTMLElement, button: HTMLButtonElement): P
     button.removeAttribute('aria-busy')
     button.textContent = label
   }
+}
+
+/** Runs the playground `embed` holds, showing progress on its Run button and the result in its output. */
+export async function runEmbed(embed: HTMLElement, button: HTMLButtonElement): Promise<void> {
+  const output = embed.querySelector<HTMLElement>('[data-playground-output]')
+  const frame = embed.dataset.playgroundSrc
+  if (!output || !frame) return
+  await runRequest(frame, JSON.parse(embed.dataset.playgroundRequest ?? '') as PageRequest, output, button)
 }

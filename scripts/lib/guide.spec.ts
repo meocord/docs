@@ -363,8 +363,10 @@ describe('::playground', () => {
 })
 
 describe('the plan', () => {
-  it("takes none of the site's own paths: the routed ones, read from the app, and the planned ones", () => {
-    expect(routedSlugs(process.cwd())).toEqual(expect.arrayContaining(['api', 'changelog', 'migrating', 'missing']))
+  it("takes none of the site's own paths: the routed ones, read from the app, the playground among them", () => {
+    expect(routedSlugs(process.cwd())).toEqual(
+      expect.arrayContaining(['api', 'changelog', 'migrating', 'missing', 'playground']),
+    )
     expect(reservedProblems(process.cwd())).toEqual([])
     expect(
       reservedProblems(process.cwd(), {

@@ -1,17 +1,12 @@
-import { Button, Code, Div, type NodeInstance, Span } from '@meonode/ui'
+import { A, Button, Code, Div, type NodeInstance, Span } from '@meonode/ui'
 import { resolveExample } from '../../../scripts/lib/pages'
-import { playgroundFor, readPlaygroundManifest } from '@/lib/playground-manifest'
+import { VERSIONS } from '@/config/versions'
+import { playgroundFrame } from '@/lib/docs/playground-site'
+import { sharedFragment } from '@/lib/docs/share-link'
+import { docsHref } from '@/lib/urls'
 import { codeFrame } from '@/lib/prose/code'
 import type { PlaygroundDirective } from '@/lib/prose/lower'
 import { parseDispatchList } from '@/playground/dispatch-list'
-
-// Read once when a build renders the pages: the built HTML names the frame, and the server never reads it again.
-// A dev server reads it for every page, so a `playground:build` run after it started is picked up.
-let manifest: ReturnType<typeof readPlaygroundManifest> | null = null
-const lineFrame = (line: string) => {
-  if (manifest === null || process.env.NODE_ENV !== 'production') manifest = readPlaygroundManifest()
-  return playgroundFor(manifest, line)?.frame
-}
 
 /**
  * A `::playground` on a Guide page: the code frame of its region, a Run button, the inputs it dispatches,
@@ -23,7 +18,7 @@ export function playgroundEmbed(
   line: string,
   directive: PlaygroundDirective,
   key: number,
-  { page, frameOf = lineFrame }: { page?: string; frameOf?: (line: string) => string | undefined } = {},
+  { page, frameOf = playgroundFrame }: { page?: string; frameOf?: (line: string) => string | undefined } = {},
 ): NodeInstance {
   const list = parseDispatchList(directive.dispatch)
   if (typeof list === 'string') throw new Error(`::playground{file="${directive.file}"}: ${list}`)
@@ -59,6 +54,21 @@ export function playgroundEmbed(
             'aria-describedby': inputs,
           }),
           Span(['Dispatches ', Code(directive.dispatch, { key: 'dispatch' })], { key: 'inputs', id: inputs }),
+          // The playground page reads the code from the link with script, so the link shows with it
+          A({
+            key: 'open',
+            children: 'Open in playground',
+            href: docsHref(
+              {
+                kind: 'playground',
+                line,
+                code: sharedFragment({ source: request.source, dispatch: directive.dispatch }),
+              },
+              VERSIONS,
+            ),
+            hidden: true,
+            'data-playground-open': true,
+          }),
         ],
       }),
       Div({ key: 'output', 'data-playground-output': true, 'aria-live': 'polite' }),

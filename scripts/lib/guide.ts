@@ -28,12 +28,6 @@ export const CHAPTERS = [
 
 export type ChapterId = (typeof CHAPTERS)[number]['id']
 
-/**
- * Paths under `/docs/<line>/` the site will route, which no Guide page may take before they land: the
- * playground. The routed ones are read from the app's folders, by `routedSlugs`.
- */
-export const PLANNED_ROUTES = ['playground'] as const
-
 /** The paths under `/docs/<line>/` the site already routes, from src/app/docs/[line]/'s folders. */
 export function routedSlugs(root: string): string[] {
   return readdirSync(path.join(root, 'src', 'app', 'docs', '[line]'), { withFileTypes: true })
@@ -42,11 +36,11 @@ export function routedSlugs(root: string): string[] {
 }
 
 /**
- * Guide paths that take one of the site's own: a routed or planned path, or one below it. An appendix
+ * Guide paths that take one of the site's own: a routed path, or one below it. An appendix
  * group's folder, `recipes/…` or `coming-from/…`, is a Guide path's own, and only the folder itself is taken.
  */
 export function reservedProblems(root: string, plan = GUIDE_PLAN): string[] {
-  const reserved = new Set([...routedSlugs(root), ...PLANNED_ROUTES])
+  const reserved = new Set(routedSlugs(root))
   // The groups whose pages sit in a folder of their own, as guidePath places them
   const folders = new Set(['recipes', 'coming-from'])
   return Object.values(plan)
