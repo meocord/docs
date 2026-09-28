@@ -11,9 +11,13 @@ test('code is coloured by theme, with no CSP violation', async ({ page }) => {
   await page.goto(PAGE)
   const token = page.locator('[data-code] code span[style*="--code-dark"]').first()
   const dark = await token.evaluate(span => getComputedStyle(span).color)
-  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
-  const light = await token.evaluate(span => getComputedStyle(span).color)
-  expect(dark).not.toBe(light)
+  // The mode switched as a reader switches it; the theme control answers once the page has hydrated
+  const light = page.locator('[data-toolbar]:visible').getByRole('button', { name: 'Light' })
+  await expect(light).toHaveAttribute('aria-pressed', 'false')
+  await light.click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  const lightColour = await token.evaluate(span => getComputedStyle(span).color)
+  expect(dark).not.toBe(lightColour)
   expect(violations).toEqual([])
 })
 

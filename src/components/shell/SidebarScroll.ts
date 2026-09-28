@@ -51,7 +51,7 @@ function returning(body: Element): boolean {
  * keeps the pages already read. A page reached by Back or Forward shows its sidebar exactly where it was
  * left, even where that hides the current link. Any other visit, by a link or search, opens the sidebar
  * where the line's sidebar was last left, before it is painted, and scrolls the current link into view
- * if it is outside the visible part.
+ * if it is outside the visible part, unless the reader has already scrolled it.
  */
 export const SidebarScroll = Component(function SidebarScroll() {
   const anchor = useRef<HTMLSpanElement>(null)
@@ -63,8 +63,10 @@ export const SidebarScroll = Component(function SidebarScroll() {
     const line = location.pathname.split('/')[2] ?? ''
 
     const left = places.get(body)
+    // Shown for the first time yet already scrolled: the reader moved it before the page hydrated
+    const readerMoved = !shownAt.has(body) && body.scrollTop !== 0
     if (returning(body) && left !== undefined) body.scrollTop = left
-    else {
+    else if (!readerMoved) {
       body.scrollTop = offsets.get(line) ?? 0
       const current = body.querySelector<HTMLElement>('[aria-current="page"]')
       if (current) {
