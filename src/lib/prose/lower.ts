@@ -1,4 +1,4 @@
-import type { Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
+import type { Image, Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
@@ -45,6 +45,25 @@ const EXAMPLE = /^::example\{([^}]*)\}$/
 const FIGURE = /^::figure\{name="([\w-]+)"\}$/
 
 const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
+
+/** Whether a page may load an image from `url` under its policy, `img-src 'self' data:`: a path on the site or a data URL. */
+const loadable = (url: string) => /^data:/i.test(url) || !(/^[a-z][a-z\d+.-]*:/i.test(url) || url.startsWith('//'))
+
+/** An image or a link that holds images alone, as a README's badges are, and blank text between them. */
+const badgePart = (node: PhrasingContent): boolean =>
+  node.type === 'image' ||
+  node.type === 'break' ||
+  (node.type === 'text' && !node.value.trim()) ||
+  (node.type === 'link' && node.children.length > 0 && node.children.every(child => child.type === 'image'))
+
+/** A paragraph of badges from another site, a README's row of version, build and licence images, which the site shows itself. */
+const isBadgeRow = (children: PhrasingContent[]) =>
+  children.every(badgePart) &&
+  children.some(child =>
+    child.type === 'image'
+      ? !loadable(child.url)
+      : child.type === 'link' && child.children.some(image => image.type === 'image' && !loadable(image.url)),
+  )
 const ALERTS = {
   NOTE: { callout: 'note', label: 'Note' },
   TIP: { callout: 'tip', label: 'Tip' },
@@ -91,6 +110,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
             ? FIGURE.exec(node.children[0].value.trim())
             : null
         if (figure) return options.figure?.(figure[1], key) ?? ''
+        if (isBadgeRow(node.children)) return ''
         return P(children(node), { key })
       }
       case 'heading': {
@@ -115,10 +135,14 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       case 'link': {
         const { url, title } = node
         const target = href(url)
-        return A({ key, href: target, title: title ?? undefined, children: children(node) })
+        // An image the page can't load reads as its alt text inside the link, never a link within a link
+        const inner = node.children.map((child, index) =>
+          child.type === 'image' && !loadable(child.url) ? (child.alt ?? '') : lower(child, index),
+        )
+        return A({ key, href: target, title: title ?? undefined, children: inner })
       }
       case 'image':
-        return Img({ key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
+        return image(node, key)
       case 'code':
         return codeFrame(node.value, node.lang ?? undefined, { key })
       case 'blockquote': {
@@ -164,6 +188,16 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       default:
         return ''
     }
+  }
+
+  /**
+   * An image the page can load, or else its alt text: a link to the image where it is on the web, plain text
+   * otherwise. The page policy loads images from the site and data URLs only, so any other would show broken.
+   */
+  function image(node: Image, key: number): Child {
+    if (loadable(node.url)) return Img({ key, src: node.url, alt: node.alt ?? '', loading: 'lazy' })
+    const text = node.alt || node.url
+    return /^https?:\/\//i.test(node.url) ? A({ key, href: node.url, children: text }) : text
   }
 
   function lowerExample(attributes: string, key: number) {

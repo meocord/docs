@@ -61,6 +61,7 @@ exact version is listed under `provenance.integrityOnly`, which a reviewer adds 
 | `bun run api:generate <version...>`          | Regenerates what the site takes from listed versions, verified again; `--all` after a TypeDoc upgrade |
 | `bun run content:check`                      | Checks front matter, examples, links and anchors, and that every version has its generated data       |
 | `bun run commands:check`                     | After a build: every create command a reader gets installs its page's line                            |
+| `bun run resources:check`                    | After a build: no page loads an image, script, frame, stylesheet or media file from another origin    |
 | `bun run examples:check [line...]`           | Typechecks each line's examples against its pinned meocord                                            |
 | `bun run content:backport <sha> --to <line>` | Applies a commit's change to one line's guides to another line, on a branch of its own                |
 
@@ -82,6 +83,11 @@ command that doesn't install its page's line, wherever its text came from. Chang
 the API reference, which name past releases' commands or are the package's own, are left alone.
 `versions:sync` fails when the registry's `latest`, or a prerelease line's tag, points at another line's
 version.
+
+A page loads nothing from another origin: its policy allows the site itself, and data URLs for images. So
+Markdown draws an image from elsewhere as its alt text, linked to the image where it is on the web, and drops
+a paragraph of such images alone, such as a README's row of badges, which the site shows in its own way.
+`resources:check` reads every built page after the build and fails on anything it would load from elsewhere.
 
 ## The release bot
 
