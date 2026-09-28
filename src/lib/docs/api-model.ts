@@ -5,7 +5,11 @@ import { shellIds } from '@/lib/page-ids'
 import { docsHref, entrySegment, memberAnchor, sectionSegment } from '@/lib/urls'
 
 /** A declaration, and for a property the object its written type stands for, where api-generate kept one. */
-type Declaration = JSONOutput.DeclarationReflection & { resolvedType?: SomeType }
+type Declaration = JSONOutput.DeclarationReflection & {
+  resolvedType?: SomeType
+  /** Named by an expression, `[PIPED_BRAND]`, as api-generate read from its declaration. */
+  computedName?: true
+}
 type Signature = JSONOutput.SignatureReflection
 /** A parameter, and the object its written type stands for where api-generate kept one to list options from. */
 type Parameter = JSONOutput.ParameterReflection & { resolvedType?: SomeType }
@@ -184,11 +188,12 @@ const rowType = (property: Declaration) =>
   property.type && isComputedType(property.type) && property.resolvedType ? property.resolvedType : property.type
 
 /**
- * A property's name as TypeScript writes it in code: bare when it is an identifier or a number, quoted
- * otherwise, as `'MeoCord reserves these theme roles; rename yours'` is.
+ * A property's name as TypeScript writes it in code: a computed name, `[PIPED_BRAND]`, as it is; a
+ * literal one bare when it is an identifier or a number, and quoted otherwise, as
+ * `'MeoCord reserves these theme roles; rename yours'` is.
  */
-export const propertyKey = (name: string) =>
-  /^(?:[A-Za-z_$][\w$]*|\d+)$/.test(name) ? name : `'${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+export const propertyKey = (name: string, computed = false) =>
+  computed || /^(?:[A-Za-z_$][\w$]*|\d+)$/.test(name) ? name : `'${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
 
 /** TypeDoc's kind for a constructor type's signature. */
 const CONSTRUCTOR_SIGNATURE = 16384
@@ -675,7 +680,9 @@ export class ApiModel {
     }
     return [
       [
-        { text: `${modifiers}${propertyKey(member.name)}${member.flags?.isOptional ? '?' : ''}: ` },
+        {
+          text: `${modifiers}${propertyKey(member.name, (member as Declaration).computedName)}${member.flags?.isOptional ? '?' : ''}: `,
+        },
         ...this.#maybe(member.type),
       ],
     ]
@@ -783,7 +790,10 @@ export class ApiModel {
         ])
       case 'mapped':
         return [
-          { text: `{ ${type.readonlyModifier === '+' ? 'readonly ' : ''}[${type.parameter} in ` },
+          // `-readonly` strips what `readonly` adds, so a mock's fields can be assigned
+          {
+            text: `{ ${type.readonlyModifier === '+' ? 'readonly ' : type.readonlyModifier === '-' ? '-readonly ' : ''}[${type.parameter} in `,
+          },
           ...this.type(type.parameterType),
           ...(type.nameType ? [{ text: ' as ' }, ...this.type(type.nameType)] : []),
           { text: `]${type.optionalModifier === '+' ? '?' : type.optionalModifier === '-' ? '-?' : ''}: ` },
@@ -797,7 +807,10 @@ export class ApiModel {
           { text: '`' },
         ]
       case 'inferred':
-        return [{ text: `infer ${type.name}` }]
+        return [
+          { text: `infer ${type.name}` },
+          ...(type.constraint ? [{ text: ' extends ' }, ...this.type(type.constraint)] : []),
+        ]
       case 'predicate':
         return [
           { text: `${type.asserts ? 'asserts ' : ''}${type.name}` },
@@ -836,7 +849,7 @@ export class ApiModel {
     children.forEach((child, index) => {
       if (index > 0) tokens.push({ text: '; ' })
       tokens.push({
-        text: `${child.flags?.isReadonly ? 'readonly ' : ''}${propertyKey(child.name)}${child.flags?.isOptional ? '?' : ''}: `,
+        text: `${child.flags?.isReadonly ? 'readonly ' : ''}${propertyKey(child.name, (child as Declaration).computedName)}${child.flags?.isOptional ? '?' : ''}: `,
       })
       tokens.push(...(child.signatures?.[0] ? this.#reflection(child, 'top') : this.#maybe(child.type)))
     })

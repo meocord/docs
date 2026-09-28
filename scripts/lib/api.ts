@@ -228,9 +228,15 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     }
   })
   // A property's type too, where TypeDoc took it from the checker rather than the written node
+  // A member named by an expression, `[PIPED_BRAND]`, keys by what it evaluates to, a symbol, not a string;
+  // TypeDoc names it `[PIPED_BRAND]` either way, so the declaration says which it is
+  const computedNames = new Set<DeclarationReflection>()
   app.converter.on(Converter.EVENT_CREATE_DECLARATION, (context, reflection) => {
+    const named = context.getSymbolFromReflection(reflection)?.valueDeclaration
+    if (named && 'name' in named && named.name && ts.isComputedPropertyName(named.name as ts.Node))
+      computedNames.add(reflection)
     if (reflection.kind !== ReflectionKind.Property) return
-    const written = context.getSymbolFromReflection(reflection)?.valueDeclaration
+    const written = named
     if (!written || !(ts.isPropertySignature(written) || ts.isPropertyDeclaration(written)) || !written.type) return
     const scope = context.withScope(reflection)
     const type = context.converter.convertType(scope, written.type)
@@ -248,7 +254,10 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     supports: item => item instanceof ParameterReflection || item instanceof DeclarationReflection,
     toObject: (item, object, serializer) => {
       const type = resolved.get(item)
-      return type ? { ...object, resolvedType: serializer.toObject(type) } : object
+      const withType = type ? { ...object, resolvedType: serializer.toObject(type) } : object
+      return item instanceof DeclarationReflection && computedNames.has(item)
+        ? { ...withType, computedName: true }
+        : withType
     },
   })
   // A signature's type parameter comes from the checker, which reorders a union and fills in a type's

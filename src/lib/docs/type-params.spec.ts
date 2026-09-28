@@ -83,10 +83,18 @@ function declaredTypeParams(): Map<string, string[][]> {
 }
 
 /** Each function's and method's parameter types, and each property's type, by `name`, `Owner.method` or `Owner.prop`, as written. */
-function declaredTypes(): { params: Map<string, string[][]>; properties: Map<string, string[]> } {
+function declaredTypes(): {
+  params: Map<string, string[][]>
+  properties: Map<string, string[]>
+  names: Map<string, Set<string>>
+  aliases: Map<string, string>
+} {
   const printer = ts.createPrinter({ removeComments: true })
   const params = new Map<string, string[][]>()
   const properties = new Map<string, string[]>()
+  // Each owner's property names as written: `[PIPED_BRAND]`, `'a name in words'` or `name`
+  const names = new Map<string, Set<string>>()
+  const aliases = new Map<string, string>()
   // An optional parameter's `?` says what a written `| undefined` would, so neither side names it
   const typeOf = (node: ts.TypeNode, source: ts.SourceFile, optional: boolean) => {
     const text = normal(printer.printNode(ts.EmitHint.Unspecified, node, source))
@@ -102,8 +110,22 @@ function declaredTypes(): { params: Map<string, string[][]>; properties: Map<str
     const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
     const visit = (node: ts.Node) => {
       if (ts.isFunctionDeclaration(node) && node.name) add(node.name.text, node.parameters, source)
+      if (ts.isTypeAliasDeclaration(node))
+        aliases.set(
+          node.name.text,
+          normal(
+            printer.printNode(ts.EmitHint.Unspecified, node, source).replace(/^(?:export |declare )+/, ''),
+          ).replace(/;$/, ''),
+        )
       if ((ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node)) && node.name)
         for (const member of node.members) {
+          if (member.name && (ts.isPropertySignature(member) || ts.isPropertyDeclaration(member)))
+            names.set(
+              node.name.text,
+              (names.get(node.name.text) ?? new Set()).add(
+                printer.printNode(ts.EmitHint.Unspecified, member.name, source),
+              ),
+            )
           if (!member.name || !ts.isIdentifier(member.name)) continue
           const key = `${node.name.text}.${member.name.text}`
           if (ts.isMethodSignature(member) || ts.isMethodDeclaration(member)) add(key, member.parameters, source)
@@ -114,7 +136,7 @@ function declaredTypes(): { params: Map<string, string[][]>; properties: Map<str
     }
     visit(source)
   }
-  return { params, properties }
+  return { params, properties, names, aliases }
 }
 
 const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
@@ -171,7 +193,7 @@ describe('type parameters', () => {
   it('read parameter and property types as the declarations write them, constructor types with new', async () => {
     const { apiModel, apiSections } = await import('@/lib/docs/api-site')
     const model = apiModel('4.1', version)!
-    const { params, properties } = declaredTypes()
+    const { params, properties, names, aliases } = declaredTypes()
     let compared = 0
     const check = (key: string, signature: { params: { name: string; type: Token[]; option?: boolean }[] }) => {
       const lists = params.get(key)
@@ -185,9 +207,24 @@ describe('type parameters', () => {
         const symbol = model.symbol(section.slug, listing.name)
         if (!symbol) continue
         for (const signature of symbol.signatures) check(symbol.name, signature)
+        // A type alias whole, its object members' keys included: a computed key must not read as a string
+        const alias = aliases.get(symbol.name)
+        if (symbol.kind === 'type-alias' && alias) {
+          expect(alias, symbol.name).toBe(normal(text(symbol.code[0] ?? [])).replace(/;$/, ''))
+          compared += 1
+        }
         for (const member of symbol.members) {
           const key = `${symbol.name}.${member.name}`
           for (const signature of member.signatures) check(key, signature)
+          if (member.kind === 'property' && names.has(symbol.name)) {
+            // Its name as written: a computed key stays one, a literal one is quoted where it must be
+            const drawn =
+              /^(?:(?:readonly|static|abstract|protected|public|declare) )*('(?:[^'\\]|\\.)*'|\[[^\]]+\]|[\w$]+)/.exec(
+                text(member.code[0] ?? []),
+              )?.[1]
+            expect([...names.get(symbol.name)!], `${symbol.name} draws ${drawn}`).toContain(drawn)
+            compared += 1
+          }
           const written = properties.get(key)
           if (member.kind !== 'property' || !written) continue
           // `name?: type`, the type after the name and its `?`
@@ -260,6 +297,15 @@ describe('propertyKey', () => {
     expect(propertyKey('0')).toBe('0')
     expect(propertyKey('not a param of the pattern')).toBe("'not a param of the pattern'")
     expect(propertyKey("it's")).toBe("'it\\'s'")
+  })
+
+  it('keeps a computed key a computed key: a symbol, not a string', async () => {
+    const { apiModel } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    const declaration = (name: string) => text(model.symbol(model.find(name)!.section, name)!.code[0]!)
+    expect(declaration('Piped')).toBe('type Piped<T> = T & { readonly [PIPED_BRAND]?: true }')
+    expect(declaration('Token')).toBe('type Token<T> = symbol & { readonly [tokenType]?: T }')
+    expect(propertyKey('[tokenType]', true)).toBe('[tokenType]')
   })
 
   it("quotes RootTheme's reserved-role member in its declaration", async () => {
