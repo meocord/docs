@@ -53,52 +53,15 @@ export function glanceSection(line: string): ApiSection {
 }
 
 /**
- * The parameters a declaration lists, as written: `...entries`, `options?`. Read from the code, where the
- * list's own commas are those outside any brackets, so a function type inside a parameter doesn't split it.
+ * How a signature is called: its name and its own parameters, as the model records them from TypeScript,
+ * with `...` on a rest parameter and `?` on an optional or defaulted one: `send(payload, options?)`. An
+ * options parameter's rows and a `this` parameter aren't arguments, and a destructured one reads `{ … }`.
  */
-function paramsOf(code: string, name: string): string[] {
-  let at = code.indexOf(name) + name.length
-  const skip = (close: string) => {
-    let depth = 0
-    const start = at
-    for (; at < code.length; at++) {
-      const char = code[at]!
-      if (char === '>' && code[at - 1] === '=') continue
-      if ('([{<'.includes(char)) depth++
-      else if (')]}>'.includes(char)) depth--
-      if (depth === 0 && char === close) return code.slice(start + 1, at++)
-    }
-    return undefined
-  }
-  if (code[at] === '<') skip('>')
-  const list = code[at] === '(' ? skip(')') : undefined
-  if (!list?.trim()) return []
-  const params: string[] = []
-  let depth = 0
-  let current = ''
-  for (let i = 0; i < list.length; i++) {
-    const char = list[i]!
-    if (char === '>' && list[i - 1] === '=') {
-      current += char
-      continue
-    }
-    if ('([{<'.includes(char)) depth++
-    else if (')]}>'.includes(char)) depth--
-    if (char === ',' && depth === 0) {
-      params.push(current)
-      current = ''
-    } else current += char
-  }
-  params.push(current)
-  return params.flatMap(param => {
-    const match = /^\s*(\.\.\.)?([A-Za-z_$][\w$]*)(\?)?/.exec(param)
-    return match ? [`${match[1] ?? ''}${match[2]}${match[3] ?? ''}`] : []
-  })
-}
-
-/** How a signature is called: its name and its parameters' names, as `send(payload, options?)`. */
 export function callShape(name: string, signature: ApiSignature): string {
-  return `${name}(${paramsOf(signature.code.map(token => token.text).join(''), name).join(', ')})`
+  const params = signature.params
+    .filter(param => !param.option && param.name !== 'this')
+    .map(param => `${param.name === '__namedParameters' ? '{ … }' : param.name}${param.optional ? '?' : ''}`)
+  return `${name}(${params.join(', ')})`
 }
 
 /** The first sentence of a summary: up to a full stop before the next sentence, or all of it. */

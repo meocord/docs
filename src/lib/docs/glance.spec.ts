@@ -2,30 +2,37 @@ import { describe, expect, it } from 'vitest'
 import type { ApiSignature } from '@/lib/docs/api-model'
 import { callShape, firstSentence, glanceSection } from '@/lib/docs/glance'
 
-const signature = (code: string): ApiSignature => ({
-  code: [{ text: code }],
+const signature = (params: ApiSignature['params']): ApiSignature => ({
+  code: [],
   description: '',
-  params: [],
+  params,
   throws: [],
   examples: [],
 })
 
 describe('cheat sheets', () => {
-  it('writes how a signature is called, from its declaration: rest and optional parameters marked', () => {
-    expect(callShape('send', signature('send(payload: P, options?: { ephemeral?: boolean }): Promise<void>'))).toBe(
-      'send(payload, options?)',
+  it('writes how a signature is called from its own parameters: rest and optional marked, rows and `this` left out', () => {
+    const param = (name: string, extra: Partial<ApiSignature['params'][number]> = {}) => ({
+      name,
+      type: [],
+      optional: false,
+      description: '',
+      ...extra,
+    })
+    const send = signature([
+      param('payload'),
+      param('options', { optional: true }),
+      param('options.ephemeral', { optional: true, option: true }),
+    ])
+    expect(callShape('send', send)).toBe('send(payload, options?)')
+    expect(callShape('UseGuard', signature([param('...entries')]))).toBe('UseGuard(...entries)')
+    expect(callShape('bind', signature([param('this'), param('value', { defaultValue: '1', optional: true })]))).toBe(
+      'bind(value?)',
     )
-    expect(
-      callShape(
-        'UseGuard',
-        signature('UseGuard<T extends readonly unknown[]>(...entries: { [K in keyof T]: E }): any'),
-      ),
-    ).toBe('UseGuard(...entries)')
-    // A rest parameter, an arrow or a comma inside a type is not the list's own
-    expect(
-      callShape('On', signature('On<E extends keyof Events>(event: E, handler: (...event: A, b: B) => void): any')),
-    ).toBe('On(event, handler)')
-    expect(callShape('delete', signature('delete(): Promise<void>'))).toBe('delete()')
+    expect(callShape('MessageUsageError', signature([param('usage'), param('__namedParameters')]))).toBe(
+      'MessageUsageError(usage, { … })',
+    )
+    expect(callShape('delete', signature([]))).toBe('delete()')
   })
 
   it("takes a summary's first sentence, keeping a name with a dot whole", () => {
