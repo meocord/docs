@@ -118,7 +118,7 @@ deferral is deleted and the message follows up privately.
 
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's
 or validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
-seconds. Other errors of message, reaction and event handlers are only logged. The fallback never throws.
+seconds. Other errors of message, reaction and event handlers are only logged.
 
 ## Failures never end the process
 
