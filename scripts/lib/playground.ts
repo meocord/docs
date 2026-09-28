@@ -8,23 +8,14 @@ import { createHash } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import type { Plugin } from 'esbuild'
+import { READER_MODULES } from '../../src/playground/runtime/modules.js'
 import type { VersionsConfig } from './versions.js'
 
 export type { PlaygroundLine, PlaygroundManifest } from '../../src/lib/playground-manifest.js'
+export { READER_MODULES }
 
 /** The most a line's runtime may weigh gzipped, the budget the first Run downloads before the compiler. */
 export const RUNTIME_GZIP_BUDGET = 400 * 1024
-
-/** The modules a reader's code may import, which every runtime carries. */
-export const READER_MODULES = [
-  'discord.js',
-  'meocord/common',
-  'meocord/decorator',
-  'meocord/enum',
-  'meocord/interface',
-  'meocord/testing',
-  'reflect-metadata',
-] as const
 
 /**
  * The lines that get a runtime, and the version each builds from: those whose guides the site writes,

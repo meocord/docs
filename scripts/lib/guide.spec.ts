@@ -16,6 +16,10 @@ const context: GuideContext = {
     '4.1': {
       'src/guards/owner.guard.ts': '// #region guard\nexport class OwnerGuard {}\n// #endregion guard\n',
       'src/tutorial/app.ts': '// #region step:guards\nguards: [],\n// #endregion step:guards\n',
+      'src/button/counter.ts':
+        "import { Command, Controller } from 'meocord/decorator'\n// #region count\nexport class Counter {}\n// #endregion count\n",
+      'src/button/uses-service.ts':
+        "import { Greeter } from '../services/greeter'\nimport type { X } from './x'\nexport {}\n",
     },
     compare: { 'src/discordjs/ping.ts': 'export {}\n' },
   },
@@ -312,6 +316,42 @@ describe('checkGuide', () => {
       'content/4.1-next/guards.md: examples/4.1/src/guards/owner.guard.ts has no region "nope"',
       'content/4.1-next/guards.md: an ::example reads from "4.0", but only "compare" can be named',
       'content/4.1-next/guards.md: an ::example names no file',
+    ])
+  })
+})
+
+describe('::playground', () => {
+  it('takes a file of the line with a region and a dispatch that parses, importing only the runtime', () => {
+    const body = chapterBody(
+      [
+        '::playground{file="button/counter.ts" region="count" dispatch="button counter/1; /ping n:1"}',
+        '::playground{file="button/counter.ts" dispatch="message !ping"}',
+        '```text\n::playground{file="missing.ts"}\n```',
+      ].join('\n\n'),
+    )
+    expect(check({ ...valid(), guards: page(guards, body) })).toEqual([])
+  })
+
+  it('refuses a missing file or region, an import the runtime lacks, a dispatch that does not parse, and other attributes', () => {
+    const body = chapterBody(
+      [
+        '::playground{region="count" dispatch="/ping"}',
+        '::playground{file="missing.ts" dispatch="/ping"}',
+        '::playground{file="button/counter.ts" region="nope" dispatch="/ping"}',
+        '::playground{file="button/uses-service.ts" dispatch="/ping"}',
+        '::playground{file="button/counter.ts"}',
+        '::playground{file="button/counter.ts" dispatch="/ping; select"}',
+        '::playground{file="button/counter.ts" from="compare" dispatch="/ping"}',
+      ].join('\n\n'),
+    )
+    expect(check({ ...valid(), guards: page(guards, body) })).toEqual([
+      'content/4.1-next/guards.md: a ::playground names no file',
+      'content/4.1-next/guards.md: examples/4.1/src/missing.ts does not exist',
+      'content/4.1-next/guards.md: examples/4.1/src/button/counter.ts has no region "nope"',
+      "content/4.1-next/guards.md: examples/4.1/src/button/uses-service.ts imports '../services/greeter'; a playground runs one file, which imports only discord.js, meocord/common, meocord/decorator, meocord/enum, meocord/interface, meocord/testing, reflect-metadata",
+      'content/4.1-next/guards.md: a ::playground names no dispatch',
+      'content/4.1-next/guards.md: dispatch step 2: select needs a customId',
+      'content/4.1-next/guards.md: a ::playground takes file, region, dispatch, not from',
     ])
   })
 })

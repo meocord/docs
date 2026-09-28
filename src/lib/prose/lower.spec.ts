@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { Div, Figure } from '@meonode/ui'
-import { lowerMarkdown, type LowerOptions } from '@/lib/prose/lower'
+import { lowerMarkdown, type LowerOptions, type PlaygroundDirective } from '@/lib/prose/lower'
 
 const html = (markdown: string, options?: LowerOptions) =>
   renderToStaticMarkup(Div({ children: lowerMarkdown(markdown, options).nodes }).render())
@@ -51,6 +51,24 @@ describe('lowerMarkdown', () => {
       example: (file, region, from) => `// ${from} ${file} ${region}`,
     })
     expect(out).toContain('// compare discordjs/bot.ts client')
+  })
+
+  it('hands a ::playground to its resolver, and draws it as its ::example when there is none or it declines', () => {
+    const seen: unknown[] = []
+    const playground = (directive: PlaygroundDirective, key: number) => {
+      seen.push(directive)
+      return directive.file === 'live.ts' ? Div({ key, 'data-playground': true }) : undefined
+    }
+    const example = (file: string, region?: string) => `// ${file} ${region ?? 'whole'}`
+    expect(
+      html('::playground{file="live.ts" region="count" dispatch="button counter/1"}', { playground, example }),
+    ).toBe('<div><div data-playground="true"></div></div>')
+    expect(seen).toEqual([{ file: 'live.ts', region: 'count', dispatch: 'button counter/1' }])
+    for (const options of [{ playground, example }, { example }]) {
+      const out = html('::playground{file="other.ts" region="count" dispatch="/ping"}', options)
+      expect(out).toContain('<figure data-code="true">')
+      expect(out).toContain('other.ts count')
+    }
   })
 
   it('draws a ::figure the page names, and nothing for one it has none of', () => {

@@ -164,6 +164,16 @@ describe('checkSite', () => {
     ])
   })
 
+  it('refuses a ::playground, which only the Guide renders', () => {
+    const pages = {
+      a: page(
+        'id: a\ntitle: A',
+        '::playground{file="guards/owner.guard.ts" dispatch="/ping"}\n\n```text\n::playground{file="x.ts"}\n```',
+      ),
+    }
+    expect(checkSite(withAuthored(pages))).toEqual(['content/4.1/a.md: ::playground is a Guide directive'])
+  })
+
   it('reads an ::example from examples/compare with from="compare", and refuses other sources', () => {
     const pages = {
       a: page(
