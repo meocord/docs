@@ -127,7 +127,7 @@ result that isn't a valid theme is left out with a warning.
 
 ## Adding tokens of your own
 
-Declare roles of your own, or groups of your own, in `src/types/theme.d.ts`, which `{{meocord}} create` writes for you:
+Declare roles of your own, or groups of your own, in `src/types/theme.d.ts`, which the `create` command writes for you:
 
 ::example{file="augmented/types/theme.d.ts" region="augment"}
 

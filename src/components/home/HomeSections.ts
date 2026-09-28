@@ -122,7 +122,8 @@ export function WhySection(claims: Claim[]) {
   })
 }
 
-export function StartSection(guideHref: string) {
+/** The quick start's three steps; `spec` is the package spec that installs the home page's line. */
+export function StartSection(guideHref: string, spec: string) {
   const step = (key: number, text: string, code: string, language: string) =>
     Li({ key, children: Div({ children: [P(text, { key: 'p' }), codeFrame(code, language, { key: 1 })] }) })
   return Section({
@@ -134,7 +135,7 @@ export function StartSection(guideHref: string) {
         key: 'steps',
         'data-steps': true,
         children: [
-          step(1, 'Create a bot. The CLI asks which package manager to use.', 'npx meocord create my-bot', 'shell'),
+          step(1, 'Create a bot. The CLI asks which package manager to use.', `npx ${spec} create my-bot`, 'shell'),
           step(2, 'Give it its token, in .env beside meocord.config.ts.', 'DISCORD_TOKEN=your-bot-token', 'dotenv'),
           step(3, 'Run it, rebuilding as you save.', 'npx meocord start --dev', 'shell'),
         ],

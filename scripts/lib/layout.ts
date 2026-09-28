@@ -8,6 +8,7 @@ import path from 'path'
 import type { ApiDocument } from './api.js'
 import type { AnchorTarget, ChangelogDocument } from './changelog.js'
 import { pageAnchors, parsePage } from './content.js'
+import { withPlaceholder } from './package-spec.js'
 import { importReadme, pageFile } from './readme.js'
 import type { VersionsConfig } from './versions.js'
 import { README_SECTIONS } from '../../src/config/readme-sections.js'
@@ -68,7 +69,9 @@ export function importLineReadme(
   const { pages, anchors } = importReadme(readme, { line, commitUrl })
   const dir = paths.readme(line)
   rmSync(dir, { recursive: true, force: true })
-  for (const page of pages) write(path.join(dir, `${page.slug}.md`), pageFile(page, `readme@${version}`))
+  // Its create commands install the line's version, as a written page's do
+  for (const page of pages)
+    write(path.join(dir, `${page.slug}.md`), withPlaceholder(pageFile(page, `readme@${version}`)))
   writeJson(paths.readmeAnchors(line), anchors)
   return anchors
 }

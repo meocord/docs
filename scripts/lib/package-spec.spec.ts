@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { distTagProblems, literalCreates, packageSpec, withPackageSpec } from './package-spec'
+import { distTagProblems, literalCreates, packageSpec, withPackageSpec, withPlaceholder } from './package-spec'
 import type { Packument } from './registry'
 import type { Line, VersionsConfig } from './versions'
 
@@ -32,6 +32,12 @@ describe('the package spec a page runs', () => {
       '`npx meocord@rc create`, then `meocord@rc create`',
     )
     expect(withPackageSpec('`meocord generate`', lines, '4.2')).toBe('`meocord generate`')
+  })
+
+  it("writes an imported page's create commands with the placeholder, whatever spec they named", () => {
+    expect(withPlaceholder('npx meocord create my-bot\n`meocord@4.0.0 create`, then `meocord generate`')).toBe(
+      'npx {{meocord}} create my-bot\n`{{meocord}} create`, then `meocord generate`',
+    )
   })
 
   it("refuses a registry whose tag would install another line's version, or has no such tag", () => {

@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto'
+import { HOME_LINE } from '@/config/home'
+import { specFor } from '@/config/versions'
 
 /** What a card says. Everything that changes the image belongs here, so it changes the hash. */
 export interface OgCard {
@@ -22,7 +24,7 @@ const CARDS: Record<string, Record<string, OgCard>> = {
     home: {
       eyebrow: 'Documentation',
       title: 'Decorator-based Discord bots, with the pipeline you’d build yourself.',
-      code: 'npx meocord create my-bot',
+      code: `npx ${specFor(HOME_LINE)} create my-bot`,
     },
   },
 }

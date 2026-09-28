@@ -7,10 +7,11 @@ import { PipelinePanel } from '@/components/home/PipelinePanel'
 
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
-import { VERSIONS } from '@/config/versions'
+import { HOME_LINE } from '@/config/home'
+import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { claims, features, HOME_LINE, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
+import { claims, features, pipelineDemo, specReport, whatsNew } from '@/lib/home/data'
 import { docsHref } from '@/lib/urls'
 import { resolveExample } from '../../scripts/lib/pages'
 import { pageMetadata } from '@/lib/docs/page-metadata'
@@ -57,7 +58,7 @@ async function home() {
           children: [
             WhySection(claims()),
             FeatureSection(features()),
-            StartSection(guide('quick-start')),
+            StartSection(guide('quick-start'), specFor(HOME_LINE)),
             TestingSection(
               {
                 file: report.file,

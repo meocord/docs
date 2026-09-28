@@ -1,4 +1,6 @@
 import manifest from '../../versions.json'
+import { packageSpec } from '../../scripts/lib/package-spec'
+import type { VersionsConfig } from '../../scripts/lib/versions'
 import type { LineStatus, VersionsManifest } from '@/lib/urls'
 
 const STATUSES: readonly string[] = ['prerelease', 'current', 'maintained', 'archived'] satisfies LineStatus[]
@@ -13,3 +15,6 @@ export const VERSIONS: VersionsManifest = {
 
 /** The line in force, which the site addresses as `latest`. */
 export const CURRENT_LINE = VERSIONS.lines.find(entry => entry.status === 'current')?.line ?? VERSIONS.lines[0].line
+
+/** The package spec that installs a line's newest version, as a reader runs it: `meocord@beta` for a line in beta. */
+export const specFor = (line: string): string => packageSpec(manifest as VersionsConfig, line)
