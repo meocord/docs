@@ -6,6 +6,7 @@ export const HANDLER_KINDS = [
   { id: 'component', label: 'Button, select or modal' },
   { id: 'autocomplete', label: 'Autocomplete' },
   { id: 'message', label: 'Message command' },
+  { id: 'message-listener', label: 'Message listener' },
   { id: 'reaction', label: 'Reaction' },
   { id: 'event', label: 'Gateway event' },
 ] as const
@@ -72,7 +73,7 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'cooldown-check',
         name: 'Cooldown check',
-        what: 'Check the cooldowns, without counting the call, before a fetch.',
+        what: 'Check the cooldowns without counting the call, when the params name members, users, roles or channels Discord must fetch.',
         kinds: ['message'],
         guide: 'guide:cooldowns',
         api: 'decorators/Cooldown',
@@ -80,7 +81,7 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'fetch',
         name: 'Fetch',
-        what: 'Get the members, users, roles and channels a message names.',
+        what: 'Get the members, users, roles or channels the params name that Discord must fetch.',
         kinds: ['message'],
         guide: 'guide:message-params',
       },
@@ -88,7 +89,7 @@ export const PIPELINE: readonly PipelineStage[] = [
         id: 'interceptors',
         name: 'Interceptors',
         what: 'Act before and after everything below.',
-        kinds: ['command', 'component', 'message', 'reaction', 'event'],
+        kinds: ['command', 'component', 'message', 'message-listener', 'reaction', 'event'],
         guide: 'guide:interceptors',
         api: 'decorators/UseInterceptor',
         around: [
@@ -112,7 +113,7 @@ export const PIPELINE: readonly PipelineStage[] = [
             id: 'cooldowns',
             name: 'Cooldowns',
             what: 'Count the call, last, so a refused call or bad input never uses one up.',
-            kinds: ['command', 'component', 'message'],
+            kinds: ['command', 'component', 'message', 'message-listener'],
             guide: 'guide:cooldowns',
             api: 'decorators/Cooldown',
           },
@@ -136,7 +137,7 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'fallback',
         name: 'The built-in fallback',
-        what: 'Answer an error no filter handled, telling the member only that something went wrong.',
+        what: "Answer what no filter handled: a refusal or a user's mistake in its own words, anything else as a generic error. An autocomplete's menu is closed, and a reaction's or an event's error is only logged.",
         kinds: EVERY,
         guide: 'guide:exception-filters#the-built-in-fallback',
       },
