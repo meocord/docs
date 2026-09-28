@@ -68,14 +68,15 @@ the stages around a handler the same way, wherever they apply: globally, on the 
 ## Testing the whole app
 
 [`MeoCordTestingModule.fromApp(App)`](api:testing/MeoCordTestingModule) builds the module as the bot builds itself:
-every controller, service and provider `@MeoCord` lists, its cooldown store, and everything `app` adds. A test lists
-nothing again, and replaces what it must by token in `providers`, before anything is made:
+every controller, service and provider `@MeoCord` lists, and its cooldown store, with what the `app` option takes
+from it: its global guards, interceptors and filters, presenter, translator, message options, theme and observers.
+A test lists nothing again, and replaces what it must by token in `providers`, before anything is made:
 
 ::example{file="recipes/database/app.spec.ts" region="spec"}
 
-A factory runs only when what it provides is first resolved, so the database factory the test replaces never
-connects. The app's `services` are made at `init()`, as the bot makes them before it logs in. `controllers` and
-`observers` add a test's own, and the `override*` methods still apply.
+`compile()` runs no factory. `init()` runs each one the test didn't replace and makes the app's `services`, as the
+bot does before it logs in; the database factory replaced here never runs, so nothing connects. `fromApp`'s
+`controllers` and `observers` options add a test's own, and the `override*` methods still apply.
 
 The module makes no Discord `Client`: a class that injects one is refused where it is resolved, naming the class,
 until the test provides one, such as `{ provide: Client, useValue: createMockClient() }`.

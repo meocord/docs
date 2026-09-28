@@ -2,7 +2,7 @@ import { Locale } from 'discord.js'
 import { CooldownError, translateError } from 'meocord/common'
 import { createMockGuild, createMockMessage, expectCompleteCatalog, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
-import { TranslatedApp } from '@src/i18n-texts/app'
+import TranslatedApp from '@src/i18n-texts/app'
 import { PaintController } from '@src/i18n-texts/paint.controller'
 import { t } from '@src/i18n'
 

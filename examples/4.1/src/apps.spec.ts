@@ -25,17 +25,10 @@ function appFiles(dir: string): string[] {
 describe('every example app', () => {
   for (const file of appFiles(root)) {
     it(`${path.relative(root, file)} provides every token its classes inject`, async () => {
-      // fromApp refuses anything but a @MeoCord class, such as a controller the file also exports
-      const builders = Object.values(await import(file)).flatMap(value => {
-        if (typeof value !== 'function') return []
-        try {
-          return [MeoCordTestingModule.fromApp(value as new () => unknown)]
-        } catch {
-          return []
-        }
-      })
-      expect(builders.length).toBeGreaterThan(0)
-      for (const builder of builders) expect(() => builder.compile()).not.toThrow()
+      // Each example app is its file's default export
+      const App = ((await import(file)) as { default?: unknown }).default
+      expect(typeof App, `${path.relative(root, file)} has no default export`).toBe('function')
+      expect(() => MeoCordTestingModule.fromApp(App as new () => unknown).compile()).not.toThrow()
     })
   }
 })

@@ -35,15 +35,15 @@ List it in `@MeoCord({ observers })`:
 | `error`      | The error the call ended with, when it ended with one.                                                                    |
 | `handled`    | Whether an exception filter or the built-in fallback answered the error; `false` without one.                             |
 
-| Outcome       | When                                                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `'ran'`       | The call settled without an error, an interceptor that answered without calling `next.handle()` included.                                                                |
-| `'denied'`    | A guard returned `false` (no `error`) or threw `GuardDeniedError`.                                                                                                       |
-| `'cooldown'`  | A [`@Cooldown`](/docs/4.1/cooldowns) refused it with `CooldownError`.                                                                                                    |
-| `'invalid'`   | The user's input doesn't fit: [`@Validate`](/docs/4.1/validation) refused it with `ValidationError`, or a message named a command it doesn't fit, a `MessageUsageError`. |
-| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                                          |
-| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard.                                                                                             |
-| `'not-found'` | No handler matches the interaction: `CommandNotFoundError`, or an autocomplete no `@Autocomplete` claims (no `error`).                                                   |
+| Outcome       | When                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `'ran'`       | The call settled without an error, an interceptor that answered without calling `next.handle()` included.                                        |
+| `'denied'`    | A guard returned `false` (no `error`) or threw `GuardDeniedError`.                                                                               |
+| `'cooldown'`  | A [`@Cooldown`](/docs/4.1/cooldowns) refused it with `CooldownError`.                                                                            |
+| `'invalid'`   | [`@Validate`](/docs/4.1/validation) refused its input with `ValidationError`, or a message named a command it doesn't fit (`MessageUsageError`). |
+| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                  |
+| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard.                                                                     |
+| `'not-found'` | No handler matches the interaction: `CommandNotFoundError`, or an autocomplete no `@Autocomplete` claims (no `error`).                           |
 
 The context is the one the call's stages saw, so `getType()`, `getHandlerName()`, `getArgs()` and
 `getHandlerParams()` read the same values. For an interaction no handler matched, it has no controller or
