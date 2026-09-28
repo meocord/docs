@@ -22,15 +22,19 @@ const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
 /**
  * A declaration as TypeScript parses it, as one string: each node's kind with its children, in order, and
  * each leaf's text. Parentheses that group nothing are unwrapped, so `(A | B)[]` and `A | B[]` still differ.
- * Three differences are deliberate and left out: a parameter's name, which the reference takes from its
- * `@param` where the declaration destructures it, a string's quotes, and `export` and `declare`.
+ * Parameter names are compared, a destructured one by the name its `@param` gives it, as the reference
+ * draws it. A string's quotes, and `export` and `declare`, are left out.
  */
 function shape(node: ts.Node, source: ts.SourceFile): string {
   if (ts.isParenthesizedTypeNode(node)) return shape(node.type, source)
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return `'${node.text}'`
   const children: string[] = []
   ts.forEachChild(node, child => {
-    if (ts.isParameter(node) && child === node.name) return
+    if (ts.isParameter(node) && child === node.name && !ts.isIdentifier(child)) {
+      // A destructured parameter is drawn by the name its @param gives it at that position, where it has one
+      children.push(paramTagName(node) ?? shape(child, source))
+      return
+    }
     // How a declaration is exported isn't drawn
     if (child.kind === ts.SyntaxKind.ExportKeyword || child.kind === ts.SyntaxKind.DeclareKeyword) return
     children.push(shape(child, source))
@@ -38,10 +42,22 @@ function shape(node: ts.Node, source: ts.SourceFile): string {
   return children.length > 0 ? `${ts.SyntaxKind[node.kind]}(${children.join(',')})` : node.getText(source)
 }
 
+/** The name the top-level `@param` at a parameter's position gives it, if its declaration has one. */
+function paramTagName(parameter: ts.ParameterDeclaration): string | undefined {
+  const owner = parameter.parent
+  const index = owner.parameters.indexOf(parameter)
+  const names = ts
+    .getJSDocTags(owner)
+    .filter(ts.isJSDocParameterTag)
+    .map(tag => tag.name.getText())
+    .filter(name => !name.includes('.'))
+  return names[index]
+}
+
 /** One line of the reference's code, parsed in the place its declaration sits. */
-function parsed(owner: 'interface' | 'class' | 'function', line: string): string {
-  // A constructor is drawn as the call that makes one, `new X(…)`; TypeScript declares it `constructor(…)`
-  const written = line.replace(/^new [\w$]+\(/, 'constructor(')
+function parsed(owner: 'interface' | 'class' | 'function', line: string, ownerName = ''): string {
+  // A constructor is drawn as the call that makes its own class, `new X(…)`; TypeScript declares it `constructor(…)`
+  const written = line.startsWith(`new ${ownerName}(`) ? `constructor(${line.slice(`new ${ownerName}(`.length)}` : line
   const wrapped =
     owner === 'function'
       ? `declare function ${written}`
@@ -107,7 +123,7 @@ describe('declarations', () => {
         for (const [key, owner, code] of lines) {
           const expected = written.get(key)
           if (!expected) continue
-          const drawn = code.map(line => parsed(owner, text(line)))
+          const drawn = code.map(line => parsed(owner, text(line), symbol.name))
           if (JSON.stringify(drawn) !== JSON.stringify(expected))
             wrong.push(`${key}:\n    drawn    ${code.map(text).join('\n             ')}`)
           compared += 1
