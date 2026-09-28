@@ -9,6 +9,7 @@ import { useLayerFocus } from '@/components/shell/layer-focus'
 import { PopoverSurface } from '@/components/shell/panes'
 import { groupHits, jumps, lineOf, marksAMatch, type Hit, type HitGroup, type PaletteEntry } from '@/lib/search-client'
 import type { SearchLine } from '@/lib/search-manifest'
+import { SHELL_IDS } from '@/lib/page-ids'
 
 export interface PaletteData {
   lines: SearchLine[]
@@ -294,7 +295,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
               type: 'search',
               role: 'combobox',
               'aria-expanded': options.length > 0,
-              'aria-controls': 'search-results',
+              'aria-controls': SHELL_IDS.searchResults,
               'aria-activedescendant': options[active]?.id,
               'aria-autocomplete': 'list',
               'aria-label': scope ? `Search MeoCord ${scope.line}` : 'Search MeoCord',
@@ -335,7 +336,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
         }),
         Div({
           key: 'results',
-          id: 'search-results',
+          id: SHELL_IDS.searchResults,
           role: 'listbox',
           'aria-label': 'Search results',
           overflowY: 'auto',

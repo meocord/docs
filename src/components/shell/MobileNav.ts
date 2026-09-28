@@ -53,6 +53,8 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[]; tabs: 
       children: SidebarPane({
         width: '100%',
         position: 'relative',
+        // Solid: over the scrim, a translucent pane would take its contrast from whatever page is under it.
+        css: { backdropFilter: 'none', backgroundColor: 'theme.material.sidebar.solid' },
         // Clear of a notch, a rounded corner or the home indicator.
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',

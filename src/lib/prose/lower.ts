@@ -1,4 +1,3 @@
-import GithubSlugger from 'github-slugger'
 import type { Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
@@ -24,6 +23,7 @@ import {
   Tr,
 } from '@meonode/ui'
 import { codeFrame } from '@/lib/prose/code'
+import { pageSlugger } from '@/lib/page-ids'
 
 /** A heading on the page, with the anchor its element carries. */
 export interface Heading {
@@ -64,7 +64,7 @@ type Child = NodeInstance | string
  */
 export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Lowered {
   const tree = fromMarkdown(markdown, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] })
-  const slugger = new GithubSlugger()
+  const slugger = pageSlugger()
   const headings: Heading[] = []
   const href = options.href ?? (url => url)
 

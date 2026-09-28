@@ -1,4 +1,5 @@
 import { createNode } from '@meonode/ui'
+import { SHELL_IDS } from '@/lib/page-ids'
 
 /*
  * The window's prestyled panes: factories whose call sites override them with CSS props only. The
@@ -73,7 +74,7 @@ export const SheetBody = createNode('div', {
 
 /** The prose column inside the sheet. Reading is never on glass. */
 export const SheetPane = createNode('main', {
-  id: 'content',
+  id: SHELL_IDS.main,
   minWidth: 0,
   outline: 'none',
 })

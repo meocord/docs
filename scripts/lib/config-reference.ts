@@ -4,7 +4,7 @@
  * default, first version and JSDoc. The site shows it as a generated page of each authored line.
  */
 
-import GithubSlugger from 'github-slugger'
+import { pageSlugger } from '../../src/lib/page-ids'
 import type { JSONOutput } from 'typedoc'
 import type { SinceEntry } from './since'
 import { lineOf } from './versions'
@@ -105,7 +105,7 @@ function markdown(parts: Part[] | undefined, links: LinkTargets, line: string): 
 
 /** The anchor of an option's heading on the page. */
 export function optionAnchor(name: string): string {
-  return new GithubSlugger().slug(name)
+  return pageSlugger().slug(name)
 }
 
 function blockTags(comment: JSONOutput.Comment | undefined, tag: string): Part[][] {

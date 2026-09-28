@@ -150,9 +150,14 @@ describe('the API by kind', () => {
     const decorators = groups.find(group => group.title === 'Decorators')!
     expect(decorators.items.find(item => item.title === 'Cooldown')?.category).toBe('Pipeline stages')
     const nav = renderToStaticMarkup(SidebarNav({ groups: [decorators] }).render())
-    const headings = [...nav.matchAll(/<li data-nav-category="true">([^<]+)<\/li>/g)].map(match => match[1])
+    const headings = [...nav.matchAll(/<div data-nav-category="true" aria-hidden="true">([^<]+)<\/div>/g)].map(
+      match => match[1],
+    )
     expect(headings).toEqual([...new Set(decorators.items.map(item => item.category))])
-    expect(nav).toContain('<li data-category="Pipeline stages"><a href="/docs/4.1/api/decorators/Cooldown"')
+    // Each category a list of its own, named by it for a screen reader, which the visible label is hidden from
+    expect(nav).toMatch(/<ul aria-label="Pipeline stages"><li><a href="\/docs\/4\.1\/api\/decorators\/[A-Za-z]+"/)
+    expect(nav).toContain('<a href="/docs/4.1/api/decorators/Cooldown"')
+    expect(nav.match(/<ul aria-label="Pipeline stages">[\s\S]*?<\/ul>/)![0]).toContain('/decorators/Cooldown"')
   })
 
   it('shows every symbol with its summary on the index, and a kind by category on its page', () => {

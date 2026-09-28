@@ -82,6 +82,11 @@ describe('palettes', () => {
       expect(contrast(colour(name), over(colour(`${name}-tint`), sheet))).toBeGreaterThanOrEqual(4.5)
     })
 
+    it("keeps the sidebar's tabs at 4.5:1: secondary text on the fill, over the phone sheet's solid sidebar", () => {
+      const tabs = over(colour('fill'), colour('material-sidebar-solid'))
+      expect(contrast(colour('ink-secondary'), tabs)).toBeGreaterThanOrEqual(4.5)
+    })
+
     it('keeps text on the accent at 4.5:1', () => {
       expect(contrast(colour('accent-content'), colour('accent'))).toBeGreaterThanOrEqual(4.5)
     })
