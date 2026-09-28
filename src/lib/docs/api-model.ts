@@ -160,6 +160,9 @@ export const kindName = (kind: number) => KINDS[kind] ?? 'declaration'
 
 const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 
+/** The interfaces whose members show on the page of what takes one, as a parameter or an option. */
+const OPTIONS_TYPE = /(?:Options|Settings|Overrides)$/
+
 /**
  * One line's API, from its TypeDoc JSON, for the reference pages: every documented symbol with
  * its signatures, parameters and members, types linked to the pages of the symbols they name.
@@ -397,32 +400,17 @@ export class ApiModel {
     }
     for (const parameter of signature.parameters ?? []) {
       params.push(this.#param(parameter, `${key}(${parameter.name})`))
-      // `@param options.seconds` documents a property of the parameter's type.
+      // Its options, wherever its type declares them: inline, in an options interface, or both
+      const rows = this.#optionRows(parameter.type, parameter.name, anchor, true)
+      // `@param options.seconds` documents a property for this function in particular: its row's text, or a row of its own
       const highlighted = parameter.type?.type === 'reference' ? parameter.type.highlightedProperties : undefined
       for (const [property, parts] of Object.entries(highlighted ?? {})) {
-        params.push({
-          name: `${parameter.name}.${property}`,
-          anchor: anchor(property),
-          type: [],
-          optional: false,
-          description: this.#parts(parts),
-        })
+        const name = `${parameter.name}.${property}`
+        const row = rows.find(each => each.name === name)
+        if (row) row.description = this.#parts(parts) || row.description
+        else rows.push({ name, anchor: anchor(property), type: [], optional: false, description: this.#parts(parts) })
       }
-      // An options object typed inline documents each of its properties where it declares them.
-      const inline =
-        parameter.type?.type === 'reflection' && !parameter.type.declaration.signatures
-          ? (parameter.type.declaration.children ?? [])
-          : []
-      for (const property of inline.filter(each => SAFE_NAME.test(each.name))) {
-        params.push({
-          name: `${parameter.name}.${property.name}`,
-          anchor: anchor(property.name),
-          type: property.type ? this.type(property.type) : [],
-          optional: !!property.flags?.isOptional,
-          defaultValue: defaultValue(property),
-          description: this.#text(property.comment),
-        })
-      }
+      params.push(...rows)
     }
     const returns = signature.comment?.blockTags?.find(tag => tag.tag === '@returns')
     const returnsType = signature.type && signature.kind !== 16384 ? this.type(signature.type) : undefined
@@ -454,6 +442,56 @@ export class ApiModel {
       since: this.since[key]?.since,
       description: this.#text(parameter.comment),
     }
+  }
+
+  /**
+   * The rows of the options a parameter or an option is typed by, under `prefix`: each property of an
+   * object typed inline, each member of an options interface (…Options, …Settings, …Overrides) with its
+   * since from the interface, and both for an intersection of them. With `nested`, an inline property
+   * typed by an options interface shows that interface's members beneath it too.
+   */
+  #optionRows(
+    type: SomeType | undefined,
+    prefix: string,
+    anchor: (name: string) => string | undefined,
+    nested = false,
+  ): ApiParam[] {
+    if (type?.type === 'intersection') return type.types.flatMap(part => this.#optionRows(part, prefix, anchor, nested))
+    if (type?.type === 'reflection') {
+      if (type.declaration.signatures) return []
+      return (type.declaration.children ?? [])
+        .filter(property => SAFE_NAME.test(property.name))
+        .flatMap(property => [
+          {
+            name: `${prefix}.${property.name}`,
+            anchor: anchor(property.name),
+            type: property.type ? this.type(property.type) : [],
+            optional: !!property.flags?.isOptional,
+            defaultValue: defaultValue(property),
+            description: this.#text(property.comment),
+          },
+          ...(nested
+            ? this.#optionRows(property.type, `${prefix}.${property.name}`, name => anchor(`${property.name}-${name}`))
+            : []),
+        ])
+    }
+    if (type?.type !== 'reference' || typeof type.target !== 'number') return []
+    const location = this.#byId.get(type.target)
+    const filed =
+      location && !location.member ? this.#declarations.get(`${location.section}/${location.symbol}`) : undefined
+    if (!filed || filed.declaration.kind !== 256 || !OPTIONS_TYPE.test(filed.declaration.name)) return []
+    const key = `${filed.entries[0]}:${filed.declaration.name}`
+    return (filed.declaration.children ?? [])
+      .filter(member => SAFE_NAME.test(member.name) && !member.flags?.isPrivate)
+      .map(member => ({
+        name: `${prefix}.${member.name}`,
+        anchor: anchor(member.name),
+        type: member.type ? this.type(member.type) : [],
+        optional: !!member.flags?.isOptional,
+        defaultValue: defaultValue(member),
+        since: this.since[`${key}.${member.name}`]?.since,
+        description: this.#text(member.comment),
+      }))
   }
 
   /** What a type decorates, when it is a decorator: TypeScript's decorator types, or a function of `target`. */
