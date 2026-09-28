@@ -20,6 +20,7 @@ import {
   type JSONOutput,
 } from 'typedoc'
 import semver from 'semver'
+import { isComputedType } from '../../src/lib/docs/api-model.js'
 import ts from 'typescript'
 
 export interface ApiMeta {
@@ -197,6 +198,19 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   // Parameter types read as written too; where the checker spelled a parameter out as an object, as it
   // does `ThemeOverride`, that stays beside it as `resolvedType`, which the reference lists options from
   const resolved = new Map<ParameterReflection | DeclarationReflection, SomeType>()
+  // Kept when the checker spelled out an object the written type names, or resolved a computed type
+  const keep = (
+    reflection: ParameterReflection | DeclarationReflection,
+    checked: SomeType | undefined,
+    written: SomeType,
+  ) => {
+    if (!checked) return
+    if (
+      (spellsOutObject(checked) && !spellsOutObject(written)) ||
+      (isComputedType(written) && !isComputedType(checked))
+    )
+      resolved.set(reflection, checked)
+  }
   app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
     const node = declaration && 'type' in declaration ? declaration.type : undefined
     const scope = context.withScope(reflection)
@@ -210,7 +224,7 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
       const type = context.converter.convertType(scope.withScope(parameter), written.type)
       // An optional parameter reads without the `undefined` its `?` already says, as TypeDoc draws it
       parameter.type = written.questionToken ? withoutUndefined(type) : type
-      if (checked && spellsOutObject(checked) && !spellsOutObject(parameter.type)) resolved.set(parameter, checked)
+      keep(parameter, checked, parameter.type)
     }
   })
   // A property's type too, where TypeDoc took it from the checker rather than the written node
@@ -218,10 +232,16 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     if (reflection.kind !== ReflectionKind.Property) return
     const written = context.getSymbolFromReflection(reflection)?.valueDeclaration
     if (!written || !(ts.isPropertySignature(written) || ts.isPropertyDeclaration(written)) || !written.type) return
-    const checked = reflection.type
-    const type = context.converter.convertType(context.withScope(reflection), written.type)
+    const scope = context.withScope(reflection)
+    const type = context.converter.convertType(scope, written.type)
+    // In a type TypeDoc drew from its node, a property's type is already as written: the checker's is asked for
+    const symbol = context.getSymbolFromReflection(reflection)
+    const checked =
+      isComputedType(type) && symbol
+        ? context.converter.convertType(scope, context.checker.getTypeOfSymbol(symbol))
+        : reflection.type
     reflection.type = reflection.flags.isOptional ? withoutUndefined(type) : type
-    if (checked && spellsOutObject(checked) && !spellsOutObject(reflection.type)) resolved.set(reflection, checked)
+    keep(reflection, checked && reflection.flags.isOptional ? withoutUndefined(checked) : checked, reflection.type)
   })
   app.serializer.addSerializer<ParameterReflection | DeclarationReflection>({
     priority: 0,

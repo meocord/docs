@@ -168,6 +168,21 @@ const KINDS: Record<number, string> = {
 }
 export const kindName = (kind: number) => KINDS[kind] ?? 'declaration'
 
+/**
+ * Whether a type is worked out from others rather than named: an indexed access, a conditional, mapped or
+ * `typeof` type, `keyof`, or one of TypeScript's utilities such as `NonNullable<…>`. An option row shows
+ * such a type as the checker resolved it, where api-generate kept that.
+ */
+export function isComputedType(type: { type: string; operator?: string; package?: string }): boolean {
+  if (['indexedAccess', 'conditional', 'mapped', 'query'].includes(type.type)) return true
+  if (type.type === 'typeOperator') return type.operator === 'keyof'
+  return type.type === 'reference' && type.package === 'typescript'
+}
+
+/** The type an option row shows: as written, or as resolved where the written one is computed. */
+const rowType = (property: Declaration) =>
+  property.type && isComputedType(property.type) && property.resolvedType ? property.resolvedType : property.type
+
 /** TypeDoc's kind for a constructor type's signature. */
 const CONSTRUCTOR_SIGNATURE = 16384
 
@@ -521,7 +536,7 @@ export class ApiModel {
           {
             name: `${prefix}.${property.name}`,
             anchorKey: property.name,
-            type: property.type ? this.type(property.type) : [],
+            type: this.#maybeType(rowType(property)),
             optional: !!property.flags?.isOptional,
             defaultValue: defaultValue(property),
             description: this.#text(property.comment),
@@ -545,7 +560,7 @@ export class ApiModel {
       .map(member => ({
         name: `${prefix}.${member.name}`,
         anchorKey: member.name,
-        type: member.type ? this.type(member.type) : [],
+        type: this.#maybeType(rowType(member)),
         optional: !!member.flags?.isOptional,
         defaultValue: defaultValue(member),
         since: this.since[`${key}.${member.name}`]?.since,
@@ -698,6 +713,10 @@ export class ApiModel {
 
   #list(types: SomeType[] | undefined): Token[] {
     return (types ?? []).flatMap((type, index) => [...(index > 0 ? [{ text: ', ' }] : []), ...this.type(type)])
+  }
+
+  #maybeType(type: SomeType | undefined): Token[] {
+    return type ? this.type(type) : []
   }
 
   #maybe(type: SomeType | undefined): Token[] {
