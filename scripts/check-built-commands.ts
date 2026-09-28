@@ -7,7 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs'
 import path from 'path'
 import { gunzipSync } from 'zlib'
 import { HOME_LINE } from '../src/config/home'
-import { type BuiltText, commandProblems, htmlText } from './lib/built-commands.js'
+import { type BuiltText, commandProblems, pageText, searchText } from './lib/built-commands.js'
 import { paths, ROOT } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
 
@@ -24,11 +24,8 @@ for (const file of filesUnder(app).filter(name => name.endsWith('.html'))) {
     .replace(/\.html$/, '')
     .split(path.sep)
     .join('/')
-  texts.push({
-    file: path.relative(ROOT, file),
-    url: route === 'index' ? '/' : `/${route}`,
-    text: htmlText(readFileSync(file, 'utf8')),
-  })
+  const url = route === 'index' ? '/' : `/${route}`
+  texts.push({ file: path.relative(ROOT, file), url, text: pageText(url, readFileSync(file, 'utf8')) })
 }
 
 // The search index's fragments, each the text of one page: gzipped JSON after Pagefind's signature
@@ -42,14 +39,15 @@ for (const file of filesUnder(path.join(ROOT, 'public', '_pagefind')).filter(nam
   texts.push({
     file: path.relative(ROOT, file),
     url: fragment.url,
-    text: [fragment.content, ...Object.values(fragment.meta ?? {})].join('\n'),
+    text: searchText(fragment.url, [fragment.content, ...Object.values(fragment.meta ?? {})].join('\n')),
   })
 }
 
 // The palette's entries
 for (const file of filesUnder(path.join(ROOT, 'public', 'palette')).filter(name => name.endsWith('.json'))) {
   const entries = JSON.parse(readFileSync(file, 'utf8')) as { name: string; url: string }[]
-  for (const entry of entries) texts.push({ file: path.relative(ROOT, file), url: entry.url, text: entry.name })
+  for (const entry of entries)
+    texts.push({ file: path.relative(ROOT, file), url: entry.url, text: searchText(entry.url, entry.name) })
 }
 
 if (!texts.some(text => text.file.endsWith('.html'))) {
