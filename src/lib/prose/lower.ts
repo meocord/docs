@@ -39,10 +39,23 @@ export interface LowerOptions {
   example?: (file: string, region?: string, from?: string) => string
   /** The figure a `::figure{name="…"}` directive draws, such as the pipeline; nothing when it has none by that name. */
   figure?: (name: string, key: number) => NodeInstance | undefined
+  /**
+   * The playground a `::playground{file="…" region="…" dispatch="…"}` directive embeds. Undefined, or no
+   * resolver, draws it as the ::example of its file and region.
+   */
+  playground?: (directive: PlaygroundDirective, key: number) => NodeInstance | undefined
+}
+
+/** A `::playground` directive's attributes, as written. */
+export interface PlaygroundDirective {
+  file: string
+  region?: string
+  dispatch: string
 }
 
 const EXAMPLE = /^::example\{([^}]*)\}$/
 const FIGURE = /^::figure\{name="([\w-]+)"\}$/
+const PLAYGROUND = /^::playground\{([^}]*)\}$/
 
 const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
 
@@ -79,6 +92,9 @@ export interface Lowered {
 
 type Child = NodeInstance | string
 
+const attributesOf = (written: string): Record<string, string> =>
+  Object.fromEntries([...written.matchAll(/(\w+)="([^"]*)"/g)].map(([, name, value]) => [name, value]))
+
 /**
  * Markdown as meonode nodes: intrinsic elements with no style props, so none of them goes through
  * meonode's styled renderer. The page's one styled container, Prose, styles them by selector.
@@ -105,6 +121,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
             ? EXAMPLE.exec(node.children[0].value.trim())
             : null
         if (directive) return lowerExample(directive[1], key)
+        const playground =
+          node.children.length === 1 && node.children[0].type === 'text'
+            ? PLAYGROUND.exec(node.children[0].value.trim())
+            : null
+        if (playground) return lowerPlayground(playground[1], key)
         const figure =
           node.children.length === 1 && node.children[0].type === 'text'
             ? FIGURE.exec(node.children[0].value.trim())
@@ -201,11 +222,18 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
   }
 
   function lowerExample(attributes: string, key: number) {
-    const values = Object.fromEntries(
-      [...attributes.matchAll(/(\w+)="([^"]*)"/g)].map(([, name, value]) => [name, value]),
-    )
+    const values = attributesOf(attributes)
     if (!values.file || !options.example) return ''
     return codeFrame(options.example(values.file, values.region, values.from), 'ts', { key, file: values.file })
+  }
+
+  function lowerPlayground(written: string, key: number) {
+    const values = attributesOf(written)
+    const drawn =
+      values.file && values.dispatch !== undefined
+        ? options.playground?.({ file: values.file, region: values.region, dispatch: values.dispatch }, key)
+        : undefined
+    return drawn ?? lowerExample(written, key)
   }
 
   function lowerTable(table: MdTable, key: number) {

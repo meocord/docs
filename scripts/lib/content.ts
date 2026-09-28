@@ -355,6 +355,9 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
           problems.push(`${where}: TypeScript belongs in examples/${name} and an ::example directive, not a code fence`)
       }
 
+      // The playground runs only where the Guide renders it; anywhere else it would show as bare text
+      if (/^::playground\{/m.test(withoutCode(body))) problems.push(`${where}: ::playground is a Guide directive`)
+
       for (const match of withoutCode(body).matchAll(EXAMPLE)) {
         const attributes = Object.fromEntries(
           [...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value]),

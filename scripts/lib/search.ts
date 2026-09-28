@@ -44,10 +44,13 @@ export interface PaletteEntry {
   deprecated?: true
 }
 
-/** Resolves `::example{file region}` to the code it embeds, or undefined when it cannot be read. */
+/**
+ * Resolves `::example{file region}` to the code it embeds, or undefined when it cannot be read. A
+ * `::playground` shows its region the same way, and is indexed by it.
+ */
 export type ExampleSource = (file: string, region?: string) => string | undefined
 
-const EXAMPLE = /^::example\{([^}]*)\}\s*$/
+const EXAMPLE = /^::(?:example|playground)\{([^}]*)\}\s*$/
 const ATTRIBUTE = /(\w+)="([^"]*)"/g
 
 /** Markdown as the words a reader sees: markup dropped, code and embedded examples kept as text. */

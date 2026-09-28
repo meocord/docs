@@ -144,6 +144,13 @@ describe('markdownText', () => {
       'code of guard',
     )
   })
+
+  it('expands a playground into the code it shows, its region', () => {
+    const examples = (file: string, region?: string) => (file === 'a.ts' ? `code of ${region}` : undefined)
+    expect(markdownText('::playground{file="a.ts" region="count" dispatch="button counter/1"}', examples)).toBe(
+      'code of count',
+    )
+  })
 })
 
 describe('splitSections', () => {
