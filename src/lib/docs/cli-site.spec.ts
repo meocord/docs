@@ -34,9 +34,9 @@ describe('the CLI reference', () => {
     expect(create).toContain('data-example="npx meocord@beta create my-bot"')
     expect(create.match(/data-example=/g)).toHaveLength(1)
     // The Guide pages that teach a command follow its reference
-    const taught = html(
-      cliArticle(command('start'), 'meocord@beta', [{ title: 'The CLI', href: '/docs/4.1/cli' }]).nodes,
-    )
+    const started = cliArticle(command('start'), 'meocord@beta', [{ title: 'The CLI', href: '/docs/4.1/cli' }])
+    const taught = html(started.nodes)
+    expect(started.toc.at(-1)?.id).toBe('in-the-guide')
     expect(taught).toContain('<h2 id="in-the-guide">In the Guide</h2>')
     expect(taught).toContain('<a href="/docs/4.1/cli">The CLI</a>')
     const { nodes, toc } = cliArticle(command('generate'), 'meocord@beta')
