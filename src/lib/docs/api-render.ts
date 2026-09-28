@@ -26,7 +26,10 @@ import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shel
 import { VERSIONS } from '@/config/versions'
 import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
-import { apiLayouts, apiModel, resolveSiteHref } from '@/lib/docs/api-site'
+import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
+import { CLI_SECTION, cliCommand, cliManifest, exampleInvocation, subcommandAnchor, usageOf } from '@/lib/docs/cli-site'
+import type { CliArgument, CliCommand, CliOption } from '../../../scripts/lib/cli'
+import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { REPOSITORY } from '@/lib/docs/render'
 import { sidebar, versionChoices } from '@/lib/docs/site'
 import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
@@ -350,7 +353,7 @@ export function apiSidebar(line: string, model: ApiModel, current?: string): Nav
   return [
     // Where the Guide is rendered, the Guide and the API are tabs of their own.
     ...(guideEnabled(line) ? [] : sidebar(line)),
-    ...model.sections().map(section => ({
+    ...apiSections(model).map(section => ({
       title: section.title,
       items: section.symbols.map(symbol => ({
         title: symbol.name,
@@ -381,7 +384,7 @@ function apiVersions(line: string, name: string): { current: VersionOption; opti
 export function apiCrumbs(line: string, model: ApiModel, section: string, title?: string): Crumb[] {
   const lineCrumb = { title: line, href: docsHref({ kind: 'line', line }, VERSIONS) }
   if (model.scheme.by === 'entry') return [lineCrumb, ...(title ? [{ title }] : [])]
-  const kind = model.sections().find(candidate => candidate.slug === section)
+  const kind = apiSections(model).find(candidate => candidate.slug === section)
   return [
     lineCrumb,
     { title: 'API', href: docsHref({ kind: 'api-index', line }, VERSIONS) },
@@ -459,7 +462,7 @@ export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]
     P(`Every public symbol of MeoCord ${line}, by kind. Each page names the entry point to import it from.`, {
       key: 'intro',
     }),
-    ...model.sections().flatMap(section => {
+    ...apiSections(model).flatMap(section => {
       toc.push({ id: section.slug, title: section.title, depth: 2 })
       const href = docsHref({ kind: 'api-index', line, section: section.slug }, VERSIONS)
       return [
@@ -473,10 +476,166 @@ export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]
 
 /** A kind's page content: its symbols with their summaries, by category; undefined for no such kind. */
 export function apiKindArticle(model: ApiModel, section: string): { nodes: Child[]; toc: TocEntry[] } | undefined {
-  const kind = model.sections().find(candidate => candidate.slug === section)
+  const kind = apiSections(model).find(candidate => candidate.slug === section)
   if (!kind) return undefined
   const toc: TocEntry[] = []
-  return { nodes: [H1(kind.title, { key: 'title' }), ...categorised(kind.symbols, 'h2', section, toc)], toc }
+  // The CLI's page opens with how it is run, and the options every command takes
+  const manifest = section === CLI_SECTION ? cliManifest(model.version ?? lineVersions(model.line)[0]) : undefined
+  const intro: Child[] = manifest
+    ? [
+        ...shellBlock(['meocord', manifest.usage].filter(Boolean).join(' '), 'usage'),
+        ...(manifest.options.length > 0 ? [cliOptionsTable(manifest.options, 'options')] : []),
+      ]
+    : []
+  return {
+    nodes: [H1(kind.title, { key: 'title' }), ...intro, ...categorised(kind.symbols, 'h2', section, toc)],
+    toc,
+  }
+}
+
+/** A shell command as a code block, highlighted and copyable as a guide's is. */
+const shellBlock = (command: string, key: string): Child[] => [
+  Div({ key, children: lowerMarkdown(`\`\`\`sh\n${command}\n\`\`\``).nodes }),
+]
+
+/** A value from the CLI's manifest as code: a default or a choice. */
+const valueCode = (value: unknown) => Code(typeof value === 'string' ? value : JSON.stringify(value))
+
+/** A table of the CLI's rows, as the API's parameters tables are drawn. */
+function cliTable(key: string, header: string[], rows: { key: string; cells: Child[] }[]) {
+  return Div({
+    key,
+    'data-table': true,
+    'data-params': true,
+    children: Table({
+      children: [
+        Thead({ key: 'head', children: Tr({ children: header.map(title => Th({ key: title, children: title })) }) }),
+        Tbody({
+          key: 'body',
+          children: rows.map(row =>
+            Tr({ key: row.key, children: row.cells.map((cell, index) => Td({ key: String(index), children: cell })) }),
+          ),
+        }),
+      ],
+    }),
+  })
+}
+
+/** What a default or a set of choices adds to a row's description. */
+function cliNotes(entry: { default: unknown; defaultDescription: string | null; choices: string[] | null }): Child[] {
+  const notes: Child[] = []
+  if (entry.defaultDescription) notes.push(' Default: ', entry.defaultDescription, '.')
+  else if (entry.default !== null && entry.default !== undefined)
+    notes.push(' Default: ', valueCode(entry.default), '.')
+  if (entry.choices?.length)
+    notes.push(' One of ', ...entry.choices.flatMap((choice, index) => [index > 0 ? ', ' : '', valueCode(choice)]), '.')
+  return notes
+}
+
+function cliArgumentsTable(args: CliArgument[], key: string) {
+  return cliTable(
+    key,
+    ['Argument', 'Description'],
+    args.map(arg => ({
+      key: arg.name,
+      cells: [
+        Code(`${arg.required ? '<' : '['}${arg.name}${arg.variadic ? '...' : ''}${arg.required ? '>' : ']'}`),
+        Span([arg.description ?? '', ...cliNotes(arg)]),
+      ],
+    })),
+  )
+}
+
+function cliOptionsTable(options: CliOption[], key: string) {
+  return cliTable(
+    key,
+    ['Option', 'Description'],
+    options.map(option => ({
+      key: option.flags,
+      cells: [
+        Code(option.flags),
+        Span([
+          option.description ?? '',
+          ...(option.mandatory ? [' Required.'] : []),
+          ...(option.env ? [' Read from ', Code(option.env), ' when not given.'] : []),
+          ...cliNotes(option),
+        ]),
+      ],
+    })),
+  )
+}
+
+/** One command's details: what it does, how it is run, an example, its arguments and options, under `level` headings. */
+function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string): Child[] {
+  const heading = (title: string) => Node(level, { key: `${key}-${title}`, children: title })
+  const out: Child[] = [
+    ...(command.aliases.length > 0
+      ? [
+          P(
+            [
+              'Also ',
+              ...command.aliases.flatMap((alias, index) => [
+                index > 0 ? ', ' : '',
+                Code(`meocord ${[...command.path.slice(0, -1), alias].join(' ')}`),
+              ]),
+            ],
+            {
+              key: `${key}-aliases`,
+              'data-api-meta': true,
+            },
+          ),
+        ]
+      : []),
+    ...markdown(command.description ?? command.summary ?? '', `${key}-description`),
+    heading('Usage'),
+    ...shellBlock(usageOf(command), `${key}-usage`),
+    heading('Example'),
+    ...shellBlock(exampleInvocation(command), `${key}-example`),
+  ]
+  if (command.arguments.length > 0)
+    out.push(heading('Arguments'), cliArgumentsTable(command.arguments, `${key}-arguments`))
+  if (command.options.length > 0) out.push(heading('Options'), cliOptionsTable(command.options, `${key}-options`))
+  for (const [where, text] of [
+    ['before', command.helpText.before],
+    ['after', command.helpText.after],
+  ] as const)
+    if (text) out.push(Pre(Code(text), { key: `${key}-help-${where}` }))
+  return out
+}
+
+/** A top-level command's page: its details, then each subcommand's, at its own anchor. */
+export function cliArticle(command: CliCommand): { nodes: Child[]; toc: TocEntry[] } {
+  const toc: TocEntry[] = []
+  const nodes: Child[] = [H1(`meocord ${command.name}`, { key: 'title' }), ...commandDetails(command, 'h3', 'command')]
+  for (const sub of command.commands) {
+    const id = subcommandAnchor(sub)
+    toc.push({ id, title: sub.name, depth: 2 })
+    nodes.push(H2(`meocord ${sub.path.join(' ')}`, { key: `sub-${id}`, id }), ...commandDetails(sub, 'h3', `sub-${id}`))
+  }
+  return { nodes, toc }
+}
+
+/** A CLI command's page in the docs window, or undefined where the version's CLI has no such command. */
+export function renderCliPage(line: string, name: string, version?: string) {
+  const model = apiModel(line, version)
+  const manifest = model?.scheme.by === 'kind' ? cliManifest(version ?? lineVersions(line)[0]) : undefined
+  const command = manifest && cliCommand(manifest, name)
+  if (!model || !command) return undefined
+  const { nodes, toc } = cliArticle(command)
+  const trail = apiCrumbs(line, model, CLI_SECTION)
+  return Window({
+    crumbs: [trail[0], ...(version ? [{ title: version }] : []), ...trail.slice(1), { title: command.name }],
+    groups: apiSidebar(
+      line,
+      model,
+      docsHref({ kind: 'api', line, section: CLI_SECTION, symbol: name, version }, VERSIONS),
+    ),
+    tabs: guideTabs(line, 'api'),
+    version: versionChoices(line),
+    repository: REPOSITORY,
+    toc,
+    children: Prose({ children: [...nodes, Node(ReadingIsland, { key: 'island' })] }),
+  })
 }
 
 /** A line's API index, where its API is arranged by kind: every symbol with its summary, by kind. */

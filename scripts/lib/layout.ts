@@ -21,6 +21,7 @@ export const paths = {
   apiDir: path.join(ROOT, 'generated', 'api'),
   changelog: (version: string) => path.join(ROOT, 'generated', 'changelog', `${version}.json`),
   config: (version: string) => path.join(ROOT, 'generated', 'config', `${version}.json`),
+  cli: (version: string) => path.join(ROOT, 'generated', 'cli', `${version}.json`),
   /** A line's migration guide, written by people; a line without one has no Migrating page. */
   migrating: (line: string) => path.join(ROOT, 'content', 'migrating', `${line}.md`),
   since: path.join(ROOT, 'generated', 'since.json'),

@@ -5,7 +5,8 @@ import manifest from '../../../versions.json'
 import { guideRendered } from '../../../scripts/lib/guide'
 import { VERSIONS } from '@/config/versions'
 import type { Layouts } from '@/lib/docs/api-layout'
-import { API_KINDS, ApiModel, type ApiScheme, type SinceData } from '@/lib/docs/api-model'
+import { API_KINDS, ApiModel, type ApiScheme, type ApiSection, type SinceData } from '@/lib/docs/api-model'
+import { cliManifest, cliSection } from '@/lib/docs/cli-site'
 import { docsHref, lineOf, resolveStoredHref } from '@/lib/urls'
 
 const semverParts = (version: string) => {
@@ -93,6 +94,18 @@ export function apiModel(line: string, version?: string, by = apiArrangement(lin
 }
 
 /**
+ * An API's sections as its pages list them: the model's, and where it is arranged by kind, the CLI's
+ * commands in the kinds' order, for a version whose package ships the CLI's manifest.
+ */
+export function apiSections(model: ApiModel): ApiSection[] {
+  const sections = model.sections()
+  const manifest = model.scheme.by === 'kind' ? cliManifest(model.version ?? lineVersions(model.line)[0]) : undefined
+  if (!manifest) return sections
+  const order = (slug: string) => API_KINDS.findIndex(kind => kind.slug === slug)
+  return [...sections, cliSection(model.line, manifest, model.version)].sort((a, b) => order(a.slug) - order(b.slug))
+}
+
+/**
  * Where a line's API reference opens: its index where the API is arranged by kind; otherwise
  * `MeoCordFactory` in meocord/core, where every app starts, or the first entry point's first symbol
  * for a line without it. Undefined for a line without an API.
@@ -158,7 +171,25 @@ export function apiParams(): { line: string; section: string; symbol: string }[]
 export function apiKindParams(): { line: string; section: string }[] {
   return VERSIONS.lines
     .filter(({ line }) => apiArrangement(line) === 'kind')
-    .flatMap(({ line }) => (apiModel(line)?.sections() ?? []).map(section => ({ line, section: section.slug })))
+    .flatMap(({ line }) => {
+      const model = apiModel(line)
+      return (model ? apiSections(model) : []).map(section => ({ line, section: section.slug }))
+    })
+}
+
+/**
+ * Every CLI command's page to prerender, in the lines whose API is arranged by kind: the line's, and each
+ * exact version's that ships the CLI's manifest.
+ */
+export function cliParams(): { line: string; version?: string; command: string }[] {
+  return VERSIONS.lines
+    .filter(({ line }) => apiArrangement(line) === 'kind')
+    .flatMap(({ line }) => [
+      ...(cliManifest(lineVersions(line)[0])?.commands ?? []).map(command => ({ line, command: command.name })),
+      ...lineVersions(line).flatMap(version =>
+        (cliManifest(version)?.commands ?? []).map(command => ({ line, version, command: command.name })),
+      ),
+    ])
 }
 
 /** Every `{ line, version, section, symbol }` an exact version's API page is prerendered for. */

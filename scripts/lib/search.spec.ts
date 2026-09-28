@@ -1,9 +1,13 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import type { ApiDocument } from './api.js'
+import type { CliManifest } from './cli.js'
 import { parsePage } from './content.js'
 import {
   apiDocuments,
   changelogDocuments,
+  cliDocuments,
+  cliPaletteEntries,
   guideDocument,
   guidePageDocuments,
   markdownText,
@@ -298,5 +302,22 @@ describe('searchHtml', () => {
     expect(html).toContain('<span data-pagefind-filter="kind" hidden>guide</span>')
     expect(html).toContain('<p>See /docs/latest/guards for the old way.</p>')
     expect(html).toContain('<h2 id="global">Global</h2><p>a &lt; b</p>')
+  })
+})
+
+describe('the CLI in search', () => {
+  const manifest = JSON.parse(readFileSync('generated/cli/4.1.0-beta.7.json', 'utf8')) as CliManifest
+  const hrefOf = (command: string, sub?: string) => `/docs/4.1/api/cli/${command}${sub ? `#${sub}` : ''}`
+
+  it('offers each command and subcommand in the palette by its words, and each command as a page to search', () => {
+    const entries = cliPaletteEntries(manifest, hrefOf)
+    expect(entries).toContainEqual({ name: 'build', kind: 'command', url: '/docs/4.1/api/cli/build' })
+    expect(entries).toContainEqual({
+      name: 'generate controller',
+      kind: 'command',
+      url: '/docs/4.1/api/cli/generate#controller',
+    })
+    const generate = cliDocuments('4.1', manifest, hrefOf).find(document => document.title === 'meocord generate')!
+    expect(generate.sections.map(section => section.anchor)).toContain('controller')
   })
 })

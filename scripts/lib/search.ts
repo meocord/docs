@@ -15,6 +15,7 @@ import { guidePath, type GuidePage } from './guide.js'
 import type { Page } from './pages.js'
 import type { SinceEntry } from './since.js'
 import type { VersionsConfig } from './versions.js'
+import type { CliCommand, CliManifest } from './cli.js'
 
 export type SearchKind = 'guide' | 'api' | 'changelog'
 
@@ -311,6 +312,48 @@ export function apiDocuments(
     })
 }
 
+/** Where a CLI command's page is, or with `sub` one of its subcommands on it. */
+export type CliHref = (command: string, sub?: string) => string
+
+/** The words of a command after `meocord`, and what it does, as search reads them. */
+const commandText = (command: CliCommand) =>
+  [
+    `meocord ${command.path.join(' ')}`,
+    command.summary ?? command.description ?? '',
+    ...command.options.map(option => `${option.flags} ${option.description ?? ''}`),
+    ...command.arguments.map(argument => `${argument.name} ${argument.description ?? ''}`),
+  ].join('\n')
+
+/** One search document per top-level CLI command, its subcommands as sections at their anchors. */
+export function cliDocuments(line: string, manifest: CliManifest, hrefOf: CliHref): SearchDocument[] {
+  return manifest.commands.map(command => ({
+    url: hrefOf(command.name),
+    title: `meocord ${command.name}`,
+    kind: 'api' as const,
+    line,
+    sections: [
+      { text: commandText(command) },
+      ...command.commands.map(sub => ({
+        anchor: memberAnchor(sub.name),
+        heading: `meocord ${sub.path.join(' ')}`,
+        text: commandText(sub),
+      })),
+    ],
+  }))
+}
+
+/** The palette's entries for the CLI: each command and subcommand, by its words after `meocord`. */
+export function cliPaletteEntries(manifest: CliManifest, hrefOf: CliHref): PaletteEntry[] {
+  return manifest.commands.flatMap(command => [
+    { name: command.name, kind: 'command', url: hrefOf(command.name) },
+    ...command.commands.map(sub => ({
+      name: sub.path.join(' '),
+      kind: 'command',
+      url: hrefOf(command.name, sub.name),
+    })),
+  ])
+}
+
 /** The palette's index for a line: every guide page and every API symbol, in a stable order. */
 export function paletteIndex(
   line: string,
@@ -319,8 +362,12 @@ export function paletteIndex(
   since: Record<string, SinceEntry>,
   versions: VersionsConfig,
   hrefOf: ApiHref = entryHref(line, versions),
+  extra: PaletteEntry[] = [],
 ): PaletteEntry[] {
-  const entries: PaletteEntry[] = guides.map(guide => ({ name: guide.title, kind: 'guide', url: guide.url }))
+  const entries: PaletteEntry[] = [
+    ...guides.map(guide => ({ name: guide.title, kind: 'guide', url: guide.url })),
+    ...extra,
+  ]
   const seen = new Set<string>()
   for (const { entry, symbol } of api ? symbols(api) : []) {
     const url = SAFE_NAME.test(symbol.name) ? hrefOf(entry, symbol.name) : undefined
