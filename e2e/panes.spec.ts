@@ -92,6 +92,27 @@ test('the sidebar keeps its place as the reader moves on, and a page gone back t
   expect(await inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(false)
 })
 
+test('the sidebar keeps a place the reader scrolled it to before the page hydrates', async ({ page }) => {
+  // The app's scripts are held until the reader has scrolled the sidebar.
+  let release!: () => void
+  const held = new Promise<void>(resolve => (release = resolve))
+  await page.route('**/_next/static/**/*.js', async route => {
+    await held
+    await route.continue()
+  })
+  await page.goto('/docs/4.1/guards', { waitUntil: 'domcontentloaded' })
+  await hideCurrentLink(page)
+  const left = await top(sidebarBody(page))
+  expect(left).toBeGreaterThan(0)
+
+  release()
+  // Hydrated: the theme control says which mode is chosen, and the page's effects have run.
+  await expect(page.locator('[data-toolbar]:visible [aria-pressed="true"]')).toHaveCount(1)
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => new Promise(requestAnimationFrame))
+  expect(await top(sidebarBody(page))).toBe(left)
+})
+
 test('a sidebar link to a page read earlier shows its current link, however its sidebar was left', async ({ page }) => {
   await page.goto('/docs/4.1/guards')
   await hideCurrentLink(page)

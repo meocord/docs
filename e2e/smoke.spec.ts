@@ -131,6 +131,8 @@ test('the reading face is preloaded from the site itself', async ({ page, reques
 })
 
 test('the palette follows the stamped mode', async ({ page }) => {
+  // Before the app's scripts run, the stamp is the page's alone; once hydrated, ThemeProvider owns it
+  await page.route('**/_next/static/**/*.js', route => route.abort())
   await page.goto('/')
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'))
