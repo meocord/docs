@@ -1,4 +1,5 @@
 import {
+  customEmoji,
   type Dispatch,
   type LogLine,
   MAX_RESULT_LENGTH,
@@ -175,23 +176,15 @@ function mockUser(testing: Testing, id: string, username: string): Record<string
   return testing.createMockUser({ id, username })
 }
 
-const CUSTOM_EMOJI = /^<(a?):(\w{2,32}):(\d{17,20})>$/
-
 /**
  * A reaction's emoji as discord.js gives it: a server's own, written `<:name:id>` as Discord formats it, by its
  * name and id; any other, by its name alone.
  */
 function emojiOf(written: string) {
-  const custom = CUSTOM_EMOJI.exec(written)
+  const custom = customEmoji(written)
   if (custom) {
-    const [, animated, name, id] = custom
-    return {
-      name,
-      id,
-      animated: animated === 'a',
-      identifier: `${animated ? 'a:' : ''}${name}:${id}`,
-      toString: () => written,
-    }
+    const { name, id, animated } = custom
+    return { name, id, animated, identifier: `${animated ? 'a:' : ''}${name}:${id}`, toString: () => written }
   }
   return { name: written, id: null, animated: false, identifier: encodeURIComponent(written), toString: () => written }
 }

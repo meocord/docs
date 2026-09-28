@@ -91,7 +91,10 @@ describe('parseRunRequest', () => {
         run({ dispatch: [{ kind: 'userselect', customId: 'x', users: [] }] }),
         "a user select menu's users are 1 to 25 different snowflakes",
       ],
-      [run({ dispatch: [{ kind: 'reaction', content: 'x', action: 'add' }] }), 'a reaction names its emoji'],
+      [
+        run({ dispatch: [{ kind: 'reaction', content: 'x', action: 'add' }] }),
+        'a reaction names its emoji, a Unicode one or <:name:id>',
+      ],
       [
         run({ dispatch: [{ kind: 'reaction', emoji: '⭐', content: 1, action: 'add' }] }),
         "a reaction's message has its content",
@@ -246,7 +249,10 @@ describe('the shapes every input shares', () => {
   it('refuses a lone surrogate in every text an input carries', () => {
     const lone = '\uD800'
     const cases: [Record<string, unknown>, string][] = [
-      [{ kind: 'reaction', emoji: lone, content: 'x', action: 'add' }, 'a reaction names its emoji'],
+      [
+        { kind: 'reaction', emoji: lone, content: 'x', action: 'add' },
+        'a reaction names its emoji, a Unicode one or <:name:id>',
+      ],
       [{ kind: 'reaction', emoji: '⭐', content: `hi ${lone}`, action: 'add' }, "a reaction's message has its content"],
       [{ kind: 'message', content: lone }, 'a message has its content'],
       [{ kind: 'button', customId: `a${lone}` }, 'a button names its customId'],
@@ -291,5 +297,61 @@ describe('the shapes every input shares', () => {
       "a modal's fields are strings by custom ID",
     )
     expect(one({ kind: 'button', customId: 'x'.repeat(101) })).toBe('a button names its customId')
+  })
+
+  it('takes an emoji as a reaction carries it, and refuses the forms Discord never sends', () => {
+    for (const emoji of ['⭐', '👍🏽', '<:party:123456789012345678>', '<a:dance:123456789012345678>']) {
+      expect(one({ kind: 'reaction', emoji, content: 'x', action: 'add' }), emoji).toMatchObject({
+        dispatch: [{ emoji }],
+      })
+    }
+    for (const emoji of [
+      '<:star:0000000000000000>',
+      '<:star:99999999999999999999>',
+      '<:s:123456789012345678>',
+      '<b:star:123456789012345678>',
+      '<: star:123456789012345678>',
+      '<:star:123456789012345678:extra>',
+      `<:${'n'.repeat(33)}:123456789012345678>`,
+      '<not an emoji>',
+      'star:123456789012345678',
+      'a:star:123456789012345678',
+    ])
+      expect(one({ kind: 'reaction', emoji, content: 'x', action: 'add' }), emoji).toBe(
+        'a reaction names its emoji, a Unicode one or <:name:id>',
+      )
+  })
+
+  it('keeps a modal field or an option named __proto__, as Discord allows', () => {
+    const fields = JSON.parse('{"__proto__": "kept", "about": "bugs"}') as Record<string, string>
+    const options = JSON.parse('{"__proto__": "kept", "n": 1}') as Record<string, string>
+    const parsed = parseRunRequest(
+      run({
+        dispatch: [
+          { kind: 'modal', customId: 'form', fields },
+          { kind: 'slash', command: 'x', options },
+        ],
+      }),
+    )
+    if (typeof parsed === 'string') throw new Error(parsed)
+    const [modal, slash] = parsed.dispatch as unknown as [
+      { fields: Record<string, string> },
+      { options: Record<string, string | number> },
+    ]
+    expect(Object.entries(modal.fields)).toEqual([
+      ['__proto__', 'kept'],
+      ['about', 'bugs'],
+    ])
+    expect(Object.entries(slash.options)).toEqual([
+      ['__proto__', 'kept'],
+      ['n', 1],
+    ])
+    // And through a result, which the frame rebuilds the same way
+    const step = { input: { kind: 'modal', customId: 'form', fields }, ran: true, handlers: [], calls: [] }
+    const result = parseRunResult({ type: 'result', id: 3, ok: true, steps: [step], logs: [] }, 3)
+    expect(result?.ok && Object.keys((result.steps[0].input as { fields: object }).fields)).toEqual([
+      '__proto__',
+      'about',
+    ])
   })
 })
