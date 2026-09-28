@@ -25,7 +25,10 @@ since: 4.1.0
 
 A translator turns a message key into text in a language. Its messages come from catalogs, one per language, and one
 set of catalogs serves both what Discord shows for your commands and what your bot says. The other catalogs are typed
-from the default one, so a missing key, a misspelt parameter or a plural form a language needs doesn't compile.
+from the default one: a key the default doesn't have, or a message of the wrong shape, such as a plain text where the
+default has a plural, fails to compile. A key a catalog leaves out is looked up in another catalog of the same
+language, then the default one, and [`expectCompleteCatalog`](#testing-a-catalog) reports it in a test, as it does a
+plural form a language needs but a catalog lacks.
 
 ## When to use it
 

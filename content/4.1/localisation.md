@@ -7,9 +7,11 @@ since: 4.1.0
 ---
 
 One catalog of messages per language serves both what Discord shows for your commands, their names and
-descriptions, and what your bot replies. The other catalogs are typed from the default one, so a missing key,
-a misspelled parameter or a plural form a language needs is caught at compile time. Nothing is added to your
-dependencies.
+descriptions, and what your bot replies. The other catalogs are typed from the default one: a key the default
+does not have, or a message of the wrong shape, such as a plain text where the default has a plural, fails to
+compile. A key a catalog leaves out is looked up in another catalog of the same language, then the default
+one, and [`expectCompleteCatalog`](#testing) reports it in a test, as it does a plural form a language needs but
+a catalog lacks. Nothing is added to your dependencies.
 
 ## Catalogs
 
