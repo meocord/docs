@@ -8,6 +8,15 @@ const HOSTILE = `<img src=x onerror="window.pwned=1"><script>window.pwned=1</scr
 const TAGS = new Set(['DIV', 'OL', 'UL', 'LI', 'P', 'CODE', 'STRONG', 'DETAILS', 'SUMMARY', 'PRE'])
 const allowedAttribute = (name: string) => name.startsWith('data-') || name === 'tabindex' || name === 'open'
 
+/** The document around `output`, which showing a result must leave as it was. */
+function outside(output: HTMLElement): string {
+  const shown = [...output.childNodes]
+  output.replaceChildren()
+  const html = document.documentElement.outerHTML
+  output.replaceChildren(...shown)
+  return html
+}
+
 /** Every element under `root` that a result view may not make, and every attribute it may not set. */
 function unexpected(root: HTMLElement): string[] {
   return [...root.querySelectorAll('*')].flatMap(element => [
@@ -56,18 +65,22 @@ describe('the result view', () => {
   it('shows what a result carries as text in every field, making only its own elements and attributes', () => {
     const output = document.createElement('div')
     document.body.append(output)
+    const before = outside(output)
     showResult(output, everywhere)
     for (const details of output.querySelectorAll('details')) details.open = true
+    // Nothing changes outside the output, and inside it only the view's own elements and attributes
+    expect(outside(output)).toBe(before)
     expect(unexpected(output)).toEqual([])
     expect(output.querySelectorAll('img, script, a, iframe, object, embed, svg, style, link, form')).toHaveLength(0)
     // Every field shows the markup as written: once per field it was put in
     const shown = output.textContent!.split(HOSTILE).length - 1
     expect(shown).toBeGreaterThanOrEqual(20)
-    expect((window as unknown as { pwned?: number }).pwned).toBeUndefined()
   })
 
   it('shows a failed run and a status the same way', () => {
     const output = document.createElement('div')
+    document.body.append(output)
+    const before = outside(output)
     for (const stage of ['request', 'compile', 'load', 'module', 'timeout', 'runtime'] as const) {
       showResult(output, {
         type: 'result',
@@ -77,10 +90,12 @@ describe('the result view', () => {
         message: HOSTILE,
         logs: [{ level: 'log', text: HOSTILE }],
       })
+      expect(outside(output), stage).toBe(before)
       expect(unexpected(output), stage).toEqual([])
       expect(output.textContent).toContain(HOSTILE)
     }
     showStatus(output, HOSTILE, true)
+    expect(outside(output)).toBe(before)
     expect(unexpected(output)).toEqual([])
     expect(output.textContent).toBe(HOSTILE)
   })
