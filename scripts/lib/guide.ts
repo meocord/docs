@@ -27,6 +27,12 @@ export const CHAPTERS = [
 export type ChapterId = (typeof CHAPTERS)[number]['id']
 
 /**
+ * The site's own paths under `/docs/<line>/`, which no Guide page may take: the API, the changelog, the
+ * migration guide, the appendix groups' folders and the playground.
+ */
+export const RESERVED_SLUGS = ['api', 'changelog', 'migrating', 'recipes', 'coming-from', 'playground'] as const
+
+/**
  * The Guide as approved: every page's path, by chapter. It is the one list of the Guide's slugs; a page
  * must be on it, and a link to a page on it that is not written yet counts as planned, not broken.
  */
@@ -70,6 +76,7 @@ export const GUIDE_PLAN: Readonly<Record<ChapterId, readonly string[]>> = {
     'coming-from/sapphire',
     'coming-from/discordx',
     'coming-from/necord',
+    'what-can-i-build',
     'troubleshooting',
     'faq',
     'glossary',
