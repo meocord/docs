@@ -121,12 +121,14 @@ discord.js objects:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 
-## When Sapphire is the better pick
+## What you gain
 
-Sapphire's official plugins add i18next translation, subcommands, scheduled tasks, an HTTP API and hot reloading, and
-it supports JavaScript as well as TypeScript. Pick it for that ecosystem, or to write JavaScript. As of 25 September
-2026, [other ways to build a bot](guide:overview#other-ways-to-build-a-bot) compares it with the others. MeoCord has
-no plugins: what a plugin adds, you write as a service.
+Translations and subcommands are built in: typed [catalogs](guide:localisation), where a missing key fails to
+compile, and [subcommand handlers](guide:subcommands) on the parent command's builder. Guards apply to buttons,
+select menus and modals as well as to commands, and [`meocord/testing`](guide:testing) runs a handler through the
+same pipeline the bot uses. Scheduled work is a service that starts in `onReady` and stops in `onShutdown`, as
+[Scheduled tasks](guide:recipes/scheduled) shows. MeoCord is built for TypeScript, so a JavaScript bot moves to it
+as it moves over, and its decorators and typed params become what the compiler checks.
 
 ## Moving over
 

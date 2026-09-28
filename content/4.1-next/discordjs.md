@@ -117,12 +117,13 @@ it sent:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 
-## When discord.js alone is the better pick
+## What you gain
 
-discord.js alone has no framework to learn and nothing between you and the API. For a small bot, or to learn how
-Discord works, that is often the right choice; see
-[other ways to build a bot](guide:overview#other-ways-to-build-a-bot). MeoCord pays off once the routing,
-registration, checks and error answers you would write by hand grow with the bot.
+The parts a discord.js bot writes by hand come with MeoCord. Commands register from their builders, buttons and
+modals route by pattern, guards and cooldowns are decorators, and an interaction whose handler throws still gets the
+member an answer. Nothing between you and the API is taken away: every handler receives discord.js's own objects, and
+a service that injects the `Client` can do anything discord.js can. [Tests](guide:testing) run a handler through the
+same pipeline the bot uses.
 
 ## Moving over
 
