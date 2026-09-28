@@ -11,7 +11,9 @@ import path from 'path'
 import { gzipSync } from 'zlib'
 import { paths, ROOT } from './lib/layout.js'
 import {
+  checkInstalled,
   contentName,
+  installedVersion,
   nodeModulesPlugin,
   type PlaygroundManifest,
   playgroundLines,
@@ -41,6 +43,8 @@ copyFileSync(path.join(ROOT, 'node_modules', '@swc', 'wasm-web', 'wasm_bg.wasm')
 const manifest: PlaygroundManifest = { swc: `/playground/${swcName}`, lines: [] }
 
 for (const { line, version } of playgroundLines(readVersions(paths.versions), pinOf)) {
+  // The bundle resolves meocord from the line's examples, so what is installed there is what ships
+  checkInstalled(line, version, installedVersion('meocord', path.join(ROOT, 'examples', line)))
   const result = await build({
     stdin: {
       contents: runtimeEntry(RUNTIME_DIR),

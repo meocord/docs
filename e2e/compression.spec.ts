@@ -25,7 +25,7 @@ function fetchRaw(url: string, headers: http.OutgoingHttpHeaders) {
 // The build the server runs from; `bun run serve` copies its static files beside the standalone server.
 const built = (asset: string) => path.join(process.cwd(), '.next', 'static', asset.replace(/^\/_next\/static\//, ''))
 
-test('a page’s scripts go out as their brotli copies to a browser that takes brotli, and as themselves to one that does not', async ({
+test('a page’s scripts go out as their brotli copies to a browser that takes brotli, gzip to one that takes only gzip, and as themselves otherwise', async ({
   page,
   baseURL,
 }) => {
@@ -41,10 +41,51 @@ test('a page’s scripts go out as their brotli copies to a browser that takes b
   expect(brotli.headers['content-type']).toMatch(/javascript/)
   expect(brotli.body.equals(readFileSync(`${built(src!)}.br`))).toBe(true)
 
-  const identity = await fetchRaw(url, { 'accept-encoding': 'gzip' })
+  const gzip = await fetchRaw(url, { 'accept-encoding': 'gzip' })
+  expect(gzip.status).toBe(200)
+  expect(gzip.headers['content-encoding']).toBe('gzip')
+  expect(gzip.body.equals(readFileSync(`${built(src!)}.gz`))).toBe(true)
+
+  const identity = await fetchRaw(url, { 'accept-encoding': 'identity' })
   expect(identity.status).toBe(200)
   expect(identity.headers['content-encoding']).toBeUndefined()
   expect(identity.body.equals(readFileSync(built(src!)))).toBe(true)
+})
+
+// The playground's files, as the build wrote them
+const playground = JSON.parse(readFileSync('.playground/manifest.json', 'utf8')) as {
+  swc: string
+  lines: { runtime: string }[]
+}
+
+test("the playground's runtime and compiler go out compressed, the compiler as WebAssembly a browser compiles as it streams", async ({
+  baseURL,
+}) => {
+  for (const [asset, type] of [
+    [playground.swc, /^application\/wasm$/],
+    [playground.lines[0].runtime, /javascript/],
+  ] as const) {
+    const url = new URL(asset, baseURL).toString()
+    const source = readFileSync(path.join('public', asset))
+    for (const [accept, encoding, decode] of [
+      ['gzip, deflate, br, zstd', 'br', brotliDecompressSync],
+      ['gzip', 'gzip', gunzipSync],
+    ] as const) {
+      const response = await fetchRaw(url, { 'accept-encoding': accept })
+      expect(response.status, asset).toBe(200)
+      expect(response.headers['content-encoding'], asset).toBe(encoding)
+      expect(response.headers['content-type'], asset).toMatch(type)
+      expect(response.headers.vary, asset).toMatch(/accept-encoding/i)
+      expect(response.headers['cache-control'], asset).toBe('public, max-age=31536000, immutable')
+      expect(response.headers['access-control-allow-origin'], asset).toBe('*')
+      expect(Number(response.headers['content-length']), asset).toBe(response.body.byteLength)
+      expect(response.body.byteLength, asset).toBeLessThan(source.byteLength / 3)
+      expect(decode(response.body).equals(source), asset).toBe(true)
+    }
+    const identity = await fetchRaw(url, { 'accept-encoding': 'identity' })
+    expect(identity.headers['content-type'], asset).toMatch(type)
+    expect(identity.body.equals(source), asset).toBe(true)
+  }
 })
 
 /** A response over HTTP/2 from `origin`, its bytes as sent; the hop's certificate is made for the run. */
@@ -79,7 +120,7 @@ test('the edge hop the performance spec measures through delivers a script its b
     const brotli = await fetchH2(hop.origin, src!, { 'accept-encoding': 'gzip, deflate, br, zstd' })
     expect(brotli.headers['content-encoding']).toBe('br')
     expect(brotliDecompressSync(brotli.body).equals(source)).toBe(true)
-    // Without brotli, the server sends the source, and the hop gzips it.
+    // Without brotli, the server sends the script's gzip copy, and the hop passes it on.
     const gzip = await fetchH2(hop.origin, src!, { 'accept-encoding': 'gzip' })
     expect(gzip.headers['content-encoding']).toBe('gzip')
     expect(gunzipSync(gzip.body).equals(source)).toBe(true)

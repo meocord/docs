@@ -1,7 +1,7 @@
 /**
  * The HTTP hop in front of Next: HTML responses are buffered and get their inline scripts' hashes in
  * a CSP meta tag at the top of `<head>`, so the header stays the same size on every page; the build's
- * immutable assets go out as their brotli copies to a client that takes brotli; everything else
+ * immutable assets go out as their brotli or gzip copies to a client that takes one; everything else
  * streams through. A failure on one request ends that request only: before any header is sent it is
  * answered 502, after that its socket is closed.
  */
@@ -28,26 +28,34 @@ export function fail(res, error) {
 }
 
 /**
- * Whether an Accept-Encoding header takes brotli: `br` listed, and not with q=0.
+ * Whether an Accept-Encoding header takes `encoding`: listed, and not with q=0.
  * @param {string} [header]
+ * @param {string} [encoding]
  */
-export function acceptsBrotli(header = '') {
+export function acceptsEncoding(header = '', encoding = 'br') {
   return header.split(',').some(part => {
     const [name, ...params] = part.trim().toLowerCase().split(';')
-    if (name.trim() !== 'br') return false
+    if (name.trim() !== encoding) return false
     const q = params.map(param => param.trim()).find(param => param.startsWith('q='))
     return q === undefined || Number(q.slice(2)) > 0
   })
 }
 
+/** The copies the build writes, in the order a client that takes both gets them. */
+const COPIES = /** @type {const} */ ([
+  { encoding: 'br', extension: 'br' },
+  { encoding: 'gzip', extension: 'gz' },
+])
+
 /**
- * Where a request's brotli copy would be, for the paths whose copies the build writes
- * (scripts/precompress.ts): `/_next/static/…` under `.next/static`, and `/_pagefind/…` and
- * `/palette/…` under `public`, from `root`. Undefined for any other path or one that leaves its root.
+ * Where a request's source file is, for the paths whose compressed copies the build writes
+ * (scripts/precompress.ts): `/_next/static/…` under `.next/static`, and `/_pagefind/…`, `/palette/…`
+ * and `/playground/…` under `public`, from `root`. Its copies sit beside it as `.br` and `.gz`.
+ * Undefined for any other path or one that leaves its root.
  * @param {string} root
  * @param {string | undefined} url
  */
-export function brotliCopyPath(root, url = '/') {
+export function assetPath(root, url = '/') {
   let pathname
   try {
     pathname = decodeURIComponent(new URL(url, 'http://localhost').pathname)
@@ -57,12 +65,12 @@ export function brotliCopyPath(root, url = '/') {
   }
   const [base, rest] = pathname.startsWith('/_next/static/')
     ? [path.join(root, '.next', 'static'), pathname.slice('/_next/static/'.length)]
-    : /^\/(?:_pagefind|palette)\//.test(pathname)
+    : /^\/(?:_pagefind|palette|playground)\//.test(pathname)
       ? [path.join(root, 'public'), pathname.slice(1)]
       : []
   if (!base || !rest) return undefined
   const file = path.resolve(base, rest)
-  return file.startsWith(base + path.sep) ? `${file}.br` : undefined
+  return file.startsWith(base + path.sep) ? file : undefined
 }
 
 /**
@@ -89,7 +97,7 @@ function varyOnEncoding(value) {
 }
 
 /**
- * A server forwarding to Next on `upstreamPort` at 127.0.0.1. Brotli copies are looked for under
+ * A server forwarding to Next on `upstreamPort` at 127.0.0.1. Compressed copies are looked for under
  * `root`, the directory the server runs from.
  * @param {number} upstreamPort
  * @param {{ root?: string }} [options]
@@ -118,24 +126,32 @@ export function createProxyServer(upstreamPort, { root = process.cwd() } = {}) {
           if (policy === undefined) delete passthrough['content-security-policy']
           else passthrough['content-security-policy'] = policy
 
-          // An asset with a brotli copy: Next's headers, and the copy's bytes for a client that takes them.
-          const copy = brotliCopyPath(root, req.url)
-          const copySize = copy && !up.headers['content-encoding'] ? sizeOf(copy) : undefined
-          if (copy && copySize !== undefined && (up.statusCode === 200 || up.statusCode === 304)) {
+          // An asset with compressed copies: Next's headers, and the bytes of the copy the client takes.
+          const file = up.headers['content-encoding'] ? undefined : assetPath(root, req.url)
+          const copies = file
+            ? COPIES.map(each => ({ ...each, file: `${file}.${each.extension}` })).flatMap(each => {
+                const size = sizeOf(each.file)
+                return size === undefined ? [] : [{ ...each, size }]
+              })
+            : []
+          if (copies.length > 0 && (up.statusCode === 200 || up.statusCode === 304)) {
             passthrough.vary = varyOnEncoding(passthrough.vary)
-            if (up.statusCode === 200 && acceptsBrotli(String(req.headers['accept-encoding'] ?? ''))) {
+            const accepted = String(req.headers['accept-encoding'] ?? '')
+            const copy = up.statusCode === 200 && copies.find(each => acceptsEncoding(accepted, each.encoding))
+            if (copy) {
               up.resume()
-              passthrough['content-encoding'] = 'br'
-              passthrough['content-length'] = String(copySize)
+              passthrough['content-encoding'] = copy.encoding
+              passthrough['content-length'] = String(copy.size)
               delete passthrough['transfer-encoding']
               // Another encoding is another representation, so it gets its own validator.
-              if (typeof passthrough.etag === 'string') passthrough.etag = passthrough.etag.replace(/"$/, '-br"')
+              if (typeof passthrough.etag === 'string')
+                passthrough.etag = passthrough.etag.replace(/"$/, `-${copy.extension}"`)
               res.writeHead(200, passthrough)
               if (req.method === 'HEAD') {
                 res.end()
                 return
               }
-              const stream = createReadStream(copy)
+              const stream = createReadStream(copy.file)
               stream.on('error', error => fail(res, error))
               stream.pipe(res)
               return

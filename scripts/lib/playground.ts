@@ -5,6 +5,7 @@
  */
 
 import { createHash } from 'crypto'
+import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import type { Plugin } from 'esbuild'
 import type { VersionsConfig } from './versions.js'
@@ -44,6 +45,26 @@ export function playgroundLines(
         )
       return { line, version }
     })
+}
+
+/**
+ * The version of `name` a bundle built from `fromDir` resolves, as Node finds it: in the nearest
+ * `node_modules` up the tree. Undefined when none has it.
+ */
+export function installedVersion(name: string, fromDir: string): string | undefined {
+  for (let dir = path.resolve(fromDir); ; dir = path.dirname(dir)) {
+    const file = path.join(dir, 'node_modules', name, 'package.json')
+    if (existsSync(file)) return (JSON.parse(readFileSync(file, 'utf8')) as { version?: string }).version
+    if (path.dirname(dir) === dir) return undefined
+  }
+}
+
+/** Refuses to build a line's runtime from a meocord other than the one its examples pin. */
+export function checkInstalled(line: string, pin: string, installed: string | undefined): void {
+  if (installed !== pin)
+    throw new Error(
+      `examples/${line} pins meocord ${pin}, but ${installed ? `meocord ${installed} is` : 'no meocord is'} installed there; run bun install, then build the playground.`,
+    )
 }
 
 /** A file name that carries the hash of its bytes, as the search indexes' do: `4.1.0-beta.7.3f9a1c02de.js`. */
