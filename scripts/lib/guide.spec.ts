@@ -288,12 +288,13 @@ describe('checkGuide', () => {
         '```cobol\nX\n```',
         '```diff\n+ a\n```',
         '```bash\nbun run dev\n```',
+        '```dockerfile\nFROM node:22-slim\n```',
         '::example{file="missing.ts"}',
       ].join('\n\n'),
     )
     expect(check({ ...valid(), guards: page(guards, body) }, context)).toEqual([
-      'content/4.1-next/guards.md: a code fence is marked "cobol"; a page\'s fences are bash, json, yaml, text',
-      'content/4.1-next/guards.md: a code fence is marked "diff"; a page\'s fences are bash, json, yaml, text',
+      'content/4.1-next/guards.md: a code fence is marked "cobol"; a page\'s fences are bash, json, yaml, text, dotenv, dockerfile, ini, toml',
+      'content/4.1-next/guards.md: a code fence is marked "diff"; a page\'s fences are bash, json, yaml, text, dotenv, dockerfile, ini, toml',
       'content/4.1-next/guards.md: TypeScript belongs in examples/4.1 and an ::example directive, not a code fence',
       'content/4.1-next/guards.md: examples/4.1/src/missing.ts does not exist',
       'content/4.1-next/guards.md: examples/4.1/src/guards/owner.guard.ts has no region "nope"',

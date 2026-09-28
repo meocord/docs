@@ -193,8 +193,11 @@ const FIXED = new Set<string>(SECTIONS.map(section => section.heading))
 const RECIPE_SECTIONS = ['The code', 'How it works', 'Variations', 'Next steps']
 
 const SUMMARY_LIMIT = 160
-/** The fences a page may carry; code comes from examples/, so these are commands, data and output. */
-const FENCES = new Set(['bash', 'json', 'yaml', 'text'])
+/**
+ * The fences a page may carry. Code comes from examples/, where it's typechecked, so these are commands, data,
+ * output, and the files a deployment writes that nothing typechecks: a Dockerfile, a service unit, `.env`, TOML.
+ */
+const FENCES = new Set(['bash', 'json', 'yaml', 'text', 'dotenv', 'dockerfile', 'ini', 'toml'])
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 const NOT_AN_API_REF = 'is not api:<kind>/<Symbol>'
