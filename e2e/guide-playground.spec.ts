@@ -50,6 +50,11 @@ test('loads nothing of the playground until Run, then runs the example and shows
   await expect(output(page).locator('[data-playground-calls] li').first()).toContainText('update')
   await expect(output(page).locator('[data-playground-calls] li').first()).toContainText('buttons and menus: 42')
   await expect(run(page)).toHaveText('Run')
+  // A clean run logs MeoCord's own line for the call, and nothing of the runtime's
+  await output(page).locator('[data-playground-logs] summary').click()
+  await expect(output(page).locator('[data-playground-logs] pre')).toHaveText(
+    /^log\s+.* \[LOG\] \[TestingModule\] \[INTERACTION\] \[BUTTON\] \[count\]$/,
+  )
 })
 
 test('runs again from the keyboard, announcing the result, with the frame out of reach', async ({ page }) => {

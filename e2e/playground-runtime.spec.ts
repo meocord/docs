@@ -172,6 +172,12 @@ test.describe('the playground runtime', () => {
     // AsyncLocalStorage over lowered async: the handler's theme before and after an await
     expect(button.calls[0]).toMatchObject({ method: 'update', payload: { content: 'Count: 1 #26A042 #26A042' } })
     expect(loaded.sort()).toEqual([manifest.swc, runtime].sort())
+    // The logs are MeoCord's own line for each call, and nothing of the runtime's, such as a warning from
+    // starting the compiler
+    expect(result.logs.map(line => `${line.level} ${line.text.replace(/^.* \[LOG\] /, '')}`)).toEqual([
+      'log [TestingModule] [INTERACTION] [SLASH] [start]',
+      'log [TestingModule] [INTERACTION] [BUTTON] [add]',
+    ])
   })
 
   test('runs guards, cooldowns, @Defer and a UserError as the bot does', async ({ page, baseURL }) => {
