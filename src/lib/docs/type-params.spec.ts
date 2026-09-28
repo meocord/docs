@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { isComputedType, type Token } from '@/lib/docs/api-model'
+import { isComputedType, propertyKey, type Token } from '@/lib/docs/api-model'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
 const pkgDir = realpathSync('examples/4.1/node_modules/meocord')
@@ -250,5 +250,24 @@ describe('isComputedType', () => {
     expect(isComputedType({ type: 'typeOperator', operator: 'readonly' })).toBe(false)
     expect(isComputedType({ type: 'reference', package: 'meocord' })).toBe(false)
     expect(isComputedType({ type: 'reflection' })).toBe(false)
+  })
+})
+
+describe('propertyKey', () => {
+  it('writes a name that is no identifier in quotes, as a declaration must', () => {
+    expect(propertyKey('theme')).toBe('theme')
+    expect(propertyKey('$ref')).toBe('$ref')
+    expect(propertyKey('0')).toBe('0')
+    expect(propertyKey('not a param of the pattern')).toBe("'not a param of the pattern'")
+    expect(propertyKey("it's")).toBe("'it\\'s'")
+  })
+
+  it("quotes RootTheme's reserved-role member in its declaration", async () => {
+    const { apiModel } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    const found = model.find('RootTheme')!
+    expect(text(model.symbol(found.section, 'RootTheme')!.code[0]!)).toContain(
+      "{ 'MeoCord reserves these theme roles; rename yours': ReservedTaken }",
+    )
   })
 })

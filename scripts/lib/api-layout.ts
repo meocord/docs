@@ -41,7 +41,7 @@ export async function formatDisplay(form: LayoutForm, display: string): Promise<
 }
 
 /** Every display on a model's pages, by form. */
-function displays(model: ApiModel): [LayoutForm, string][] {
+export function displays(model: ApiModel): [LayoutForm, string][] {
   const out: [LayoutForm, string][] = []
   const signature = (each: ApiSignature) => {
     if (each.returns) out.push(['returns', text(each.returns.type)])

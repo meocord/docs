@@ -183,6 +183,13 @@ export function isComputedType(type: { type: string; operator?: string; package?
 const rowType = (property: Declaration) =>
   property.type && isComputedType(property.type) && property.resolvedType ? property.resolvedType : property.type
 
+/**
+ * A property's name as TypeScript writes it in code: bare when it is an identifier or a number, quoted
+ * otherwise, as `'MeoCord reserves these theme roles; rename yours'` is.
+ */
+export const propertyKey = (name: string) =>
+  /^(?:[A-Za-z_$][\w$]*|\d+)$/.test(name) ? name : `'${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+
 /** TypeDoc's kind for a constructor type's signature. */
 const CONSTRUCTOR_SIGNATURE = 16384
 
@@ -667,7 +674,10 @@ export class ApiModel {
       return lines
     }
     return [
-      [{ text: `${modifiers}${member.name}${member.flags?.isOptional ? '?' : ''}: ` }, ...this.#maybe(member.type)],
+      [
+        { text: `${modifiers}${propertyKey(member.name)}${member.flags?.isOptional ? '?' : ''}: ` },
+        ...this.#maybe(member.type),
+      ],
     ]
   }
 
@@ -826,7 +836,7 @@ export class ApiModel {
     children.forEach((child, index) => {
       if (index > 0) tokens.push({ text: '; ' })
       tokens.push({
-        text: `${child.flags?.isReadonly ? 'readonly ' : ''}${child.name}${child.flags?.isOptional ? '?' : ''}: `,
+        text: `${child.flags?.isReadonly ? 'readonly ' : ''}${propertyKey(child.name)}${child.flags?.isOptional ? '?' : ''}: `,
       })
       tokens.push(...(child.signatures?.[0] ? this.#reflection(child, 'top') : this.#maybe(child.type)))
     })
