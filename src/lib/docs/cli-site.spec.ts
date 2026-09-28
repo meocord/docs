@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
@@ -68,9 +68,11 @@ describe('the CLI reference', () => {
         expect(ids).toEqual(everySub(each).map(name => name.toLowerCase()))
       }
       expect(renderCliPage('4.1', 'deploy')).toBeUndefined()
-      // Only versions that ship the manifest have CLI pages of their own
+      // Only versions that ship the manifest have CLI pages of their own: those with a generated/cli file
       const versions = new Set(cliParams().flatMap(param => (param.version ? [param.version] : [])))
-      expect([...versions]).toEqual(['4.1.0-beta.7'])
+      const shipped = readdirSync('generated/cli').map(file => file.replace(/\.json$/, ''))
+      expect(shipped.length).toBeGreaterThan(0)
+      expect([...versions].sort()).toEqual(shipped.sort())
     })
   })
 })
