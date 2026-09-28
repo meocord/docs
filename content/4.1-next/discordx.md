@@ -111,12 +111,14 @@ MeoCord runs a handler through the same pipeline the bot uses, with mocks of the
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 
-## When discordx is the better pick
+## What you gain
 
-discordx runs several bots in one process, each class naming its bot with `@Bot`, and its packages add pagination and
-music playback with Lavalink. Pick it for those; see
-[other ways to build a bot](guide:overview#other-ways-to-build-a-bot). A MeoCord process runs one bot, logged in with
-the one token its config gives.
+Guards are classes that inject services, [exception filters](guide:exception-filters) decide what a member is told
+when a handler throws, [typed catalogs](guide:localisation) translate the bot, and
+[`meocord/testing`](guide:testing) runs a handler through the same pipeline the bot uses. Pagination is a component
+with a typed route, as [Paginated lists](guide:recipes/pagination) shows. Each bot is its own process, with its own
+config, token and logs, so it restarts and deploys on its own, and one bot spreads across processes with
+[sharding](guide:sharding).
 
 ## Moving over
 

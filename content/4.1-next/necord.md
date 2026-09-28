@@ -117,17 +117,18 @@ pipeline the bot uses, with mocks of the discord.js objects:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 
-## When Necord is the better pick
+## What you gain
 
-If you already run NestJS, Necord puts the bot in the same application, sharing its modules, configuration and HTTP
-API. That is often worth keeping; see [other ways to build a bot](guide:overview#other-ways-to-build-a-bot). MeoCord
-suits a bot that is only a bot, with no Nest application around it.
+The ideas Necord borrows from Nest, controllers, services, guards, interceptors, pipes and exception filters, built
+for Discord alone: the bot needs no Nest application, module or `@Injectable()` around it, and a guard receives the
+interaction itself rather than an execution context to unwrap. Message commands get
+[typed patterns](guide:message-params) with flags, and [`meocord/testing`](guide:testing) runs a handler through the
+same pipeline the bot uses, with mocks of discord.js's own classes.
 
 ## Moving over
 
 Necord providers become controllers and services almost line for line: `@Injectable()` becomes `@Service()`, a
-handler's `@Context()` tuple becomes its first argument, and Nest guards and filters become MeoCord's. A bot that uses
-Nest for more than Discord, an HTTP API for instance, may be better off staying on Nest.
+handler's `@Context()` tuple becomes its first argument, and Nest guards and filters become MeoCord's.
 
 ## Next steps
 
