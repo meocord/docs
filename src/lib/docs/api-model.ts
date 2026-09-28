@@ -346,7 +346,11 @@ export class ApiModel {
       }))
     // Its options take the anchors its members, and the window, leave free
     const anchors = new Set([...shellIds(), ...members.map(member => member.anchor)])
-    const signatures = (declaration.signatures ?? []).map(signature => this.#signature(signature, key, anchors))
+    // How many of its signatures so far declared each option, which numbers a later one's anchor
+    const declared = new Map<string, number>()
+    const signatures = (declaration.signatures ?? []).map(signature =>
+      this.#signature(signature, key, { taken: anchors, declared }),
+    )
     return {
       name: declaration.name,
       kind: kindName(declaration.kind),
@@ -392,14 +396,25 @@ export class ApiModel {
     }
   }
 
-  /** A signature's details; with `anchors`, the ids taken on its page, its options' rows get ids of their own. */
-  #signature(signature: Signature, key: string, anchors?: Set<string>): ApiSignature {
+  /**
+   * A signature's details. With `anchors`, the ids taken on its page and how many earlier signatures
+   * declared each option, its options' rows get ids of their own.
+   */
+  #signature(
+    signature: Signature,
+    key: string,
+    anchors?: { taken: Set<string>; declared: Map<string, number> },
+  ): ApiSignature {
     const params: ApiParam[] = []
-    // An option takes its name's anchor, or `<name>-option` where the page or the window has that one
+    // An option takes its name's anchor in the first signature declaring it, `<name>-2` in the next
+    // and so on; with `-option` where the page or the window has that one
     const anchor = (property: string) => {
       if (!anchors) return undefined
-      const id = [memberAnchor(property), `${memberAnchor(property)}-option`].find(each => !anchors.has(each))
-      if (id) anchors.add(id)
+      const count = (anchors.declared.get(property) ?? 0) + 1
+      anchors.declared.set(property, count)
+      const base = count === 1 ? memberAnchor(property) : `${memberAnchor(property)}-${count}`
+      const id = [base, `${base}-option`].find(each => !anchors.taken.has(each))
+      if (id) anchors.taken.add(id)
       return id
     }
     for (const parameter of signature.parameters ?? []) {
