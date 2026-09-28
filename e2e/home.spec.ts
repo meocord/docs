@@ -82,6 +82,25 @@ test('with reduced motion, Run reaches the reply at once', async ({ page }) => {
   await expect(panel).toHaveAttribute('data-answered', '', { timeout: 500 })
 })
 
+test("the trace's stages are rows, with none of the Guide's pipeline figure drawn on them", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const stages = page.locator('[data-pipeline] [data-stage]')
+  await expect(stages).toHaveCount(7)
+  // The figure frames each stage as a card, with a border and a fill; a row of the trace has neither
+  const boxes = await stages.evaluateAll(rows =>
+    rows.map(row => {
+      const style = getComputedStyle(row)
+      return {
+        border: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
+        background: style.backgroundColor,
+      }
+    }),
+  )
+  for (const box of boxes) expect(box).toEqual({ border: ['0px', '0px', '0px', '0px'], background: 'rgba(0, 0, 0, 0)' })
+  await expect(page.locator('[data-pipeline-figure]')).toHaveCount(0)
+})
+
 for (const scheme of ['light', 'dark'] as const) {
   test(`stages not yet run stay readable in ${scheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })

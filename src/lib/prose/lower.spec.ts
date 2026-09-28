@@ -55,8 +55,10 @@ describe('lowerMarkdown', () => {
 
   it('draws a ::figure the page names, and nothing for one it has none of', () => {
     const figure = (name: string, key: number) =>
-      name === 'pipeline' ? Figure({ key, 'data-pipeline': true }) : undefined
-    expect(html('::figure{name="pipeline"}', { figure })).toBe('<div><figure data-pipeline="true"></figure></div>')
+      name === 'pipeline' ? Figure({ key, 'data-pipeline-figure': true }) : undefined
+    expect(html('::figure{name="pipeline"}', { figure })).toBe(
+      '<div><figure data-pipeline-figure="true"></figure></div>',
+    )
     expect(html('::figure{name="map"}\n\nAfter.', { figure })).toBe('<div><p>After.</p></div>')
   })
 
