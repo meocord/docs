@@ -311,3 +311,30 @@ describe('ApiModel option types inline', () => {
     expect(rows('MeoCord').some(param => param.name.startsWith('options.i18n.'))).toBe(false)
   })
 })
+
+describe('ApiModel option rows on beta.7', () => {
+  const beta7 = (
+    JSON.parse(readFileSync('generated/api/4.1.0-beta.7.json', 'utf8')) as { project: JSONOutput.ProjectReflection }
+  ).project
+  const byKind = new ApiModel('4.1', beta7, versions, since, undefined, { by: 'kind' })
+
+  it("lists an option both parts of an intersection declare once, with the inline part's type and text", () => {
+    for (const signature of byKind.symbol('decorators', 'Cooldown')!.signatures) {
+      const names = signature.params.map(param => param.name)
+      expect(names.length).toBe(new Set(names).size)
+    }
+    const by = byKind
+      .symbol('decorators', 'Cooldown')!
+      .signatures.flatMap(signature => signature.params)
+      .filter(param => param.name === 'options.by')
+    expect(by.some(param => !param.optional && param.description !== '')).toBe(true)
+  })
+
+  it("gives an option named like one of the window's ids an anchor of its own, not none", () => {
+    const content = byKind
+      .symbol('testing', 'createMockMessage')!
+      .signatures.flatMap(signature => signature.params)
+      .find(param => param.name === 'overrides.content')!
+    expect(content.anchor).toBe('content-option')
+  })
+})
