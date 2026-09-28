@@ -4,7 +4,7 @@
  * generated data for every version versions.json lists.
  */
 
-import GithubSlugger from 'github-slugger'
+import { pageSlugger } from '../../src/lib/page-ids'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
@@ -207,7 +207,7 @@ export const EXAMPLE_SOURCE = 'compare'
 
 /** The anchors of a page's headings, as GitHub and the site give them. */
 export function pageAnchors(body: string): Set<string> {
-  const slugger = new GithubSlugger()
+  const slugger = pageSlugger()
   const anchors = new Set<string>()
   for (const line of withoutCode(body).split('\n')) {
     const heading = /^#{1,6} (.+?)\s*#*\s*$/.exec(line)

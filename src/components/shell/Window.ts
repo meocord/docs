@@ -10,6 +10,7 @@ import { SidebarNav } from '@/components/shell/sidebar-nav'
 import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { NavGroup, NavTab, TocEntry } from '@/components/shell/types'
+import { SHELL_IDS } from '@/lib/page-ids'
 
 export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   /**
@@ -63,7 +64,7 @@ function SiteFooter({ wide }: { wide?: boolean } = {}) {
 /** Hidden until focused, then the first thing on the page. */
 function SkipLink() {
   return A({
-    href: '#content',
+    href: `#${SHELL_IDS.main}`,
     position: 'absolute',
     left: 'theme.space.2',
     top: 'theme.space.2',

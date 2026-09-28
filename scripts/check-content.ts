@@ -18,6 +18,7 @@ import { checkGuide } from './lib/guide.js'
 import { markdownAnchors } from './lib/migrating.js'
 import { paths, ROOT } from './lib/layout.js'
 import { readVersions } from './lib/versions.js'
+import { memberAnchor } from '../src/lib/urls'
 import { apiModel } from '../src/lib/docs/api-site.js'
 
 const readIf = (file: string) => (existsSync(file) ? readFileSync(file, 'utf8') : undefined)
@@ -113,7 +114,8 @@ for (const line of config.lines) {
     const symbol = model!.symbol(section, name)!
     const known = apiSymbols.get(name) ?? { kinds: [], members: [] }
     if (symbol.group) known.kinds.push(symbol.group.toLowerCase())
-    known.members.push(...symbol.anchors)
+    // A link names a member as it is written, and goes to its anchor, wherever the page moved it
+    known.members.push(...symbol.anchors, ...symbol.members.map(member => memberAnchor(member.name)))
     apiSymbols.set(name, known)
   }
   const migrating = site.migrating[line.line]

@@ -354,6 +354,18 @@ describe('ApiModel by kind, where the tags are wrong', () => {
     )
   })
 
+  it('fails on a symbol re-exported under another name, rather than file it under the first', () => {
+    const original = tagged('Original', 'Types')
+    const alias = decl({ name: 'Alias', kind: 4194304, target: original.id })
+    expect(() => build(['meocord/core', [original]], ['meocord/interface', [alias]])).toThrow(
+      "meocord/interface's Alias re-exports Original under another name",
+    )
+    // Under its own name, a re-export is the same page, listing both entry points
+    const same = decl({ name: 'Original', kind: 4194304, target: original.id })
+    const model = build(['meocord/core', [original]], ['meocord/interface', [same]])
+    expect(model.symbol('types', 'Original')!.imports).toEqual(['meocord/core', 'meocord/interface'])
+  })
+
   it('fails where two symbols would share a URL, rather than pick one', () => {
     expect(() =>
       build(['meocord/core', [tagged('Same', 'Types')]], ['meocord/interface', [tagged('Same', 'Types')]]),
@@ -418,5 +430,27 @@ describe('options typed inline', () => {
       '3:size',
       '2:examples-section',
     ])
+  })
+})
+
+describe("anchors the window's own ids leave free", () => {
+  const member = (name: string) =>
+    decl({ name, kind: 1024, flags: {}, type: str('string'), comment: { summary: parts(`${name}.`) } })
+  const message = decl({ name: 'Message', kind: 256, children: [member('content'), member('Value'), member('value')] })
+  const own = new ApiModel(
+    '4.1',
+    { ...project, children: [decl({ name: 'meocord/testing', kind: 2, children: [message] })] } as never,
+    versions,
+  )
+
+  it("moves a member named like the window's main region, or a member before it, clear", () => {
+    const symbol = own.symbol('testing', 'Message')!
+    expect(symbol.members.map(each => each.anchor)).toEqual(['content-member', 'value', 'value-member'])
+    expect(symbol.anchors).toEqual(['content-member', 'value', 'value-member'])
+    expect(apiArticle(symbol).toc.map(entry => entry.id)).not.toContain('content')
+    // A link by the member's name goes to its anchor
+    expect(own.href({ section: 'testing', symbol: 'Message', member: 'content' })).toBe(
+      '/docs/latest/api/testing/Message#content-member',
+    )
   })
 })

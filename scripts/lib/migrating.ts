@@ -3,11 +3,11 @@
  * headings get, which changelog links and pages name.
  */
 
-import GithubSlugger from 'github-slugger'
+import { pageSlugger } from '../../src/lib/page-ids'
 
 /** The anchors GitHub gives the guide's headings, which stay stable for the links that name them. */
 export function markdownAnchors(markdown: string): string[] {
-  const slugger = new GithubSlugger()
+  const slugger = pageSlugger()
   const anchors: string[] = []
   let fence = false
   for (const line of markdown.split('\n')) {

@@ -1,6 +1,7 @@
 import type { JSONOutput } from 'typedoc'
 import type { DecoratorTarget } from '@/lib/docs/api-layout'
 import type { VersionsManifest } from '@/lib/urls'
+import { shellIds } from '@/lib/page-ids'
 import { docsHref, entrySegment, memberAnchor, sectionSegment } from '@/lib/urls'
 
 type Declaration = JSONOutput.DeclarationReflection
@@ -169,6 +170,8 @@ export class ApiModel {
   readonly #declarations = new Map<string, Filed>()
   readonly #aliases = new Map<number, SomeType>()
   readonly #titles = new Map<string, string>()
+  /** Each member's anchor on its symbol's page, by `section/Symbol#member`. */
+  readonly #memberAnchors = new Map<string, string>()
 
   constructor(
     readonly line: string,
@@ -193,6 +196,12 @@ export class ApiModel {
     }
     for (const { entry, declaration, target } of reexports) {
       const location = this.#byId.get(target)
+      // Exported under another name, it would be filed on a page that neither names nor imports it that way
+      if (location && location.symbol !== declaration.name) {
+        throw new Error(
+          `${this.#source()}: ${entry}'s ${declaration.name} re-exports ${location.symbol} under another name, which the API by kind has no page for.`,
+        )
+      }
       const filed = location && this.#declarations.get(`${location.section}/${location.symbol}`)
       if (!filed) this.#file(entry, declaration)
       else if (!filed.entries.includes(entry)) filed.entries.push(entry)
@@ -217,9 +226,15 @@ export class ApiModel {
     this.#titles.set(section, this.scheme.by === 'entry' ? entry : API_KINDS.find(kind => kind.slug === section)!.title)
     this.#byId.set(declaration.id, { section, symbol: declaration.name })
     if (declaration.kind === 2097152 && declaration.type) this.#aliases.set(declaration.id, declaration.type)
+    // A member takes its name's anchor unless the window, or a member before it, has it
+    const anchored = new Set(shellIds())
     for (const member of declaration.children ?? []) {
-      if (SAFE_NAME.test(member.name))
-        this.#byId.set(member.id, { section, symbol: declaration.name, member: member.name })
+      if (!SAFE_NAME.test(member.name)) continue
+      this.#byId.set(member.id, { section, symbol: declaration.name, member: member.name })
+      const anchor = memberAnchor(member.name)
+      const free = anchored.has(anchor) ? `${anchor}-member` : anchor
+      anchored.add(free)
+      this.#memberAnchors.set(`${section}/${declaration.name}#${member.name}`, free)
     }
   }
 
@@ -299,11 +314,16 @@ export class ApiModel {
         line: this.line,
         section: location.section,
         symbol: location.symbol,
-        member: location.member,
+        member: location.member && this.#anchorOf(location.section, location.symbol, location.member),
         version: this.version,
       },
       this.versions,
     )
+  }
+
+  /** A member's anchor on its symbol's page. */
+  #anchorOf(section: string, symbol: string, member: string): string {
+    return this.#memberAnchors.get(`${section}/${symbol}#${member}`) ?? memberAnchor(member)
   }
 
   /** A symbol's page, or undefined when the section has no such symbol. */
@@ -314,9 +334,12 @@ export class ApiModel {
     const key = `${entries[0]}:${declaration.name}`
     const members = (declaration.children ?? [])
       .filter(member => SAFE_NAME.test(member.name) && !member.flags?.isInherited && !member.flags?.isPrivate)
-      .map(member => this.#member(declaration, member, `${key}.${member.name}`))
-    // Its options take the anchors its members leave free
-    const anchors = new Set(members.map(member => member.anchor))
+      .map(member => ({
+        ...this.#member(declaration, member, `${key}.${member.name}`),
+        anchor: this.#anchorOf(found.section, declaration.name, member.name),
+      }))
+    // Its options take the anchors its members, and the window, leave free
+    const anchors = new Set([...shellIds(), ...members.map(member => member.anchor)])
     const signatures = (declaration.signatures ?? []).map(signature => this.#signature(signature, key, anchors))
     return {
       name: declaration.name,
@@ -334,7 +357,7 @@ export class ApiModel {
       examples: examples(declaration.comment),
       seeAlso: this.#seeAlso(declaration.comment),
       group: group(declaration),
-      anchors: [...anchors],
+      anchors: [...anchors].filter(anchor => !shellIds().includes(anchor)),
     }
   }
 

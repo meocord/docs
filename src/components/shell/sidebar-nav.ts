@@ -8,13 +8,23 @@ import type { NavGroup, NavItem, NavTab } from '@/components/shell/types'
 function NavRow(item: NavItem) {
   return Li({
     key: item.href,
-    'data-category': item.category,
     children: Link({
       href: item.href,
       'aria-current': item.current ? 'page' : undefined,
       children: [Span(item.title, { title: item.title }), item.badge ? Span(item.badge, { 'data-badge': true }) : null],
     }),
   })
+}
+
+/** A group's items in runs of one category each, in order; items without one run on their own. */
+function runs(items: NavItem[]): { category?: string; items: NavItem[] }[] {
+  const out: { category?: string; items: NavItem[] }[] = []
+  for (const item of items) {
+    const last = out.at(-1)
+    if (last && last.category === item.category) last.items.push(item)
+    else out.push({ category: item.category, items: [item] })
+  }
+  return out
 }
 
 /**
@@ -40,13 +50,20 @@ function NavSection(group: NavGroup) {
         margin: 0,
         padding: 0,
         listStyle: 'none',
-        children: group.items.flatMap((item, index) => [
-          // A sub-group's heading, where its first item starts it
-          ...(item.category && item.category !== group.items[index - 1]?.category
-            ? [Li({ key: `category-${item.category}`, 'data-nav-category': true, children: item.category })]
-            : []),
-          NavRow(item),
-        ]),
+        children: runs(group.items).flatMap(({ category, items }) =>
+          category
+            ? // A sub-group: its own list, named by its category, which its visible label shows once
+              [
+                Li({
+                  key: `category-${category}`,
+                  children: [
+                    Div({ key: 'label', 'data-nav-category': true, 'aria-hidden': true, children: category }),
+                    Ul({ key: 'items', 'aria-label': category, children: items.map(NavRow) }),
+                  ],
+                }),
+              ]
+            : items.map(NavRow),
+        ),
       }),
     ],
   })
@@ -109,7 +126,8 @@ export function SidebarNav({
       },
       '& details[open] > summary [data-chevron]': { transform: 'rotate(90deg)' },
       '& [data-group-icon]': { display: 'inline-flex', color: 'theme.accent.default' },
-      // A sub-group's heading: quieter than the group's, aligned with the rows' text.
+      '& li > ul': { margin: 0, padding: 0, listStyle: 'none' },
+      // A sub-group's label: quieter than the group's, aligned with the rows' text.
       '& [data-nav-category]': {
         padding: 'theme.space.2 theme.space.2 theme.space.1 theme.space.8',
         fontSize: 'theme.type.caption.size',
@@ -229,12 +247,12 @@ export function readNavGroups(nav: Element): NavGroup[] {
   return [...nav.querySelectorAll<HTMLDetailsElement>(':scope > [data-nav-group]')].map(group => ({
     title: group.querySelector('summary')?.textContent ?? '',
     icon: (group.dataset.navIcon as GlyphName | undefined) || undefined,
-    items: [...group.querySelectorAll<HTMLAnchorElement>(':scope > ul > li > a')].map(link => ({
+    items: [...group.querySelectorAll<HTMLAnchorElement>(':scope > ul li > a')].map(link => ({
       title: link.querySelector('[title]')?.getAttribute('title') ?? link.textContent ?? '',
       href: link.getAttribute('href') ?? '',
       current: link.getAttribute('aria-current') === 'page' || undefined,
       badge: link.querySelector('[data-badge]')?.textContent || undefined,
-      category: link.parentElement?.dataset.category || undefined,
+      category: link.closest('ul[aria-label]')?.getAttribute('aria-label') || undefined,
     })),
   }))
 }

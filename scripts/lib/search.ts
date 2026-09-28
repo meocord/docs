@@ -5,7 +5,7 @@
  * rendered pages, and linked through src/lib/urls.ts.
  */
 
-import GithubSlugger from 'github-slugger'
+import { pageSlugger } from '../../src/lib/page-ids'
 import { ReflectionKind, type JSONOutput } from 'typedoc'
 import { changelogSectionAnchor, docsHref, entrySegment, memberAnchor, resolveStoredHref } from '../../src/lib/urls.js'
 import type { ApiDocument } from './api.js'
@@ -99,7 +99,7 @@ export function markdownText(markdown: string, examples: ExampleSource = () => u
  */
 export function splitSections(body: string, examples?: ExampleSource): SearchSection[] {
   const level = sectionLevel(body)
-  const slugger = new GithubSlugger()
+  const slugger = pageSlugger()
   const sections: { anchor?: string; heading?: string; lines: string[] }[] = [{ lines: [] }]
   let fence: string | undefined
   for (const line of body.split('\n')) {

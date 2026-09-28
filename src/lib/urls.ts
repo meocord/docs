@@ -37,6 +37,8 @@ const VERSION = /^(\d+)\.(\d+)\.\d+(?:-[0-9A-Za-z.-]+)?$/
 const SLUG = /^[a-z0-9][a-z0-9-]*$/
 const ENTRY = /^(?:meocord\/)?([a-z][a-z0-9-]*)$/
 const SYMBOL = /^[A-Za-z_$][\w$]*$/
+// A member by its name, or by its anchor where the page moved it clear of another id: `content-member`
+const MEMBER = /^[A-Za-z_$][\w$-]*$/
 
 /** The minor line a version belongs to: `4.1.0-beta.0` belongs to `4.1`. */
 export function lineOf(version: string): string {
@@ -110,7 +112,7 @@ export function docsHref(target: DocsTarget, versions: VersionsManifest): string
 
     case 'api': {
       const path = [sectionSegment(target.section), check(target.symbol, SYMBOL, 'symbol name')].join('/')
-      const anchor = target.member === undefined ? undefined : memberAnchor(check(target.member, SYMBOL, 'member name'))
+      const anchor = target.member === undefined ? undefined : memberAnchor(check(target.member, MEMBER, 'member name'))
       if (target.version === undefined) return withAnchor(`/docs/${segment}/api/${path}`, anchor)
       if (lineOf(target.version) !== target.line) {
         throw new Error(`${target.version} is not a version of line ${target.line}.`)
