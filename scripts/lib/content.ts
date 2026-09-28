@@ -60,6 +60,11 @@ export function parsePage(text: string): { frontmatter: Frontmatter; body: strin
 }
 
 /** Markdown with fenced and inline code blanked out, so links and directives inside code are not read. */
+/** Whether an example's source has the region `// #region <name>` … `// #endregion <name>`. */
+export function hasRegion(source: string, region: string): boolean {
+  return source.includes(`// #region ${region}\n`) && source.includes(`// #endregion ${region}`)
+}
+
 export function withoutCode(markdown: string): string {
   let fence: string | undefined
   return markdown
@@ -356,7 +361,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
       }
 
       // The playground runs only where the Guide renders it; anywhere else it would show as bare text
-      if (/^::playground\{/m.test(withoutCode(body))) problems.push(`${where}: ::playground is a Guide directive`)
+      if (/::playground\b/.test(withoutCode(body))) problems.push(`${where}: ::playground is a Guide directive`)
 
       for (const match of withoutCode(body).matchAll(EXAMPLE)) {
         const attributes = Object.fromEntries(
@@ -373,13 +378,7 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
         const source = attributes.file ? site.examples[from]?.[`src/${attributes.file}`] : undefined
         if (!attributes.file) problems.push(`${where}: an ::example names no file`)
         else if (source === undefined) problems.push(`${where}: examples/${from}/src/${attributes.file} does not exist`)
-        else if (
-          attributes.region &&
-          !(
-            source.includes(`// #region ${attributes.region}\n`) &&
-            source.includes(`// #endregion ${attributes.region}`)
-          )
-        ) {
+        else if (attributes.region && !hasRegion(source, attributes.region)) {
           problems.push(`${where}: examples/${from}/src/${attributes.file} has no region "${attributes.region}"`)
         }
       }

@@ -342,9 +342,15 @@ describe('::playground', () => {
         '::playground{file="button/counter.ts"}',
         '::playground{file="button/counter.ts" dispatch="/ping; select"}',
         '::playground{file="button/counter.ts" from="compare" dispatch="/ping"}',
+        'Run it: ::playground{file="button/counter.ts" dispatch="/ping"} here.',
+        'A line before it\n::playground{file="button/counter.ts" dispatch="/ping"}',
+        '  ::playground{file="button/counter.ts" dispatch="/ping"}',
       ].join('\n\n'),
     )
     expect(check({ ...valid(), guards: page(guards, body) })).toEqual([
+      'content/4.1-next/guards.md: a ::playground stands alone in its paragraph, not in "Run it: ::playground{file="button/counter.ts" dispatch="/ping"} here."',
+      'content/4.1-next/guards.md: a ::playground stands alone in its paragraph, not in "::playground{file="button/counter.ts" dispatch="/ping"}"',
+      'content/4.1-next/guards.md: a ::playground stands alone in its paragraph, not in "  ::playground{file="button/counter.ts" dispatch="/ping"}"',
       'content/4.1-next/guards.md: a ::playground names no file',
       'content/4.1-next/guards.md: examples/4.1/src/missing.ts does not exist',
       'content/4.1-next/guards.md: examples/4.1/src/button/counter.ts has no region "nope"',
