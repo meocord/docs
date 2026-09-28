@@ -23,7 +23,8 @@ export default defineConfig({
   webServer: {
     command: 'bun run serve',
     url: `http://localhost:${PORT}/api/health`,
-    env: { PORT: String(PORT), UPSTREAM_PORT: String(PORT + 1) },
+    // The site's origin is this server's, which the playground frame's policy names
+    env: { PORT: String(PORT), UPSTREAM_PORT: String(PORT + 1), SITE_URL: `http://localhost:${PORT}` },
     reuseExistingServer: false,
     timeout: 60_000,
   },

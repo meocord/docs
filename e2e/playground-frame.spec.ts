@@ -95,11 +95,11 @@ test("runs a reader's code in the sandboxed frame, fetching only the playground'
 
 test('serves the frame sandboxed, under a policy that names the site', async ({ page, baseURL }) => {
   const response = await page.request.get(frame)
-  const { host } = new URL(baseURL!)
+  const { origin } = new URL(baseURL!)
   const policy = response.headers()['content-security-policy']
   expect(policy).toContain('sandbox allow-scripts')
-  expect(policy).toContain(`script-src https://${host}/playground/ http://${host}/playground/ `)
-  expect(policy).toContain(`frame-ancestors https://${host} http://${host};`)
+  expect(policy).toContain(`script-src ${origin}/playground/ 'unsafe-eval'`)
+  expect(policy).toContain(`frame-ancestors ${origin};`)
   expect(response.headers()['cache-control']).toBe('public, max-age=31536000, immutable')
 })
 
@@ -222,6 +222,59 @@ export class Spin {
   expect(Date.now() - started).toBeGreaterThanOrEqual(5_000)
   const after = await send(page, runOf(COUNTER, [{ kind: 'button', customId: 'counter/1' }]))
   expect(after).toMatchObject({ ok: true, steps: [{ ran: true }] })
+})
+
+test('stops the Worker once a run is answered, even by a result its code forged', async ({ page }) => {
+  await embed(page)
+  // The code answers its own run, then spins: the answer ends the run, and its Worker with it
+  const forged = runOf(
+    `
+const scope = globalThis as any
+scope.postMessage({ type: 'result', id: ID, ok: true, steps: [], logs: [] })
+for (;;) {}
+`.replaceAll('ID', String(next)),
+    [],
+  )
+  expect(await send(page, forged)).toMatchObject({ ok: true, steps: [] })
+  const started = Date.now()
+  const after = await send(page, runOf(COUNTER, [{ kind: 'button', customId: 'counter/2' }]))
+  expect(after).toMatchObject({ ok: true, steps: [{ ran: true, handlers: ['Counter.add'] }] })
+  expect(Date.now() - started).toBeLessThan(5_000)
+})
+
+test('gives each run a fresh Worker, with nothing left of the run before', async ({ page }) => {
+  await embed(page)
+  // A global, and a timer that would forge the next run's result, both left behind by this run
+  const first = runOf(
+    `
+const scope = globalThis as any
+scope.leftover = 'from the run before'
+setInterval(() => scope.postMessage({ type: 'result', id: NEXT, ok: true, steps: [], logs: [] }), 10)
+export {}
+`.replaceAll('NEXT', String(next + 1)),
+    [],
+  )
+  expect(await send(page, first)).toMatchObject({ ok: true })
+  const second = runOf(
+    `
+import { type ButtonInteraction } from 'discord.js'
+import { respond } from 'meocord/common'
+import { Command, Controller } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+@Controller()
+export class Looker {
+  @Command('look', CommandType.BUTTON)
+  async look(interaction: ButtonInteraction) {
+    await new Promise(resolve => setTimeout(resolve, 200))
+    await respond(interaction).send({ content: String((globalThis as any).leftover) })
+  }
+}
+`,
+    [{ kind: 'button', customId: 'look' }],
+  )
+  const result = await send(page, second)
+  expect(result).toMatchObject({ ok: true, steps: [{ ran: true, handlers: ['Looker.look'] }] })
+  expect((result.steps as { calls: unknown[] }[])[0].calls[0]).toMatchObject({ payload: { content: 'undefined' } })
 })
 
 test('answers a malformed request, and one sent while a run is in progress, with why', async ({ page }) => {

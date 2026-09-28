@@ -66,6 +66,9 @@ Every page is rendered once and served byte-identical to every reader, so it can
   `Accept-Encoding` weights highest, `br` on a tie, and answers with that copy's bytes, its `Content-Encoding` and
   `Vary: Accept-Encoding`, keeping Next's `Content-Type` and cache headers; otherwise it streams the source from Next,
   as for any other path. Pages have no copy: the proxy writes each page's hashes into its `<head>` as it serves it.
+- `SITE_URL` is the site's public origin, `https://meocord.dev` unless set. Besides absolute URLs, it names the only
+  origin that may embed the playground's frame and the one its scripts come from, so a server previewed elsewhere, such
+  as on `http://localhost:3000`, sets it to its own origin; the e2e server does.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
   disallows everything and the sitemap is empty. It is read at build time; set `SITE_INDEXABLE=true` to build the
   indexable site.

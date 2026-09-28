@@ -26,27 +26,24 @@ export const STATIC_FILE_CSP = "default-src 'none'; base-uri 'none'; frame-ances
 const ORIGIN = /^https?:\/\/[a-z0-9.-]+(?::\d{1,5})?$/i
 
 /**
- * The playground frame's policy. `sandbox` gives the frame an opaque origin wherever it is loaded, so the
- * reader's code reaches no page, storage or cookie of the site. Scripts and requests are limited to the
- * playground's own files, and only the site may embed the frame. Each source names the site's host, since
- * WebKit matches no `'self'` in a sandboxed document, over `https` and `http` both: behind the edge the
- * request says `http` whatever the reader used, Chromium matches an `http` source to no `https` URL there,
- * and WebKit's Worker matches no source without a scheme. The Worker the frame starts from a blob inherits
- * the policy. `'unsafe-eval'` runs the compiled code and `'wasm-unsafe-eval'` the compiler. An origin that
- * can't be named gets the flat-deny policy.
+ * The playground frame's policy, for the site at `origin`. `sandbox` gives the frame an opaque origin
+ * wherever it is loaded, so the reader's code reaches no page, storage or cookie of the site. Scripts and
+ * requests are limited to the playground's own files, and only the site may embed the frame, each named
+ * by the site's configured origin, exactly: WebKit matches no `'self'` in a sandboxed document, and a
+ * policy read from the request would make an immutable file vary by its Host header. The Worker the frame
+ * starts from a blob inherits the policy. `'unsafe-eval'` runs the compiled code and `'wasm-unsafe-eval'`
+ * the compiler. An origin that can't be named gets the flat-deny policy.
  */
 export function playgroundFrameCsp(origin: string): string {
   if (!ORIGIN.test(origin)) return STATIC_FILE_CSP
-  const { host } = new URL(origin)
-  const site = `https://${host} http://${host}`
-  const files = `https://${host}/playground/ http://${host}/playground/`
+  const files = `${origin}/playground/`
   return [
     'sandbox allow-scripts',
     "default-src 'none'",
     `script-src ${files} 'unsafe-eval' 'wasm-unsafe-eval'`,
     'worker-src blob:',
     `connect-src ${files}`,
-    `frame-ancestors ${site}`,
+    `frame-ancestors ${origin}`,
     "base-uri 'none'",
     "form-action 'none'",
   ].join('; ')
