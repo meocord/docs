@@ -17,7 +17,12 @@ MeoCord is a framework for Discord bots built on [discord.js](https://discord.js
 and services, and decorators connect them to Discord: `@Command` binds a method to a slash command, a button or a
 modal, and the framework routes each interaction to it.
 
-Every call a handler receives passes through the same pipeline. Guards decide whether it runs, interceptors wrap it,
+Two parts carry the everyday work. [`respond()`](guide:responses) answers every interaction with the call Discord
+expects for where the answer stands, so a handler says what to send and never which method sends it. And
+[`meocord/testing`](guide:testing) runs a handler exactly as the bot does, through the same pipeline, with mocks of
+discord.js's own classes, so a test passes because the bot works.
+
+Every call a handler receives passes through that pipeline. Guards decide whether it runs, interceptors wrap it,
 validation and pipes check and shape its input, cooldowns limit how often it runs, and exception filters decide what the
 user is told when it throws. Guards, interceptors and exception filters apply to one method, a whole controller or the
 entire bot; cooldowns to a method or a controller; validation to a method.
@@ -25,22 +30,36 @@ entire bot; cooldowns to a method or a controller; validation to a method.
 ## When to use it
 
 MeoCord is for bots that grow: many commands and components, rules about who may use them, and code a team wants to
-test. It gives a bot the structure a web framework gives a server.
+test. It gives a bot the structure a web framework gives a server, and with it:
 
-- **Decorators and injection.** A controller declares what it handles, and its services arrive through its
-  constructor. Listing the controller in `@MeoCord` is all it takes: nothing is wired to discord.js by hand.
-- **One pipeline for every call.** Guards, interceptors, validation, pipes, cooldowns and exception filters run in a
-  fixed order around every handler, and `@Defer` and `respond()` take care of Discord's answer rules. See
+- **One call that knows where the answer stands.** `respond(interaction)` tracks each answer as unanswered, deferred or
+  replied, read from the interaction before every call, and makes the call Discord expects: `reply` or `update` first,
+  `editReply` once the answer is deferred or sent, `followUp` for another message. A second `send()` edits rather than
+  replying twice, and [`@Defer`](guide:defer) acknowledges a slow handler before Discord's three seconds are up. See
+  [Answering with respond()](guide:responses).
+- **Tests that run the way the bot runs.** `invoke` and `dispatch` send a call through the same pipeline the bot uses,
+  guards, validation, cooldowns and filters included, and `getResponse` reports what `respond()` sent. Mocks of
+  discord.js's own classes keep their prototypes and follow Discord's reply rules, and `fromApp` builds the testing
+  module from the app class itself. See [Testing](guide:testing), [Mocks](guide:mocks) and
+  [Invoke and dispatch](guide:invoke-and-dispatch).
+- **One pipeline around every call.** Guards, interceptors, validation, pipes, cooldowns and exception filters run in a
+  fixed order around every handler, each set on one method, a controller or the whole bot. See
   [How a call runs](guide:how-a-call-runs).
-- **Tested the way it runs.** `invoke` runs a handler through the same pipeline the bot does, with mocks of
-  discord.js's own classes. See [Testing](guide:testing).
-
-For a small bot, or to learn how Discord works, discord.js alone may be all you need; the comparison below shows the
-other frameworks built on it.
+- **Cooldowns and translations built in.** [`@Cooldown`](guide:cooldowns) counts per user, server, channel or resource,
+  in memory or [in Redis](guide:recipes/cooldown-stores), and [typed catalogs](guide:localisation) translate what the
+  bot says and the names of its commands.
+- **Routes and params the compiler checks.** A button's `counter/{count:int}` gives its handler `count` as a number,
+  and a message command's `pay {to:member} {amount:int}` a member and a number. A handler whose params don't fit its
+  pattern, or a catalog missing a key, fails to compile. See [Components](guide:components#typed-params) and
+  [Message command params](guide:message-params).
+- **Services by constructor.** A controller or a service names what it needs in its constructor, and MeoCord makes
+  each one once, in dependency order. See [Services](guide:services).
+- **A CLI from create to deploy.** `npx {{meocord}} create` starts a project, `generate` scaffolds a controller, service
+  or guard with its spec, `start --dev` rebuilds and restarts on every change, and `build` and `register` ship it. See
+  [The CLI](guide:cli).
 
 It covers every interaction Discord sends, from slash commands, subcommands and autocomplete to buttons, the five
-select menus, modals, context menus and activity entry points, plus messages, reactions and any gateway event. A CLI
-creates the project, scaffolds its parts, builds it and runs it.
+select menus, modals, context menus and activity entry points, plus messages, reactions and any gateway event.
 
 ## Example
 
@@ -128,29 +147,30 @@ is destroyed. See [Lifecycle hooks](guide:lifecycle-hooks).
 
 ## Other ways to build a bot
 
-Each of these is a good choice for some bots. The comparison is as of 25 September 2026, against the versions named,
-from each project's own documentation and published packages; corrections are welcome in the
+If you've built a bot before, most of what you know carries over. Each framework below is a good home for the bots
+built on it, and each "coming from" page shows one bot both ways. The comparison is as of 25 September 2026, against the
+versions named, from each project's own documentation and published packages; corrections are welcome in the
 [issue tracker](https://github.com/meocord/meocord/issues).
 
-**discord.js alone** (14.27.0). Every framework here, MeoCord included, is built on it. Alone, it has no framework to
-learn and nothing between you and the API; the command handler, component routing and error handling are yours to
-write. Pick it for a small bot, or to learn how Discord works.
+**From discord.js alone** (14.27.0). Every framework here, MeoCord included, is built on it, and a MeoCord handler
+receives discord.js's own interaction, message and client. What you stop writing is the plumbing around them: the
+command handler, component routing, error handling and answer tracking. See
+[Coming from discord.js](guide:coming-from/discordjs).
 
-**Sapphire** (`@sapphire/framework` 5.5.1). The most downloaded of these frameworks on npm. Commands, listeners and
-preconditions are pieces, loaded from their folders; shared objects are properties of a global `container`. Official
-plugins add i18next translation, subcommands, scheduled tasks, an HTTP API and hot reloading, and it supports JavaScript
-as well as TypeScript. Pick it for its ecosystem and plugins, for prefix commands with argument parsing, or to write
-JavaScript.
+**From Sapphire** (`@sapphire/framework` 5.5.1), the most downloaded of these frameworks on npm. Its commands,
+listeners and preconditions become controllers, `@On` handlers and guards, and the global `container` becomes
+constructor injection. Translations and subcommands, plugins in Sapphire, are built into MeoCord, and scheduled work is
+a service, as [Scheduled tasks](guide:recipes/scheduled) shows. See [Coming from Sapphire](guide:coming-from/sapphire).
 
-**Necord** (7.0.0). A NestJS module: the bot lives inside a NestJS application and uses Nest's own modules, guards,
-interceptors, pipes and exception filters, with text commands through `@TextCommand` and translations through
-`@necord/localization`. Pick it if you already run NestJS, and want the bot to share its modules, configuration and HTTP
-API.
+**From Necord** (7.0.0), a NestJS module. Nest's guards, interceptors, pipes and exception filters have MeoCord
+counterparts with the same names and roles, built for Discord alone, so the bot needs no Nest application around it.
+`@TextCommand` becomes a typed message pattern, and `@necord/localization` typed catalogs. See
+[Coming from Necord](guide:coming-from/necord).
 
-**discordx** (11.13.3). Decorators on classes, with guards written as middleware functions, dependency injection
-through TSyringe or TypeDI, prefix commands with `@SimpleCommand`, and several bots in one process. Its packages add
-pagination, and music playback with Lavalink. Pick it for prefix commands, several bots in one process, or its music
-packages.
+**From discordx** (11.13.3). Decorators on classes, as in MeoCord. Guard functions become guard classes that inject
+services, TSyringe or TypeDI become the built-in injection, and `@SimpleCommand` a typed pattern. Where discordx runs
+several bots in one process, a MeoCord bot is its own process, with its own config, token and logs. See
+[Coming from discordx](guide:coming-from/discordx).
 
 ## At a glance
 
@@ -171,12 +191,15 @@ may add one.
 | Documented runtime   | Node.js 22.13+ or Bun                   | Node.js 18+                  | Node.js 20.19+ or 22.13+                | Node.js 20+                                |
 | Needs                | nothing else                            | nothing else                 | a NestJS application                    | nothing else                               |
 
-## Gotchas
+## Good to know
 
-- **It is young,** with a small community and no plugin ecosystem; what a plugin would add, you write as a service.
-- **It is TypeScript only.**
-- **A process runs one bot:** it logs in with the one token its `meocord.config.ts` gives, so two bots take a process
-  each. One bot can span processes, a shard in each; see [Sharding](guide:sharding).
+- **A modern core.** MeoCord runs on discord.js 14, with Node.js 22.13+ or Bun. What a plugin would add elsewhere is a
+  plain [service](guide:services) here: injected where it's needed, and tested like the rest of the bot.
+- **Built for TypeScript.** Decorators, route and pattern params, and catalogs are all checked by the compiler, and
+  `npx {{meocord}} create` starts every project in TypeScript.
+- **One process, one bot.** A process logs in with the token its `meocord.config.ts` gives, so each bot keeps its own
+  config, token and logs, and restarts on its own. One bot grows across processes, a shard in each; see
+  [Sharding](guide:sharding).
 
 ## Next steps
 
