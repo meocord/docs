@@ -5,14 +5,14 @@ chapter: start
 order: 2
 summary: Create a MeoCord project with the CLI, give it a bot token, and start it in development with a test server.
 learn:
-  - Create a project with meocord create
+  - Create a project with the create command
   - Give it a bot token without committing it
   - Start it in development and in production
 requires: [overview]
 api: [configuration/MeoCordConfig]
 ---
 
-`meocord create` writes a project that runs as it is: a sample of each kind of handler, a spec beside each, and the
+The `create` command writes a project that runs as it is: a sample of each kind of handler, a spec beside each, and the
 scripts to build, test and lint it. You give it a bot token, and `meocord start --dev` puts it online, rebuilding and
 restarting as you edit.
 
@@ -29,14 +29,14 @@ You need:
   [Discord Developer Portal](https://discord.com/developers/applications).
 - **A server to test in,** where you can add the bot.
 
-`discord.js` 14 and `dotenv` 18 are peer dependencies, which `meocord create` installs. TypeScript comes with the
+`discord.js` 14 and `dotenv` 18 are peer dependencies, which the `create` command installs. TypeScript comes with the
 project, and 5.0 or newer works. Keep `skipLibCheck` on, as generated projects have it: discord.js's own dependencies
 don't typecheck without it.
 
 ## Example
 
 ```bash
-npx meocord create my-bot
+npx {{meocord}} create my-bot
 cd my-bot
 cp .env.example .env         # then put your bot token in DISCORD_TOKEN
 npx meocord start --dev      # development, rebuilding and restarting on every change
@@ -44,7 +44,8 @@ npx meocord start --dev      # development, rebuilding and restarting on every c
 
 The CLI asks which package manager to use, or takes it as a flag: `--use-npm`, `--use-yarn`, `--use-pnpm` or
 `--use-bun`. The project is named after the argument, and depends on the MeoCord version that created it, as a `^`
-range.
+range. `create` runs before there is a project, so it names the package to install, `{{meocord}}`. Inside the project,
+`npx meocord` runs the version the project installed.
 
 ## How it works
 
@@ -93,7 +94,7 @@ posts it for the staff with **Approve** and **Reject** buttons, and the author i
 Create its project, and start it in your test server:
 
 ```bash
-npx meocord create feedback-bot
+npx {{meocord}} create feedback-bot
 cd feedback-bot
 cp .env.example .env         # DISCORD_TOKEN, and your test server's ID in DEV_GUILD_ID
 npx meocord start --dev
