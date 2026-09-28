@@ -112,9 +112,10 @@ reply: ✅ approves, ❌ rejects.
 
 The handler acts only on an added reaction, only on a reply of the bot's that names feedback, where it reads the
 feedback's number, and only for a member holding the staff role from `FeedbackSettings`; anyone else's reaction
-changes nothing. A status reply names feedback too, so staff can decide from either. In the app, add the
-controller, the `GuildMessageReactions` intent, and the `Message` and `Reaction` partials, so reactions to
-replies sent before the bot restarted still arrive:
+changes nothing. A status reply names feedback too, so staff can decide from either; one naming feedback the bot
+doesn't hold, such as `There is no feedback #9.`, decides nothing. In the app, add the controller, the
+`GuildMessageReactions` intent, and the `Message` and `Reaction` partials, so reactions to replies sent before
+the bot restarted still arrive:
 
 ::example{file="tutorial/app.ts" region="app"}
 

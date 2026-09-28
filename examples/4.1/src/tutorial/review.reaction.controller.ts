@@ -2,6 +2,7 @@ import { type MessageReaction, type PartialMessageReaction } from 'discord.js'
 import { Controller, ReactionHandler } from 'meocord/decorator'
 import { ReactionHandlerAction } from 'meocord/enum'
 import { type ReactionHandlerOptions } from 'meocord/interface'
+import { FeedbackNotFoundError } from '@src/tutorial/feedback.errors'
 import { FeedbackService } from '@src/tutorial/feedback.service'
 import { FeedbackSettings } from '@src/tutorial/feedback.settings'
 // #region step:localisation
@@ -41,11 +42,16 @@ export class ReviewReactionController {
     if (!member.roles.cache.has(this.settings.staffRoleId)) return
     const id = /#(\d+)/.exec(message.content ?? '')?.[1]
     if (!id) return
-    const feedback = this.feedback.decide(id, status)
-    // before:localisation await message.reply(`Feedback #${feedback.id} is ${feedback.status}.`)
-    // #region step:localisation
-    await message.reply(t.forGuild(guild)(`feedback.chat.status.${feedback.status}`, { id: feedback.id }))
-    // #endregion step:localisation
+    try {
+      const feedback = this.feedback.decide(id, status)
+      // before:localisation await message.reply(`Feedback #${feedback.id} is ${feedback.status}.`)
+      // #region step:localisation
+      await message.reply(t.forGuild(guild)(`feedback.chat.status.${feedback.status}`, { id: feedback.id }))
+      // #endregion step:localisation
+    } catch (error) {
+      // A reply naming feedback the bot doesn't hold, such as "There is no feedback #9.", decides nothing
+      if (!(error instanceof FeedbackNotFoundError)) throw error
+    }
   }
 }
 // #endregion reactions
