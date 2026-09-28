@@ -60,11 +60,6 @@ export function parsePage(text: string): { frontmatter: Frontmatter; body: strin
 }
 
 /** Markdown with fenced and inline code blanked out, so links and directives inside code are not read. */
-/** Whether an example's source has the region `// #region <name>` … `// #endregion <name>`. */
-export function hasRegion(source: string, region: string): boolean {
-  return source.includes(`// #region ${region}\n`) && source.includes(`// #endregion ${region}`)
-}
-
 export function withoutCode(markdown: string): string {
   let fence: string | undefined
   return markdown
@@ -78,6 +73,11 @@ export function withoutCode(markdown: string): string {
       return fence ? '' : line.replace(/`[^`\n]*`/g, '')
     })
     .join('\n')
+}
+
+/** Whether an example's source has the region `// #region <name>` … `// #endregion <name>`. */
+export function hasRegion(source: string, region: string): boolean {
+  return source.includes(`// #region ${region}\n`) && source.includes(`// #endregion ${region}`)
 }
 
 export function markdownLinks(markdown: string): string[] {
