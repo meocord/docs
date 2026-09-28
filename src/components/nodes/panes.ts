@@ -82,6 +82,7 @@ export const SheetPane = createNode('main', {
 /** The column beside the prose: on this page, and the page's facts. */
 export const InspectorPane = createNode('aside', {
   'data-inspector': true,
+  'aria-label': 'Page details',
   width: 'theme.layout.inspector',
   flexShrink: 0,
   position: 'sticky',
