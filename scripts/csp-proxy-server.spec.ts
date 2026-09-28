@@ -6,7 +6,7 @@ import path from 'node:path'
 import { brotliCompressSync, gzipSync } from 'node:zlib'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MARKER } from './csp-hash.mjs'
-import { acceptsEncoding, assetPath, createProxyServer, fail } from './csp-proxy-server.mjs'
+import { assetPath, createProxyServer, fail, preferredEncoding } from './csp-proxy-server.mjs'
 
 const servers: http.Server[] = []
 
@@ -345,17 +345,31 @@ describe('compressed copies', () => {
   })
 })
 
-describe('acceptsEncoding', () => {
+describe('preferredEncoding', () => {
+  const both = ['br', 'gzip']
   it('takes an encoding listed with no weight or a positive one, and not at q=0 or absent', () => {
-    expect(acceptsEncoding('gzip, deflate, br, zstd', 'br')).toBe(true)
-    expect(acceptsEncoding('BR;q=0.5', 'br')).toBe(true)
-    expect(acceptsEncoding('br;q=0', 'br')).toBe(false)
-    expect(acceptsEncoding('gzip', 'br')).toBe(false)
-    expect(acceptsEncoding('brotli', 'br')).toBe(false)
-    expect(acceptsEncoding(undefined, 'br')).toBe(false)
-    expect(acceptsEncoding('gzip, deflate', 'gzip')).toBe(true)
-    expect(acceptsEncoding('gzip;q=0, br', 'gzip')).toBe(false)
-    expect(acceptsEncoding('x-gzip', 'gzip')).toBe(false)
+    expect(preferredEncoding('gzip, deflate, br, zstd', ['br'])).toBe('br')
+    expect(preferredEncoding('BR;q=0.5', ['br'])).toBe('br')
+    expect(preferredEncoding('br;q=0', ['br'])).toBeUndefined()
+    expect(preferredEncoding('gzip', ['br'])).toBeUndefined()
+    expect(preferredEncoding('brotli', ['br'])).toBeUndefined()
+    expect(preferredEncoding(undefined, ['br'])).toBeUndefined()
+    expect(preferredEncoding('x-gzip', ['gzip'])).toBeUndefined()
+  })
+
+  it('prefers the higher weight, and brotli on a tie', () => {
+    expect(preferredEncoding('gzip, deflate, br, zstd', both)).toBe('br')
+    expect(preferredEncoding('gzip;q=1, br;q=0.5', both)).toBe('gzip')
+    expect(preferredEncoding('gzip, br;q=0', both)).toBe('gzip')
+    expect(preferredEncoding('gzip;q=0.8, br;q=0.8', both)).toBe('br')
+  })
+
+  it('reads * as every encoding not listed, and identity weighted above them as none', () => {
+    expect(preferredEncoding('*', both)).toBe('br')
+    expect(preferredEncoding('br;q=0, *', both)).toBe('gzip')
+    expect(preferredEncoding('*;q=0', both)).toBeUndefined()
+    expect(preferredEncoding('identity;q=1, gzip;q=0.5', both)).toBeUndefined()
+    expect(preferredEncoding('identity;q=0.5, gzip', both)).toBe('gzip')
   })
 })
 

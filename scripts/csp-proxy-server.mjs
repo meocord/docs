@@ -28,17 +28,30 @@ export function fail(res, error) {
 }
 
 /**
- * Whether an Accept-Encoding header takes `encoding`: listed, and not with q=0.
+ * Which of `encodings` an Accept-Encoding header prefers: the one with the highest weight, a listed
+ * encoding's own or else `*`'s, the earlier on a tie; none at q=0, and none when the header weights
+ * `identity` above them all. Undefined when it takes none of them.
  * @param {string} [header]
- * @param {string} [encoding]
+ * @param {readonly string[]} [encodings]
  */
-export function acceptsEncoding(header = '', encoding = 'br') {
-  return header.split(',').some(part => {
+export function preferredEncoding(header = '', encodings = ['br']) {
+  /** @type {Map<string, number>} */
+  const weights = new Map()
+  for (const part of header.split(',')) {
     const [name, ...params] = part.trim().toLowerCase().split(';')
-    if (name.trim() !== encoding) return false
+    if (!name.trim()) continue
     const q = params.map(param => param.trim()).find(param => param.startsWith('q='))
-    return q === undefined || Number(q.slice(2)) > 0
-  })
+    const weight = q === undefined ? 1 : Number(q.slice(2))
+    weights.set(name.trim(), Number.isFinite(weight) ? weight : 0)
+  }
+  const weightOf = (/** @type {string} */ name) => weights.get(name) ?? weights.get('*') ?? 0
+  let best
+  let bestWeight = 0
+  for (const encoding of encodings) {
+    const weight = weightOf(encoding)
+    if (weight > bestWeight) [best, bestWeight] = [encoding, weight]
+  }
+  return best !== undefined && (weights.get('identity') ?? 0) <= bestWeight ? best : undefined
 }
 
 /** The copies the build writes, in the order a client that takes both gets them. */
@@ -136,8 +149,11 @@ export function createProxyServer(upstreamPort, { root = process.cwd() } = {}) {
             : []
           if (copies.length > 0 && (up.statusCode === 200 || up.statusCode === 304)) {
             passthrough.vary = varyOnEncoding(passthrough.vary)
-            const accepted = String(req.headers['accept-encoding'] ?? '')
-            const copy = up.statusCode === 200 && copies.find(each => acceptsEncoding(accepted, each.encoding))
+            const encoding = preferredEncoding(
+              String(req.headers['accept-encoding'] ?? ''),
+              copies.map(each => each.encoding),
+            )
+            const copy = up.statusCode === 200 && copies.find(each => each.encoding === encoding)
             if (copy) {
               up.resume()
               passthrough['content-encoding'] = copy.encoding
