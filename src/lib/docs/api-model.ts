@@ -653,10 +653,12 @@ export class ApiModel {
   }
 
   #memberCode(parent: Declaration, member: Declaration): Token[][] {
+    // In the order TypeScript requires: `abstract readonly`, never `readonly abstract`
     const modifiers = [
+      member.flags?.isProtected ? 'protected ' : '',
       member.flags?.isStatic ? 'static ' : '',
-      member.flags?.isReadonly ? 'readonly ' : '',
       member.flags?.isAbstract ? 'abstract ' : '',
+      member.flags?.isReadonly ? 'readonly ' : '',
     ].join('')
     if (member.kind === 512) {
       return (member.signatures ?? []).map(signature => [
@@ -665,8 +667,12 @@ export class ApiModel {
         ...this.#paramsCode(signature),
       ])
     }
+    // An optional method, `onStart?(…)`, is one a class may leave out
     if (member.signatures)
-      return member.signatures.map(signature => [{ text: modifiers }, ...this.#signatureCode(signature)])
+      return member.signatures.map(signature => [
+        { text: modifiers },
+        ...this.#signatureCode(signature, member.flags?.isOptional),
+      ])
     if (member.kind === 16) {
       return [[{ text: member.name }, ...(member.type ? [{ text: ' = ' }, ...this.type(member.type)] : [])]]
     }
@@ -688,9 +694,9 @@ export class ApiModel {
     ]
   }
 
-  #signatureCode(signature: Signature): Token[] {
+  #signatureCode(signature: Signature, optional = false): Token[] {
     return [
-      { text: signature.name },
+      { text: `${signature.name}${optional ? '?' : ''}` },
       ...this.#typeParams(signature.typeParameters),
       ...this.#paramsCode(signature),
       { text: ': ' },

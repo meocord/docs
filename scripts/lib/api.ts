@@ -117,16 +117,6 @@ function linkPeers(packageDir: string): void {
   }
 }
 
-/** Whether a type as written names a type alias, directly or in a union or an intersection. */
-function namesAlias(node: ts.TypeNode, checker: ts.TypeChecker): boolean {
-  if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node))
-    return node.types.some(part => namesAlias(part, checker))
-  if (!ts.isTypeReferenceNode(node)) return false
-  const symbol = checker.getSymbolAtLocation(node.typeName)
-  const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
-  return !!target && !!(target.flags & ts.SymbolFlags.TypeAlias)
-}
-
 /** A union without its `undefined`, or the one type left. */
 function withoutUndefined(type: SomeType): SomeType {
   if (type.type !== 'union') return type
@@ -192,9 +182,8 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
     },
     [new TSConfigReader()],
   )
-  // TypeDoc draws a return type from the checker, which resolves a conditional alias, `DeepMocked<T>`,
-  // into its branch: the alias is lost, and its `infer`s read as unbound names. A return written with an
-  // alias's name, alone or within a union or an intersection, is drawn as written instead.
+  // TypeDoc draws a return type from the checker, which resolves an alias into what it stands for, turns
+  // `this` into the class, fills in default type arguments and reorders a union; it reads as written instead.
   // Parameter types read as written too; where the checker spelled a parameter out as an object, as it
   // does `ThemeOverride`, that stays beside it as `resolvedType`, which the reference lists options from
   const resolved = new Map<ParameterReflection | DeclarationReflection, SomeType>()
@@ -214,16 +203,14 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
     const node = declaration && 'type' in declaration ? declaration.type : undefined
     const scope = context.withScope(reflection)
-    if (node && ts.isTypeNode(node) && namesAlias(node, context.checker))
-      reflection.type = context.converter.convertType(scope, node)
+    if (node && ts.isTypeNode(node)) reflection.type = context.converter.convertType(scope, node)
     for (const parameter of reflection.parameters ?? []) {
       const written = context.getSymbolFromReflection(parameter)?.valueDeclaration
       if (!written || !ts.isParameter(written) || !written.type || written.type.kind === ts.SyntaxKind.ThisType)
         continue
-      const checked = parameter.type
-      const type = context.converter.convertType(scope.withScope(parameter), written.type)
-      // An optional parameter reads without the `undefined` its `?` already says, as TypeDoc draws it
-      parameter.type = written.questionToken ? withoutUndefined(type) : type
+      // The checker adds `undefined` to an optional parameter's type, which the written one says with its `?`
+      const checked = parameter.type && written.questionToken ? withoutUndefined(parameter.type) : parameter.type
+      parameter.type = context.converter.convertType(scope.withScope(parameter), written.type)
       keep(parameter, checked, parameter.type)
     }
   })
@@ -246,7 +233,7 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
       isComputedType(type) && symbol
         ? context.converter.convertType(scope, context.checker.getTypeOfSymbol(symbol))
         : reflection.type
-    reflection.type = reflection.flags.isOptional ? withoutUndefined(type) : type
+    reflection.type = type
     keep(reflection, checked && reflection.flags.isOptional ? withoutUndefined(checked) : checked, reflection.type)
   })
   app.serializer.addSerializer<ParameterReflection | DeclarationReflection>({

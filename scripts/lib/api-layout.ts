@@ -22,10 +22,12 @@ export async function formatDisplay(form: LayoutForm, display: string): Promise<
   const constructed = form === 'member' ? CONSTRUCTOR.exec(display)?.[1] : undefined
   let parsed = source.replace(ELIDED, '$$$$$$')
   if (constructed) parsed = parsed.replace(`new ${constructed}(`, 'constructor(')
+  // `constructor(` stands in for `new X(`, which is longer: the width left for the rest shrinks by the difference
+  const shift = constructed ? `new ${constructed}(`.length - 'constructor('.length : 0
   try {
     const formatted = await format(parsed, {
       parser: 'typescript',
-      printWidth: LAYOUT_WIDTH[form],
+      printWidth: LAYOUT_WIDTH[form] - shift,
       semi: false,
       singleQuote: true,
       trailingComma: 'all',
