@@ -1,8 +1,8 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { paths } from '../scripts/lib/layout'
 import { listPages } from '../scripts/lib/pages'
 import { readVersions } from '../scripts/lib/versions'
+import { axe } from './axe'
 
 // Every page written for the site, read from the content itself, so a new page is covered the day it lands
 const PAGES = readVersions(paths.versions)
@@ -25,9 +25,7 @@ for (const { path, title } of PAGES) {
     await page.goto(path)
     await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible()
 
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze()
+    const { violations } = await axe(page, builder => builder.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']))
     const serious = violations
       .filter(violation => violation.impact === 'serious' || violation.impact === 'critical')
       .map(

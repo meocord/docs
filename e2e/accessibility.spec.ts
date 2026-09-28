@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { axe } from './axe'
 
 // The page types a reader meets: home, the longest guide and one with code near its top, an API page,
 // the changelog and a release's page, a missing page.
@@ -16,9 +16,7 @@ const PAGES = [
 for (const path of PAGES) {
   test(`${path} has no serious or critical accessibility violation`, async ({ page }) => {
     await page.goto(path)
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze()
+    const { violations } = await axe(page, builder => builder.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']))
     const serious = violations
       .filter(violation => violation.impact === 'serious' || violation.impact === 'critical')
       .map(
@@ -43,7 +41,7 @@ for (const path of PAGES) {
   test(`${path} names each of its landmarks apart`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(path)
-    const { violations } = await new AxeBuilder({ page }).withRules(LANDMARK_RULES).analyze()
+    const { violations } = await axe(page, builder => builder.withRules(LANDMARK_RULES))
     expect(
       violations.map(violation => `${violation.id}: ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`),
     ).toEqual([])
