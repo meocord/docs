@@ -62,9 +62,11 @@ Fix what it names. The common ones:
   in a test. See [Providers](guide:services#providers).
 - **"`Class`: two classes have this name"** With process sharding, `ShardContext.call` finds a service in another
   shard by its class name, so every controller and service needs a name of its own. Rename one.
-- **"`Class.method`: @MessageHandler('…'): …"** A message pattern MeoCord can't read, such as a rest that isn't
-  last, a type nothing adds, a name used twice, or braces inside a word. So does `scope: 'dm'` on a command with a
-  `member`, `role` or `channel` param, and two patterns that match the same messages. See
+- **"`Class.method`: @MessageHandler('…'): …"** A message pattern MeoCord can't read stops the bot there, such as a
+  rest that isn't last, a type nothing adds, a name used twice, or braces inside a word. So does `scope: 'dm'` on a
+  command with a `member`, `role` or `channel` param. Two patterns that match the same messages stop it too, with a
+  line naming both handlers and their patterns, such as
+  `A.swap: "swap {a}" and "swap {b}" in B.swap match the same messages, …`. See
   [Errors at startup](guide:message-commands#errors-at-startup), which lists each one.
 - **A builder that fails.** A command's builder runs as its class loads, so a name Discord refuses, such as one
   with a capital letter or a space, stops the bot there, naming the builder and the command. See
