@@ -94,8 +94,8 @@ Each problem is named with its key path and what to give instead, such as
 checked whatever roles an app added to them; a group of the app's own is the app's to check.
 
 A theme set in code is checked where it's declared. A bad token in `@MeoCord({ theme })` or `@UseTheme` stops the bot
-before it logs in, and the message names the decorator, as in
-`@UseTheme on ShopController.refund: theme.emojis.loading: …`.
+before it logs in, and the message names where it was set, then each token it refuses, as in
+`ShopController.refund: @UseTheme: the theme has 1 problem:` followed by `theme.emojis.loading: …`.
 
 ## Reading the theme
 

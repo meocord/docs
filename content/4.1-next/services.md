@@ -129,8 +129,8 @@ fails when the module compiles, naming both:
   before that class exists, and MeoCord names both:
 
   ```text
-  Notes cannot be created: parameter 1 of its constructor has no runtime type. Usually Notes and a class it
-  injects import each other (NotesController injects Notes), or the parameter is typed with an interface or
+  Notes: parameter 1 of its constructor has no runtime type, so it cannot be created. Usually Notes and a class
+  it injects import each other (NotesController injects Notes), or the parameter is typed with an interface or
   an `import type`. Move what they both need into a third service, or inject the parameter with @Inject(token).
   ```
 
