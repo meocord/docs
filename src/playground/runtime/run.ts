@@ -27,8 +27,8 @@ type MockFn = { mock: { calls: unknown[][] } }
 /** The parts of `meocord/testing` a run drives. */
 interface Testing {
   MeoCordTestingModule: {
-    create(options: { controllers: Class[] }): Builder
-    fromApp(app: Class, options?: { controllers?: Class[] }): Builder
+    create(options: { controllers: Class[]; observers?: Class[] }): Builder
+    fromApp(app: Class, options?: { controllers?: Class[]; observers?: Class[] }): Builder
   }
   createMockInteraction(type: unknown, overrides?: Record<string, unknown>): Record<string, unknown>
   createMockMessage(overrides?: Record<string, unknown>): Record<string, unknown>
@@ -94,6 +94,29 @@ function appOf(exports: Record<string, unknown>, appOptionsKey: string): Class |
   return Object.values(exports).find(
     (value): value is Class => typeof value === 'function' && reflect.getMetadata?.(appOptionsKey, value) !== undefined,
   )
+}
+
+/** What an observer is told as a call reaches its handler: the controller and the method. */
+interface StartedCall {
+  getController(): { name: string } | undefined
+  getHandlerName(): string | undefined
+}
+
+/**
+ * An `@Observer` that notes each handler a call reaches, as MeoCord reports it: a dispatch that rejects,
+ * for an error no filter handled, says nothing of the handler it ran, and this does.
+ */
+function handlerRecorder(observer: () => (target: Class) => void, reached: string[]): Class {
+  class HandlerRecorder {
+    onStart(context: StartedCall) {
+      const controller = context.getController()?.name
+      const method = context.getHandlerName()
+      if (controller && method) reached.push(`${controller}.${method}`)
+    }
+    onSettled() {}
+  }
+  observer()(HandlerRecorder)
+  return HandlerRecorder
 }
 
 /** The mock interaction or message a dispatch describes, from the caller it comes from. */
@@ -209,6 +232,9 @@ export async function runPlayground(
   const testing = modules['meocord/testing'] as Testing
   const discord = modules['discord.js'] as Record<string, unknown>
   const { MetadataKey } = modules['meocord/enum'] as { MetadataKey: { AppOptions: string } }
+  const { Observer } = modules['meocord/decorator'] as { Observer: () => (target: Class) => void }
+  // The handlers the current input reached, as the recorder hears them
+  const reached: string[] = []
   let testingModule: TestingModule
   try {
     const app = appOf(exports, MetadataKey.AppOptions)
@@ -220,10 +246,11 @@ export async function runPlayground(
     const classes = Object.values(exports).filter(
       (value): value is Class => typeof value === 'function' && value !== app,
     )
+    const observers = [handlerRecorder(Observer, reached)]
     testingModule = (
       app
-        ? testing.MeoCordTestingModule.fromApp(app, named && { controllers: named })
-        : testing.MeoCordTestingModule.create({ controllers: named ?? classes })
+        ? testing.MeoCordTestingModule.fromApp(app, { ...(named && { controllers: named }), observers })
+        : testing.MeoCordTestingModule.create({ controllers: named ?? classes, observers })
     ).compile()
     await testingModule.init()
   } catch (error) {
@@ -243,6 +270,7 @@ export async function runPlayground(
         steps.push({ input: dispatch, ran: false, handlers: [], error: describeError(error), calls: [] })
         continue
       }
+      reached.length = 0
       try {
         const outcome = await testingModule.dispatch(input)
         steps.push({
@@ -253,11 +281,12 @@ export async function runPlayground(
           calls: callsOf(dispatch, input, testing),
         })
       } catch (error) {
-        // An error no filter handled: the fallback has answered it, and dispatch rethrows it
+        // An error no filter handled: the fallback has answered it, and dispatch rethrows it; the handler
+        // that threw is the one the recorder heard start
         steps.push({
           input: dispatch,
-          ran: false,
-          handlers: [],
+          ran: reached.length > 0,
+          handlers: [...reached],
           error: describeError(error),
           calls: callsOf(dispatch, input, testing),
         })

@@ -139,8 +139,35 @@ export class Broken {
 }
 `
     const result = ok(await run(source, [{ kind: 'button', customId: 'boom' }]))
-    expect(result.steps[0]).toMatchObject({ ran: false, error: { message: 'kaput' } })
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['Broken.boom'], error: { message: 'kaput' } })
     expect(result.steps[0].calls[0]?.method).toBeDefined()
+  })
+
+  it('names the handler that threw after answering, with what it sent before', async () => {
+    const source = `
+import { type ChatInputCommandInteraction } from 'discord.js'
+import { respond } from 'meocord/common'
+import { Command, Controller } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+@Controller()
+export class Halfway {
+  @Command('halfway', CommandType.SLASH)
+  async halfway(interaction: ChatInputCommandInteraction) {
+    await respond(interaction).send({ content: 'first' })
+    throw new Error('then this')
+  }
+}
+`
+    const result = ok(
+      await run(source, [
+        { kind: 'slash', command: 'halfway' },
+        { kind: 'button', customId: 'nowhere' },
+      ]),
+    )
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['Halfway.halfway'], error: { message: 'then this' } })
+    expect(result.steps[0].calls[0]).toMatchObject({ method: 'reply', payload: { content: 'first' } })
+    // The next input starts with nothing heard
+    expect(result.steps[1]).toMatchObject({ ran: false, handlers: [] })
   })
 
   it('answers an input nothing routes as the bot does', async () => {

@@ -81,7 +81,7 @@ export function startWorker(modules: ModuleMap) {
       try {
         const wasm = scope.__playground?.wasm
         if (!wasm) throw new Error('The playground runtime was loaded without its compiler.')
-        swc ??= initSwc(wasm)
+        swc ??= initSwc({ module_or_path: wasm })
         await swc
         scope.postMessage({ type: 'started', id: request.id } satisfies RunStarted)
         scope.postMessage(await runPlayground(request, { modules, compile, logs }))

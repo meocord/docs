@@ -81,6 +81,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "events": "^3.3.0",
     "github-slugger": "^2.0.0",
+    "happy-dom": "^20.14.5",
     "lighthouse": "^13.5.0",
     "pagefind": "^1.5.2",
     "path-browserify": "^1.0.1",
