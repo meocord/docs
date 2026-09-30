@@ -15,8 +15,8 @@ import { docsHref } from '@/lib/urls'
 export const guideEnabled = (line: string) => guideRendered(line)
 
 /**
- * Whether a line has a playground page, and a Playground tab and palette entry for it: its Guide is
- * rendered, and the build made its runtime.
+ * Whether a line has a playground page, linked from its Guide sidebar and the home, with a palette
+ * entry: its Guide is rendered, and the build made its runtime.
  */
 export const hasPlaygroundPage = (line: string) => guideEnabled(line) && playgroundFrame(line) !== undefined
 
