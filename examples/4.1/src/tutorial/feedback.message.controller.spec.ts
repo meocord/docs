@@ -1,7 +1,13 @@
 import { Collection, GuildMember, Locale, MessageReaction, User } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
 import { ReactionHandlerAction } from 'meocord/enum'
-import { createMockGuild, createMockInteraction, createMockMessage, MeoCordTestingModule } from 'meocord/testing'
+import {
+  createMockClient,
+  createMockGuild,
+  createMockInteraction,
+  createMockMessage,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { FeedbackMessageController } from '@src/tutorial/feedback.message.controller'
 import { FeedbackService } from '@src/tutorial/feedback.service'
@@ -74,8 +80,14 @@ describe('the feedback bot in chat', () => {
       roles: { cache: new Collection(roles.map(role => [role, { id: role }])) } as never,
     })
     reviewed.members.fetch.mockResolvedValue(member as never)
-    const filed = createMockMessage({ guild: reviewed, content: content ?? `Filed as feedback #${id}. Thank you!` })
-    filed.author = filed.client.user as never
+    // The bot's own filing reply: sent by the client's user
+    const client = createMockClient()
+    const filed = createMockMessage({
+      guild: reviewed,
+      client,
+      author: client.user!,
+      content: content ?? `Filed as feedback #${id}. Thank you!`,
+    })
     const reaction = createMockInteraction(MessageReaction, { message: filed, emoji: { name: emoji } as never })
     const user = createMockInteraction(User, { id: '222', username: 'grace', bot: false })
 
