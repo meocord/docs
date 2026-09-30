@@ -96,6 +96,36 @@ test("keeps what a reader typed before the page's script ran, and a link's code 
   await expect(code(opened)).toHaveValue(LOUD)
 })
 
+test("keeps what a reader typed over a shared link's code, and says the link's code wasn't loaded", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(baseURL!).origin })
+  await page.goto(PAGE)
+  await code(page).fill(LOUD)
+  await inputs(page).fill('/hello name:ada')
+  await share(page).click()
+  await expect(status(page)).toHaveText('Link copied.')
+
+  // Opened on a slow connection: the reader starts editing the example before the page's scripts run
+  const opened = await context.newPage()
+  let release!: () => void
+  const held = new Promise<void>(resolve => (release = resolve))
+  await opened.route('**/_next/static/**/*.js', async route => {
+    await held
+    await route.continue()
+  })
+  await opened.goto(page.url(), { waitUntil: 'domcontentloaded' })
+  await code(opened).fill('// my own edit')
+  release()
+  await expect(run(opened)).toBeVisible()
+  await expect(status(opened)).toHaveText(
+    "This link's code wasn't loaded, so your edits stay. Reload the page to open it.",
+  )
+  await expect(code(opened)).toHaveValue('// my own edit')
+})
+
 test('copies a link that carries the code and inputs, and opens from it', async ({ page, context, baseURL }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(baseURL!).origin })
   await page.goto(PAGE)

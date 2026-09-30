@@ -45,7 +45,12 @@ test("a line's API reference opens on its index by kind, or on MeoCordFactory by
   // 4.1 is arranged by kind: its API opens on the index of the kinds
   const index = await request.get('/docs/4.1/api', { maxRedirects: 0 })
   expect(index.status()).toBe(200)
-  expect(await index.text()).toContain('<h1>API</h1>')
+  const html = await index.text()
+  expect(html).toContain('<h1>API</h1>')
+  // Each kind heads its section, linking its page, over the symbols it files, each linking its own
+  expect(html).toContain('<a href="/docs/4.1/api/decorators">Decorators</a>')
+  expect(html).toContain('<a href="/docs/4.1/api/decorators/Command">')
+  expect(html).toContain('<a href="/docs/4.1/api/controllers/ShardContext">')
   // 4.0 is arranged by entry point, and opens where every app starts
   for (const [path, landing] of [
     ['/docs/4.0/api', '/docs/latest/api/core/MeoCordFactory'],
