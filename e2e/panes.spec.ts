@@ -18,11 +18,14 @@ const inView = (page: Page, selector: string, scroller: string) =>
     [selector, scroller],
   )
 
-/** A sidebar link on show and not the current one, for navigating by the sidebar. */
+/** A sidebar link on show, below the pinned filter, and not the current one, for navigating by the sidebar. */
 const visibleLink = (page: Page) =>
   page.evaluate(() => {
     const body = [...document.querySelectorAll('[data-sidebar-body]')].find(element => element.checkVisibility())!
-    const view = body.getBoundingClientRect()
+    const view = {
+      top: body.querySelector('[data-sidebar-filter]')!.getBoundingClientRect().bottom,
+      bottom: body.getBoundingClientRect().bottom,
+    }
     const link = [...body.querySelectorAll<HTMLAnchorElement>('a[href^="/docs/"]:not([aria-current])')].find(
       candidate => {
         const box = candidate.getBoundingClientRect()

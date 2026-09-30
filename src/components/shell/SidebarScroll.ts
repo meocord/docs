@@ -72,7 +72,9 @@ export const SidebarScroll = Component(function SidebarScroll() {
       if (current) {
         const view = body.getBoundingClientRect()
         const link = current.getBoundingClientRect()
-        if (link.top < view.top) body.scrollTop -= view.top - link.top + MARGIN
+        // Below the room the link keeps at the top, which the pinned filter takes
+        const top = view.top + parseFloat(getComputedStyle(current).scrollMarginTop)
+        if (link.top < top) body.scrollTop -= top - link.top + MARGIN
         else if (link.bottom > view.bottom) body.scrollTop += link.bottom - view.bottom + MARGIN
       }
     }

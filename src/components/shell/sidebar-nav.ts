@@ -171,6 +171,20 @@ export function SidebarNav({
         overflowWrap: 'anywhere',
       },
       // The tabs: two or more links side by side, the current one tinted as a current row is.
+      // The filter stays at the top of the scroller, opaque over the links scrolling under it, and every
+      // row keeps its height clear of it when scrolled or focused into view.
+      '& [data-sidebar-filter]': {
+        position: 'sticky',
+        top: 0,
+        zIndex: 1,
+        margin: 'calc(-1 * theme.space.2) calc(-1 * theme.space.2) 0',
+        padding: 'theme.space.2',
+        backgroundColor: 'theme.material.sidebar.solid',
+      },
+      '& li > a, & summary': {
+        scrollMarginTop: 'calc(theme.layout.row + 2 * theme.space.2)',
+        '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(44px + 2 * theme.space.2)' },
+      },
       '& [data-nav-tabs]': {
         display: 'flex',
         gap: 'theme.space.1',
