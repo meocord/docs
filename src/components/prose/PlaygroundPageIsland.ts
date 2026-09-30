@@ -28,6 +28,9 @@ export function PlaygroundPageIsland() {
     if (location.hash)
       void decodeShared(location.hash).then(shared => {
         if (!shared) return say("This link's code couldn't be read, so the playground starts from an example.")
+        // Only over the page as served: a reader who began editing before this ran keeps their text
+        if (code.value !== code.defaultValue || inputs.value !== inputs.defaultValue)
+          return say("This link's code wasn't loaded, so your edits stay. Reload the page to open it.")
         code.value = shared.source
         inputs.value = shared.dispatch
       })
