@@ -7,7 +7,7 @@ import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { guideEnabled, guideTabs, guideView, resolveGuideLink, type GuideView } from '@/lib/docs/guide-site'
 import { guidePage, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
-import { CHAPTERS } from '../../../scripts/lib/guide'
+import { CHAPTERS, guidePath } from '../../../scripts/lib/guide'
 
 export const REPOSITORY = 'https://github.com/meocord/meocord'
 
@@ -149,7 +149,7 @@ export function renderGuidePage(line: string, pagePath: string) {
   if (!view) return undefined
   return Window({
     crumbs: view.crumbs,
-    groups: sidebar(line, view.page.id),
+    groups: sidebar(line, guidePath(view.page)),
     tabs: guideTabs(line, 'guide'),
     version: versionChoices(line, { page: view.page, line }),
     repository: REPOSITORY,

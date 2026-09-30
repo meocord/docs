@@ -93,9 +93,13 @@ const SECTION_ICONS: Record<string, GlyphName> = {
   Reference: 'reference',
 }
 
-/** The sidebar: a line's pages in order, grouped by section in the order sections first appear. */
+/** The sidebar: a line's pages in order, grouped by section in the order sections first appear, the one read marked. */
 export function sidebar(line: string, currentSlug?: string): NavGroup[] {
-  if (guideEnabled(line)) return [...guideSidebar(line), referenceGroup(line, currentSlug)]
+  if (guideEnabled(line)) {
+    // The page read, by its path below the line, marked in the Guide's groups
+    const current = guideEntries(line).find(({ page }) => guidePath(page) === currentSlug)?.page
+    return [...guideSidebar(line, current), referenceGroup(line, currentSlug)]
+  }
   const groups: NavGroup[] = []
   for (const page of listPages(line)) {
     const title = page.section ?? 'Guides'

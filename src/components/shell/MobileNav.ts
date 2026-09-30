@@ -47,8 +47,8 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[]; tabs: 
         '@keyframes slide': { from: { transform: 'translateX(-100%)' } },
         animation: 'slide theme.motion.duration.move theme.motion.ease.enter',
         '@media (prefers-reduced-motion: reduce)': { animationName: 'fade' },
-        // Rows a finger can take.
-        '& nav a, & nav summary': { minHeight: 44 },
+        // Rows a finger can take, the Guide/API tabs above them included.
+        '& nav a, & nav summary, & nav [data-nav-tabs] > a': { minHeight: 44 },
       },
       children: SidebarPane({
         width: '100%',

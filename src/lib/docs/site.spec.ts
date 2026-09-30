@@ -17,6 +17,15 @@ describe('the docs site data', () => {
     expect(items.filter(item => item.current).map(item => item.title)).toEqual(['Guards'])
     expect(items.find(item => item.title === 'Guards')?.href).toBe('/docs/latest/guards')
     expect(sidebar('4.1').flatMap(group => group.items)[0].href).toMatch(/^\/docs\/4\.1\//)
+    // A Guide line marks the page read, by its path, a recipe's under its group
+    const marked = (path: string) =>
+      sidebar('4.1', path)
+        .flatMap(group => group.items)
+        .filter(item => item.current)
+        .map(item => item.href)
+    expect(marked('defer')).toEqual(['/docs/4.1/defer'])
+    expect(marked('overview')).toEqual(['/docs/4.1/overview'])
+    expect(marked('recipes/tickets')).toEqual(['/docs/4.1/recipes/tickets'])
     // Every group carries a glyph; a section without its own gets the book.
     expect(groups.every(group => group.icon)).toBe(true)
     expect(groups.at(-1)).toEqual({

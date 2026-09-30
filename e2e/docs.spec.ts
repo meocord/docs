@@ -9,9 +9,17 @@ test('a guide renders in the window, at its canonical latest URL', async ({ page
 })
 
 test('the sidebar lists the line’s pages and marks the one being read', async ({ page }) => {
+  // In a Guide, the tab of the section read is current too, but only the page's own link is current as a page
+  await page.goto('/docs/4.1/guards')
+  const guide = page.getByRole('navigation', { name: 'Documentation' })
+  await expect(guide.locator('[aria-current="page"]')).toHaveCount(1)
+  await expect(guide.locator('[aria-current="page"]')).toHaveAttribute('href', '/docs/4.1/guards')
+  await expect(guide.locator('[data-nav-tabs] > a[aria-current="true"]')).toHaveText('Guide')
+
   await page.goto('/docs/latest/guards')
   const nav = page.getByRole('navigation', { name: 'Documentation' })
   await expect(nav.getByRole('link')).not.toHaveCount(0)
+  await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
   await expect(nav.locator('[aria-current="page"]')).toHaveText('Guards')
   await nav.getByRole('link', { name: 'Testing' }).click()
   await expect(page).toHaveURL(/\/docs\/latest\/testing$/)
@@ -43,7 +51,8 @@ test('a line lands on its first page, and an unknown page is a 404', async ({ pa
 
 test('the home page links into the guides of the line it shows', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Read the quick start' }).click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/quick-start$/)
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  // The Learn door opens the Guide where a reader starts, the first command after the setup
+  await page.locator('[data-door]').first().getByRole('link', { name: 'Your first command' }).click()
+  await expect(page).toHaveURL(/\/docs\/4\.1\/first-command$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Your first command' })).toBeVisible()
 })
