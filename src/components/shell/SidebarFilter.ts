@@ -18,16 +18,27 @@ function scrollerOf(element: Element): HTMLElement | null {
   return null
 }
 
+/** Out of sight but read aloud: the status while it counts the pages shown. */
+const countHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+} as const
+
 /**
  * Narrows the sidebar's links to those whose title holds what is typed, keeping each match's group and
- * category, and says so when none does. The matches show from the top, and clearing the filter, as
- * Escape does, puts the sidebar back where the reader left it. It only hides rows: the links, and which
- * one is the page read, stay as drawn.
+ * category, and says how many pages show, or that none does. The matches show from the top, and
+ * clearing the filter, as Escape does, puts the sidebar back where the reader left it. It only hides
+ * rows: the links, and which one is the page read, stay as drawn.
  */
 export const SidebarFilter = Component(function SidebarFilter() {
   const root = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
-  const [none, setNone] = useState(false)
+  // How many pages the filter shows, or null while it is empty
+  const [count, setCount] = useState<number | null>(null)
   // Where the sidebar was scrolled when filtering began, to go back to once it is cleared
   const left = useRef<number | null>(null)
 
@@ -62,7 +73,7 @@ export const SidebarFilter = Component(function SidebarFilter() {
       }
       shown += matched
     }
-    setNone(Boolean(needle) && shown === 0)
+    setCount(needle ? shown : null)
 
     if (!scroller) return
     if (needle) scroller.scrollTop = 0
@@ -106,10 +117,12 @@ export const SidebarFilter = Component(function SidebarFilter() {
           '@media (width < theme.breakpoint.compact)': { minHeight: 44 },
         },
       }),
-      P(none ? 'No pages match' : '', {
-        key: 'none',
+      P(count === null ? '' : count === 0 ? 'No pages match' : count === 1 ? '1 page' : `${count} pages`, {
+        key: 'count',
         role: 'status',
-        margin: none ? 'theme.space.2 theme.space.2 0' : 0,
+        margin: count === 0 ? 'theme.space.2 theme.space.2 0' : 0,
+        // A count is for a screen reader: shown, it would deepen the pinned bar over the rows it keeps clear
+        ...(count ? countHidden : {}),
         fontSize: 'theme.type.small.size',
         color: 'theme.ink.secondary',
       }),
