@@ -7,8 +7,8 @@ import { SHELL_IDS } from '@/lib/page-ids'
  */
 
 /**
- * The sidebar's scroller: the body scrolls, the header above it does not, and nothing in the pane is
- * sticky. The scrollbar runs beside the navigation only.
+ * The sidebar's scroller: the body scrolls, the header above it does not, and only the navigation's
+ * filter is sticky, to the top of the body. The scrollbar runs beside the navigation only.
  */
 export const SidebarBody = createNode('div', {
   'data-sidebar-body': true,

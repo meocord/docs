@@ -11,21 +11,34 @@ const folded = (text: string) =>
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
 
+/** The element the sidebar's links scroll in: the pane's body, or the sheet's. */
+function scrollerOf(element: Element): HTMLElement | null {
+  for (let node = element.parentElement; node; node = node.parentElement)
+    if (/(auto|scroll)/.test(getComputedStyle(node).overflowY)) return node
+  return null
+}
+
 /**
  * Narrows the sidebar's links to those whose title holds what is typed, keeping each match's group and
- * category, and says so when none does. Escape clears it. It only hides rows: the links, and which
+ * category, and says so when none does. The matches show from the top, and clearing the filter, as
+ * Escape does, puts the sidebar back where the reader left it. It only hides rows: the links, and which
  * one is the page read, stay as drawn.
  */
 export const SidebarFilter = Component(function SidebarFilter() {
   const root = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [none, setNone] = useState(false)
+  // Where the sidebar was scrolled when filtering began, to go back to once it is cleared
+  const left = useRef<number | null>(null)
 
   const apply = (value: string) => {
     setQuery(value)
     const nav = root.current?.closest('nav')
     if (!nav) return
     const needle = folded(value.trim())
+    const scroller = scrollerOf(nav)
+    // Read before any row hides, which clamps the offset to the shorter list
+    if (needle && scroller) left.current ??= scroller.scrollTop
     let shown = 0
     for (const group of nav.querySelectorAll<HTMLDetailsElement>(':scope > [data-nav-group]')) {
       let matched = 0
@@ -50,12 +63,18 @@ export const SidebarFilter = Component(function SidebarFilter() {
       shown += matched
     }
     setNone(Boolean(needle) && shown === 0)
+
+    if (!scroller) return
+    if (needle) scroller.scrollTop = 0
+    else if (left.current !== null) {
+      scroller.scrollTop = left.current
+      left.current = null
+    }
   }
 
   return Div({
     ref: root,
     'data-sidebar-filter': true,
-    margin: '0 0 theme.space.2',
     children: [
       Input({
         key: 'field',
