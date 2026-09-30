@@ -48,6 +48,7 @@ import { stageAnchor, stagesNamed } from '@/lib/docs/pipeline'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
+import { escapeAttribute, escapeHtml } from '@/lib/html'
 
 type Child = NodeInstance | string
 
@@ -100,9 +101,6 @@ function sourceStyles(source: string) {
   }
   return styles
 }
-
-const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttribute = (text: string) => escapeHtml(text).replace(/"/g, '&quot;')
 
 /**
  * Code as TypeScript, as HTML for the inside of a `<code>`: formatted over lines when `bun run

@@ -37,6 +37,8 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   await expect(page).toHaveURL(/\/docs\/4\.1\/playground$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Playground' })).toBeVisible()
   await expect(page.locator('[aria-current="page"]', { hasText: 'Playground' }).first()).toBeVisible()
+  // The Playground tab is the section read, marked current as the other tabs are
+  await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Playground')
 
   // It starts from the Guide's first playground
   await expect(code(page)).toHaveValue(/export class CounterButtonController/)
@@ -61,6 +63,37 @@ test('runs what the reader writes, from the keyboard, and says what is wrong wit
   await inputs(page).fill('/hello; select')
   await run(page).click()
   await expect(status(page)).toHaveText('dispatch step 2: select needs a customId')
+})
+
+test("keeps what a reader typed before the page's script ran, and a link's code wins over the example", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(baseURL!).origin })
+  // The page's scripts are held until the reader has typed, as on a slow connection
+  let release!: () => void
+  const held = new Promise<void>(resolve => (release = resolve))
+  await page.route('**/_next/static/**/*.js', async route => {
+    await held
+    await route.continue()
+  })
+  await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
+  await code(page).fill(LOUD)
+  await inputs(page).fill('/hello name:ada')
+  release()
+  await expect(run(page)).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await expect(code(page)).toHaveValue(LOUD)
+  await expect(inputs(page)).toHaveValue('/hello name:ada')
+
+  // Opened from a link, the editor holds the link's code alone, not the example with it
+  await share(page).click()
+  await expect(status(page)).toHaveText('Link copied.')
+  const opened = await context.newPage()
+  await opened.goto(page.url())
+  await expect(run(opened)).toBeVisible()
+  await expect(code(opened)).toHaveValue(LOUD)
 })
 
 test('copies a link that carries the code and inputs, and opens from it', async ({ page, context, baseURL }) => {

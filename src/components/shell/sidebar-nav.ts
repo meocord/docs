@@ -193,7 +193,7 @@ export function SidebarNav({
       },
       '& [data-nav-tabs] > a:hover': { color: 'theme.ink.primary' },
       '& [data-nav-tabs] > a:focus-visible': focusCss['&:focus-visible'],
-      '& [data-nav-tabs] > a[aria-current="page"]': {
+      '& [data-nav-tabs] > a[aria-current="true"]': {
         color: 'theme.ink.primary',
         backgroundColor: 'theme.surface.sheet',
       },
@@ -219,7 +219,8 @@ export function SidebarNav({
               Link({
                 key: tab.href,
                 href: tab.href,
-                'aria-current': tab.current ? 'page' : undefined,
+                // The section read, not the page: the page's own link below is the one current as a page
+                'aria-current': tab.current ? 'true' : undefined,
                 children: tab.title,
               }),
             ),
@@ -235,7 +236,7 @@ export function readNavTabs(nav: Element): NavTab[] {
   return [...nav.querySelectorAll<HTMLAnchorElement>(':scope > [data-nav-tabs] > a')].map(link => ({
     title: link.textContent ?? '',
     href: link.getAttribute('href') ?? '',
-    current: link.getAttribute('aria-current') === 'page' || undefined,
+    current: link.getAttribute('aria-current') === 'true' || undefined,
   }))
 }
 
