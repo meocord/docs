@@ -6,8 +6,16 @@
 import { type FrameMessage, parseRunResult, type RunRequest, type RunResult } from '../runtime/protocol'
 import { showResult, showStatus } from './result-view'
 
-/** How long the frame may take to say it is ready, the runtime and compiler still to load. */
-const READY_LIMIT = 30_000
+/**
+ * How long the frame may take to say it is ready. It says so as its own small script runs, before it loads the
+ * runtime and compiler, which it bounds itself, so only a frame that never loads takes this long.
+ */
+const READY_LIMIT = 10_000
+/**
+ * How long after the frame's document loads its ready message may still arrive: the two reach the page as
+ * separate tasks, in either order. A document that loads without saying it is ready is not the frame.
+ */
+const LOADED_GRACE = 2_000
 /** How long a run may take to be answered, loading included; the frame stops runs well within it. */
 const ANSWER_LIMIT = 90_000
 
@@ -35,13 +43,17 @@ function openChannel(frame: string): Promise<Channel> {
   const waiting = new Map<number, (message: unknown) => void>()
   let ready: () => void
   const readied = new Promise<void>(resolve => (ready = resolve))
-  addEventListener('message', event => {
-    if (event.source !== iframe.contentWindow) return
-    const message = event.data as FrameMessage | undefined
-    if (message?.type === 'ready') ready()
-    else if (message?.type === 'result' && typeof message.id === 'number') waiting.get(message.id)?.(message)
-  })
-  document.body.append(iframe)
+  const listening = new AbortController()
+  addEventListener(
+    'message',
+    event => {
+      if (event.source !== iframe.contentWindow) return
+      const message = event.data as FrameMessage | undefined
+      if (message?.type === 'ready') ready()
+      else if (message?.type === 'result' && typeof message.id === 'number') waiting.get(message.id)?.(message)
+    },
+    { signal: listening.signal },
+  )
 
   // The frame takes one run at a time, so runs from every playground on the page wait their turn
   let queue: Promise<unknown> = Promise.resolve()
@@ -69,17 +81,33 @@ function openChannel(frame: string): Promise<Channel> {
       return answered
     },
   }
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      channels.delete(frame)
+  // A frame that isn't ready is dropped with its listener, so the next Run starts a fresh one
+  const starting = new AbortController()
+  const opened = new Promise<Channel>((resolve, reject) => {
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const settle = () => {
+      timers.forEach(clearTimeout)
+      starting.abort()
+    }
+    const giveUp = (reason: string) => {
+      settle()
+      listening.abort()
+      if (channels.get(frame) === opened) channels.delete(frame)
       iframe.remove()
-      reject(new Error("The playground couldn't load."))
-    }, READY_LIMIT)
+      reject(new Error(`The playground couldn't start: ${reason} Press Run to try again.`))
+    }
+    const blocked = () =>
+      giveUp("its frame didn't load, so a browser extension, the network or the site's settings may be blocking it.")
+    timers.push(setTimeout(() => giveUp(`its frame didn't load within ${READY_LIMIT / 1000} seconds.`), READY_LIMIT))
+    iframe.addEventListener('load', () => timers.push(setTimeout(blocked, LOADED_GRACE)), { signal: starting.signal })
+    iframe.addEventListener('error', blocked, { signal: starting.signal })
     void readied.then(() => {
-      clearTimeout(timer)
+      settle()
       resolve(channel)
     })
+    document.body.append(iframe)
   })
+  return opened
 }
 
 /**
