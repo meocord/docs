@@ -9,22 +9,23 @@ test('a symbol page shows its declaration, links its types, and anchors its memb
   page.on('console', message => {
     if (message.type() === 'error') violations.push(message.text())
   })
-  const response = await page.goto('/docs/4.1/api/core/ShardContext')
+  // 4.1's API is arranged by kind; live-routes.spec checks its old pages by entry point redirect here
+  const response = await page.goto('/docs/4.1/api/controllers/ShardContext')
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1, name: 'ShardContext' })).toBeVisible()
   await expect(page.locator('[data-signature]').first()).toContainText('class ShardContext')
   await expect(page.locator('h3#constructor')).toBeVisible()
   await expect(page.locator('nav, aside').getByRole('link', { name: 'Cooldown', exact: true }).first()).toHaveAttribute(
     'href',
-    '/docs/4.1/api/decorator/Cooldown',
+    '/docs/4.1/api/decorators/Cooldown',
   )
   expect(violations).toEqual([])
 })
 
 test('a linked type opens its own page', async ({ page }) => {
-  await page.goto('/docs/4.1/api/decorator/Cooldown')
+  await page.goto('/docs/4.1/api/decorators/Cooldown')
   await page.locator('[data-signature] a', { hasText: 'CooldownOptions' }).first().click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/api\/interface\/CooldownOptions$/)
+  await expect(page).toHaveURL(/\/docs\/4\.1\/api\/types\/CooldownOptions$/)
   await expect(page.getByRole('heading', { level: 1, name: 'CooldownOptions' })).toBeVisible()
 })
 

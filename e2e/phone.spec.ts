@@ -24,7 +24,7 @@ for (const width of [390, 430]) {
       await page.setViewportSize({ width, height: 844 })
     })
 
-    for (const url of ['/', '/docs/4.1/guards', '/docs/4.1/api/decorator/Command']) {
+    for (const url of ['/', '/docs/4.1/guards', '/docs/4.1/api/decorators/Command']) {
       test(`every control on ${url} is a 44px touch target`, async ({ page }) => {
         await page.goto(url)
         expect(await smallTargets(page)).toEqual([])

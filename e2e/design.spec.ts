@@ -68,7 +68,7 @@ test('on a wide window the missing page is centred, with its footer rule under t
 
 test('on a phone the toolbar names only the current page, without overlap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/docs/4.1/api/decorator/Command')
+  await page.goto('/docs/4.1/api/decorators/Command')
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' }).locator('li')
   const shown = await crumbs.evaluateAll(items =>
     items.filter(item => item.checkVisibility()).map(item => (item as HTMLElement).innerText),
@@ -79,7 +79,7 @@ test('on a phone the toolbar names only the current page, without overlap', asyn
 test('an API parameter’s name and type never break inside a word', async ({ page }) => {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/docs/4.1/api/decorator/Command')
+    await page.goto('/docs/4.1/api/decorators/Command')
     const lines = await page
       .locator('[data-params] td:first-child code, [data-params] td:nth-child(2) code')
       .evaluateAll(codes => codes.map(code => code.getClientRects().length))
@@ -88,7 +88,7 @@ test('an API parameter’s name and type never break inside a word', async ({ pa
 })
 
 test('an API return type is framed as its signature is, after what it returns', async ({ page }) => {
-  await page.goto('/docs/4.1/api/decorator/Command')
+  await page.goto('/docs/4.1/api/decorators/Command')
   await expect(page.locator('h2#returns + p')).toHaveText('Returns a method decorator.')
   await expect(page.locator('h2#returns + p + pre[data-signature]')).toBeVisible()
 })
