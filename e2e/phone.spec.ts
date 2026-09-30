@@ -39,6 +39,20 @@ for (const width of [390, 430]) {
       expect(await smallTargets(page)).toEqual([])
     })
 
+    test('the navigation sheet scrolls to its last link, its header staying put', async ({ page }) => {
+      await page.goto('/docs/4.1/guards')
+      await page.getByRole('button', { name: 'Open navigation' }).click()
+      const sheet = page.getByRole('dialog', { name: 'Documentation' })
+      const close = sheet.getByRole('button', { name: 'Close navigation' })
+      const last = sheet.locator('nav li > a').last()
+      await expect(last).not.toBeInViewport()
+      const before = (await close.boundingBox())!.y
+      await sheet.locator('nav').hover()
+      await page.mouse.wheel(0, 5000)
+      await expect(last).toBeInViewport()
+      expect((await close.boundingBox())!.y).toBe(before)
+    })
+
     test('the palette’s field and results are 44px touch targets', async ({ page }) => {
       await page.goto('/docs/4.1/guards')
       await page.locator('[data-search-trigger]').first().click()

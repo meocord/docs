@@ -76,8 +76,14 @@ function NavSheet({ data, close }: PortalLayerProps<{ groups: NavGroup[]; tabs: 
               }),
             ],
           }),
-          // A followed link replaces the page underneath, so the sheet closes with it.
+          // A followed link replaces the page underneath, so the sheet closes with it. The links scroll
+          // beneath the sheet's header, as the sidebar's do beneath the pane's.
           Div({
+            'data-sheet-links': true,
+            flex: '1 1 auto',
+            minHeight: 0,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
             onClick: (event: { target: EventTarget }) => (event.target as HTMLElement).closest('a') && close(),
             children: SidebarNav({ groups: data.groups, tabs: data.tabs }),
           }),
