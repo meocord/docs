@@ -100,8 +100,8 @@ export function renderPlaygroundPage(line: string): NodeInstance | undefined {
 
   return Window({
     crumbs: [{ title: line, href: docsHref({ kind: 'line', line }, VERSIONS) }, { title: 'Playground' }],
-    groups: sidebar(line),
-    tabs: guideTabs(line, 'playground'),
+    groups: sidebar(line, 'playground'),
+    tabs: guideTabs(line, 'guide'),
     version: versionChoices(line),
     repository: REPOSITORY,
     toc: [],

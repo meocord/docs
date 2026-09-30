@@ -4,7 +4,7 @@ import { migratingGuide, resolveExample } from '../../../scripts/lib/pages'
 import { HOME_EXAMPLE, HOME_LINE } from '@/config/home'
 import { VERSIONS } from '@/config/versions'
 import { apiLandingHref } from '@/lib/docs/api-site'
-import { guideEntries, guidePageHref, resolveGuideLink } from '@/lib/docs/guide-site'
+import { guideEntries, guidePageHref, hasPlaygroundPage, resolveGuideLink } from '@/lib/docs/guide-site'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 
@@ -219,7 +219,14 @@ export function doors(): Door[] {
     {
       title: 'Learn',
       body: 'The Guide, in reading order: what a bot is made of, each kind of handler, the pipeline around it, testing and shipping.',
-      links: [...link(pages[0]?.id ?? ''), ...link('getting-started'), ...link('first-command')],
+      links: [
+        ...link(pages[0]?.id ?? ''),
+        ...link('getting-started'),
+        ...link('first-command'),
+        ...(hasPlaygroundPage(HOME_LINE)
+          ? [{ title: 'Playground', href: docsHref({ kind: 'playground', line: HOME_LINE }, VERSIONS) }]
+          : []),
+      ],
     },
     {
       title: 'Look up',
