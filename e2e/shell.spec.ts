@@ -88,7 +88,7 @@ test.describe('on a phone', () => {
   })
 
   // The sheet draws the sidebar's own links, read from the pane hidden at this width.
-  for (const path of ['/docs/4.1/defer', '/docs/4.1/api/core/ShardContext']) {
+  for (const path of ['/docs/4.1/defer', '/docs/4.1/api/controllers/ShardContext']) {
     test(`the sheet shows the sidebar's groups and links, at ${path}`, async ({ page }) => {
       await page.goto(path)
       const outline = (nav: Element) =>

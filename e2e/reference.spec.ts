@@ -41,9 +41,13 @@ test('a release no line has answers 404, and a line reaches its releases through
   expect((await request.get('/docs/latest/changelog/4.0.0')).status()).toBe(200)
 })
 
-test("a line's API reference opens on MeoCordFactory", async ({ request }) => {
+test("a line's API reference opens on its index by kind, or on MeoCordFactory by entry point", async ({ request }) => {
+  // 4.1 is arranged by kind: its API opens on the index of the kinds
+  const index = await request.get('/docs/4.1/api', { maxRedirects: 0 })
+  expect(index.status()).toBe(200)
+  expect(await index.text()).toContain('<h1>API</h1>')
+  // 4.0 is arranged by entry point, and opens where every app starts
   for (const [path, landing] of [
-    ['/docs/4.1/api', '/docs/4.1/api/core/MeoCordFactory'],
     ['/docs/4.0/api', '/docs/latest/api/core/MeoCordFactory'],
     ['/docs/latest/api', '/docs/latest/api/core/MeoCordFactory'],
   ]) {
@@ -78,5 +82,8 @@ test('a missing page is noindexed, and one for a page no line has is a 404', asy
   // Noindex always; its links are followed once the site is indexable, which this build is not.
   expect(html).toContain('<meta name="robots" content="noindex, nofollow"/>')
   expect((await request.get('/docs/4.0/missing/no-such-page')).status()).toBe(404)
-  expect((await request.get('/docs/4.1/missing/interceptors')).status()).toBe(404)
+  // A line that has the page sends the reader to it, rather than saying it lacks it
+  const present = await request.get('/docs/4.1/missing/interceptors', { maxRedirects: 0 })
+  expect(present.status()).toBe(308)
+  expect(present.headers().location).toBe('/docs/4.1/interceptors')
 })

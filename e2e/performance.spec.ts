@@ -11,7 +11,7 @@ const PAGES = [
   '/',
   '/docs/4.1/defer',
   '/docs/4.1/testing',
-  '/docs/4.1/api/core/ShardContext',
+  '/docs/4.1/api/controllers/ShardContext',
   '/docs/4.1/changelog',
   '/docs/4.1/changelog/4.1.0-beta.0',
 ]

@@ -24,17 +24,22 @@ test("every docs link in the pinned meocord's declarations resolves on the site"
   expect(problems).toEqual([])
 })
 
-test('an aliased Guide slug lands on the page that holds its topic', async ({ request }) => {
-  const response = await request.get('/docs/4.1/slash-commands', { maxRedirects: 0 })
-  expect(response.status()).toBe(307)
-  expect(response.headers().location).toBe('/docs/4.1/command-types')
-  // Another line finds its own page for the topic by id, whatever its slug there.
-  const older = await request.get('/docs/4.0/components', { maxRedirects: 0 })
-  expect(older.headers().location).toBe('/docs/4.0/command-parameters')
+test('a Guide slug lands on the page that holds its topic, in each line', async ({ request }) => {
+  // 4.1 serves the Guide's own page at the slug
+  expect((await request.get('/docs/4.1/slash-commands', { maxRedirects: 0 })).status()).toBe(200)
+  // Another line finds its own page for the topic, by the page the Guide's covers, whatever its slug there
+  for (const [slug, own] of [
+    ['slash-commands', 'command-types'],
+    ['context-menus', 'command-types'],
+    ['components', 'command-parameters'],
+  ]) {
+    const older = await request.get(`/docs/4.0/${slug}`, { maxRedirects: 0 })
+    expect(older.headers().location, slug).toBe(`/docs/4.0/${own}`)
+  }
   // A line without the topic's page says where it is instead: a page, but no page for a JSDoc link.
   const missing = await request.get('/docs/4.0/reactions')
-  expect([missing.status(), new URL(missing.url()).pathname]).toEqual([200, '/docs/4.0/missing/messages-and-reactions'])
+  expect([missing.status(), new URL(missing.url()).pathname]).toEqual([200, '/docs/4.0/missing/reactions'])
   expect(linkProblem('/docs/4.0/reactions', missing.status(), await missing.text(), missing.url())).toBe(
-    '/docs/4.0/reactions: its line has no such page (it lands on /docs/4.0/missing/messages-and-reactions)',
+    '/docs/4.0/reactions: its line has no such page (it lands on /docs/4.0/missing/reactions)',
   )
 })

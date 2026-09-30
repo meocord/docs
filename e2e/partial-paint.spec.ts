@@ -25,7 +25,7 @@ const PAGES: { path: string; cuts: Cut[] }[] = [
     ],
   },
   {
-    path: '/docs/4.1/api/decorator/Command',
+    path: '/docs/4.1/api/decorators/Command',
     cuts: [
       { selector: '[data-search-trigger]', at: 'close' },
       { selector: '[data-signature]', at: 'open' },
