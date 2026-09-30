@@ -464,6 +464,13 @@ describe('overlongLines', () => {
     expect(overlongLines(text, 60)).toEqual([])
   })
 
+  it('leaves a directive alone, written on one line, but not prose that holds one', () => {
+    const directive = `::playground{file="${'a'.repeat(20)}.ts" dispatch="button x/1; button x/2; button x/3"}`
+    const prose = `Run ${directive}`
+    const text = [directive, '', prose].join('\n')
+    expect(overlongLines(text, 60)).toEqual([{ line: 3, length: prose.length }])
+  })
+
   it('leaves a heading, a quoted URL, a link definition, a double-backtick span and indented code alone', () => {
     const long = words(30)
     const url = `https://example.com/${'a'.repeat(80)}`

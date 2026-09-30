@@ -101,11 +101,15 @@ export function textWidth(text: string): number {
   return width
 }
 
+/** A leaf directive, `::name{attributes}`, alone on its line. */
+const DIRECTIVE_LINE = /^::[a-z]+\{[^}]*\}\s*$/
+
 /**
  * The lines of a Markdown file that run past PROSE_WIDTH though they could have wrapped: a paragraph's line with a
  * space within the width to break at. Only paragraphs are prose, so headings, code, tables, HTML and link
  * definitions are left alone; a code span, a link, an image or inline HTML is no place to break, so a line that is
- * one long URL, link or code span passes; and a line's quote markers and indent are not its text.
+ * one long URL, link or code span passes; a directive, such as `::playground{…}`, is written on one line, so it
+ * passes too; and a line's quote markers and indent are not its text.
  */
 export function overlongLines(markdown: string, width = PROSE_WIDTH): { line: number; length: number }[] {
   const { tree, body } = markdownTree(markdown)
@@ -127,7 +131,7 @@ export function overlongLines(markdown: string, width = PROSE_WIDTH): { line: nu
     for (let line = paragraph.startLine; line <= paragraph.endLine; line++) {
       const text = lines[line - 1]
       const length = textWidth(text)
-      if (length <= width || found.has(line)) continue
+      if (length <= width || found.has(line) || DIRECTIVE_LINE.test(text)) continue
       const base = lineStart[line - 1]
       // The paragraph's own text on the line: after its first line's start, or a later line's quote markers and indent
       const from = line === paragraph.startLine ? paragraph.start - base : /^[\s>]*/.exec(text)![0].length
