@@ -36,7 +36,7 @@ discord.js's `GatewayIntentBits`.
 of every option of the wrong type. An option MeoCord doesn't know, often a typo, is only a warning. See
 [Configuration](guide:configuration#options).
 
-**"This build carries native addons compiled for …, but is running on …"** A
+**"dist: this build carries native addons compiled for …, but is running on …"** A
 [self-contained build](guide:self-contained-builds#native-addons-and-platforms) made on one platform was started on
 another. Build where it runs; for a container, run `meocord build` inside the image.
 
@@ -60,8 +60,17 @@ Fix what it names. The common ones:
 - **"`Class`: it injects …, which nothing provides"** A class injects a string, symbol or `createToken` token that
   no provider supplies. Add a provider for it to `@MeoCord({ providers })`, or to the testing module's `providers`
   in a test. See [Providers](guide:services#providers).
-- **"`Class`: two classes have this name"** With process sharding, `ShardContext.call` finds a service in another
-  shard by its class name, so every controller and service needs a name of its own. Rename one.
+- **"`Class`: two classes have this name; …"** MeoCord tells these classes apart by name, and the rest of the line
+  says why:
+
+  ```text
+  Shop: two classes have this name; @Cooldown and @Once tell classes apart by name, so they would share their counts. Rename one of them.
+  ```
+
+  Two classes of one name are refused when either uses `@Cooldown` or `@Once`, in any mode. With process sharding,
+  any two controllers or services are, since `ShardContext.call` finds a service in another shard by its class name.
+  Rename one of the classes.
+
 - **"`Class.method`: @MessageHandler('…'): …"** A message pattern MeoCord can't read stops the bot there, such as a
   rest that isn't last, a type nothing adds, a name used twice, or braces inside a word. So does `scope: 'dm'` on a
   command with a `member`, `role` or `channel` param. Two patterns that match the same messages stop it too, with a
@@ -79,9 +88,6 @@ The generated `main.ts` logs these as "Error during startup:" with the error, an
 **"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
 refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
 [Providers](guide:services#providers).
-
-**"Two classes are named …, and @Cooldown and @Once tell classes apart by name, so they would share counts."** In
-any mode, two classes of one name are refused when either uses `@Cooldown` or `@Once`. Rename one of the classes.
 
 ## A command doesn't show up in Discord
 

@@ -25,10 +25,11 @@ since: 4.1.0
 
 A translator turns a message key into text in a language. Its messages come from catalogs, one per language, and one
 set of catalogs serves both what Discord shows for your commands and what your bot says. The other catalogs are typed
-from the default one: a key the default doesn't have, or a message of the wrong shape, such as a plain text where the
-default has a plural, fails to compile. A key a catalog leaves out is looked up in another catalog of the same
-language, then the default one, and [`expectCompleteCatalog`](#testing-a-catalog) reports it in a test, as it does a
-plural form a language needs but a catalog lacks.
+from the default one: a key the default doesn't have, a `{param}` its message doesn't take, or a message of the
+wrong shape, such as a plain text where the default has a plural, fails to compile. A key a catalog leaves out is
+looked up in another catalog of the same language, then the default one, and
+[`expectCompleteCatalog`](#testing-a-catalog) reports it in a test, as it does a plural form a language needs but a
+catalog lacks.
 
 ## When to use it
 
@@ -104,6 +105,25 @@ A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `f
 `other`. It takes a numeric `count`, which picks the form through `Intl.PluralRules` for the language, so Russian's
 `few` and `many` need no code of your own.
 
+A parameter's name is ASCII letters, digits or `_`, such as `{user}` or `{user_id2}`, and a message may take hundreds.
+Other text in braces is the message's own: `'Wrap text in { and }.'` takes no parameters.
+
+### Parameters in other languages
+
+A translation may use any of its default message's parameters, in any order, and leave some out, since a language
+can say something without the name. A plural's forms may also use `{count}`. A parameter the default message doesn't
+take, such as a misspelt or translated name, would reach the user as written, so it's refused twice:
+
+- **When the code compiles,** for a catalog whose text TypeScript keeps: one made with `defineCatalog`, written
+  `as const`, or written inline. The error names each parameter, the message and its default text:
+
+  ```text
+  id: warn.done takes no {pengguna}; the default is "Warned {user}."
+  ```
+
+- **In a test,** [`expectCompleteCatalog`](#testing-a-catalog) reads the catalogs' own strings, so it also checks a
+  catalog TypeScript types as `string`: a plain object, such as the Indonesian one above, or a JSON file.
+
 ## In services
 
 Pass the translator to the app, and a class injects it as `Translator`, typed by the default catalog:
@@ -148,11 +168,25 @@ language of an interaction, a message or a locale.
 ## Testing a catalog
 
 `expectCompleteCatalog(t)` from `meocord/testing` fails with every message a language lacks, every message the
-default catalog doesn't have, and every plural form a language needs but lacks:
+default catalog doesn't have, every plural form a language needs but lacks, and every
+[parameter the default message doesn't take](#parameters-in-other-languages):
 
 ::example{file="controllers/slash/warn.slash.controller.spec.ts" region="complete"}
 
-MeoCord's own texts fall back to English by design, so it reports only a `meocord` key MeoCord lacks.
+It lists each gap, language by language:
+
+```text
+The catalogs are incomplete:
+  id: warn.done takes no {pengguna}; the default is "Warned {user}."
+```
+
+MeoCord's own texts fall back to English by design, so it reports only a `meocord` key MeoCord lacks, and a
+parameter MeoCord's English doesn't take:
+
+```text
+id: meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usage}"
+```
+
 `expectCompleteCatalog(t, { meocord: true })` requires every language other than English to translate each of them:
 
 ::example{file="i18n-texts/paint.controller.spec.ts" region="complete"}
@@ -161,7 +195,8 @@ MeoCord's own texts fall back to English by design, so it reports only a `meocor
 
 - **The default catalog must be TypeScript,** wrapped in `defineCatalog(...)` or written `as const`. Parameters are
   typed from the message text, which TypeScript keeps only for a literal; a catalog that has lost it is refused
-  with a compile error saying so. Other languages may be plain objects, or JSON.
+  with a compile error saying so. Other languages may be plain objects, or JSON; their parameters are then checked
+  only by [`expectCompleteCatalog`](#testing-a-catalog).
 - **Discord limits command names to 32 lowercase characters, and descriptions to 100.** A builder handed a longer
   one fails when its class is decorated, naming the builder and the command. A raw command body that breaks them is
   caught at registration instead: nothing is registered, the error lists each field, and the bot stays up.
