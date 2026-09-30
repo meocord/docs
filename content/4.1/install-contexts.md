@@ -29,7 +29,7 @@ If your app is only installed to servers, every command runs where the bot is pr
 
 ## Example
 
-::example{file="controllers/slash/stats.slash.controller.ts" region="where"}
+::playground{file="controllers/slash/stats.slash.controller.ts" region="where" dispatch="/stats"}
 
 [`getInstallContext(interaction)`](api:utilities/getInstallContext) reports where the command ran and whether the bot
 is there. In a server that only a member's own install reaches, the answer stays private.

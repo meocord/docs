@@ -45,7 +45,7 @@ The app sets its theme, and a controller changes part of it for its own handlers
 
 ::example{file="app-with-theme.ts" region="app"}
 
-::example{file="controllers/slash/store.slash.controller.ts" region="store"}
+::playground{file="controllers/slash/store.slash.controller.ts" region="store" dispatch="/receipt; /refund; /banner"}
 
 `/receipt` reads the theme and builds its embed from the `success` role, with the app's 🎉. `/refund` changes the
 primary colour and the loading emoji for that one handler, and its embed, sent with no colour, takes that primary.
@@ -131,7 +131,7 @@ A collector's `collect` callback, or a `client.on(...)` listener, is called by i
 set it up. `respond(click)` there still takes the app's theme, with the server's and the user's over it, but not the
 handler's `@UseTheme`. To keep the handler's, wrap the callback in [`bindTheme`](api:responses/bindTheme):
 
-::example{file="controllers/slash/vote.slash.controller.ts" region="bind"}
+::playground{file="controllers/slash/vote.slash.controller.ts" region="bind" dispatch="/vote"}
 
 ## What respond() themes
 
@@ -174,7 +174,7 @@ Declare roles of your own, or groups of your own, in `src/types/theme.d.ts`, whi
 Your tokens have no default, so your root theme has to set them, and TypeScript says so if it doesn't. `useTheme()`
 then always has them:
 
-::example{file="augmented/vip.app.ts" region="app"}
+::playground{file="augmented/vip.app.ts" region="app" dispatch="/vip"}
 
 A few names are reserved for roles MeoCord may add later, such as `accent` and `brand`. Taking one is a type error at
 your root theme, naming each.

@@ -42,7 +42,7 @@ To stop a call before it starts, use a [guard](guide:guards); a guard's `GuardDe
 
 ## Example
 
-::example{file="controllers/slash/transfer.slash.controller.ts" region="user-error"}
+::playground{file="controllers/slash/transfer.slash.controller.ts" region="user-error" dispatch="/transfer amount:50" expect="refused"}
 
 A `/transfer` of more coins than the user holds doesn't change the balance, and the user is told privately what they're
 short of. The error is logged only at debug level, since the bot did nothing wrong, and observers see the outcome

@@ -31,7 +31,7 @@ notices, but an answer sent around it doesn't get the [theme's colour](guide:the
 
 ## Example
 
-::example{file="controllers/slash/profile.slash.controller.ts" region="respond"}
+::playground{file="controllers/slash/profile.slash.controller.ts" region="respond" dispatch="/profile"}
 
 The handler acknowledges first, so the user sees "thinking…" while the profile loads. `send()` then edits that
 deferred reply, since the interaction is no longer unanswered, and `followUp()` adds a private tip.

@@ -31,7 +31,7 @@ collector can be simpler: see [Collectors](#collectors).
 
 ## Example
 
-::example{file="controllers/button/profile.button.controller.ts" region="params"}
+::playground{file="controllers/button/profile.button.controller.ts" region="params" dispatch="button profile/123/800000001"}
 
 The pattern `profile/{ownerId}/{uid}` matches a `customId` such as `profile/123/800000001`. The two parameters are
 captured and arrive as the handler's second argument, as text; a parameter that names a type, such as
@@ -79,7 +79,7 @@ captured whole.
 [`route()`](api:utilities/route) turns a pattern into a value `@Command` takes and that builds the ids it matches, so
 the button you send and the handler that receives it share one definition:
 
-::example{file="controllers/button/ticket.button.controller.ts" region="route"}
+::playground{file="controllers/button/ticket.button.controller.ts" region="route" dispatch="/ticket; button ticket/42/close"}
 
 `build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a handler whose
 params name something the route doesn't capture. A `/` or `%` inside a value is encoded, and the handler receives it
@@ -111,7 +111,7 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 Patterns with different segment counts never compete. When two with the same count can both match an id, the one that
 spells out more literal text wins, whatever order they were declared in:
 
-::example{file="controllers/button/profile.button.controller.ts" region="overlap"}
+::playground{file="controllers/button/profile.button.controller.ts" region="overlap" dispatch="button profile/summary/456"}
 
 Between equally literal patterns, the one with fewer parameters wins, then the one whose typed parameters take fewer
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
@@ -130,7 +130,7 @@ command.
 
 A select menu's handler receives what the member chose, beside the captured values:
 
-::example{file="controllers/select-menu/poll.select-menu.controller.ts" region="values"}
+::playground{file="controllers/select-menu/poll.select-menu.controller.ts" region="values" dispatch="select poll/lunch pizza,soup"}
 
 | Select menu | Second argument, beside the captured values                                    |
 | ----------- | ------------------------------------------------------------------------------ |
@@ -143,13 +143,13 @@ A select menu's handler receives what the member chose, beside the captured valu
 A user, role, mentionable or channel select is its own command type because Discord sends it with different resolved
 data. Declaring `SELECT_MENU` for a user select is a type error rather than a silent mismatch:
 
-::example{file="controllers/select-menu/assign.select-menu.controller.ts" region="user-select"}
+::playground{file="controllers/select-menu/assign.select-menu.controller.ts" region="user-select" dispatch="userselect assign/7 13,14"}
 
 ## Modals
 
 A form's handler receives its submitted fields, keyed by their `customId`, beside the captured values:
 
-::example{file="controllers/modal-submit/feedback.modal.controller.ts" region="modal"}
+::playground{file="controllers/modal-submit/feedback.modal.controller.ts" region="modal" dispatch="modal feedback/42 body='The bot is fast.'"}
 
 A command opens the form with `respond(interaction).modal(...)`, and its `customId` routes the submission here. When a
 field or a choice shares a name with a captured value, the captured value wins, and development logs a warning.

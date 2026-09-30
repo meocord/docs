@@ -109,7 +109,7 @@ in `?`:
 
 A typed rest, `{name:type...}`, is a list: each word, or "quoted words", becomes a value of the type:
 
-::example{file="controllers/message/moderation.message.controller.ts" region="lists"}
+::playground{file="controllers/message/moderation.message.controller.ts" region="lists" dispatch="message poll Lunch? pizza soup; message kick <@140000000000000014> <@140000000000000015>"}
 
 The members a list names are fetched together, in one request. `{name...}` with no type stays the rest of
 the message as text, with its own spacing and line breaks.

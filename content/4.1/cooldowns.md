@@ -38,7 +38,7 @@ Discord already applies, such as a channel's slowmode, needs no cooldown.
 
 ## Example
 
-::example{file="controllers/slash/daily.slash.controller.ts" region="cooldown"}
+::playground{file="controllers/slash/daily.slash.controller.ts" region="cooldown" dispatch="/daily; /daily" expect="refused"}
 
 Each user can claim `/daily` five times a minute, and never twice within three seconds. A call the three-second
 limit refuses doesn't spend one of the five.

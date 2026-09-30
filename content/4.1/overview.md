@@ -134,7 +134,7 @@ settled. [`respond()`](guide:responses) makes the right call to Discord for wher
 So a service or a field on a controller holds state across calls, and a guard holds none. A test shows it: one
 controller and one service serve two calls, and each call gets its own guard.
 
-::example{file="concepts/lifetimes.ts" region="lifetimes"}
+::playground{file="concepts/lifetimes.ts" region="lifetimes" dispatch="button visit; button visit"}
 
 ::example{file="concepts/lifetimes.spec.ts" region="spec"}
 
