@@ -1,7 +1,8 @@
-import { Details, Div, For, Li, Nav, Span, Summary, Ul } from '@meonode/ui'
+import { Details, Div, For, Li, Nav, Node, Span, Summary, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
 import { Glyph, type GlyphName } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
+import { SidebarFilter } from '@/components/shell/SidebarFilter'
 import type { NavGroup, NavItem, NavTab } from '@/components/shell/types'
 
 /** One link row, with no styles of its own: `SidebarNav` styles every row. */
@@ -226,6 +227,7 @@ export function SidebarNav({
             ),
           })
         : null,
+      Node(SidebarFilter, { key: 'filter' }),
       ...For(groups, NavSection, group => group.title),
     ],
   })
