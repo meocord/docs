@@ -210,6 +210,75 @@ export class Forms {
     expect(result.steps[1].calls[0]).toMatchObject({ payload: { content: 'about bugs' } })
   })
 
+  it("sends every input from the playground's server, as a member, unless the caller is in a DM", async () => {
+    const source = `
+import { type ButtonInteraction, type ChatInputCommandInteraction, type Message } from 'discord.js'
+import { getInstallContext, respond } from 'meocord/common'
+import { Command, Controller, MessageHandler } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+@Controller()
+export class Where {
+  @Command('where', CommandType.SLASH)
+  async where(interaction: ChatInputCommandInteraction) {
+    const { where, botInstalled } = getInstallContext(interaction)
+    await respond(interaction).send({ content: [where, botInstalled, interaction.inGuild(), interaction.guild?.name, interaction.member?.user.id].join(' ') })
+  }
+
+  @Command('here', CommandType.BUTTON)
+  async here(interaction: ButtonInteraction) {
+    await respond(interaction).send({ content: interaction.guildId + ' ' + interaction.user.username })
+  }
+
+  @MessageHandler('who')
+  async who(message: Message) {
+    await message.reply([message.author.id, message.author.username, message.member?.user.id, message.guildId].join(' '))
+  }
+}
+`
+    const inputs: Dispatch[] = [
+      { kind: 'slash', command: 'where', options: {} },
+      { kind: 'button', customId: 'here' },
+      { kind: 'message', content: 'who' },
+    ]
+    const caller = { userId: '13', username: 'ada' }
+    const [slash, button, message] = ok(await run(source, inputs, { caller })).steps.map(
+      step => (step.calls[0].payload as { content?: string }).content ?? step.calls[0].payload,
+    )
+    expect(slash).toBe('guild true true MeoCord Playground 13')
+    const server = String(button).split(' ')[0]
+    expect(button).toBe(`${server} ada`)
+    expect(message).toBe(`13 ada 13 ${server}`)
+
+    const inDm = ok(await run(source, inputs, { caller: { ...caller, inGuild: false } })).steps.map(
+      step => (step.calls[0].payload as { content?: string }).content ?? step.calls[0].payload,
+    )
+    expect(inDm).toEqual(['bot-dm true false  ', 'null ada', '13 ada  '])
+  })
+
+  it('records a command refused in a server, which MeoCord tells its author in a direct message', async () => {
+    const source = `
+import { type Message } from 'discord.js'
+import { Controller, Cooldown, MeoCord, MessageHandler } from 'meocord/decorator'
+@Controller()
+export class Daily {
+  @MessageHandler('daily')
+  @Cooldown({ uses: 1, seconds: 60 })
+  async daily(message: Message) {
+    await message.reply('claimed')
+  }
+}
+@MeoCord({ controllers: [Daily], clientOptions: { intents: [] }, messages: { prefix: '!', dmOnCooldown: true } })
+export class App {}
+`
+    const daily: Dispatch = { kind: 'message', content: '!daily' }
+    const [first, again] = ok(await run(source, [daily, daily])).steps
+    expect(first.calls).toEqual([{ method: 'reply', payload: 'claimed' }])
+    expect(again).toMatchObject({ ran: false, error: { name: 'CooldownError' } })
+    expect(again.calls).toEqual([
+      { method: 'author.send', payload: expect.objectContaining({ content: expect.stringContaining('!daily') }) },
+    ])
+  })
+
   it("builds a @MeoCord app when the code exports one, with its message prefix, and records a message's reply", async () => {
     const source = `
 import { type Message } from 'discord.js'
