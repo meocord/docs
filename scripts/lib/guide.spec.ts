@@ -151,6 +151,20 @@ describe('checkGuide', () => {
     ).toEqual(['content/4.1/guards.md: covers "4.1/never-served" names no page this line\'s deployed site served'])
   })
 
+  it('lets one page only claim a retired page of its own line', () => {
+    const coverable = { lines: ['4.1'], pages: { '4.1': {} }, deployed: { '4.1': ['interaction-responses'] } }
+    const problems = check(
+      {
+        guards: page({ ...guards, covers: ['4.1/interaction-responses'] }, chapterBody()),
+        services: page({ ...services, covers: ['4.1/interaction-responses'] }, chapterBody()),
+      },
+      { coverable },
+    )
+    expect(problems.filter(problem => problem.includes('covers'))).toEqual([
+      'content/4.1/services.md: covers "4.1/interaction-responses", which is also guards\'s',
+    ])
+  })
+
   it('links a generated page as a written one, and holds it to no template', () => {
     const reference = page(
       {

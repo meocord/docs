@@ -459,12 +459,19 @@ function checkFormerly(
     }
   // A page covers another line's page on its topic, many pages one, as 4.1's slash-commands and context-menus
   // both cover 4.0/command-types; or a page its own line retired, which no current page is known by.
+  // A retired page of its own line is claimed by one page only, which pageKnownAs finds by it.
   const current = new Set([...pages.values()].flatMap(({ page }) => [page.id, ...page.formerly]))
+  const retired = new Map<string, string>()
   for (const [slug, { page }] of pages)
     for (const entry of page.covers) {
       const where = `${folder}/${slug}.md: covers "${entry}"`
       const cover = parseCover(entry)
       const line = folder.slice('content/'.length)
+      if (cover?.line === line && !current.has(cover.id)) {
+        const claimant = retired.get(cover.id)
+        if (claimant && claimant !== slug) problems.push(`${where}, which is also ${claimant}'s`)
+        else retired.set(cover.id, slug)
+      }
       if (!cover) problems.push(`${where} is not <line>/<id>, with an optional #anchor`)
       else if (!coverable) continue
       else if (!coverable.lines.includes(cover.line)) problems.push(`${where} names a line versions.json doesn't list`)
