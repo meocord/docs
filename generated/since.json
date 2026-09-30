@@ -2734,6 +2734,9 @@
   "meocord/testing:MockMessageOverrides": {
     "since": "4.1.0-beta.1"
   },
+  "meocord/testing:MockMessageOverrides.author": {
+    "since": "4.1.0-beta.9"
+  },
   "meocord/testing:MockMessageOverrides.client": {
     "since": "4.1.0-beta.5"
   },
