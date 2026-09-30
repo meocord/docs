@@ -101,7 +101,7 @@ describe('checkGuide', () => {
     expect(problems).toEqual([
       'content/4.1/guards.md: formerly "services" is a path the Guide takes',
       'content/4.1/guards.md: formerly "Old_Page" is not a page slug',
-      'content/4.1/services.md: formerly "only-staff" is also guards\'s',
+      'content/4.1: formerly "only-staff" is claimed by guards and services; one page only',
       'content/4.1/services.md: formerly "recipes" is a path the Guide takes',
     ])
   })
@@ -161,7 +161,7 @@ describe('checkGuide', () => {
       { coverable },
     )
     expect(problems.filter(problem => problem.includes('covers'))).toEqual([
-      'content/4.1/services.md: covers "4.1/interaction-responses", which is also guards\'s',
+      'content/4.1: covers "4.1/interaction-responses" is claimed by guards and services; one page only',
     ])
   })
 
