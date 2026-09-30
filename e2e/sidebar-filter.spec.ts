@@ -32,6 +32,15 @@ test.describe('on a desktop', () => {
     expect(narrowed.groups.length).toBeLessThan(all.groups.length)
     // The page read is still the one marked
     await expect(body(page).locator('[aria-current="page"]')).toHaveText('Guards')
+    // A screen reader hears how many pages show
+    await expect(body(page).getByRole('status')).toHaveText(`${narrowed.links.length} pages`)
+  })
+
+  test('counts one page as one', async ({ page }) => {
+    await page.goto('/docs/4.1/guards')
+    await filter(body(page)).fill('troubleshooting')
+    expect((await shown(body(page))).links).toEqual(['Troubleshooting'])
+    await expect(body(page).getByRole('status')).toHaveText('1 page')
   })
 
   test('says when no page matches, and Escape clears it', async ({ page }) => {
