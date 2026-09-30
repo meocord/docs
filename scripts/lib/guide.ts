@@ -454,7 +454,9 @@ function checkFormerly(
       const where = `${folder}/${slug}.md`
       if (!/^[a-z0-9][a-z0-9-]*$/.test(old)) problems.push(`${where}: formerly "${old}" is not a page slug`)
       else if (taken.has(old)) problems.push(`${where}: formerly "${old}" is a path the Guide takes`)
-      else if (claimed.has(old)) problems.push(`${where}: formerly "${old}" is also ${claimed.get(old)}'s`)
+      // Named once, with both pages, since neither is the one to change
+      else if (claimed.has(old))
+        problems.push(`${folder}: formerly "${old}" is claimed by ${claimed.get(old)} and ${slug}; one page only`)
       claimed.set(old, slug)
     }
   // A page covers another line's page on its topic, many pages one, as 4.1's slash-commands and context-menus
@@ -469,7 +471,8 @@ function checkFormerly(
       const line = folder.slice('content/'.length)
       if (cover?.line === line && !current.has(cover.id)) {
         const claimant = retired.get(cover.id)
-        if (claimant && claimant !== slug) problems.push(`${where}, which is also ${claimant}'s`)
+        if (claimant && claimant !== slug)
+          problems.push(`${folder}: covers "${entry}" is claimed by ${claimant} and ${slug}; one page only`)
         else retired.set(cover.id, slug)
       }
       if (!cover) problems.push(`${where} is not <line>/<id>, with an optional #anchor`)
