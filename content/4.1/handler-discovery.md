@@ -57,7 +57,7 @@ A subcommand's `description` is its own, and a context menu command has none.
 
 A message command is listed once, with the `aliases`, `description` and `scope` its handler declares:
 
-::example{file="controllers/message/moderation.message.controller.ts" region="metadata"}
+::playground{file="controllers/message/moderation.message.controller.ts" region="metadata" dispatch="message m <@140000000000000014> 1h"}
 
 For a help command, `messageHelp(message, query?)` answers as the [built-in `!help`](guide:message-commands) would: the
 commands the caller can use where they asked, or the one `query` names, its subcommands, or that nothing matches. It

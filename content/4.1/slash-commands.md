@@ -36,7 +36,7 @@ For an action on a particular user or message, a right-click is often better: se
 
 ::example{file="controllers/slash/echo.slash.controller.ts" region="builder"}
 
-::example{file="controllers/slash/echo.slash.controller.ts" region="handler"}
+::playground{file="controllers/slash/echo.slash.controller.ts" region="handler" dispatch="/echo text:'hi'"}
 
 The builder describes `/echo` with one required text option. The controller method handles it: MeoCord hands it the
 interaction, and the options the member typed, keyed by name. It answers privately with what they said.

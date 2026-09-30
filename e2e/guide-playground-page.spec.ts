@@ -42,15 +42,15 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Guide')
   await expect(page.locator('[data-sidebar-body]:visible nav a[aria-current="page"]')).toHaveText('Playground')
 
-  // It starts from the Guide's first playground
-  await expect(code(page)).toHaveValue(/export class CounterButtonController/)
-  await expect(inputs(page)).toHaveValue('button counter/41')
+  // It starts from the Guide's first playground, the overview's
+  await expect(code(page)).toHaveValue(/export class VisitButtonController/)
+  await expect(inputs(page)).toHaveValue('button visit; button visit')
   await expect(run(page)).toBeVisible()
   await page.waitForLoadState('networkidle')
   expect(seen.filter(path => path.startsWith('/playground/'))).toEqual([])
 
   await run(page).click()
-  await expect(output(page)).toContainText('CounterButtonController.count', { timeout: 30_000 })
+  await expect(output(page)).toContainText('Visit number 2', { timeout: 30_000 })
   expect(seen.filter(path => path.startsWith('/playground/')).length).toBeGreaterThanOrEqual(4)
 })
 
@@ -165,13 +165,16 @@ test('starts from an example when a link is damaged or carries more than a run t
     await expect(status(page)).toHaveText(
       "This link's code couldn't be read, so the playground starts from an example.",
     )
-    await expect(code(page)).toHaveValue(/export class CounterButtonController/)
+    await expect(code(page)).toHaveValue(/export class VisitButtonController/)
   }
 })
 
 test("opens a Guide page's playground with its code and inputs", async ({ page }) => {
   await page.goto('/docs/4.1/components')
-  await page.getByRole('link', { name: 'Open in playground' }).click()
+  await page
+    .locator('[data-playground-embed]', { hasText: 'button counter/41' })
+    .getByRole('link', { name: 'Open in playground' })
+    .click()
   await expect(page).toHaveURL(/\/docs\/4\.1\/playground#v1\./)
   await expect(code(page)).toHaveValue(/export class CounterButtonController/)
   await expect(inputs(page)).toHaveValue('button counter/41')
@@ -181,7 +184,7 @@ test('shows the example and no buttons without script', async ({ browser, baseUR
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
   const page = await context.newPage()
   await page.goto(PAGE)
-  await expect(code(page)).toHaveValue(/export class CounterButtonController/)
+  await expect(code(page)).toHaveValue(/export class VisitButtonController/)
   await expect(page.locator('[data-playground-run]')).toBeHidden()
   await expect(page.locator('[data-playground-share]')).toBeHidden()
   await context.close()
@@ -200,7 +203,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
     await page.goto(PAGE)
     await run(page).click()
-    await expect(output(page)).toContainText('CounterButtonController.count', { timeout: 30_000 })
+    await expect(output(page)).toContainText('Visit number 2', { timeout: 30_000 })
     const { violations } = await axe(page, builder =>
       builder.include('[data-playground-page]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']),
     )

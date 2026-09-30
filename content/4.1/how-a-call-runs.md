@@ -37,7 +37,7 @@ Read this before you write a stage of your own, to pick the one that fits:
 
 This slash command has a guard, an interceptor and a pipe, and each of them records when it runs:
 
-::example{file="controllers/slash/stages.slash.controller.ts" region="stages"}
+::playground{file="controllers/slash/stages.slash.controller.ts" region="stages" dispatch="/stages text:' hello '"}
 
 The test runs it the way the bot does and reads the order back:
 

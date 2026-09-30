@@ -30,7 +30,7 @@ activity. For a command a user types, give `@MessageHandler` a pattern, as in
 
 ## Example
 
-::example{file="controllers/reaction/star.reaction.controller.ts" region="controller"}
+::playground{file="controllers/reaction/star.reaction.controller.ts" region="controller" dispatch="reaction ⭐ on 'Ship it'"}
 
 The second argument says who reacted, `user`, and whether the reaction was added or removed, `action`.
 
@@ -77,7 +77,7 @@ that fails.
 `@MessageHandler()` with no pattern is a listener. It runs for every message a user sends, after the one
 patterned handler the message matched, if any:
 
-::example{file="controllers/message/keyword.message.controller.ts" region="controller"}
+::playground{file="controllers/message/keyword.message.controller.ts" region="controller" dispatch="message ping"}
 
 - It never runs for a message from a bot, or for one with no text.
 - Its guards only filter what it takes. A denial gets no reply, and is logged at debug level.

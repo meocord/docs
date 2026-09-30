@@ -2,10 +2,10 @@ import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 import { axe } from './axe'
 
-// The Guide page that embeds a playground: components.md's typed route params, the counter button
+// A Guide page with several playgrounds, and among them components.md's typed route params, the counter button
 const PAGE = '/docs/4.1/components'
 
-const embed = (page: Page) => page.locator('[data-playground-embed]').first()
+const embed = (page: Page) => page.locator('[data-playground-embed]', { hasText: 'button counter/41' })
 const run = (page: Page) => embed(page).getByRole('button', { name: 'Run' })
 const output = (page: Page) => embed(page).locator('[data-playground-output]')
 

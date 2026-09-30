@@ -27,7 +27,7 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 
 ## Example
 
-::example{file="controllers/event/welcome.controller.ts" region="controller"}
+::playground{file="controllers/event/welcome.controller.ts" region="controller" dispatch="event guildMemberAdd"}
 
 ## How it works
 

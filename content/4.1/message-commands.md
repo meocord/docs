@@ -200,7 +200,7 @@ translated like [MeoCord's own texts](guide:localisation#meocords-own-texts).
 
 A handler's options say more about its command:
 
-::example{file="controllers/message/moderation.message.controller.ts" region="metadata"}
+::playground{file="controllers/message/moderation.message.controller.ts" region="metadata" dispatch="message m <@140000000000000014> 1h"}
 
 - `aliases` are other words for the command, in place of the words the pattern begins with: `!m @ana 1h` runs
   `mute`. A misuse is answered with the usage as the user typed it.
