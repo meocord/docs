@@ -7,7 +7,8 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
 /**
  * Focus for an open layer: moves focus in when it opens, keeps Tab inside it, closes on Escape or a
  * press outside, and hands focus back to whatever had it when the layer closes, or to `returnTo`
- * when the layer opened from something that took focus for it.
+ * when the layer opened from something that took focus for it. An Escape a control in the layer has
+ * prevented, having used it itself, leaves the layer open.
  */
 export function useLayerFocus(ref: RefObject<HTMLElement | null>, close: () => void, returnTo?: Element | null) {
   // Read through a ref, so a new `close` each render does not re-run the effect and move focus again.
@@ -26,6 +27,8 @@ export function useLayerFocus(ref: RefObject<HTMLElement | null>, close: () => v
     ;(layer.querySelector<HTMLElement>('[aria-current="page"]') ?? focusables()[0] ?? layer).focus()
 
     const onKeyDown = (event: KeyboardEvent) => {
+      // A control in the layer that took Escape for itself, as a filter clearing its text, keeps it open
+      if (event.key === 'Escape' && event.defaultPrevented) return
       if (event.key === 'Escape') {
         event.preventDefault()
         dismiss()
