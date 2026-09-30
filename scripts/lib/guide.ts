@@ -316,7 +316,7 @@ const FENCES = new Set(['bash', 'json', 'yaml', 'text', 'dotenv', 'dockerfile', 
 const TYPESCRIPT_FENCE = /^\s*(`{3,}|~{3,})\s*(ts|typescript|tsx|mts|cts|js|javascript)\b/m
 const EXAMPLE = /::example\{([^}]*)\}/g
 const PLAYGROUND = /^::playground\{([^}]*)\}\s*$/gm
-const PLAYGROUND_ATTRIBUTES = ['file', 'region', 'dispatch']
+const PLAYGROUND_ATTRIBUTES = ['file', 'region', 'dispatch', 'expect']
 const NOT_AN_API_REF = 'is not api:<kind>/<Symbol>'
 
 /** A link to the site by its address, which a page writes as a guide: or api: link instead. */
@@ -625,8 +625,9 @@ function checkExamples(where: string, body: string, context: GuideContext, probl
 }
 
 /**
- * A `::playground{file region dispatch}`: the region shows as an ::example does, and Run runs the whole file,
- * so the file imports only what the playground's runtime carries, and the dispatch parses.
+ * A `::playground{file region dispatch expect}`: the region shows as an ::example does, and Run runs the whole
+ * file, so the file imports only what the playground's runtime carries, and the dispatch parses. `expect="refused"`
+ * says its last input is refused, as a cooldown or a user error refuses one.
  */
 function checkPlayground(where: string, written: string, context: GuideContext, problems: string[]): void {
   const pairs = [...written.matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value] as const)
@@ -655,6 +656,8 @@ function checkPlayground(where: string, written: string, context: GuideContext, 
     const list = parseDispatchList(attributes.dispatch)
     if (typeof list === 'string') problems.push(`${where}: ${list}`)
   }
+  if (attributes.expect !== undefined && attributes.expect !== 'refused')
+    problems.push(`${where}: a ::playground expects "refused" or nothing, not "${attributes.expect}"`)
 }
 
 /** Checks every `guide:` and `api:` link; any other page link is written as one of those. */

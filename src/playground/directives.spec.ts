@@ -17,7 +17,14 @@ const DIRECTIVES = readVersions(paths.versions)
     readGuide(line).flatMap(({ page, body }) =>
       [...withoutCode(body).matchAll(/^::playground\{([^}]*)\}\s*$/gm)].map(match => {
         const attributes = Object.fromEntries([...match[1].matchAll(/(\w+)="([^"]*)"/g)].map(([, k, v]) => [k, v]))
-        return { line, page: page.id, file: attributes.file, dispatch: attributes.dispatch, pagePath: guidePath(page) }
+        return {
+          line,
+          page: page.id,
+          file: attributes.file,
+          dispatch: attributes.dispatch,
+          refused: attributes.expect === 'refused',
+          pagePath: guidePath(page),
+        }
       }),
     ),
   )
@@ -33,8 +40,8 @@ describe("the Guide's playgrounds", () => {
   })
 
   it.each(DIRECTIVES)(
-    '$line/$page runs $file with "$dispatch" at the pinned meocord, every input answered',
-    async ({ line, file, dispatch, pagePath }) => {
+    '$line/$page runs $file with "$dispatch" at the pinned meocord, every input answered or the last refused as expected',
+    async ({ line, file, dispatch, refused, pagePath }) => {
       const list = parseDispatchList(dispatch)
       if (typeof list === 'string') throw new Error(list)
       const logs: LogLine[] = []
@@ -49,9 +56,16 @@ describe("the Guide's playgrounds", () => {
         { modules: modules.get(line)!, compile, logs },
       )
       if (!result.ok) throw new Error(`${result.stage}: ${result.message}\n${logs.map(l => l.text).join('\n')}`)
-      for (const step of result.steps) {
+      const answered = refused ? result.steps.slice(0, -1) : result.steps
+      for (const step of answered) {
         expect(step.error, JSON.stringify(step.input)).toBeUndefined()
         expect(step.ran, JSON.stringify(step.input)).toBe(true)
+      }
+      if (refused) {
+        // A refusal tells the caller why, as a cooldown or a user error does; a crash would not
+        const last = result.steps.at(-1)!
+        expect(last.error, JSON.stringify(last.input)).toBeDefined()
+        expect(JSON.stringify(last.calls)).toContain(JSON.stringify(last.error!.message).slice(1, -1))
       }
       expect(result.steps.flatMap(step => step.calls).length).toBeGreaterThan(0)
     },
