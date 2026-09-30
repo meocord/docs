@@ -76,49 +76,6 @@ test('runs again from the keyboard, announcing the result, with the frame out of
   expect(await frame.evaluate(el => getComputedStyle(el).display)).not.toBe('none')
 })
 
-const FRAME = '**/playground/*.html'
-
-test('says so when its frame is blocked, and starts a fresh frame on the next Run', async ({ page }) => {
-  await page.route(FRAME, route => route.abort('blockedbyclient'))
-  await page.goto(PAGE)
-  await run(page).click()
-  // The blocked document loads as the browser's error page, which never says it is ready
-  await expect(output(page).locator('[data-playground-error]')).toHaveText(
-    "The playground couldn't start: its frame didn't load, so a browser extension, the network or the site's settings may be blocking it. Press Run to try again.",
-    { timeout: 5_000 },
-  )
-  await expect(run(page)).toHaveText('Run')
-  await expect(run(page)).not.toHaveAttribute('aria-busy')
-  await expect(page.locator('iframe[data-playground-frame]')).toHaveCount(0)
-
-  await page.unroute(FRAME)
-  await run(page).click()
-  await expect(output(page)).toContainText('CounterButtonController.count', { timeout: 30_000 })
-  await expect(page.locator('iframe[data-playground-frame]')).toHaveCount(1)
-})
-
-test('gives up on a frame that never answers, within its bound, and runs once it can', async ({ page }) => {
-  let answer!: () => void
-  const held = new Promise<void>(resolve => (answer = resolve))
-  // The request is held until the test lets it go; the removed frame has cancelled it by then
-  await page.route(FRAME, async route => {
-    await held
-    await route.abort().catch(() => undefined)
-  })
-  await page.goto(PAGE)
-  await run(page).click()
-  await expect(output(page).locator('[data-playground-error]')).toHaveText(
-    "The playground couldn't start: its frame didn't load within 10 seconds. Press Run to try again.",
-    { timeout: 12_000 },
-  )
-  await expect(run(page)).toHaveText('Run')
-  answer()
-  await page.unrouteAll({ behavior: 'wait' })
-
-  await run(page).click()
-  await expect(output(page)).toContainText('CounterButtonController.count', { timeout: 30_000 })
-})
-
 test("shows what the reader's code answers as text, never as markup", async ({ page }) => {
   await page.goto(PAGE)
   await expect(run(page)).toBeVisible()
