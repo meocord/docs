@@ -82,11 +82,17 @@ describe('the Guide', () => {
   })
 
   it('groups the sidebar by chapter in reading order, and the appendix by group, marking the page read', () => {
-    const [guards] = guideEntries('4.1').filter(entry => entry.page.id === 'guards')
-    expect(
-      guideSidebar('4.1', guards.page).map(group => [group.title, group.items.map(item => [item.title, item.current])]),
-    ).toEqual([
-      ['Structuring your app', [['Services', false]]],
+    const outline = (path: string) =>
+      guideSidebar('4.1', path).map(group => [group.title, group.items.map(item => [item.title, item.current])])
+    expect(outline('guards')).toEqual([
+      // The playground is a page of the first group, where the line has one
+      [
+        'Structuring your app',
+        [
+          ['Services', false],
+          ['Playground', false],
+        ],
+      ],
       [
         'The request pipeline',
         [
@@ -96,6 +102,16 @@ describe('the Guide', () => {
       ],
       ['Recipes', [['A ticket system', false]]],
     ])
+    expect(outline('playground')[0][1]).toEqual([
+      ['Services', false],
+      ['Playground', true],
+    ])
+    expect(outline('recipes/tickets').at(-1)).toEqual(['Recipes', [['A ticket system', true]]])
+    expect(guideSidebar('4.1', 'guards')[0].items.at(-1)?.href).toBe('/docs/4.1/playground')
+    // A line with no playground runtime has no Playground page to list
+    delete frames['4.1']
+    expect(outline('guards')[0]).toEqual(['Structuring your app', [['Services', false]]])
+    frames['4.1'] = '/playground/4.1.0-beta.7.0123456789.html'
   })
 
   it('places a page in reading order, with what it requires, and keeps the appendix apart', () => {
@@ -124,17 +140,12 @@ describe('the Guide', () => {
   })
 
   it("offers the Guide and the API as the sidebar's tabs, marking the one read", () => {
+    // The playground is a page of the Guide, not a tab of its own
     expect(guideTabs('4.1', 'guide')).toEqual([
       { title: 'Guide', href: '/docs/4.1/services', current: true },
       // The API opens on its index, where it is arranged by kind
       { title: 'API', href: '/docs/4.1/api', current: false },
-      { title: 'Playground', href: '/docs/4.1/playground', current: false },
     ])
-    expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true, false])
-    expect(guideTabs('4.1', 'playground').map(tab => tab.current)).toEqual([false, false, true])
-    // A line with no playground runtime has no Playground tab
-    delete frames['4.1']
-    expect(guideTabs('4.1', 'guide').map(tab => tab.title)).toEqual(['Guide', 'API'])
-    frames['4.1'] = '/playground/4.1.0-beta.7.0123456789.html'
+    expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true])
   })
 })

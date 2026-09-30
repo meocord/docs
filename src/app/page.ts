@@ -10,6 +10,7 @@ import { Window } from '@/components/shell/Window'
 import { HOME_LINE } from '@/config/home'
 import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
+import { guideTabs } from '@/lib/docs/guide-site'
 import { sidebar, versionChoices } from '@/lib/docs/site'
 import { buildKinds, claims, doors, pipelineDemo } from '@/lib/home/data'
 import { pageMetadata } from '@/lib/docs/page-metadata'
@@ -31,6 +32,8 @@ async function home() {
     crumbs: [{ title: 'Overview' }],
     // The home page is the line's overview, so the sidebar marks it.
     groups: sidebar(HOME_LINE, 'overview'),
+    // The home is the Guide's first page, under the same tabs
+    tabs: guideTabs(HOME_LINE, 'guide'),
     version: versionChoices(HOME_LINE),
     repository: REPOSITORY,
     wide: true,

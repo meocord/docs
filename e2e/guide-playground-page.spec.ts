@@ -37,8 +37,9 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   await expect(page).toHaveURL(/\/docs\/4\.1\/playground$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Playground' })).toBeVisible()
   await expect(page.locator('[aria-current="page"]', { hasText: 'Playground' }).first()).toBeVisible()
-  // The Playground tab is the section read, marked current as the other tabs are
-  await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Playground')
+  // A page of the Guide: the Guide tab is the section read, and the sidebar's Playground link is the page
+  await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Guide')
+  await expect(page.locator('[data-sidebar-body]:visible nav a[aria-current="page"]')).toHaveText('Playground')
 
   // It starts from the Guide's first playground
   await expect(code(page)).toHaveValue(/export class CounterButtonController/)

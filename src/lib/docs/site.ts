@@ -96,9 +96,7 @@ const SECTION_ICONS: Record<string, GlyphName> = {
 /** The sidebar: a line's pages in order, grouped by section in the order sections first appear, the one read marked. */
 export function sidebar(line: string, currentSlug?: string): NavGroup[] {
   if (guideEnabled(line)) {
-    // The page read, by its path below the line, marked in the Guide's groups
-    const current = guideEntries(line).find(({ page }) => guidePath(page) === currentSlug)?.page
-    return [...guideSidebar(line, current), referenceGroup(line, currentSlug)]
+    return [...guideSidebar(line, currentSlug), referenceGroup(line, currentSlug)]
   }
   const groups: NavGroup[] = []
   for (const page of listPages(line)) {

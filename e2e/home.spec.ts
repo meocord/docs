@@ -166,6 +166,11 @@ test('each kind of handler opens its section of What you can build, and each doo
   await page.goBack()
   const doors = page.locator('[data-door]')
   await expect(doors.locator('h3')).toHaveText(['Learn', 'Look up', 'Migrate or compare'])
+  await expect(doors.first().getByRole('link', { name: 'Playground' })).toHaveAttribute('href', '/docs/4.1/playground')
+  // The home is the Guide's first page, under the same tabs as the rest of the Guide
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect(page.locator('[data-nav-tabs]:visible > a')).toHaveText(['Guide', 'API'])
+  await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Guide')
   await expect(doors.nth(1).getByRole('link', { name: 'API reference' })).toHaveAttribute('href', '/docs/4.1/api')
 })
 

@@ -96,8 +96,12 @@ const CHAPTER_ICONS: Record<string, GlyphName> = {
 
 const GROUP_TITLES: Record<string, string> = { recipes: 'Recipes', 'coming-from': 'Coming from', help: 'Help' }
 
-/** The Guide's sidebar: a group per chapter in reading order, and the appendices by group. */
-export function guideSidebar(line: string, current?: GuidePage): NavGroup[] {
+/**
+ * The sidebar where the Guide is rendered: its pages by chapter in reading order, and the appendix by group,
+ * the page at `currentPath` marked. The playground sits in the first group, after Getting started, where
+ * the line has one.
+ */
+export function guideSidebar(line: string, currentPath?: string): NavGroup[] {
   const groups: NavGroup[] = []
   for (const { page } of guideEntries(line)) {
     const title =
@@ -106,10 +110,15 @@ export function guideSidebar(line: string, current?: GuidePage): NavGroup[] {
         : CHAPTERS.find(chapter => chapter.id === page.chapter)!.title
     let group = groups.find(candidate => candidate.title === title)
     if (!group) groups.push((group = { title, icon: CHAPTER_ICONS[page.chapter], items: [] }))
-    group.items.push({
-      title: page.title,
-      href: guidePageHref(line, page),
-      current: current?.id === page.id && current.group === page.group,
+    group.items.push({ title: page.title, href: guidePageHref(line, page), current: guidePath(page) === currentPath })
+  }
+  const [first] = groups
+  if (first && hasPlaygroundPage(line)) {
+    const after = first.items.findIndex(item => item.href === guidePageHref(line, { id: 'getting-started' }))
+    first.items.splice(after < 0 ? first.items.length : after + 1, 0, {
+      title: 'Playground',
+      href: docsHref({ kind: 'playground', line }, VERSIONS),
+      current: currentPath === 'playground',
     })
   }
   return groups
@@ -187,23 +196,14 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
 }
 
 /**
- * The sidebar's tabs where the Guide is rendered: the Guide's first page, the line's API reference, and
- * its playground where the line has one.
+ * The sidebar's tabs where the Guide is rendered: the Guide's first page, and the line's API reference. The
+ * playground is part of the Guide, a page of its first group.
  */
-export function guideTabs(line: string, current: 'guide' | 'api' | 'playground'): NavTab[] {
+export function guideTabs(line: string, current: 'guide' | 'api'): NavTab[] {
   const [first] = guideEntries(line)
   const api = apiLandingHref(line)
   return [
     ...(first ? [{ title: 'Guide', href: guidePageHref(line, first.page), current: current === 'guide' }] : []),
     ...(api ? [{ title: 'API', href: api, current: current === 'api' }] : []),
-    ...(hasPlaygroundPage(line)
-      ? [
-          {
-            title: 'Playground',
-            href: docsHref({ kind: 'playground', line }, VERSIONS),
-            current: current === 'playground',
-          },
-        ]
-      : []),
   ]
 }
