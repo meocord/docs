@@ -53,8 +53,8 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 - **Replies follow Discord's rules.** Replying or deferring twice throws, and `followUp()`, `editReply()` and
   `deleteReply()` throw before any reply. An autocomplete's `respond()` works once, and refuses more than 25 choices.
 - **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot,
-  each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart.
-  Ids you give are kept.
+  each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
+  give them one `user`, or one message `author`, to count them together. Ids you give are kept.
 - **Creation times come from the id**, as discord.js reads them: `createdTimestamp` and `createdAt` are the time an
   `id` you give encodes, or, with the generated id, the time the mock was made. A `createdTimestamp` you set wins.
 - **A mock without a `guildId` is a DM.** `inGuild()`, `inCachedGuild()` and `inRawGuild()` answer from the mock's
@@ -97,12 +97,24 @@ test build.
   the rest throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`, and builders or JSON for
   the last three. What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's
   `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
+- **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the
+  bot sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that
+  user, made and cached when there's none. Every message from that author has the same member, and so does an
+  interaction given the same `user` in the same server.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
 - **`createMockClient()`** has real, empty caches, and one bot user, the same in every mock, as `client.user`.
 - **`createMockUser()` and `createMockChannel(Class)`** mock the classes a handler reads most, with their managers
   stubbed.
 - **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface.
+
+Two messages from one `author` count against that member's cooldown, as they would from one person in Discord:
+
+::example{file="testing/mock-author.spec.ts" region="author"}
+
+A message and an interaction from that user in one server share the member:
+
+::example{file="testing/mock-author.spec.ts" region="member"}
 
 ## What methods return
 
