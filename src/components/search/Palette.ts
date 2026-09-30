@@ -281,6 +281,8 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
       children: [
         Row({
           key: 'field',
+          // The field stays put; only the results below it scroll
+          flexShrink: 0,
           alignItems: 'center',
           gap: 'theme.space.2',
           padding: 'theme.space.3',
@@ -339,7 +341,12 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
           id: SHELL_IDS.searchResults,
           role: 'listbox',
           'aria-label': 'Search results',
+          // The one scroller: shrinking below its content, as a flex item won't by default, is what lets it
+          // scroll, and a scroll reaching its end goes no further than the dialog
+          flex: '1 1 auto',
+          minHeight: 0,
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           padding: options.length > 0 ? 'theme.space.2' : 0,
           children: For(
             listed,
