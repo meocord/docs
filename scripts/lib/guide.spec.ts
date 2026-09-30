@@ -484,18 +484,19 @@ describe('checkGuide', () => {
 })
 
 describe('::playground', () => {
-  it('takes a file of the line with a region and a dispatch that parses, importing only the runtime', () => {
+  it('takes a file of the line with a region and a dispatch that parses, importing only the runtime, and may expect a refusal', () => {
     const body = chapterBody(
       [
         '::playground{file="button/counter.ts" region="count" dispatch="button counter/1; /ping n:1"}',
         '::playground{file="button/counter.ts" dispatch="message !ping"}',
+        '::playground{file="button/counter.ts" dispatch="/ping; /ping" expect="refused"}',
         '```text\n::playground{file="missing.ts"}\n```',
       ].join('\n\n'),
     )
     expect(check({ ...valid(), guards: page(guards, body) })).toEqual([])
   })
 
-  it('refuses a missing file or region, an import the runtime lacks, a dispatch that does not parse, and other attributes', () => {
+  it('refuses a missing file or region, an import the runtime lacks, a dispatch that does not parse, another expectation, and other attributes', () => {
     const body = chapterBody(
       [
         '::playground{region="count" dispatch="/ping"}',
@@ -505,6 +506,7 @@ describe('::playground', () => {
         '::playground{file="button/counter.ts"}',
         '::playground{file="button/counter.ts" dispatch="/ping; select"}',
         '::playground{file="button/counter.ts" from="compare" dispatch="/ping"}',
+        '::playground{file="button/counter.ts" dispatch="/ping" expect="answered"}',
         'Run it: ::playground{file="button/counter.ts" dispatch="/ping"} here.',
         'A line before it\n::playground{file="button/counter.ts" dispatch="/ping"}',
         '  ::playground{file="button/counter.ts" dispatch="/ping"}',
@@ -520,7 +522,8 @@ describe('::playground', () => {
       "content/4.1/guards.md: examples/4.1/src/button/uses-service.ts imports '../services/greeter'; a playground runs one file, which imports only discord.js, meocord/common, meocord/decorator, meocord/enum, meocord/interface, meocord/testing, reflect-metadata",
       'content/4.1/guards.md: a ::playground names no dispatch',
       'content/4.1/guards.md: dispatch step 2: select needs a customId',
-      'content/4.1/guards.md: a ::playground takes file, region, dispatch, not from',
+      'content/4.1/guards.md: a ::playground takes file, region, dispatch, expect, not from',
+      'content/4.1/guards.md: a ::playground expects "refused" or nothing, not "answered"',
     ])
   })
 })
