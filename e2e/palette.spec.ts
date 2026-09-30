@@ -97,6 +97,36 @@ test('a search groups results, and Enter opens the one the arrows reach', async 
   expect(problems).toEqual([])
 })
 
+test('only the results scroll: to the row the arrows reach, the field staying in view, and by the wheel', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/docs/4.1/defer')
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.keyboard.type('e')
+  const list = dialog(page).getByRole('listbox')
+  await expect(list.getByRole('option').nth(12)).toBeAttached()
+  const scrolled = () =>
+    Promise.all([list.evaluate(node => node.scrollTop), dialog(page).evaluate(node => node.scrollTop)])
+  // More results than it shows: the list overflows, and the dialog doesn't
+  expect(await list.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true)
+
+  // Up from the first row reaches the last: the list scrolls to it, and the field stays where it was
+  await field(page).press('ArrowUp')
+  const last = list.getByRole('option').last()
+  await expect(field(page)).toHaveAttribute('aria-activedescendant', (await last.getAttribute('id'))!)
+  await expect(last).toBeInViewport()
+  await expect(field(page)).toBeInViewport()
+  expect((await scrolled())[1]).toBe(0)
+
+  // The wheel over the results scrolls them, not the dialog
+  await list.evaluate(node => (node.scrollTop = 0))
+  await list.hover()
+  await page.mouse.wheel(0, 400)
+  await expect.poll(async () => (await scrolled())[0]).toBeGreaterThan(0)
+  expect((await scrolled())[1]).toBe(0)
+})
+
 test('Escape closes the palette and hands focus back to the search field', async ({ page }) => {
   await page.goto('/docs/4.1/defer')
   const trigger = page.getByRole('button', { name: 'Search the documentation' })
