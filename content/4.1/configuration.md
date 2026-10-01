@@ -114,11 +114,18 @@ you ship a source mapper of your own. `meocord start` then passes no flag, and t
 
 ## Environment variables
 
-Load `.env` in `meocord.config.ts`, as the generated one does with `import 'dotenv/config'`, not in `main.ts`. The
-bot loads its config before `main.ts`, so every value `.env` sets is there by the time `@MeoCord({...})` and the rest
-of your modules read `process.env`.
+Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config before `main.ts`, so every value the
+files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
+reads the files Bun reads, the same on node and Bun, under `meocord start` and under `node dist/main.js`:
 
-To keep a file per environment, put the choice in a module the config imports:
+::example{file="config/env-files.meocord.config.ts" region="config"}
+
+The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development, and
+`meocord build --prod` writes `production` into the config it compiles. A more specific file wins, and a variable the
+shell sets wins over every file, so `.env.local` can hold your own values beside the committed `.env.development`.
+
+To pick files by something other than `NODE_ENV`, such as a staging server, put the choice in a module the config
+imports:
 
 ::example{file="config/load-env.ts" region="load-env"}
 
