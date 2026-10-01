@@ -5,7 +5,8 @@
  * rendered pages, and linked through src/lib/urls.ts.
  */
 
-import { pageSlugger } from '../../src/lib/page-ids'
+import type { Heading } from 'mdast'
+import { anchorIds, type AnchorOptions, headingText, parseMarkdown } from '../../src/lib/prose/anchors'
 import { ReflectionKind, type JSONOutput } from 'typedoc'
 import { changelogSectionAnchor, docsHref, entrySegment, memberAnchor, resolveStoredHref } from '../../src/lib/urls.js'
 import type { ApiDocument } from './api.js'
@@ -100,46 +101,31 @@ export function markdownText(markdown: string, examples: ExampleSource = () => u
 
 /**
  * A page body split at its section headings: the highest level below the title it uses, `##` on an
- * authored page and `###` on one imported from a README. Anchors are slugged across every heading in
- * order, as the page's own heading ids and content:check's anchors are, so `#anchor` lands on it.
+ * authored page and `###` on one imported from a README. Each section's anchor is its heading's id on the
+ * page, from `anchorIds`, so `#anchor` lands on it.
  */
-export function splitSections(body: string, examples?: ExampleSource): SearchSection[] {
-  const level = sectionLevel(body)
-  const slugger = pageSlugger()
-  const sections: { anchor?: string; heading?: string; lines: string[] }[] = [{ lines: [] }]
-  let fence: string | undefined
-  for (const line of body.split('\n')) {
-    const marker = /^\s*(`{3,}|~{3,})/.exec(line)?.[1]
-    if (marker && (!fence || marker.startsWith(fence))) fence = fence ? undefined : marker
-    const heading = fence || marker ? undefined : /^(#{1,6}) (.+?)\s*#*\s*$/.exec(line)
-    if (heading) {
-      const anchor = slugger.slug(heading[2])
-      if (heading[1].length === level) {
-        sections.push({ anchor, heading: markdownText(heading[2]), lines: [] })
-        continue
-      }
-    }
-    sections[sections.length - 1].lines.push(line)
-  }
+export function splitSections(body: string, examples?: ExampleSource, options: AnchorOptions = {}): SearchSection[] {
+  const tree = parseMarkdown(body)
+  const ids = anchorIds(tree, body, options)
+  const below = tree.children.filter((node): node is Heading => node.type === 'heading' && node.depth >= 2)
+  const level = Math.min(...below.map(heading => heading.depth))
+  const starts = below.filter(heading => heading.depth === level)
+  const offset = (heading: Heading | undefined, edge: 'start' | 'end') =>
+    heading?.position?.[edge].offset ?? body.length
+  // The lead runs from the top to the first section's heading, and each section from its heading to the next
+  const sections: SearchSection[] = [
+    { anchor: undefined, heading: undefined, text: body.slice(0, offset(starts[0], 'start')) },
+  ]
+  starts.forEach((heading, index) =>
+    sections.push({
+      anchor: ids.get(heading),
+      heading: markdownText(headingText(body.slice(offset(heading, 'start'), offset(heading, 'end')))),
+      text: body.slice(offset(heading, 'end'), offset(starts[index + 1], 'start')),
+    }),
+  )
   return sections
-    .map(({ anchor, heading, lines }) => ({ anchor, heading, text: markdownText(lines.join('\n'), examples) }))
+    .map(section => ({ ...section, text: markdownText(section.text, examples) }))
     .filter(section => section.heading || section.text)
-}
-
-/** The shallowest heading depth from `##` down that a body uses outside code, or 2 without any. */
-function sectionLevel(body: string): number {
-  let fence: string | undefined
-  let level = 7
-  for (const line of body.split('\n')) {
-    const marker = /^\s*(`{3,}|~{3,})/.exec(line)?.[1]
-    if (marker && (!fence || marker.startsWith(fence))) {
-      fence = fence ? undefined : marker
-      continue
-    }
-    const depth = fence ? 0 : (/^(#{2,6}) /.exec(line)?.[1].length ?? 0)
-    if (depth > 0) level = Math.min(level, depth)
-  }
-  return level === 7 ? 2 : level
 }
 
 /** A guide page's search document, from the page as pages.ts reads it. */
@@ -182,7 +168,7 @@ export function guidePageDocuments(
     title: page.title,
     kind: 'guide',
     line,
-    sections: splitSections(body, examples(guidePath(page))),
+    sections: splitSections(body, examples(guidePath(page)), page),
   }))
 }
 

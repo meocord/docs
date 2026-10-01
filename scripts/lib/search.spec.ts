@@ -203,6 +203,7 @@ describe('documents', () => {
         api: [],
         formerly: [],
         covers: [],
+        terms: false,
       }) as GuidePage
     const shownAt: string[] = []
     const documents = guidePageDocuments(

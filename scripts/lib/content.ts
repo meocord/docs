@@ -4,7 +4,7 @@
  * generated data for every version versions.json lists.
  */
 
-import { pageSlugger } from '../../src/lib/page-ids'
+import { type AnchorOptions, pageAnchorSet } from '../../src/lib/prose/anchors'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
@@ -212,15 +212,12 @@ const GITHUB_README =
 /** The one examples folder an ::example may name with `from`, beside its own line's. */
 export const EXAMPLE_SOURCE = 'compare'
 
-/** The anchors of a page's headings, as GitHub and the site give them. */
-export function pageAnchors(body: string): Set<string> {
-  const slugger = pageSlugger()
-  const anchors = new Set<string>()
-  for (const line of withoutCode(body).split('\n')) {
-    const heading = /^#{1,6} (.+?)\s*#*\s*$/.exec(line)
-    if (heading) anchors.add(slugger.slug(heading[1]))
-  }
-  return anchors
+/**
+ * The anchors of a page's headings, as GitHub and the site give them, and of its terms on a page that
+ * defines terms, such as the glossary.
+ */
+export function pageAnchors(body: string, options: AnchorOptions = {}): Set<string> {
+  return pageAnchorSet(body, options)
 }
 
 type PageSet = 'authored' | 'readme'

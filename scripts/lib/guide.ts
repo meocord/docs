@@ -132,6 +132,7 @@ export interface GuideFrontmatter {
   since?: string
   formerly?: string[]
   covers?: string[]
+  terms?: boolean
 }
 
 export interface GuidePage {
@@ -149,6 +150,8 @@ export interface GuidePage {
   formerly: string[]
   /** The ids of other lines' pages on the same topic, such as 4.0's `command-types` for slash commands. */
   covers: string[]
+  /** Whether the page defines terms, each an anchor of its own; see `anchorIds`. */
+  terms: boolean
 }
 
 /** The repository root the Guide is read from (the tests point it at a scratch directory). */
@@ -412,6 +415,7 @@ function readFrontmatter(where: string, slug: string, fm: GuideFrontmatter, prob
     if (rest.length > 0 || !symbol || !(API_KINDS as readonly string[]).includes(kind))
       problems.push(`${where}: api entry "${entry}" is not <kind>/<Symbol>, with a kind of ${API_KINDS.join(', ')}`)
   }
+  if (fm.terms !== undefined && typeof fm.terms !== 'boolean') problems.push(`${where}: terms is true or false`)
   if (problems.length > before) return undefined
   return {
     id: fm.id!,
@@ -426,6 +430,7 @@ function readFrontmatter(where: string, slug: string, fm: GuideFrontmatter, prob
     since: fm.since,
     formerly: fm.formerly ?? [],
     covers: fm.covers ?? [],
+    terms: fm.terms === true,
   }
 }
 
@@ -708,14 +713,14 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     const where = `${folder}/${slug}.md`
     const { frontmatter, body } = parseGuidePage(text)
     const page = readFrontmatter(where, slug, frontmatter, problems)
-    if (page) pages.set(slug, { page, body, anchors: pageAnchors(body) })
+    if (page) pages.set(slug, { page, body, anchors: pageAnchors(body, page) })
   }
   // A generated page, such as the configuration reference, is linked like any other but written by no one
   const generated = new Set<string>()
   for (const [slug, text] of Object.entries(context.generated ?? {})) {
     const { frontmatter, body } = parseGuidePage(text)
     const page = readFrontmatter(`generated ${slug}`, slug, frontmatter, problems)
-    if (page) pages.set(slug, { page, body, anchors: pageAnchors(body) })
+    if (page) pages.set(slug, { page, body, anchors: pageAnchors(body, page) })
     generated.add(slug)
   }
 

@@ -9,6 +9,7 @@ requires: []
 api: []
 since: 4.1.0
 formerly: []
+terms: true
 ---
 
 The words the Guide uses, and what each means in MeoCord.

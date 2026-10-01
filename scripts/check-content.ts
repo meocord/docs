@@ -142,7 +142,7 @@ const coverable: Coverable = {
       entry.line,
       Object.fromEntries(
         entry.guides === 'authored'
-          ? readGuide(entry.line).map(({ page, body }) => [page.id, [...pageAnchors(body)]])
+          ? readGuide(entry.line).map(({ page, body }) => [page.id, [...pageAnchors(body, page)]])
           : listPages(entry.line).map(page => [page.id, [...pageAnchors(loadPage(entry.line, page.slug)?.body ?? '')]]),
       ),
     ]),
