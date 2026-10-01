@@ -52,6 +52,10 @@ package.json
 `start --prod` runs the build in `dist/` as it is. The bot compiles `meocord.config.ts` into `dist/` as it builds, so
 `node dist/main.js` starts it the same way, with nothing else to install, which suits a container.
 
+The bot finds its config and its assets beside `dist/main.js`, from wherever it's started, so `dist` can be built in CI
+or on another machine and copied over. A bot with native addons is the exception: build it on the platform it runs on,
+as [Self-contained builds](guide:self-contained-builds#native-addons-and-platforms) explains.
+
 The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file beside `dist`
 works, and so does setting the variables in the service manager or container, where a file is one more thing to copy
 and protect. The config's dotenv leaves variables that are already set alone, so the environment wins over the file.

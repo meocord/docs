@@ -74,9 +74,10 @@ npx meocord start --build --prod  # a production build, then start it
 npx meocord start --prod          # start the last production build
 ```
 
-`--dev` watches the source and `meocord.config.ts`. A change rebuilds the bot, stops the running one, and starts the new
-one once the old one has exited. If the bot can't log in, as with a token Discord refuses, the
-session stops, since no code change fixes that.
+`--dev` watches the source, `meocord.config.ts`, `tsconfig.json` and `.env`. A change rebuilds the bot, stops the
+running one, and starts the new one once the old one has exited; a change to `.env` restarts it without a rebuild. If
+the bot can't log in, as with a token Discord refuses, watch mode says so and keeps watching: fix the token in `.env`,
+or the code, and it starts the bot again.
 
 ## Gotchas
 

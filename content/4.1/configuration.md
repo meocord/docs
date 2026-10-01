@@ -198,7 +198,8 @@ Some things need no rule of your own:
 
 - **Every imported file**, images, fonts, SVG and media, and any other kind, such as a PDF, a text file or
   WebAssembly, is emitted to `dist/assets/` under its own name, and importing one gives its absolute path on disk,
-  ready for `fs`, a canvas or a Discord attachment. Nothing is inlined as a data URI.
+  ready for `fs`, a canvas or a Discord attachment. The path is set as the bot starts, from where its `dist` is, so a
+  build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
 - **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
   error, naming the file. `output.filename.image`, and `svg`, `font`, `media`, `assets` and `wasm`, accept a function
   to keep both.

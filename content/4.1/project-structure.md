@@ -24,7 +24,7 @@ with.
 ## Example
 
 The layout the `create` command writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
-lockfile, and it makes the folder a git repository. For pnpm it adds a `pnpm-workspace.yaml`, and for npm an
+lockfile. It makes the folder a git repository, with the project, lockfile included, as its first commit. For pnpm it adds a `pnpm-workspace.yaml`, and for npm an
 `allowScripts` field in `package.json`. Both turn off the dependency install scripts the app doesn't need, those of
 `@swc/core` and `unrs-resolver`, and for npm `fsevents`, so pnpm 11 and later install without stopping and npm 11.16 and
 later without a warning:
@@ -133,7 +133,8 @@ dist/
 └── node_modules/           # native addons, with bundleDependencies only
 ```
 
-The bot reads its config from `dist`, not from `meocord.config.ts`, so a change to the config takes a new build.
+The bot reads its config from `dist`, beside `main.js`, not from `meocord.config.ts`, so a change to the config takes
+a new build.
 [Deployment](guide:deployment) covers what a server needs beside `dist`, and
 [Self-contained builds](guide:self-contained-builds) covers `bundleDependencies`.
 

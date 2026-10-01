@@ -58,6 +58,10 @@ dist/node_modules holds 7 packages; nothing else to install.
 It copies only the binaries for the platform building, going by the `os`, `cpu` and `libc` each platform package
 declares. So a glibc build carries no musl binaries, even where both were installed.
 
+A pnpm project packs as an npm, yarn or bun one does. Under pnpm, each package's dependencies come from beside it in
+the store, and when two packages need different versions of one dependency, each gets its own: the first
+at the top of `dist/node_modules`, the other nested under the package that needs it.
+
 ## Native addons and platforms
 
 A compiled binary loads only on the operating system, CPU and C library it was built for. A build made on a Mac
