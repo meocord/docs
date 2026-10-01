@@ -56,7 +56,8 @@ allow it. When some refuse, it's told the longest wait among them. On Redis Clus
 [option](guide:recipes/cooldown-stores#redis-cluster).
 
 A refused call throws [`CooldownError`](api:responses/CooldownError), which the built-in fallback answers only to the
-caller: "Slow down: try again in 12s." An interaction gets it privately. A message command's refusal is skipped, since
+caller: "Slow down: try again in 12 seconds.", the end of the wait shown as a Discord timestamp that counts down. An
+interaction gets it privately. A message command's refusal is skipped, since
 a reply in the channel can't be private, unless the app turns on
 [`dmOnCooldown`](guide:message-commands#telling-the-author-privately), which tells the author once per wait.
 
@@ -107,10 +108,28 @@ check-in:
 
 ## Answering a refused call
 
-The built-in answer is in the user's language where the app [translates MeoCord's texts](guide:localisation). To
-word it yourself, catch `CooldownError` in an [exception filter](guide:exception-filters). It carries `retryAfterMs`;
+A call a cooldown refuses is answered privately with `meocord.cooldown.until`: "Slow down: try again {when}.", where
+`{when}` is the time the wait ends as a Discord timestamp, `<t:…:R>`. Discord words it in the reader's language ("in 5
+minutes", "in 23 hours") and counts it down. The rest of the text is in the user's language where the app
+[translates MeoCord's texts](guide:localisation).
+
+To answer another way, catch `CooldownError` in an [exception filter](guide:exception-filters).
+[`error.retryAt`](api:responses/CooldownError#retryAt) is the `Date` the next call is allowed, and
+[`error.limit`](api:responses/CooldownError#limit) is the `uses` and `windowMs` of the cooldown that refused it:
+
+```ts
+@Catch(CooldownError)
+export class WaitFilter implements ExceptionFilter<CooldownError> {
+  async catch(error: CooldownError, context: ExecutionContext) {
+    await context.response?.error(error, { message: `Slow down: try again ${time(error.retryAt, 'R')}.` })
+  }
+}
+```
+
 [`translateError(error, t, interaction)`](api:utilities/translateError) gives MeoCord's own text in the user's
-language, and [`cooldownMessage(retryAfterMs)`](api:utilities/cooldownMessage) the English one.
+language. `error.message`, like [`cooldownMessage(retryAfterMs)`](api:utilities/cooldownMessage), is plain text for
+logs and tests. It gives the wait in its two biggest units with the smaller rounded up, so it never says less than the
+wait: "Slow down: try again in 23h 59m.", "… in 1d.", "… in 2d 3h."
 
 ## Where calls are counted
 
@@ -183,7 +202,7 @@ minutes:
 ::example{file="tutorial/feedback.controller.ts" region="step:cooldowns"}
 
 Run `/feedback`, send the form, and run `/feedback` again: the form doesn't open, and the bot tells only you how long
-to wait, such as "Slow down: try again in 4m 52s."
+to wait, such as "Slow down: try again in 5 minutes."
 
 ## Next steps
 
