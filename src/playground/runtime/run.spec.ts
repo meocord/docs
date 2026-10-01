@@ -172,6 +172,29 @@ export class Halfway {
     expect(result.steps[1]).toMatchObject({ ran: false, handlers: [] })
   })
 
+  it('builds the classes the file decorated, beside a helper function and a route it also exports', async () => {
+    const source = `
+import { type ButtonInteraction } from 'discord.js'
+import { respond, route } from 'meocord/common'
+import { Command, Controller } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+export const page = route('page/{n:int}')
+export function label(n: number, of: number) {
+  return 'Page ' + (n + 1) + ' of ' + of
+}
+@Controller()
+export class Pages {
+  @Command(page, CommandType.BUTTON)
+  async turn(interaction: ButtonInteraction, { n }: { n: number }) {
+    await respond(interaction).send({ content: label(n, 3) })
+  }
+}
+`
+    const result = ok(await run(source, [{ kind: 'button', customId: 'page/1' }]))
+    expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['Pages.turn'] })
+    expect(result.steps[0].calls[0]).toMatchObject({ payload: { content: 'Page 2 of 3' } })
+  })
+
   it('answers an input nothing routes as the bot does', async () => {
     const result = ok(await run(COUNTER, [{ kind: 'button', customId: 'nowhere' }]))
     expect(result.steps[0]).toMatchObject({ ran: false, handlers: [], error: { name: 'CommandNotFoundError' } })
