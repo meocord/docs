@@ -143,7 +143,9 @@ A shared store can be down, restarting or cut off. When it throws, rejects or do
 - **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
 
 Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many
-calls failed.
+calls failed. An outage ends when the store answers 30 seconds or more after its latest failure, so a store that fails
+some calls and answers others, such as a Redis Cluster with one node down, is logged once rather than for every
+failing call.
 
 ## Testing
 
