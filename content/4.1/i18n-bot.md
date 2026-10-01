@@ -62,7 +62,8 @@ The app gives MeoCord the translator, which is what makes its own texts follow t
 
 A mock's `locale` and `guildLocale` stand for the member's and the server's languages. The cooldown test runs the
 command twice through the app, as the bot does, and reads the refusal the author sees.
-`expectCompleteCatalog(t, { meocord: true })` fails when a language lacks a message, MeoCord's own included:
+`expectCompleteCatalog(t, { meocord: true })` fails when a language lacks a message, MeoCord's own included, or uses a
+`{param}` the default message doesn't take:
 
 ::example{file="recipes/i18n/bot.spec.ts" region="spec"}
 
@@ -76,7 +77,8 @@ and translate with `t.locale(chosen)`.
 ### Some of MeoCord's texts
 
 A catalog can translate only some of MeoCord's texts, such as the cooldown notices: the rest stay in MeoCord's
-English, line by line. Check it with `expectCompleteCatalog(t)`, without `{ meocord: true }`.
+English, line by line. Check it with `expectCompleteCatalog(t)`, without `{ meocord: true }`: it still reports a
+`{param}` MeoCord's English doesn't take.
 
 ### MeoCord's words in your own answer
 
