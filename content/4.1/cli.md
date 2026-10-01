@@ -130,7 +130,12 @@ Set `commands.register` to `false` to keep registering out of startup, and run `
 | `observer`    | `ob`  | a dispatch observer and its spec    |
 
 It prints where to wire the part up: a controller goes in `@MeoCord({ controllers })`, and a service is bound the
-first time something injects it. Each new file is formatted with the project's own ESLint.
+first time something injects it.
+
+Once the files are written, `generate` formats them with the project's own ESLint, in one run, and says
+"Formatting with your project's ESLint..." while it waits. The files are kept as written whatever ESLint does. When it
+can't run, or reports problems it can't fix, `generate` says "Could not format the generated files:" and why, and still
+exits 0. A project without ESLint skips the step.
 
 ### Controllers
 
