@@ -138,7 +138,8 @@ test('fetches the frame afresh for every page, never revalidating a kept copy', 
   // A kept copy answers with the Date it was first served with; the server's next answer, a second on, has its own
   await page.waitForTimeout(1_100)
   await open()
-  expect(answers).toHaveLength(2)
+  // The listener reads each answer's headers asynchronously, so the frame can say it's ready before the last is in
+  await expect.poll(() => answers.length).toBe(2)
   for (const answer of answers) expect(answer).toMatchObject({ status: 200, conditional: [] })
   expect(answers[1].date).not.toBe(answers[0].date)
 })
