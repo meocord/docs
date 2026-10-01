@@ -92,8 +92,14 @@ Each method may draw asynchronously, and a slow drawing never misses Discord's t
 
 - The loading view is drawn after `@Defer` acknowledges the call. Its files leave the message when the lock does.
 - For an error on an interaction not yet acknowledged, MeoCord acknowledges it privately first, and the drawn view
-  replaces the acknowledgement. If the drawing fails, MeoCord's own error view answers instead.
+  replaces the acknowledgement.
 - A view added to a message by an edit keeps the message's own attachments.
+
+A presenter that fails never leaves the user without an answer. When `error()` or `messageError()` throws, rejects, or
+returns a view MeoCord can't render, such as a colour that is no colour or an empty text, MeoCord's own answer goes
+out instead: its error view, or the plain text a message command gets without `messageError`. The failure is then
+logged as the call's fault, and a testing module's `dispatch` rejects with it. A `loading()` that fails the same way
+is replaced by MeoCord's loading view, with a warning naming the presenter, and the handler still runs.
 
 Discord takes at most 10 attachments on a message, counting the ones a message the view is added to keeps, and each
 file within the interaction's attachment size limit, or 20 MiB without one. A view past either is sent without its
@@ -119,7 +125,7 @@ Its [`MessageResponseContext`](api:responses/MessageResponseContext) has the `me
 | `theme`   | The call's resolved theme, as `ResponseContext` has it.                    |
 
 The `error` it gets is a `PresentedError`, as `error()` gets. The view is sent as an embed with its files, under the
-same limits. When `messageError` throws, the failure is logged and the author gets no reply.
+same limits. When it fails, the author gets the plain text instead, and the failure is the call's fault.
 
 ## The help reply
 
