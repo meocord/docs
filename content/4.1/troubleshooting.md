@@ -70,6 +70,13 @@ Fix what it names. The common ones:
 - **"`Class`: it injects …, which nothing provides"** A class injects a string, symbol or `createToken` token that
   no provider supplies. Add a provider for it to `@MeoCord({ providers })`, or to the testing module's `providers`
   in a test. See [Providers](guide:services#providers).
+- **"App: @MeoCord({ providers }): the provider for '…' injects ExecutionContext, but its factory runs once and its
+  value is shared, …"** A factory provider lists `ExecutionContext` in its `inject`. Its value is made once for the
+  whole app, so it would keep the first call's context for every later call. Inject `ExecutionContext` into a guard
+  instead. The testing module refuses it the same way.
+- **"'a' → 'b' → 'a': each is made before what injects it, so none of them can be made."** Providers or classes
+  inject each other in a cycle, which the line names from where it was entered. Move what they share into a provider of
+  its own. See [Providers](guide:services#providers).
 - **"`Class`: two classes have this name; …"** MeoCord tells these classes apart by name, and the rest of the line
   says why:
 
@@ -136,8 +143,8 @@ version (5.0). Each warning names the handler or the filter, and says what to wr
   pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
   pattern is built from.
 
-A warning that ends "will be removed in the next major version (5.0). Use … instead." names an API that still works, and
-is logged once. See [the upgrade guide](guide:migrating#upgrading-from-40-to-41).
+A warning that ends "will be removed in the next major version (5.0). Use … instead." names an API that still works,
+and is logged once. See [the upgrade guide](guide:migrating#upgrading-from-40-to-41).
 
 ## A command doesn't show up in Discord
 
