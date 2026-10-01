@@ -403,7 +403,7 @@ export async function runPlayground(
 
   const testing = modules['meocord/testing'] as Testing
   const discord = modules['discord.js'] as Record<string, unknown>
-  const { MetadataKey } = modules['meocord/enum'] as { MetadataKey: { AppOptions: string } }
+  const { MetadataKey } = modules['meocord/enum'] as { MetadataKey: { AppOptions: string; Injectable: string } }
   const { Observer } = modules['meocord/decorator'] as { Observer: () => (target: Class) => void }
   // The handlers the current input reached, as the recorder hears them
   const reached: string[] = []
@@ -415,8 +415,11 @@ export async function runPlayground(
       if (typeof value !== 'function') throw new Error(`The code exports no class named ${name}.`)
       return value as Class
     })
+    // The classes MeoCord's decorators made, and not a helper function the file also exports
+    const reflect = Reflect as unknown as { hasMetadata?: (key: string, target: object) => boolean }
     const classes = Object.values(exports).filter(
-      (value): value is Class => typeof value === 'function' && value !== app,
+      (value): value is Class =>
+        typeof value === 'function' && value !== app && reflect.hasMetadata?.(MetadataKey.Injectable, value) === true,
     )
     const observers = [handlerRecorder(Observer, reached)]
     testingModule = (
