@@ -12,6 +12,7 @@ import { EXAMPLE_SOURCE, fenceLanguages, hasRegion, markdownLinks, pageAnchors, 
 import { withPackageSpec } from './package-spec'
 import { newestIn, readVersions, type VersionsConfig } from './versions'
 import { memberAnchor } from '../../src/lib/urls'
+import { displacedTerms } from '../../src/lib/prose/anchors'
 import { parseDispatchList } from '../../src/playground/dispatch-list'
 import { outsideModules, READER_MODULES } from '../../src/playground/runtime/modules'
 
@@ -679,7 +680,8 @@ function checkLinks(
         if (anchor && context.migratingAnchors && !context.migratingAnchors.has(anchor))
           problems.push(`${where}: ${target} names no heading of the migration guide`)
       } else if (entry) {
-        if (anchor && !entry.anchors.has(anchor)) problems.push(`${where}: ${target} names no heading of that page`)
+        if (anchor && !entry.anchors.has(anchor))
+          problems.push(`${where}: ${target} names no ${entry.page.terms ? 'heading or term' : 'heading'} of that page`)
       } else if (PLANNED.has(targetPath) && !context.complete) planned.push(`${where}: ${target}`)
       else problems.push(`${where}: ${target} names no Guide page`)
     } else if (base.startsWith('api:')) {
@@ -751,6 +753,10 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
       problems.push(
         `${where}: TypeScript belongs in examples/${context.line} and an ::example directive, not a code fence`,
       )
+    // A term keeps its own anchor, so a link to it holds whatever order the page lists its terms in
+    if (page.terms)
+      for (const { term, own, id } of displacedTerms(body))
+        problems.push(`${where}: the term "${term}" would be #${id}, since #${own} is already taken`)
     checkCallouts(where, body, problems)
     checkExamples(where, body, context, problems)
     checkLinks(where, body, pages, context, anchors, problems, planned)
