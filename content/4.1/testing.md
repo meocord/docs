@@ -49,7 +49,9 @@ test needs, and returns a builder. `compile()` binds them into a fresh container
   filters, in the bot's order. [Invoke and dispatch](guide:invoke-and-dispatch) covers the two ways to run one.
 
 Pass the app class as `app` to add what `@MeoCord` declares: its global guards, interceptors and filters, its
-presenter, translator, message prefixes, observers and theme. The controllers are still the ones you list.
+presenter, translator, message prefixes, observers and theme, and its cooldown store and policy. The controllers are
+still the ones you list. A store that injects something, such as a database pool, needs it in `providers`, or a
+`CooldownStore` provider of your own, such as a `MemoryCooldownStore`, in the store's place.
 
 ::example{file="testing/greeting.module.spec.ts" region="app"}
 
@@ -69,8 +71,8 @@ the stages around a handler the same way, wherever they apply: globally, on the 
 ## Testing the whole app
 
 [`MeoCordTestingModule.fromApp(App)`](api:testing/MeoCordTestingModule) builds the module as the bot builds itself:
-every controller, service and provider `@MeoCord` lists, and its cooldown store, with what the `app` option takes
-from it: its global guards, interceptors and filters, presenter, translator, message options, theme and observers.
+every controller, service and provider `@MeoCord` lists, with what the `app` option takes from it: its global
+guards, interceptors and filters, presenter, translator, message options, theme, observers and cooldown store.
 A test lists nothing again, and replaces what it must by token in `providers`, before anything is made:
 
 ::example{file="recipes/database/app.spec.ts" region="spec"}
