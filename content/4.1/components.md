@@ -119,10 +119,15 @@ Between equally literal patterns, the one with fewer parameters wins, then the o
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
 `page/5` and leaves `page/last` to the other, in whatever order they're declared.
 
+Between two equally specific patterns, such as `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`, the one whose
+controller is listed first in `@MeoCord({ controllers })` runs, or, within one controller, the one declared first. In
+the next major version (5.0), the pattern that spells out the first segment where the two differ runs instead:
+`a/b/{y}` here.
+
 MeoCord warns once at startup about every pair of patterns of one component type that can both take an id: the two
-above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`. For each pair it names
-the handler that runs and why, and where the next major version (5.0) would run the other one, what to do. The bot still
-starts, and the ranking decides which handler runs; `MeoCordTestingModule.compile()` gives the same warning, and
+profile patterns above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`. For each pair it names the
+handler that runs and why, and where 5.0 would run the other one, what to do. The bot still starts, and the ranking
+decides which handler runs; `MeoCordTestingModule.compile()` gives the same warning, and
 [`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns with different literals in the same
 place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
