@@ -185,7 +185,7 @@ describe('checkGuide', () => {
       chapterBody('[a](guide:glossary#cooldown-store) [b](guide:glossary#usererror) [c](guide:glossary#nope)'),
     )
     expect(check({ ...valid(), guards: linking, glossary: glossary(true) }, context)).toEqual([
-      'content/4.1/guards.md: guide:glossary#nope names no heading of that page',
+      'content/4.1/guards.md: guide:glossary#nope names no heading or term of that page',
     ])
     expect(check({ ...valid(), guards: linking, glossary: glossary() }, context)).toEqual([
       'content/4.1/guards.md: guide:glossary#cooldown-store names no heading of that page',
@@ -195,6 +195,32 @@ describe('checkGuide', () => {
     expect(check({ ...valid(), glossary: glossary("'yes'") }, context)).toEqual([
       'content/4.1/glossary.md: terms is true or false',
     ])
+  })
+
+  it('refuses a term whose anchor an earlier term or heading takes, so no term moves when the page is reordered', () => {
+    const fields = {
+      id: 'glossary',
+      title: 'Glossary',
+      chapter: 'appendix',
+      group: 'help',
+      order: 4,
+      summary: 'The words.',
+      terms: true,
+    }
+    const body = [
+      '## Guard',
+      '**Guard.** Decides whether a call runs.',
+      '**Cooldown store.** Where counts are kept.',
+      '**Cooldown store.** Said twice.',
+      '**Content.** A word the window takes for its main region.',
+    ].join('\n\n')
+    expect(check({ ...valid(), glossary: page(fields, body) }, context)).toEqual([
+      'content/4.1/glossary.md: the term "Guard" would be #guard-1, since #guard is already taken',
+      'content/4.1/glossary.md: the term "Cooldown store" would be #cooldown-store-1, since #cooldown-store is already taken',
+      'content/4.1/glossary.md: the term "Content" would be #content-1, since #content is already taken',
+    ])
+    // A page that defines no terms reads the same paragraphs as prose
+    expect(check({ ...valid(), glossary: page({ ...fields, terms: false }, body) }, context)).toEqual([])
   })
 
   it('links a generated page as a written one, and holds it to no template', () => {
