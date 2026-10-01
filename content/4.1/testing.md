@@ -98,6 +98,12 @@ until the test provides one, such as `{ provide: Client, useValue: createMockCli
   `init({ ready: { client, primary } })`.
 - **Failures.** Every hook runs even when one throws, and `init` or `close` then rejects with that error, or with an
   `AggregateError` naming each hook that threw.
+- **The cooldown store.** The app's store, or the `CooldownStore` a test provides in its place, gets its `onReady`
+  first and its `onShutdown` last, once the store operations its calls started have settled.
+- **A shutdown that hangs.** `close()` waits for the whole sequence for up to `shutdownTimeout`, 10 seconds unless
+  `create()` or `fromApp()` sets it, as the bot's [`shutdownTimeout`](guide:configuration) does. It then stops waiting
+  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers,
+  or whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
   until `close()`, unless another module or app in the same process was ready first, which keeps it. See
   [Testing recipes](guide:testing-recipes#themes).

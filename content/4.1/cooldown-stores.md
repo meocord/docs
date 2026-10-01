@@ -140,6 +140,12 @@ Override `peekMany(entries)` too, to check the entries and record nothing. MeoCo
 fetches the members, users, roles or channels it names, so a caller on cooldown costs no request. The default allows
 every call, so a store without its own `peekMany` refuses only at `consumeMany`, after the fetch.
 
+A store that connects can do it in its own [lifecycle hooks](guide:lifecycle-hooks). Its `onReady` runs before the
+services', and a call that comes meanwhile waits for it, up to `cooldownStoreTimeoutMs`; one that would wait longer
+meets the [`cooldownStoreFailure`](guide:cooldowns#when-the-store-fails) policy. Its `onShutdown` runs after the services', once
+the calls under way have finished, along with every store operation they started, so the store closes after its last
+write.
+
 ### Checking a store
 
 `testCooldownStore` from `meocord/testing` runs the behaviour `MemoryCooldownStore` defines against yours, under
