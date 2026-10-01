@@ -108,6 +108,8 @@ Guards, interceptors and exception filters inject services the same way:
 - **A guard** is created for each call, so it may also inject `ExecutionContext`.
 - **An interceptor or a filter** is one instance shared across calls, like a service. It holds no per-call state
   and can't inject `ExecutionContext`; it receives the context as an argument instead.
+- **A factory provider** runs once, so its `inject` can't list `ExecutionContext` either: MeoCord refuses it as the
+  app is created, since its value would keep the first call's context for every later one.
 
 ## Testing a service
 
@@ -138,6 +140,14 @@ fails when the module compiles, naming both:
 
 - **A factory that throws stops the bot before login,** with the token and the error. So does a token provided
   twice, or one a class injects that nothing provides.
+- **Providers that inject each other in a cycle stop the bot as it's created,** classes among them included, naming
+  the cycle:
+
+  ```text
+  'a' → 'b' → 'a': each is made before what injects it, so none of them can be made. Move what they share into a
+  provider of its own.
+  ```
+
 - **MeoCord's own tokens can't be provided:** `Client`, `HandlerRegistry`, `ShardContext`, `CooldownStore`, and
   `Translator` when the app configures `i18n`.
 
