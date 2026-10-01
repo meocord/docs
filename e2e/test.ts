@@ -7,7 +7,8 @@ export { expect } from '@playwright/test'
  * ends. A route handler still running then, such as one awaiting `route.fetch()` for a page that is still
  * loading, rejects once the test is over, and Playwright reports that against whichever test the worker runs
  * next. Unrouting first keeps each test's handlers inside it. A spec that routes a request imports `test` from
- * here; scripts/lib/e2e-routes.spec.ts checks it does.
+ * here, and none calls `routeWebSocket`, whose routes no API removes; scripts/lib/e2e-routes.ts checks both.
+ * A context made with `browser.newContext()` is outside this fixture: the spec unroutes and closes it itself.
  */
 export const test = base.extend({
   context: async ({ context }, use) => {
