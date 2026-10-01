@@ -163,6 +163,10 @@ threw it, and the direct messages of `dmOnError` and `dmOnCooldown`:
 sides: "lots" is not a valid whole number
 ```
 
+To draw these replies and direct messages instead, give the app's [presenter](guide:presenters) a `messageError`
+method: it styles each one as an embed, with any files it attaches, such as an image it drew. A presenter without it
+leaves them plain text.
+
 The error is a [`MessageUsageError`](api:responses/MessageUsageError), carrying `usage` and `issues`. It
 reaches the handler's exception filters first, so a filter can answer in the app's own words, and
 [observers](guide:observers) see its outcome as `'invalid'`.
