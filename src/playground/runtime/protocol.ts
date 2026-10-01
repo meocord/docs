@@ -49,7 +49,7 @@ export interface RunRequest {
   controllers?: string[]
 }
 
-/** A Discord call a handler made, as `getResponse(...).calls` records it, in JSON. */
+/** A Discord call a handler made, as the run records it when it is made, in JSON. */
 export interface RecordedCall {
   method: string
   payload?: unknown

@@ -23,7 +23,6 @@ export interface RunEnvironment {
 }
 
 type Class = abstract new (...args: never[]) => unknown
-type MockFn = { mock: { calls: unknown[][] } }
 
 /** The parts of `meocord/testing` a run drives. */
 interface Testing {
@@ -37,7 +36,6 @@ interface Testing {
   createChatInputOptions(options: Record<string, unknown>): unknown
   createModalFields(fields: Record<string, string>): unknown
   createMockGuild(overrides?: Record<string, unknown>): Record<string, unknown>
-  getResponse(interaction: unknown): { calls: { method: string; payload?: unknown; error?: unknown }[] }
 }
 interface Builder {
   compile(): TestingModule
@@ -149,12 +147,13 @@ interface Context {
   }
   /** The handlers the recorder heard start for the current input. */
   reached: string[]
+  /** What the current input sent, in order. */
+  log: SendLog
 }
 
-/** An input ready to send: how MeoCord receives it, and where what the handler answered is read from. */
+/** An input ready to send, as MeoCord receives it. */
 interface Prepared {
   send(): Promise<Outcome>
-  calls(): RecordedCall[]
 }
 
 const fromCall = (call: DispatchedCall): Outcome => ({
@@ -163,29 +162,55 @@ const fromCall = (call: DispatchedCall): Outcome => ({
   ...(call.error !== undefined && { error: call.error }),
 })
 
-/** An interaction's calls, as `getResponse` records them. */
-const interactionCalls = (testing: Testing, interaction: unknown) => () =>
-  testing.getResponse(interaction).calls.map(call => ({
-    method: call.method,
-    ...(call.payload !== undefined && { payload: toJson(call.payload) }),
-    ...(call.error !== undefined && { error: describeError(call.error).message }),
-  }))
-
 /** How a run names a direct message to the caller, sent through its user or its member. */
 const DM = 'dm'
 
+/** The calls through which an interaction answers, each a call to Discord. */
+const ANSWERS = ['reply', 'deferReply', 'editReply', 'followUp', 'deleteReply', 'update', 'deferUpdate', 'showModal']
+
 /**
- * The calls a mock's `method` received, such as a message's replies or a member's direct messages, named
- * `label` when the method alone would not say whose it is.
+ * What a step sent, in the order it sent it: an interaction's answers, a message's replies and every direct
+ * message to the caller, as each call is made. Mocks keep no order between them, so each recorded one writes
+ * here itself, and `respond()` answers through the same mocks, so each call is written once.
  */
-const mockCalls = (target: Record<string, unknown>, method: string, label = method) => {
-  const all = () => (target[method] as MockFn | undefined)?.mock.calls ?? []
-  // A mock the whole run shares, such as the caller, has the earlier steps' calls too: a step reads its own
-  const start = all().length
-  return () =>
-    all()
-      .slice(start)
-      .map(args => ({ method: label, payload: toJson(args[0]) }))
+class SendLog {
+  private entries: RecordedCall[] = []
+
+  /** Starts a step. */
+  start() {
+    this.entries = []
+  }
+
+  /**
+   * Makes each call to `target[method]` write itself here, named `label`, and then do what it did; a call that
+   * throws or rejects, as one Discord refuses does, is written with its error. The mock stays the same mock to
+   * the reader's code, so what it is told to do next, such as `mockRejectedValueOnce`, it still does.
+   */
+  record(target: Record<string, unknown>, method: string, label = method) {
+    const write = (call: RecordedCall) => this.entries.push(call)
+    target[method] = new Proxy(target[method] as (...args: unknown[]) => unknown, {
+      apply(mock, self, args: unknown[]) {
+        const payload = toJson(args[0])
+        const call: RecordedCall = { method: label, ...(payload !== undefined && { payload }) }
+        write(call)
+        const failed = (error: unknown) => (call.error = describeError(error).message)
+        try {
+          const result: unknown = Reflect.apply(mock, self, args)
+          const then = (result as { then?: unknown } | null)?.then
+          if (typeof then === 'function') then.call(result, undefined, failed)
+          return result
+        } catch (error) {
+          failed(error)
+          throw error
+        }
+      },
+    })
+  }
+
+  /** The step's calls, in the order they were made. */
+  calls(): RecordedCall[] {
+    return [...this.entries]
+  }
 }
 
 /**
@@ -234,7 +259,7 @@ function memberIn(
 
 /** A dispatch as MeoCord receives it, from the caller it comes from. */
 function prepare(dispatch: Dispatch, context: Context): Prepared {
-  const { testing, discord, module, caller } = context
+  const { testing, discord, module, caller, log } = context
   const { user, server, member } = caller
   const { InteractionContextType } = discord as { InteractionContextType: { Guild: number; BotDM: number } }
   // In the server, as a member of it, or in a DM with the bot, as Discord reports each
@@ -245,7 +270,8 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
   const sent = (content: string) => testing.createMockMessage({ content, guild: server, author: user })
   const interaction = (type: string, overrides: Record<string, unknown>): Prepared => {
     const input = testing.createMockInteraction(discord[type], { ...from, ...overrides })
-    return { send: async () => fromCall(await module.dispatch(input)), calls: interactionCalls(testing, input) }
+    for (const method of ANSWERS) log.record(input, method)
+    return { send: async () => fromCall(await module.dispatch(input)) }
   }
   switch (dispatch.kind) {
     case 'slash': {
@@ -280,7 +306,8 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
       })
     case 'message': {
       const message = sent(dispatch.content)
-      return { send: async () => fromCall(await module.dispatch(message)), calls: mockCalls(message, 'reply') }
+      log.record(message, 'reply')
+      return { send: async () => fromCall(await module.dispatch(message)) }
     }
     case 'reaction': {
       // Someone else's message, in the same place
@@ -290,23 +317,24 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
         emoji: emojiOf(dispatch.emoji),
         count: 1,
       })
+      log.record(message, 'reply')
       const { ADD, REMOVE } = context.enums.ReactionHandlerAction
       const action = dispatch.action === 'add' ? ADD : REMOVE
-      return {
-        send: async () => fromCall(await module.dispatch(reaction, { user, action })),
-        calls: mockCalls(message, 'reply'),
-      }
+      return { send: async () => fromCall(await module.dispatch(reaction, { user, action })) }
     }
     case 'event': {
       // The caller as the server's member; a caller in a DM joins a server of this event's own
-      const joined = member ?? memberIn(testing, discord, serverOf(testing), user)
+      let joined = member
+      if (!joined) {
+        joined = memberIn(testing, discord, serverOf(testing), user)
+        log.record(joined, 'send', DM)
+      }
       return {
         // An event names no handler; the recorder heard which ran
         send: async () => {
           const { ran } = await module.emit(dispatch.event, joined)
           return { ran: ran > 0, handlers: [...context.reached] }
         },
-        calls: member ? () => [] : mockCalls(joined, 'send', DM),
       }
     }
   }
@@ -409,6 +437,10 @@ export async function runPlayground(
   const server = inGuild ? serverOf(testing) : null
   const user = mockUser(testing, userId, username)
   const member = server ? memberIn(testing, discord, server, user) : null
+  // A direct message to the caller, from whichever input: through the user, or the member, whose mock sends
+  // apart from its user's
+  const log = new SendLog()
+  for (const each of member ? [user, member] : [user]) log.record(each, 'send', DM)
   try {
     for (const dispatch of request.dispatch) {
       const context: Context = {
@@ -418,11 +450,8 @@ export async function runPlayground(
         module: testingModule,
         caller: { user, userId, username, server, member },
         reached,
+        log,
       }
-      // A direct message to the caller, from whichever input: through the user, or the member, whose mock sends
-      // apart from its user's
-      const messaged = [user, ...(member ? [member] : [])].map(each => mockCalls(each, 'send', DM))
-      const sentTo = () => messaged.flatMap(read => read())
       let prepared: Prepared
       try {
         prepared = prepare(dispatch, context)
@@ -431,6 +460,7 @@ export async function runPlayground(
         continue
       }
       reached.length = 0
+      log.start()
       try {
         const outcome = await prepared.send()
         steps.push({
@@ -438,7 +468,7 @@ export async function runPlayground(
           ran: outcome.ran,
           handlers: outcome.handlers,
           ...(outcome.error !== undefined && { error: describeError(outcome.error) }),
-          calls: [...prepared.calls(), ...sentTo()],
+          calls: log.calls(),
         })
       } catch (error) {
         // An error no filter handled: the fallback has answered it, and dispatch rethrows it; the handler
@@ -448,7 +478,7 @@ export async function runPlayground(
           ran: reached.length > 0,
           handlers: [...reached],
           error: describeError(error),
-          calls: [...prepared.calls(), ...sentTo()],
+          calls: log.calls(),
         })
       }
     }

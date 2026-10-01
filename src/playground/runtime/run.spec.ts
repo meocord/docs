@@ -325,6 +325,92 @@ export class Same {
     ])
   })
 
+  describe('a step lists what it sent in the order it sent it', () => {
+    const ORDERED = `
+import { type ButtonInteraction, type ChatInputCommandInteraction, type GuildMember, type Message } from 'discord.js'
+import { respond } from 'meocord/common'
+import { Command, Controller, MessageHandler } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+type Refusable = { mockRejectedValueOnce(error: Error): void }
+@Controller()
+export class Ordered {
+  @MessageHandler('mixed')
+  async mixed(message: Message) {
+    await message.member!.send('1')
+    await message.author.send('2')
+    await message.member!.user.send('3')
+    await message.reply('4')
+  }
+
+  @Command('raw', CommandType.SLASH)
+  async raw(interaction: ChatInputCommandInteraction) {
+    await interaction.user.send('1')
+    await (interaction.member as GuildMember).send('2')
+    await interaction.reply({ content: '3' })
+    await interaction.user.send('4')
+    await interaction.followUp({ content: '5' })
+  }
+
+  @Command('kept', CommandType.BUTTON)
+  async kept(interaction: ButtonInteraction) {
+    await interaction.user.send('1')
+    await respond(interaction).send({ content: '2' })
+    await interaction.user.send('3')
+  }
+
+  @Command('refused', CommandType.SLASH)
+  async refused(interaction: ChatInputCommandInteraction) {
+    await interaction.user.send('1')
+    ;(interaction.reply as unknown as Refusable).mockRejectedValueOnce(new Error('Unknown interaction'))
+    await interaction.reply({ content: '2' }).catch(() => undefined)
+    await interaction.user.send('3')
+  }
+}
+`
+    const listed = async (dispatch: Dispatch) =>
+      ok(await run(ORDERED, [dispatch])).steps[0].calls.map(call => {
+        const content = (call.payload as { content?: string } | string | undefined) ?? ''
+        return [call.method, typeof content === 'string' ? content : content.content, call.error].filter(
+          part => part !== undefined,
+        )
+      })
+
+    it('direct messages through the member, the author and the member’s user, then a reply', async () => {
+      expect(await listed({ kind: 'message', content: 'mixed' })).toEqual([
+        ['dm', '1'],
+        ['dm', '2'],
+        ['dm', '3'],
+        ['reply', '4'],
+      ])
+    })
+
+    it('an interaction answered with discord.js itself, between direct messages', async () => {
+      expect(await listed({ kind: 'slash', command: 'raw', options: {} })).toEqual([
+        ['dm', '1'],
+        ['dm', '2'],
+        ['reply', '3'],
+        ['dm', '4'],
+        ['followUp', '5'],
+      ])
+    })
+
+    it('an answer through respond(), once', async () => {
+      expect(await listed({ kind: 'button', customId: 'kept' })).toEqual([
+        ['dm', '1'],
+        ['update', '2'],
+        ['dm', '3'],
+      ])
+    })
+
+    it('an answer Discord refused, with its error, where it was made', async () => {
+      expect(await listed({ kind: 'slash', command: 'refused', options: {} })).toEqual([
+        ['dm', '1'],
+        ['reply', '2', 'Unknown interaction'],
+        ['dm', '3'],
+      ])
+    })
+  })
+
   it('records a command refused in a server, which MeoCord tells its author in a direct message', async () => {
     const source = `
 import { type Message } from 'discord.js'
