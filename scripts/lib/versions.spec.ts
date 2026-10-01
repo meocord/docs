@@ -70,6 +70,20 @@ describe('identityFor', () => {
   })
 })
 
+describe("the site's versions.json", () => {
+  it('signs every listed version by exactly one identity, and a 4.0 patch from the release/4.0 branch', () => {
+    const config = readVersions(path.resolve(import.meta.dirname, '..', '..', 'versions.json'))
+
+    for (const version of allVersions(config)) expect(() => identityFor(config, version), version).not.toThrow()
+    expect(identityFor(config, '4.0.0')).toBe(L7)
+    expect(identityFor(config, '4.0.1')).toBe(
+      'https://github.com/meocord/meocord/.github/workflows/release.yml@refs/heads/release/4.0',
+    )
+    expect(identityFor(config, '4.0.9')).toBe(identityFor(config, '4.0.1'))
+    expect(identityFor(config, '4.1.0-beta.0')).toBe(ORG)
+  })
+})
+
 describe('addVersion', () => {
   it('opens a line in prerelease and makes it current at its stable release', () => {
     const betas = addVersion(empty(), '4.0.0-beta.0')
