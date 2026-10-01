@@ -154,16 +154,18 @@ It checks that:
 - each key counts on its own, and calls in the same millisecond stay distinct;
 - of several concurrent calls at the limit, exactly one passes;
 - a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
-- for a store that overrides `consumeMany`, a refused batch records nothing;
-- for a store that overrides `peekMany`, a peek records nothing, answers a refusal with the wait `consume` gives,
-  and names a batch's longest wait.
+- a refused batch records nothing, or, with the default `consumeMany`, counts the cooldowns before the one that
+  refuses, as one call to `consume` after another does;
+- of several concurrent batches at the limit, exactly one passes;
+- a peek records nothing, answers a refusal with the wait `consume` gives, and names a batch's longest wait, or,
+  with the default `peekMany`, allows every call.
 
 It uses real time with short windows, so it takes a few seconds. Each case counts under keys of its own, so it can
 run against a database that outlives the test. It can't see whether every key expires; check that yourself.
 
-Its windows are whole milliseconds. A `@Cooldown` whose `seconds` has more than three decimals, such as `1.0005`,
-reaches a store as a `windowMs` of `1000.5`, which no case checks; a store whose database takes only whole milliseconds,
-as Redis's `PEXPIRE` does, needs a test of its own for that.
+Every `windowMs` a store gets is a whole number of milliseconds, from 1 to 9007199254740000: `@Cooldown` rounds
+`seconds` to the millisecond and refuses one outside `0.001` to `9007199254740`. A database that takes only whole
+milliseconds, as Redis's `PEXPIRE` does, can store it as it is.
 
 ## Next steps
 
