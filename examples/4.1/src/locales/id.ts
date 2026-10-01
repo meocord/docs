@@ -11,7 +11,7 @@ export default {
   meocord: {
     usage: { heading: 'Cara pakai: {usage}', notValid: '{label}: "{word}" bukan {type} yang sah' },
     types: { int: 'bilangan bulat' },
-    cooldown: { seconds: 'Pelan-pelan: coba lagi dalam {seconds} detik.' },
+    cooldown: { until: 'Pelan-pelan: coba lagi {when}.' },
     fallback: { notFound: 'Perintah tidak ditemukan!' },
   },
   // #endregion meocord
