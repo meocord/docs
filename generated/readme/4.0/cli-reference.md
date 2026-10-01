@@ -2,7 +2,7 @@
 id: cli-reference
 title: 'CLI Reference'
 order: 6
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 ```shell

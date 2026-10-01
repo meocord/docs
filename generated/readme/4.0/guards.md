@@ -2,7 +2,7 @@
 id: guards
 title: 'Guards'
 order: 11
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 Guards run before the handler method. Each guard implements `canActivate` — return `true` to allow, `false` to block.

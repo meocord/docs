@@ -2,7 +2,7 @@
 id: custom-decorators
 title: 'Custom Decorators'
 order: 12
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 MeoCord exports `applyDecorators` and `SetMetadata` from `meocord/common` for composing reusable decorators.

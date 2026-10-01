@@ -2,7 +2,7 @@
 id: subcommands
 title: 'Subcommands'
 order: 9
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 Discord sends `/settings notify email` as a single interaction named `settings`, so a command with subcommands would otherwise have one handler for all of them. Name the full path — parts separated by a space, the way Discord displays them — to give each subcommand its own method:

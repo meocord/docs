@@ -2,7 +2,7 @@
 id: command-parameters
 title: 'Command Parameters'
 order: 8
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 Buttons, select menus and modals route on their `customId`, and a pattern can capture parts of it. Captured values arrive as the handler's second argument.

@@ -2,7 +2,7 @@
 id: command-types
 title: 'Command Types'
 order: 7
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 `@Command` binds a method to one kind of interaction, and the interaction class the handler receives follows from that. Every type Discord sends is covered.

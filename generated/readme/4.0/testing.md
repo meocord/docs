@@ -2,7 +2,7 @@
 id: testing
 title: 'Testing'
 order: 13
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 MeoCord ships a `meocord/testing` entry point with utilities for testing controllers in isolation — no real Discord connection required. The framework repo runs tests with [Vitest](https://vitest.dev/); the mocks themselves are **framework-agnostic** and work with Vitest or Jest assertions (see below).
