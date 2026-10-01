@@ -97,9 +97,10 @@ Each method may draw asynchronously, and a slow drawing never misses Discord's t
 
 A presenter that fails never leaves the user without an answer. When `error()` or `messageError()` throws, rejects, or
 returns a view MeoCord can't render, such as a colour that is no colour or an empty text, MeoCord's own answer goes
-out instead: its error view, or the plain text a message command gets without `messageError`. The failure is then
-logged as the call's fault, and a testing module's `dispatch` rejects with it. A `loading()` that fails the same way
-is replaced by MeoCord's loading view, with a warning naming the presenter, and the handler still runs.
+out instead: its error view, or the plain text a message command gets without `messageError`. When MeoCord's fallback
+is answering, the failure is then logged as the call's fault, and a testing module's `dispatch` rejects with it; a
+`respond().error()` of your own logs it. A `loading()` that fails the same way is replaced by MeoCord's loading view,
+with a warning naming the presenter, and the handler still runs.
 
 Discord takes at most 10 attachments on a message, counting the ones a message the view is added to keeps, and each
 file within the interaction's attachment size limit, or 20 MiB without one. A view past either is sent without its
