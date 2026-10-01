@@ -79,8 +79,8 @@ Fix what it names. The common ones:
   [Overlapping patterns](guide:components#overlapping-patterns).
 - **"`Class.method`: @Validate and @UsePipe are for interaction and patterned message handlers, …"** They check a
   handler's options, customId params, modal fields or pattern params, and a message handler without a pattern, a
-  reaction, autocomplete or event handler has none. `@Cooldown` on one of those methods is refused the same way,
-  "`@Cooldown` is for interaction and message handlers"; on the controller, it skips them.
+  reaction, autocomplete or event handler has none. `@Cooldown` on a reaction, autocomplete or event handler is
+  refused the same way, "`@Cooldown` is for interaction and message handlers"; on the controller, it skips them.
 - **"`Class`: not decorated with @MeoCord(), so there is no app to create."** The class given to
   `MeoCordFactory.create()`, usually in `src/main.ts`, has no `@MeoCord`.
 - **"meocord.config.ts: sharding.mode 'process' starts one shard per process, …"** With process sharding,
