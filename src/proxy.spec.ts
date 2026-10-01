@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { proxy } from '@/proxy'
-import { IMMUTABLE, playgroundFrameCsp, STATIC_FILE_CSP, VERSIONED_PAGE } from '@/lib/cache-policy'
+import { playgroundFrameCsp, STATIC_FILE_CSP, UNSTORED, VERSIONED_PAGE } from '@/lib/cache-policy'
 import { SITE_URL } from '@/config/site'
 
 const request = (path: string) => new NextRequest(new URL(path, 'https://docs.test'))
@@ -48,7 +48,24 @@ describe('proxy', () => {
     ]) {
       const response = proxy(asked)
       expect(response.headers.get('Content-Security-Policy')).toBe(expected)
-      expect(response.headers.get('Cache-Control')).toBe(IMMUTABLE)
+      expect(response.headers.get('Cache-Control')).toBe(UNSTORED)
     }
+  })
+
+  it('serves one frame path under the policy of whichever origin the running server is configured for, stored by nobody', async () => {
+    const frameFrom = async (siteUrl: string) => {
+      vi.resetModules()
+      vi.stubEnv('SITE_URL', siteUrl)
+      try {
+        const { proxy: configured } = await import('@/proxy')
+        return configured(request('/playground/4.1.0-beta.7.0123456789.html')).headers
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    }
+    const [site, preview] = [await frameFrom('https://meocord.dev'), await frameFrom('http://localhost:4700')]
+    expect(site.get('Content-Security-Policy')).toContain('frame-ancestors https://meocord.dev;')
+    expect(preview.get('Content-Security-Policy')).toContain('frame-ancestors http://localhost:4700;')
+    for (const headers of [site, preview]) expect(headers.get('Cache-Control')).toBe(UNSTORED)
   })
 })

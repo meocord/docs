@@ -103,7 +103,44 @@ test('serves the frame sandboxed, under a policy that names the site', async ({ 
   expect(policy).toContain('sandbox allow-scripts')
   expect(policy).toContain(`script-src ${origin}/playground/ 'unsafe-eval'`)
   expect(policy).toContain(`frame-ancestors ${origin};`)
-  expect(response.headers()['cache-control']).toBe('public, max-age=31536000, immutable')
+  expect(response.headers()['cache-control']).toBe('no-store')
+})
+
+test('fetches the frame afresh for every page, never revalidating a kept copy', async ({ page }) => {
+  // No route here: a routed request skips the browser's cache, which this test is about
+  const answers: { status: number; date: string; conditional: string[] }[] = []
+  page.on('response', async response => {
+    if (new URL(response.url()).pathname !== frame) return
+    const sent = await response.request().allHeaders()
+    answers.push({
+      status: response.status(),
+      date: (await response.allHeaders()).date ?? '',
+      conditional: Object.keys(sent).filter(name => /^if-(none-match|modified-since)$/i.test(name)),
+    })
+  })
+  const open = async () => {
+    await page.goto('/docs/4.1/guards')
+    await page.evaluate(
+      frame =>
+        new Promise<void>(resolve => {
+          const iframe = document.createElement('iframe')
+          iframe.setAttribute('sandbox', 'allow-scripts')
+          iframe.src = frame
+          addEventListener('message', event => {
+            if (event.source === iframe.contentWindow && (event.data as Message).type === 'ready') resolve()
+          })
+          document.body.append(iframe)
+        }),
+      frame,
+    )
+  }
+  await open()
+  // A kept copy answers with the Date it was first served with; the server's next answer, a second on, has its own
+  await page.waitForTimeout(1_100)
+  await open()
+  expect(answers).toHaveLength(2)
+  for (const answer of answers) expect(answer).toMatchObject({ status: 200, conditional: [] })
+  expect(answers[1].date).not.toBe(answers[0].date)
 })
 
 test("refuses what the reader's code posts in place of a result, and answers the run itself", async ({ page }) => {

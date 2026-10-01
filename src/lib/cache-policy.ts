@@ -18,6 +18,12 @@ export const NAMED_FILE = 'public, max-age=86400, stale-while-revalidate=604800'
 export const VERSIONED_PAGE = 'public, s-maxage=86400, stale-while-revalidate=604800'
 /** A page whose content moves when a release flips `latest`, and everything else. */
 export const MOVING_PAGE = 'public, s-maxage=3600, stale-while-revalidate=86400'
+/**
+ * A response whose headers come from the running server's configuration, not from its bytes: the
+ * playground frame, whose policy names the site's origin. No browser or CDN keeps a copy, so a server
+ * configured for another origin never has its frame answered from one made under the old policy.
+ */
+export const UNSTORED = 'no-store'
 
 /** The policy files a flat-deny CSP, since nothing in them runs. */
 export const STATIC_FILE_CSP = "default-src 'none'; base-uri 'none'; frame-ancestors 'none'"
@@ -32,7 +38,7 @@ const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]'])
  * wherever it is loaded, so the reader's code reaches no page, storage or cookie of the site. Scripts and
  * requests are limited to the playground's own files, and only the site may embed the frame, each named
  * by the site's configured origin, exactly: WebKit matches no `'self'` in a sandboxed document, and a
- * policy read from the request would make an immutable file vary by its Host header. The Worker the frame
+ * policy read from the request would take its Host header for the site. The Worker the frame
  * starts from a blob inherits the policy. `'unsafe-eval'` runs the compiled code and `'wasm-unsafe-eval'`
  * the compiler. An origin that can't be named, or a plain-http one other than this machine's, gets the
  * flat-deny policy, so no configuration can open the frame to a cleartext site.
@@ -80,8 +86,9 @@ export function cacheControlFor(pathname: string): string {
     case 'search-bundle':
     case 'palette':
     case 'playground':
-    case 'playground-frame':
       return IMMUTABLE
+    case 'playground-frame':
+      return UNSTORED
     case 'file':
       return NAMED_FILE
     case 'versioned-page':
