@@ -9,8 +9,7 @@ learn:
   - Tell an added reaction from a removed one, and who reacted
   - Run a listener on every message, beside message commands
 requires: [message-commands]
-api:
-  [decorators/ReactionHandler, types/ReactionHandlerOptions, types/ReactionHandlerSettings, types/ReactionHandlerAction]
+api: [decorators/ReactionHandler, types/ReactionEvent, types/ReactionHandlerSettings, types/ReactionHandlerAction]
 since: 4.1.0
 ---
 
@@ -32,7 +31,8 @@ activity. For a command a user types, give `@MessageHandler` a pattern, as in
 
 ::playground{file="controllers/reaction/star.reaction.controller.ts" region="controller" dispatch="reaction ⭐ on 'Ship it'"}
 
-The second argument says who reacted, `user`, and whether the reaction was added or removed, `action`.
+The second argument, a [`ReactionEvent`](api:types/ReactionEvent), says who reacted, `user`, and whether the reaction
+was added or removed, `action`.
 
 ## How it works
 

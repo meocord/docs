@@ -107,7 +107,12 @@ Fix what it names. The common ones:
   on another. Build where it runs; for a container, run `meocord build` inside the image.
 - **A builder that fails.** A command's builder runs as its class loads, so a name Discord refuses, such as one
   with a capital letter or a space, stops the bot there, naming the builder and the command. See
-  [Your first command](guide:first-command#gotchas).
+  [Your first command](guide:first-command#gotchas). A builder whose constructor throws, such as one that reads a
+  translator in a field, stops it the same way, with the builder's error last:
+
+  ```text
+  Stats.stats: StatsBuilder could not be made for "stats": missing translator.
+  ```
 
 ### Other startup errors
 
@@ -117,6 +122,22 @@ it as "Error during startup:" with the error, and the process exits 1.
 **"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
 refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
 [Providers](guide:services#providers).
+
+### Warnings that become errors in 5.0
+
+Some mistakes a 4.0 bot could start with only warn in 4.1, so the bot still starts, and stop it in the next major
+version (5.0). Each warning names the handler or the filter, and says what to write instead:
+
+- **"Broken: @Catch takes error classes, and its first is undefined, so it matches no error."** An entry in a filter's
+  `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
+  other types it lists. Import the class where it's defined, or move it out of the cycle. See
+  [Exception filters](guide:exception-filters#gotchas).
+- **"@MessageHandler('') on `Class.method` is deprecated; in the next major version (5.0) it is refused."** An empty
+  pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
+  pattern is built from.
+
+A warning that ends "will be removed in the next major version (5.0). Use … instead." names an API that still works, and
+is logged once. See [the upgrade guide](guide:migrating#upgrading-from-40-to-41).
 
 ## A command doesn't show up in Discord
 

@@ -330,6 +330,9 @@ See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
 - **Two handlers, one pattern.** Patterns that differ only in param names, such as `'roll {sides}'` and
   `'roll {count}'`, match the same messages and stop the bot at startup. Change one, or give one its own
   prefix.
+- **An empty pattern runs for every message.** `@MessageHandler('')`, often a pattern built from a value that is
+  empty, runs as `@MessageHandler()` does, and logs a warning naming the handler. It is deprecated, and stops the bot
+  in the next major version (5.0). Write `@MessageHandler()` for a listener.
 
 ## Build it
 

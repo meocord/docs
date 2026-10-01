@@ -102,7 +102,9 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 - **A segment of the wrong type matches no route**, so the next pattern is tried: `counter/lots` reaches no handler
   here.
 - **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`.
-- **The handler's params are checked when the code compiles**: `{ count: string }` for `{count:int}` is an error.
+- **The handler's params are checked when the code compiles**, for a pattern written as a string as for a route:
+  `{ count: string }` for `{count:int}` is an error, and so is a name the pattern doesn't capture, such as `{ uid }`
+  for `stats/{id}`.
 - **A customId holds text the bot wrote**, so there is no `member` or `channel` type, as a message command has. Capture
   the ID, `{userId}`, and fetch it in the handler; `{target:member}` stops the bot where it's declared.
 
@@ -141,6 +143,11 @@ A select menu's handler receives what the member chose, beside the captured valu
 | Role        | `values`; `roles`, the `Role`s                                                 |
 | Channel     | `values`; `channels`, the channels                                             |
 | Mentionable | `values`; `users`, `members` and `roles`, as they were chosen                  |
+
+Each is an array: `values` a `string[]`, `users` a `User[]`, and `members`, `roles` and `channels` as discord.js
+resolves them. The handler's declaration is checked when the code compiles, so `values: number` or `users: string` is
+an error, while a type a choice can hold, such as `members: GuildMember[]` or `readonly Role[]`, compiles. A captured
+param of the same name, as in `pick/{values}`, takes the choice's place.
 
 A user, role, mentionable or channel select is its own command type because Discord sends it with different resolved
 data. Declaring `SELECT_MENU` for a user select is a type error rather than a silent mismatch:
