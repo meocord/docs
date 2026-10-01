@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from './test'
 
 // A Guide page's playground that can't start, in each engine: the frame is where engines differ most
 const PAGE = '/docs/4.1/components'
