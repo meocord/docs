@@ -7,6 +7,7 @@ summary: Stand in for discord.js interactions, messages, users and Discord's err
 learn:
   - Mock any discord.js class, with the properties a test needs
   - Build a command's options, a modal's fields and a message with its mentions
+  - Give a member roles, and read its permissions as discord.js computes them
   - Reset mocks between tests, and reject with Discord's own errors
 requires: [testing]
 api:
@@ -15,6 +16,8 @@ api:
     testing/createChatInputOptions,
     testing/createMockMessage,
     testing/createMockGuild,
+    testing/createMockMember,
+    testing/createMockChannel,
     testing/createMockClient,
     testing/createDiscordError,
     testing/resetAllMocks,
@@ -59,6 +62,12 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   `id` you give encodes, or, with the generated id, the time the mock was made. A `createdTimestamp` you set wins.
 - **A mock without a `guildId` is a DM.** `inGuild()`, `inCachedGuild()` and `inRawGuild()` answer from the mock's
   `guildId` and `guild`, and in a DM `guild` and `member` are `null`.
+- **An interaction has the channel it came from.** In a server, `channel` is a text channel of that server, the one
+  its `guild` caches under `channelId`; in a DM, it's the user's DM channel. Its `send()` resolves, and its type
+  guards, such as `isTextBased()`, answer as discord.js's do.
+- **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role,
+  and `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or
+  permission guard runs on a mock as it does in Discord.
 - **Locales are set as Discord sends them.** `locale` is `'en-US'`, and `guildLocale` is `'en-US'` in a server and
   `null` in a DM, so a [translator](guide:localisation) works on a default mock.
 
@@ -104,9 +113,16 @@ test build.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
 - **`createMockClient()`** has real, empty caches, and one bot user, the same in every mock, as `client.user`.
-- **`createMockUser()` and `createMockChannel(Class)`** mock the classes a handler reads most, with their managers
-  stubbed.
-- **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface.
+- **`createMockMember({ user, guild, roles, nickname })`** makes a member with the roles given; see
+  [Members and roles](#members-and-roles).
+- **`createMockUser()`** mocks a person, `bot: false`. A DM to the user, or to a member of theirs, goes through the
+  user's one DM channel, which `createDM()` resolves to.
+- **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
+  type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches.
+  Give one to `createMockMessage({ channel })` to send a message there.
+- **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface. A type has no
+  shape at runtime, so every property is a mock function, data included: `if (settings.enabled)` always passes. Pass
+  the values the code reads, `createMock<Settings>({ enabled: false })`.
 
 Two messages from one `author` count against that member's cooldown, as they would from one person in Discord:
 
@@ -116,19 +132,39 @@ A message and an interaction from that user in one server share the member:
 
 ::example{file="testing/mock-author.spec.ts" region="member"}
 
+## Members and roles
+
+[`createMockMember({ user, guild, roles, nickname })`](api:testing/createMockMember) makes a member of a server, with
+the roles you give. Put it in `createMockGuild({ members })`, and an interaction or a message from its user in that
+server has it as its `member`, so a role guard sees its roles:
+
+::example{file="testing/mock-member.spec.ts" region="member"}
+
+A role is a mock `Role` with the `id` a guard checks: `createMockInteraction(Role, { id })`. The member's
+`roles.cache` holds the server's @everyone role, then the roles given, and `roles.add()`, `remove()` and `set()` change
+them. `roles.highest` ranks them by position, then by id. Its `permissions` combine its roles', @everyone's included,
+and the server's owner has every permission:
+
+::example{file="testing/mock-member.spec.ts" region="permissions"}
+
+A member made without a server joins the one whose `members` it's given to. An interaction's channel is one of that
+server's, and a manager's `fetch(id)` finds what the server caches:
+
+::example{file="testing/mock-member.spec.ts" region="channel"}
+
 ## What methods return
 
 A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup:
 
-| Method                                                          | Resolves to                                               |
-| --------------------------------------------------------------- | --------------------------------------------------------- |
-| `send()`, `reply()`, `crosspost()`, `forward()`, `fetchReply()` | a mock message                                            |
-| a manager's `fetch(id)`, or `fetch({ user })` and the like      | a mock of its item: a user, member, guild, role, message… |
-| a manager's `fetch()` for a list                                | an empty `Collection`                                     |
-| a manager's `create()` and `edit()`                             | a mock of its item                                        |
-| `createDM()`                                                    | a mock DM channel                                         |
-| a structure's own `edit()`, `fetch()`, `delete()` and setters   | the structure itself                                      |
-| any other method that returns a promise                         | `undefined`                                               |
+| Method                                                          | Resolves to                                          |
+| --------------------------------------------------------------- | ---------------------------------------------------- |
+| `send()`, `reply()`, `crosspost()`, `forward()`, `fetchReply()` | a mock message                                       |
+| a manager's `fetch(id)`, or `fetch({ user })` and the like      | its cached item with that id, or a new one it caches |
+| a manager's `fetch()` for a list                                | an empty `Collection`                                |
+| a manager's `create()` and `edit()`                             | a mock of its item                                   |
+| `createDM()`                                                    | a mock DM channel                                    |
+| a structure's own `edit()`, `fetch()`, `delete()` and setters   | the structure itself                                 |
+| any other method that returns a promise                         | `undefined`                                          |
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
 

@@ -1,15 +1,10 @@
-import {
-  ChatInputCommandInteraction,
-  Collection,
-  type GuildMember,
-  type GuildMemberRoleManager,
-  type Role,
-} from 'discord.js'
+import { ChatInputCommandInteraction, Role } from 'discord.js'
 import {
   createExecutionContext,
-  createMock,
   createMockGuild,
   createMockInteraction,
+  createMockMember,
+  createMockUser,
   getResponse,
   inspectHandler,
   MeoCordTestingModule,
@@ -63,16 +58,14 @@ describe('ModerationSlashController', () => {
 
   // A call from a server member with the given roles, in its roles cache by ID, as discord.js keeps them
   const fromMember = (...roles: Role[]) => {
-    const guild = createMockGuild({ id: '444444444444444444', roles })
-    const member = createMock<GuildMember>({
-      roles: createMock<GuildMemberRoleManager>({ cache: new Collection(roles.map(role => [role.id, role])) }),
-    })
-    return createMockInteraction(ChatInputCommandInteraction, { guildId: guild.id, guild, member })
+    const user = createMockUser()
+    const guild = createMockGuild({ members: [createMockMember({ user, roles })] })
+    return createMockInteraction(ChatInputCommandInteraction, { user, guildId: guild.id, guild })
   }
 
   it("lets in a member with a required role's ID, and no one for a role that only has its name", async () => {
-    const moderator = createMock<Role>({ id: ROLE_IDS.moderator, name: 'moderator' })
-    const renamed = createMock<Role>({ id: '555555555555555555', name: 'moderator' })
+    const moderator = createMockInteraction(Role, { id: ROLE_IDS.moderator, name: 'moderator' })
+    const renamed = createMockInteraction(Role, { id: '555555555555555555', name: 'moderator' })
 
     await expect(module.invoke(ModerationSlashController, 'ban', fromMember(moderator))).resolves.toEqual({ ran: true })
     await expect(module.invoke(ModerationSlashController, 'ban', fromMember(renamed))).resolves.toEqual({ ran: false })
