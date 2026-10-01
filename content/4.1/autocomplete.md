@@ -78,6 +78,10 @@ filters.
   searches, or search a smaller index.
 - **A suggestion isn't a guarantee.** The member can ignore it and send anything. Check the value when the command
   runs.
+- **Only one handler completes an option.** With two `@Autocomplete` handlers for the same option of one command
+  path, or for every option of one path, the one in the controller listed first runs, and the other never does. The
+  bot warns at startup, naming both, and in the next major version (5.0) it refuses to start. Keep one, or give the
+  other an option or a path of its own.
 
 ## Next steps
 
