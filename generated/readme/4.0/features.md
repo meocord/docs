@@ -2,7 +2,7 @@
 id: features
 title: 'Features'
 order: 2
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 - **Decorator-based controllers** — Handle every Discord interaction type — slash commands and their subcommands, autocomplete, buttons, modals, all five select menus, context menus, activity entry points, messages, and reactions — with `@Command`, `@Autocomplete`, `@Controller`, and `@UseGuard` decorators. No routing boilerplate.

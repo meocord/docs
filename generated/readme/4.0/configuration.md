@@ -2,7 +2,7 @@
 id: configuration
 title: 'Configuration'
 order: 5
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 ### `meocord.config.ts`

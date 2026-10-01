@@ -67,7 +67,7 @@
       "name": "examples-4-0",
       "dependencies": {
         "discord.js": "^14.27.0",
-        "meocord": "4.0.0",
+        "meocord": "4.0.1",
       },
     },
     "examples/4.1": {
@@ -1228,7 +1228,7 @@
 
     "meo-canvas": ["meo-canvas@10.0.4", "", { "dependencies": { "@types/node": "^26.5.1" }, "optionalDependencies": { "@meo-canvas/darwin-arm64": "10.0.4", "@meo-canvas/linux-arm64-gnu": "10.0.4", "@meo-canvas/linux-arm64-musl": "10.0.4", "@meo-canvas/linux-x64-gnu": "10.0.4", "@meo-canvas/linux-x64-musl": "10.0.4", "@meo-canvas/win32-arm64": "10.0.4", "@meo-canvas/win32-x64": "10.0.4" } }, "sha512-HOLU8dBwLZF3Tfam3p0NL93t3lBcMHhgnoc3JAJZHiX7bgOhxhq30vnlS06uyPOBTiDxd5oY67mbTiJBVJJJ5w=="],
 
-    "meocord": ["meocord@4.0.0", "", { "dependencies": { "@clack/prompts": "^1.8.0", "@rsbuild/core": "^2.2.8", "chalk": "^6.0.0", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2", "simple-git": "^3.36.0" }, "peerDependencies": { "discord.js": "^14.26.4", "dotenv": "^18.0.3" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-Tu3LuDF5Mq2rLOiIrxIwJ31wKyUUmPe4zzdQScA8PUGCowXIyEsiM5c98qrk32ReKke35KBWPqkt0gZRbh/PBQ=="],
+    "meocord": ["meocord@4.0.1", "", { "dependencies": { "@clack/prompts": "^1.8.0", "@rsbuild/core": "^2.2.8", "chalk": "^6.0.0", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2", "simple-git": "^3.36.0" }, "peerDependencies": { "discord.js": "^14.26.4", "dotenv": "^18.0.3" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-YEC/NRyUt9RMxU3/zytPwn6oswMVoop1GDQkD9OJGfkq2Ggjz99Z0PNZirPlSBy+K0J4GnyNBimMmef53nwPtw=="],
 
     "merge2": ["merge2@1.4.1", "", {}, "sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg=="],
 

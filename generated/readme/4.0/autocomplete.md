@@ -2,7 +2,7 @@
 id: autocomplete
 title: 'Autocomplete'
 order: 10
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 Autocomplete is a separate interaction from the command it belongs to: Discord sends it while the user is still typing, it is answered with `respond()` rather than a reply, and the window closes after three seconds. `@Autocomplete` binds a handler to it.

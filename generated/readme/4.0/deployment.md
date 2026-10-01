@@ -2,7 +2,7 @@
 id: deployment
 title: 'Deployment'
 order: 14
-source: readme@4.0.0
+source: readme@4.0.1
 ---
 
 Install all dependencies and build for production:
