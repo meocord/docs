@@ -89,6 +89,10 @@ line is logged, so a busy bot never looks it up again, and setting the variable 
 MEOCORD_LOG_LEVEL=debug node dist/main.js
 ```
 
+`logger.info()` and `logger.verbose()` print at the `'log'` level, tagged `[INFO]` and `[VERBOSE]`, so a filter on
+`[LOG]` doesn't match them. A line is in colour on a terminal and plain where the output isn't one, such as a file or a
+log collector, objects included. Set `FORCE_COLOR=1` to keep the colour where your log viewer shows it.
+
 ### Stack traces
 
 A stack trace names your source, such as `src/services/profile.service.ts:42:11`, not the bundle, on Node and Bun

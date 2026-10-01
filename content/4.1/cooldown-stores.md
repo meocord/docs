@@ -161,6 +161,10 @@ It checks that:
 It uses real time with short windows, so it takes a few seconds. Each case counts under keys of its own, so it can
 run against a database that outlives the test. It can't see whether every key expires; check that yourself.
 
+Its windows are whole milliseconds. A `@Cooldown` whose `seconds` has more than three decimals, such as `1.0005`,
+reaches a store as a `windowMs` of `1000.5`, which no case checks; a store whose database takes only whole milliseconds,
+as Redis's `PEXPIRE` does, needs a test of its own for that.
+
 ## Next steps
 
 - [Cooldowns](guide:cooldowns): the limits a store counts, and what a call gets when the store fails.
