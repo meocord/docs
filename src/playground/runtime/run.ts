@@ -168,8 +168,15 @@ const interactionCalls = (testing: Testing, interaction: unknown) => () =>
  * The calls a mock's `method` received, such as a message's replies or a member's direct messages, named
  * `label` when the method alone would not say whose it is.
  */
-const mockCalls = (target: Record<string, unknown>, method: string, label = method) =>
-  ((target[method] as MockFn | undefined)?.mock.calls ?? []).map(args => ({ method: label, payload: toJson(args[0]) }))
+const mockCalls = (target: Record<string, unknown>, method: string, label = method) => {
+  const all = () => (target[method] as MockFn | undefined)?.mock.calls ?? []
+  // A mock the whole run shares, such as the caller, has the earlier steps' calls too: a step reads its own
+  const start = all().length
+  return () =>
+    all()
+      .slice(start)
+      .map(args => ({ method: label, payload: toJson(args[0]) }))
+}
 
 /**
  * A user as MeoCord's own tests make one, a person and not a bot, with every default its mocks carry, named
@@ -212,7 +219,10 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
   const sent = (content: string) => testing.createMockMessage({ content, guild: server, author: user })
   const interaction = (type: string, overrides: Record<string, unknown>): Prepared => {
     const input = testing.createMockInteraction(discord[type], { ...from, ...overrides })
-    return { send: async () => fromCall(await module.dispatch(input)), calls: interactionCalls(testing, input) }
+    const answered = interactionCalls(testing, input)
+    // A handler may also message the caller directly
+    const messaged = mockCalls(user, 'send', 'user.send')
+    return { send: async () => fromCall(await module.dispatch(input)), calls: () => [...answered(), ...messaged()] }
   }
   switch (dispatch.kind) {
     case 'slash': {
@@ -247,13 +257,12 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
       })
     case 'message': {
       const message = sent(dispatch.content)
+      const replies = mockCalls(message, 'reply')
+      const messaged = mockCalls(message.author as Record<string, unknown>, 'send', 'author.send')
       return {
         send: async () => fromCall(await module.dispatch(message)),
         // In a server, MeoCord tells the author of a refused or failed command in a direct message
-        calls: () => [
-          ...mockCalls(message, 'reply'),
-          ...mockCalls(message.author as Record<string, unknown>, 'send', 'author.send'),
-        ],
+        calls: () => [...replies(), ...messaged()],
       }
     }
     case 'reaction': {
@@ -268,24 +277,29 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
       const action = dispatch.action === 'add' ? ADD : REMOVE
       return {
         send: async () => fromCall(await module.dispatch(reaction, { user, action })),
-        calls: () => mockCalls(message, 'reply'),
+        calls: mockCalls(message, 'reply'),
       }
     }
     case 'event': {
+      // The caller as the member the server holds, the one its other inputs come from
       const guild = server ?? serverOf(testing)
-      const member = testing.createMockInteraction(discord.GuildMember, {
-        guild,
-        user,
-        id: caller.userId,
-        displayName: caller.username,
-      })
+      const members = (guild.members as { cache: Map<string, Record<string, unknown>> }).cache
+      const member =
+        members.get(caller.userId) ??
+        testing.createMockInteraction(discord.GuildMember, {
+          guild,
+          user,
+          id: caller.userId,
+          displayName: caller.username,
+        })
+      members.set(caller.userId, member)
       return {
         // An event names no handler; the recorder heard which ran
         send: async () => {
           const { ran } = await module.emit(dispatch.event, member)
           return { ran: ran > 0, handlers: [...context.reached] }
         },
-        calls: () => mockCalls(member, 'send'),
+        calls: mockCalls(member, 'send'),
       }
     }
   }
@@ -383,11 +397,12 @@ export async function runPlayground(
   const { userId = '100000000000000001', username = 'reader', inGuild = true } = request.caller ?? {}
   const enums = modules['meocord/enum'] as Context['enums']
   const steps: Step[] = []
-  // One server for the whole run, so each input comes from the same place
+  // One server and one caller for the whole run, as Discord has one user by an id, so each input comes from the
+  // same place and person, and the server's member for the caller is the same throughout
   const server = inGuild ? serverOf(testing) : null
+  const user = mockUser(testing, userId, username)
   try {
     for (const dispatch of request.dispatch) {
-      const user = mockUser(testing, userId, username)
       const context: Context = {
         testing,
         discord,
