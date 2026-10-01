@@ -151,6 +151,9 @@ Generate a filter with `npx meocord g f <name>`.
 ## Gotchas
 
 - **A filter without `@Catch` stops the bot at startup.** `@Catch()` with no types handles every error.
+- **An entry of `@Catch` that isn't a class matches no error.** An `undefined`, often from two files that import each
+  other, logs a warning naming the filter as it loads, and the filter still handles the other types it lists. In the
+  next major version (5.0) it stops the bot. Import the class where it's defined.
 - **A plain `Error` tells the user nothing useful.** If the user can fix the problem, throw `UserError` instead, and
   its message reaches them.
 - **A global filter catches everything the others don't.** List specific filters on the controller or method, and

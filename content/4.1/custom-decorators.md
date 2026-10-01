@@ -52,6 +52,10 @@ The handler ends up with exactly what the combined decorators give it, and
 
 ::example{file="controllers/slash/shop.slash.controller.spec.ts" region="spec"}
 
+A decorator of your own that passes options on types them with the wrapped decorator's options type from
+`meocord/interface`: `CooldownOptions` for `@Cooldown`, `DeferOptions` for `@Defer`, and `GuardOptions`,
+`InterceptorOptions`, `ObserverOptions` and `ValidateOptions` for the stage classes and `@Validate`.
+
 ## Facts about a handler
 
 `createMetadata<T>()` returns a decorator that stores a value of type `T` on a handler or a controller. A stage reads it
@@ -66,8 +70,8 @@ two never collide:
 ## String keys
 
 [`SetMetadata(key, value)`](api:utilities/SetMetadata) stores a value under a key of your choosing, read with
-`ExecutionContext.get(key)`. Prefer `createMetadata`: its values are typed, and its key can't collide with another
-library's.
+`ExecutionContext.get(key)`. Both are deprecated, and removed in the next major version (5.0): each logs a warning
+once. Use `createMetadata`, whose values are typed and whose key can't collide with another library's.
 
 ## Gotchas
 
