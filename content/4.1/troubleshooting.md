@@ -36,15 +36,11 @@ discord.js's `GatewayIntentBits`.
 of every option of the wrong type. An option MeoCord doesn't know, often a typo, is only a warning. See
 [Configuration](guide:configuration#options).
 
-**"dist: this build carries native addons compiled for …, but is running on …"** A
-[self-contained build](guide:self-contained-builds#native-addons-and-platforms) made on one platform was started on
-another. Build where it runs; for a container, run `meocord build` inside the image.
-
 ### One line naming a class, and exit code 1
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it as one line that starts with what it is on:
-`Class.method:`, `Class:`, or `App:` for `@MeoCord`'s options. The rest names the decorator and the problem, such
-as:
+`Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, `meocord.config.ts:` for its settings, or the build's
+folder, such as `dist:`. The rest names the decorator and the problem, such as:
 
 ```text
 SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
@@ -77,13 +73,31 @@ Fix what it names. The common ones:
   line naming both handlers and their patterns, such as
   `A.swap: "swap {a}" and "swap {b}" in B.swap match the same messages, …`. See
   [Errors at startup](guide:message-commands#errors-at-startup), which lists each one.
+- **"`Class.method`: "…" and "…" in `Other.method` match the same … customIds"** Two component handlers of one
+  type take the same ids, so only one could ever run. `MeoCordFactory.create()` and `meocord register` refuse them,
+  the second before it sends any command. Change one pattern; see
+  [Overlapping patterns](guide:components#overlapping-patterns).
+- **"`Class.method`: @Validate and @UsePipe are for interaction and patterned message handlers, …"** They check a
+  handler's options, customId params, modal fields or pattern params, and a message handler without a pattern, a
+  reaction, autocomplete or event handler has none. `@Cooldown` on one of those methods is refused the same way,
+  "`@Cooldown` is for interaction and message handlers"; on the controller, it skips them.
+- **"`Class`: not decorated with @MeoCord(), so there is no app to create."** The class given to
+  `MeoCordFactory.create()`, usually in `src/main.ts`, has no `@MeoCord`.
+- **"meocord.config.ts: sharding.mode 'process' starts one shard per process, …"** With process sharding,
+  `clientOptions.shards` and `shardCount` must be unset. Otherwise, set there, they must agree with
+  `sharding.shards`, or the line reads "sharding.shards (…) and clientOptions.shards/shardCount disagree"; set the
+  shards in one place. See [Sharding](guide:sharding).
+- **"dist: this build carries native addons compiled for …, but is running on …"** A
+  [self-contained build](guide:self-contained-builds#native-addons-and-platforms) made on one platform was started
+  on another. Build where it runs; for a container, run `meocord build` inside the image.
 - **A builder that fails.** A command's builder runs as its class loads, so a name Discord refuses, such as one
   with a capital letter or a space, stops the bot there, naming the builder and the command. See
   [Your first command](guide:first-command#gotchas).
 
 ### Other startup errors
 
-The generated `main.ts` logs these as "Error during startup:" with the error, and the process exits 1.
+What MeoCord can't see as the bot loads, such as a provider that fails, reaches the generated `main.ts`, which logs
+it as "Error during startup:" with the error, and the process exits 1.
 
 **"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
 refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
