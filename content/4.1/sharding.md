@@ -71,8 +71,10 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
   `{ shardIds, ok, error }` per process: one per shard with process sharding, and one in all otherwise.
 - **Which service:** each process resolves it from its own container, the class you pass in this process, and the
   class of the same name in another.
-- **What crosses:** only JSON, arguments and results alike. So with process sharding the bot refuses to start when two
-  controllers or services share a name.
+- **What crosses:** only JSON, arguments and results alike, in every mode: in one process and in a test too, a `Date`
+  arrives as a string, a `Map` as `{}` and a function as `undefined`, and a value JSON can't write, such as a
+  `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers or services
+  share a name.
 - **Failures:** a process that throws, lacks the service or takes more than 10 seconds gives an error result, and the
   others still answer.
 - **This process:** `ids`, `count` and `isPrimary` describe its shards.
@@ -82,7 +84,8 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
 
 ### Testing
 
-The testing module runs as one process, so a `call` runs the method once, in the module:
+The testing module runs as one process, so a `call` runs the method once, in the module, with its arguments and
+result passed as JSON, as between processes:
 
 ::example{file="services/stats.service.spec.ts" region="spec"}
 
