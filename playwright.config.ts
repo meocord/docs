@@ -9,7 +9,10 @@ export default defineConfig({
   testIgnore: '**/port.spec.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
+  // In CI, every test's outcome is also written as JSON, uploaded from every run, which check-e2e-ran.ts reads
+  reporter: process.env.CI
+    ? [['github'], ['html', { open: 'never' }], ['json', { outputFile: 'e2e-results/results.json' }]]
+    : 'list',
   use: { baseURL: `http://localhost:${PORT}`, trace: 'retain-on-failure' },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
