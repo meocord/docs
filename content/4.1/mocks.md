@@ -70,6 +70,9 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 - **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role,
   and `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or
   permission guard runs on a mock as it does in Discord.
+- **A select menu has picked nothing unless given.** Its `values` are an empty array, and so are the collections of
+  what its kind picks: `users` and `members`, `roles`, or `channels`, each an empty `Collection`. Give the choices a
+  test needs in the overrides.
 - **Locales are set as Discord sends them.** `locale` is `'en-US'`, and `guildLocale` is `'en-US'` in a server and
   `null` in a DM, so a [translator](guide:localisation) works on a default mock.
 
