@@ -142,9 +142,22 @@ every call, so a store without its own `peekMany` refuses only at `consumeMany`,
 
 A store that connects can do it in its own [lifecycle hooks](guide:lifecycle-hooks). Its `onReady` runs before the
 services', and a call that comes meanwhile waits for it, up to `cooldownStoreTimeoutMs`; one that would wait longer
-meets the [`cooldownStoreFailure`](guide:cooldowns#when-the-store-fails) policy. Its `onShutdown` runs after the services', once
-the calls under way have finished, along with every store operation they started, so the store closes after its last
-write.
+meets the [`cooldownStoreFailure`](guide:cooldowns#when-the-store-fails) policy. Its `onShutdown` runs after the
+services', once the calls under way have finished, along with every store operation they started, so the store closes
+after its last write.
+
+### Giving back a refused call's use
+
+When a store answers after `cooldownStoreTimeoutMs`, `@Cooldown` has already refused the call under `'deny'`. If the
+late answer recorded the call, the caller would lose a use for a call that never ran, so `@Cooldown` calls the
+verdict's `release()` to undo it. The built-in stores give `release`. A store of your own can add it to the verdict
+its `consumeMany` returns:
+
+::example{file="recipes/cooldown-stores/releasing.store.ts" region="store"}
+
+A store without `release` keeps such a call counted. Under `'allow'` the call ran uncounted, so the late count stays.
+`testCooldownStore` checks a store's `release` when it gives one. A release still under way when the bot stops
+finishes before the store's `onShutdown` runs, so a store can close its connection there.
 
 ### Checking a store
 
