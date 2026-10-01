@@ -127,6 +127,12 @@ with [`@MeoCord({ cooldownStore })`](api:decorators/MeoCord#cooldownStore):
 [Cooldown stores](guide:recipes/cooldown-stores) sets up each one, and builds a store for PostgreSQL, SQLite and
 MongoDB.
 
+Each cooldown's count is kept under a key named for its window, `Controller.method#<windowMs>:…`, so a deploy that
+adds, removes or reorders `@Cooldown`s leaves the others' counts as they were. Changing a cooldown's `uses` keeps the
+calls counted so far, held to the new number; changing its `seconds` starts its count again. Two cooldowns of one
+handler with the same window and `per`, both with or both without `by`, are told apart by their `uses` too: changing
+either one's `uses` starts its count again, and adding or removing the second starts the first's again.
+
 ## When the store fails
 
 A shared store can be down, restarting or cut off. When it throws, rejects or doesn't answer within
