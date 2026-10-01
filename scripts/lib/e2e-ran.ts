@@ -5,7 +5,7 @@
  */
 
 /** The specs that must run every test in every CI build, by file name under e2e/. */
-export const MUST_RUN = ['live-routes.spec.ts', 'playground-frame.spec.ts']
+export const MUST_RUN = ['live-routes.spec.ts', 'playground-frame.spec.ts', 'playground-start.spec.ts']
 
 interface ReportTest {
   projectName: string
