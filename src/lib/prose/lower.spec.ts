@@ -145,6 +145,15 @@ describe('lowerMarkdown', () => {
     )
   })
 
+  it('marks each term on a page that defines terms with its anchor, and no other paragraph', () => {
+    const markdown = '**Cooldown store.** Where counts are kept.\n\nA plain paragraph.'
+    expect(html(markdown, { terms: true })).toBe(
+      '<div><p id="cooldown-store" data-term="true"><strong>Cooldown store.</strong> Where counts are kept.</p>' +
+        '<p>A plain paragraph.</p></div>',
+    )
+    expect(html(markdown)).not.toContain('id=')
+  })
+
   it('titles a heading from its text, images and breaks included', () => {
     expect(lowerMarkdown('## A ![b](/b.png) c').headings[0].title).toBe('A  c')
   })

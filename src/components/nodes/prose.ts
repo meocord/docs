@@ -366,6 +366,22 @@ export const Prose = createNode('article', {
       '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)' },
     },
     '& [data-params] tr:target': { boxShadow: 'inset 3px 0 0 theme.accent.default' },
+    // A glossary's term is a link's target too: clear of the toolbar, and marked in the gutter beside it while it
+    // is the target, its text left where it stands.
+    '& p[data-term]': {
+      position: 'relative',
+      scrollMarginTop: 'theme.space.4',
+      '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)' },
+    },
+    '& p[data-term]:target::before': {
+      content: '""',
+      position: 'absolute',
+      insetBlock: 0,
+      insetInlineStart: 'calc(-1 * theme.space.3)',
+      width: 3,
+      borderRadius: 'theme.radius.chip',
+      backgroundColor: 'theme.accent.default',
+    },
     '& [data-params] td:first-child code': { whiteSpace: 'nowrap' },
     '& [data-params] td code': { overflowWrap: 'normal' },
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },

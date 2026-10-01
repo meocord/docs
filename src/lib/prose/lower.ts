@@ -1,7 +1,4 @@
 import type { Image, Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { gfmFromMarkdown } from 'mdast-util-gfm'
-import { gfm } from 'micromark-extension-gfm'
 import {
   A,
   Aside,
@@ -22,8 +19,8 @@ import {
   Thead,
   Tr,
 } from '@meonode/ui'
+import { anchorIds, type AnchorOptions, parseMarkdown } from '@/lib/prose/anchors'
 import { codeFrame } from '@/lib/prose/code'
-import { pageSlugger } from '@/lib/page-ids'
 
 /** A heading on the page, with the anchor its element carries. */
 export interface Heading {
@@ -32,7 +29,7 @@ export interface Heading {
   depth: number
 }
 
-export interface LowerOptions {
+export interface LowerOptions extends AnchorOptions {
   /** Maps a link as written to the href to render; stored `/docs/<line>/…` links go through urls.ts. */
   href?: (url: string) => string
   /** The code an `::example{file="…" region="…" from="…"}` directive embeds. */
@@ -98,16 +95,14 @@ const attributesOf = (written: string): Record<string, string> =>
 /**
  * Markdown as meonode nodes: intrinsic elements with no style props, so none of them goes through
  * meonode's styled renderer. The page's one styled container, Prose, styles them by selector.
- * Headings carry the anchors GitHub gives them, which the content pipeline checks links against.
+ * Headings, and the terms of a page that defines them, carry the anchors `anchorIds` gives them, which
+ * the content pipeline checks links against.
  */
 export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Lowered {
-  const tree = fromMarkdown(markdown, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] })
-  const slugger = pageSlugger()
+  const tree = parseMarkdown(markdown)
+  const ids = anchorIds(tree, markdown, options)
   const headings: Heading[] = []
   const href = options.href ?? (url => url)
-
-  const source = (node: Nodes) =>
-    node.position ? markdown.slice(node.position.start.offset, node.position.end.offset) : ''
 
   const children = (parent: Parents): Child[] => parent.children.map((child, index) => lower(child, index))
 
@@ -132,14 +127,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
             : null
         if (figure) return options.figure?.(figure[1], key) ?? ''
         if (isBadgeRow(node.children)) return ''
-        return P(children(node), { key })
+        const term = ids.get(node)
+        return P(children(node), { key, ...(term && { id: term, 'data-term': true }) })
       }
       case 'heading': {
-        // Slugged from the heading as written, as GitHub and the pipeline do.
-        const written = source(node)
-          .replace(/^#{1,6}\s+/, '')
-          .replace(/\s+#*\s*$/, '')
-        const id = slugger.slug(written)
+        const id = ids.get(node)!
         headings.push({ id, title: plainText(node), depth: node.depth })
         return Node(`h${node.depth}`, { key, id, children: children(node) })
       }

@@ -51,6 +51,7 @@ interface Fields {
   api?: string[]
   formerly?: string[]
   covers?: string[]
+  terms?: boolean | string
 }
 
 const yaml = (fields: Fields) =>
@@ -162,6 +163,37 @@ describe('checkGuide', () => {
     )
     expect(problems.filter(problem => problem.includes('covers'))).toEqual([
       'content/4.1: covers "4.1/interaction-responses" is claimed by guards and services; one page only',
+    ])
+  })
+
+  it("resolves a link to a glossary's term only on a page that defines terms", () => {
+    const glossary = (terms?: boolean | string) =>
+      page(
+        {
+          id: 'glossary',
+          title: 'Glossary',
+          chapter: 'appendix',
+          group: 'help',
+          order: 4,
+          summary: 'The words.',
+          ...(terms !== undefined && { terms }),
+        },
+        '**Cooldown store.** Where counts are kept.\n\n**`UserError`.** A refusal the user is shown.',
+      )
+    const linking = page(
+      guards,
+      chapterBody('[a](guide:glossary#cooldown-store) [b](guide:glossary#usererror) [c](guide:glossary#nope)'),
+    )
+    expect(check({ ...valid(), guards: linking, glossary: glossary(true) }, context)).toEqual([
+      'content/4.1/guards.md: guide:glossary#nope names no heading of that page',
+    ])
+    expect(check({ ...valid(), guards: linking, glossary: glossary() }, context)).toEqual([
+      'content/4.1/guards.md: guide:glossary#cooldown-store names no heading of that page',
+      'content/4.1/guards.md: guide:glossary#usererror names no heading of that page',
+      'content/4.1/guards.md: guide:glossary#nope names no heading of that page',
+    ])
+    expect(check({ ...valid(), glossary: glossary("'yes'") }, context)).toEqual([
+      'content/4.1/glossary.md: terms is true or false',
     ])
   })
 
@@ -505,6 +537,7 @@ describe('reading order', () => {
     api: [],
     formerly: [],
     covers: [],
+    terms: false,
   })
 
   it('runs chapter by chapter, then by order, with the appendix groups last', () => {

@@ -92,11 +92,12 @@ export function authoredAnchors(line: string): Record<string, AnchorTarget> {
     target: { slug: page.id, group: page.group === 'help' ? undefined : page.group },
     ids: [page.id, ...page.formerly],
     body,
+    terms: page.terms,
   }))
   const anchors: Record<string, AnchorTarget> = {}
   for (const { target, ids } of pages) for (const id of ids) anchors[id] = target
-  for (const { target, body } of pages)
-    for (const anchor of pageAnchors(body)) anchors[anchor] ??= { ...target, anchor }
+  for (const { target, body, terms } of pages)
+    for (const anchor of pageAnchors(body, { terms })) anchors[anchor] ??= { ...target, anchor }
   return anchors
 }
 
