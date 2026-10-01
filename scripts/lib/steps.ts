@@ -12,8 +12,13 @@
 
 import { GUIDE_PLAN } from './guide'
 
-/** Every planned Guide path in reading order. */
-export const READING_ORDER: readonly string[] = Object.values(GUIDE_PLAN).flat()
+/**
+ * Every planned Guide path in reading order, read from the plan when asked: the Guide's own checks use this
+ * module too, so it reads nothing of guide.ts as it loads.
+ */
+export function readingOrder(): readonly string[] {
+  return Object.values(GUIDE_PLAN).flat()
+}
 
 /** The pages whose step may replace an earlier line with `before:`, as the Guide's template allows. */
 export const REPLACING_STEPS: readonly string[] = ['localisation']
@@ -24,7 +29,7 @@ const BEFORE = /^(\s*)\/\/ before:(\S+) (.*)$/
 
 /** Where a page falls in reading order, or undefined for a path that is not on the plan. */
 export function stepIndex(page: string): number | undefined {
-  const index = READING_ORDER.indexOf(page)
+  const index = readingOrder().indexOf(page)
   return index === -1 ? undefined : index
 }
 

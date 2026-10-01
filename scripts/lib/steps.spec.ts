@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { excerpt } from './pages'
-import { asOf, READING_ORDER, REPLACING_STEPS, stepIndex, stepProblems, stepsIn } from './steps'
+import { asOf, readingOrder, REPLACING_STEPS, stepIndex, stepProblems, stepsIn } from './steps'
 
 // An app file that presenters (chapter 2) and theming (chapter 4) add to, and localisation replaces a line of.
 const app = [
@@ -116,7 +116,7 @@ describe('step marks', () => {
   it('lists the pages a file steps at, in reading order', () => {
     expect(stepsIn(app)).toEqual(['presenters', 'theming', 'localisation'])
     expect(stepIndex('presenters')! < stepIndex('theming')!).toBe(true)
-    expect(READING_ORDER[0]).toBe('overview')
+    expect(readingOrder()[0]).toBe('overview')
     expect(stepIndex('nowhere')).toBeUndefined()
   })
 

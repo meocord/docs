@@ -15,6 +15,9 @@ import { memberAnchor } from '../../src/lib/urls'
 import { displacedTerms } from '../../src/lib/prose/anchors'
 import { parseDispatchList } from '../../src/playground/dispatch-list'
 import { outsideModules, READER_MODULES } from '../../src/playground/runtime/modules'
+import { sharedFragment } from '../../src/lib/docs/share-link'
+import { excerpt } from './pages'
+import { asOf } from './steps'
 
 /** The Guide's chapters, in reading order, then the appendices. */
 export const CHAPTERS = [
@@ -591,7 +594,7 @@ function checkCallouts(where: string, body: string, problems: string[]): void {
 /** The figures a page can draw with `::figure{name="…"}`; src/lib/docs/figures.ts draws each. */
 export const GUIDE_FIGURES = ['pipeline'] as const
 
-function checkExamples(where: string, body: string, context: GuideContext, problems: string[]): void {
+function checkExamples(where: string, body: string, context: GuideContext, problems: string[], page: string): void {
   for (const match of withoutCode(body).matchAll(/^::figure\{([^}]*)\}\s*$/gm)) {
     const name = /^name="([\w-]+)"$/.exec(match[1].trim())?.[1]
     if (!name || !(GUIDE_FIGURES as readonly string[]).includes(name))
@@ -621,15 +624,22 @@ function checkExamples(where: string, body: string, context: GuideContext, probl
   for (const [at, line] of lines.entries())
     if (/::playground\b/.test(line) && !(/^::playground\{[^}]*\}\s*$/.test(line) && blank(at - 1) && blank(at + 1)))
       problems.push(`${where}: a ::playground stands alone in its paragraph, not in "${line.trimEnd()}"`)
-  for (const match of withoutCode(body).matchAll(PLAYGROUND)) checkPlayground(where, match[1], context, problems)
+  for (const match of withoutCode(body).matchAll(PLAYGROUND)) checkPlayground(where, match[1], context, problems, page)
 }
 
 /**
  * A `::playground{file region dispatch expect}`: the region shows as an ::example does, and Run runs the whole
- * file, so the file imports only what the playground's runtime carries, and the dispatch parses. `expect="refused"`
- * says its last input is refused, as a cooldown or a user error refuses one.
+ * file, so the file imports only what the playground's runtime carries, the dispatch parses, and the file and
+ * its inputs fit the "Open in playground" link the page builds from them. `expect="refused"` says its last
+ * input is refused, as a cooldown or a user error refuses one.
  */
-function checkPlayground(where: string, written: string, context: GuideContext, problems: string[]): void {
+function checkPlayground(
+  where: string,
+  written: string,
+  context: GuideContext,
+  problems: string[],
+  page: string,
+): void {
   const pairs = [...written.matchAll(/(\w+)="([^"]*)"/g)].map(([, key, value]) => [key, value] as const)
   const attributes: Record<string, string> = Object.fromEntries(pairs)
   const unknown = pairs.map(([key]) => key).filter(key => !PLAYGROUND_ATTRIBUTES.includes(key))
@@ -655,6 +665,13 @@ function checkPlayground(where: string, written: string, context: GuideContext, 
   else {
     const list = parseDispatchList(attributes.dispatch)
     if (typeof list === 'string') problems.push(`${where}: ${list}`)
+    // The link the embed carries, measured as the build writes it, from the whole file as the page shows it
+    else if (source !== undefined)
+      try {
+        sharedFragment({ source: excerpt(asOf(source, page))!, dispatch: attributes.dispatch }, file)
+      } catch (error) {
+        problems.push(`${where}: ${(error as Error).message}`)
+      }
   }
   if (attributes.expect !== undefined && attributes.expect !== 'refused')
     problems.push(`${where}: a ::playground expects "refused" or nothing, not "${attributes.expect}"`)
@@ -761,7 +778,7 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
       for (const { term, own, id } of displacedTerms(body))
         problems.push(`${where}: the term "${term}" would be #${id}, since #${own} is already taken`)
     checkCallouts(where, body, problems)
-    checkExamples(where, body, context, problems)
+    checkExamples(where, body, context, problems, guidePath(page))
     checkLinks(where, body, pages, context, anchors, problems, planned)
   }
   checkFormerly(folder, pages, problems, context.coverable)
