@@ -111,7 +111,8 @@ until the test provides one, such as `{ provide: Client, useValue: createMockCli
 ## Running tests
 
 A generated app has Vitest set up: `vitest.config.ts` compiles with SWC, which gives the decorator metadata
-injection needs, and every generated component has a spec beside it.
+injection needs, and every generated component has a spec beside it. A generated controller's spec invokes its handler
+through the testing module and checks the answer, so it fails when the handler stops answering.
 
 ```bash
 npm test                # once

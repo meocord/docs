@@ -68,11 +68,22 @@ package manager to use; `--use-npm`, `--use-yarn`, `--use-pnpm` or `--use-bun` a
 package manager isn't installed. It's the one command run outside a project, so the command above names the version
 this guide documents. [Getting started](guide:getting-started) walks through it.
 
+After the install, `create` makes the folder a git repository and commits it, lockfile included. When git can't make
+that commit, on a machine with no `user.email` for instance, or with no git at all, the project stays as it is, and
+`create` prints the commands that finish the commit. Inside an existing repository, it makes no new one and leaves the
+files to that repository.
+
 ## Development and production
 
 `start --dev` builds the bot as it starts, then watches the project: a change rebuilds it and restarts the bot, and
-`meocord.config.ts` is watched too. It registers the commands to `commands.developmentGuild`, or globally without one,
-and only when they changed since the last development start; `--force-register` sends them anyway.
+`meocord.config.ts` and `tsconfig.json` are watched too. A change to `.env` restarts the bot without a rebuild, since
+the bot reads it as it starts. It registers the commands to `commands.developmentGuild`, or globally without one, and
+only when they changed since the last development start; `--force-register` sends them anyway.
+
+A bot that can't log in, or exits on its own, leaves watch mode running: the next change starts it again. When watch
+mode itself can't start, as when an `rsbuild` hook in `meocord.config.ts` throws, `start --dev` exits with code 1, as
+`build` does. In a terminal, it clears the screen as it starts and keeps your scrollback; `build` and `start --prod`
+never clear it, and write no escape codes into piped output such as a CI log or `docker logs`.
 
 For production, build once and start the build:
 
@@ -113,7 +124,7 @@ Set `commands.register` to `false` to keep registering out of startup, and run `
 | `observer`    | `ob`  | a dispatch observer and its spec    |
 
 It prints where to wire the part up: a controller goes in `@MeoCord({ controllers })`, and a service is bound the
-first time something injects it.
+first time something injects it. Each new file is formatted with the project's own ESLint.
 
 ### Controllers
 
@@ -133,7 +144,13 @@ src/controllers/<type>/
 ```
 
 - **A builder** comes only with the three types Discord registers by name. `npx meocord g co slash Greeting` registers
-  `/greeting`. The other types are reached by custom ID, or, for autocomplete, by the command they complete.
+  `/greeting`. The builder receives that name from `@Command`, so the two can't drift apart. The other types are
+  reached by custom ID, or, for autocomplete, by the command they complete.
+- **The spec** invokes the handler through the [testing module](guide:testing), with the input Discord would send it,
+  and checks its answer: a command's reply, a button's update, the choices an autocomplete offers.
+- **An autocomplete controller** completes the `query` option of the command it's named after, which already exists
+  with its own builder. `generate` leaves that builder alone and prints the option to add to it, with
+  `setAutocomplete(true)`; until the command declares it, Discord never asks the handler.
 - **A message context menu** is `npx meocord g co context-menu Report --message`; without `--message`, it's a user
   context menu.
 - **A name with `/`** nests the files: `npx meocord g co slash admin/ban` writes into `src/controllers/slash/admin/`

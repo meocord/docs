@@ -52,6 +52,15 @@ npm install --save-dev eslint-import-resolver-typescript
 
 [Services](guide:services#gotchas) covers the fix: move what both need into a third service.
 
+## Promises nothing waits for
+
+`meocord/eslint` turns on `@typescript-eslint/no-floating-promises`. A promise nothing awaits, such as an
+interceptor's `next.handle()` called without `await` or `return`, rejects outside every handler MeoCord runs, so its
+error reaches no [exception filter](guide:exception-filters) and can end the bot. For each one it reports:
+
+- `await` it, or `return` it, where the code after it should wait, as an interceptor's `next.handle()` always should;
+- or write `void` before it where it's meant to run on its own, and handle its failure with `.catch()`.
+
 ## Gotchas
 
 - **A warning doesn't fail `lint`** unless it runs with `--max-warnings=0`, as a CI job may. Run it that way to hold
