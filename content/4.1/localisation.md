@@ -76,6 +76,9 @@ A locale resolves message by message:
 
 Locales are discord.js `Locale` values, such as `en-GB`, `es-419` or `zh-TW`. A bare `en` is refused, naming it.
 
+A key no catalog has a message for, or one that names a group of messages, comes back as the key itself, rather than
+throwing. In development, the translator logs a warning naming it, once for each key.
+
 Command names are read when a builder's class is decorated, which is why the translator is made at module scope. An
 interaction still reports the command's default name, so `@Command('warn', ...)` routes `/peringatan` too.
 
@@ -91,7 +94,9 @@ interaction still reports the command's default name, so `@Command('warn', ...)`
 | `t.localizations(key)`                 | Every translation of a message, for a command builder.                |
 
 `t.localizations(key)` returns only the locales whose catalog has the message, so Discord's own fallback applies to
-the rest.
+the rest. Discord shows a name or a description as written, so it takes only a message without parameters: a key whose
+message takes one doesn't compile, or, in a catalog TypeScript can't read, throws as the app loads. A translation that
+uses a parameter is left out, and [`expectCompleteCatalog`](#testing-a-catalog) reports it.
 
 A [presenter](guide:presenters) gets the user's locale as `context.locale`, for a loading view and error titles in
 their language.
@@ -106,7 +111,9 @@ A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `f
 `few` and `many` need no code of your own.
 
 A parameter's name is ASCII letters, digits or `_`, such as `{user}` or `{user_id2}`, and a message may take hundreds.
-Other text in braces is the message's own: `'Wrap text in { and }.'` takes no parameters.
+Other text in braces is the message's own: `'Wrap text in { and }.'` takes no parameters. A brace written twice is
+one brace of text, so `'Buttons use ticket/{{id}}'` shows `ticket/{id}` and takes no parameter, and `'{{{user}}}'`
+shows the `user` parameter in braces.
 
 ### Parameters in other languages
 
