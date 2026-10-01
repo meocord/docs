@@ -117,14 +117,7 @@ To answer another way, catch `CooldownError` in an [exception filter](guide:exce
 [`error.retryAt`](api:responses/CooldownError#retryAt) is the `Date` the next call is allowed, and
 [`error.limit`](api:responses/CooldownError#limit) is the `uses` and `windowMs` of the cooldown that refused it:
 
-```ts
-@Catch(CooldownError)
-export class WaitFilter implements ExceptionFilter<CooldownError> {
-  async catch(error: CooldownError, context: ExecutionContext) {
-    await context.response?.error(error, { message: `Slow down: try again ${time(error.retryAt, 'R')}.` })
-  }
-}
-```
+::example{file="filters/wait.filter.ts" region="filter"}
 
 [`translateError(error, t, interaction)`](api:utilities/translateError) gives MeoCord's own text in the user's
 language. `error.message`, like [`cooldownMessage(retryAfterMs)`](api:utilities/cooldownMessage), is plain text for
