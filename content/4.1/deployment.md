@@ -54,8 +54,13 @@ package.json
 
 The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file beside `dist`
 works, and so does setting the variables in the service manager or container, where a file is one more thing to copy
-and protect. `import 'dotenv/config'` in `meocord.config.ts` leaves variables that are already set alone, so the
-environment wins over the file.
+and protect. The config's dotenv leaves variables that are already set alone, so the environment wins over the file.
+A production build reads `.env.production` and `.env.production.local` beside `.env`, and never the development files.
+
+On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, Bun
+loads `.env.development` before any code runs, so its values win over `.env.production`, and the bot warns, naming
+each variable that has its development value. `bun --no-env-file dist/main.js` works too. `meocord start --prod` sets
+`NODE_ENV` already.
 
 > [!WARNING]
 > Keep the token out of the image, the repository and the logs. Anyone who has it controls the bot.
