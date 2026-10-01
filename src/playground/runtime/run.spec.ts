@@ -255,6 +255,58 @@ export class Where {
     expect(inDm).toEqual(['bot-dm true false  ', 'null ada', '13 ada  '])
   })
 
+  it('is one person and one member through the run, and gives each step only the messages it sent', async () => {
+    const source = `
+import { type ChatInputCommandInteraction, type GuildMember, type Message } from 'discord.js'
+import { respond } from 'meocord/common'
+import { Command, Controller, MessageHandler, On } from 'meocord/decorator'
+import { CommandType } from 'meocord/enum'
+@Controller()
+export class Same {
+  @MessageHandler('hello')
+  async hello(message: Message) {
+    await message.reply('hi')
+  }
+
+  @MessageHandler('dm')
+  async dm(message: Message) {
+    await message.member!.user.send('by member')
+  }
+
+  @Command('who', CommandType.SLASH)
+  async who(interaction: ChatInputCommandInteraction) {
+    const member = interaction.member as GuildMember
+    await respond(interaction).send({ content: String(member.user === interaction.user) })
+    await interaction.user.send('by user')
+  }
+
+  @On('guildMemberAdd')
+  async joined(member: GuildMember) {
+    await member.send(String(member.guild.members.cache.get(member.id) === member))
+  }
+}
+`
+    const steps = ok(
+      await run(source, [
+        { kind: 'message', content: 'hello' },
+        { kind: 'message', content: 'dm' },
+        { kind: 'slash', command: 'who', options: {} },
+        { kind: 'event', event: 'guildMemberAdd' },
+      ]),
+    ).steps.map(step =>
+      step.calls.map(call => [call.method, (call.payload as { content?: string }).content ?? call.payload]),
+    )
+    expect(steps).toEqual([
+      [['reply', 'hi']],
+      [['author.send', 'by member']],
+      [
+        ['reply', 'true'],
+        ['user.send', 'by user'],
+      ],
+      [['send', 'true']],
+    ])
+  })
+
   it('records a command refused in a server, which MeoCord tells its author in a direct message', async () => {
     const source = `
 import { type Message } from 'discord.js'
