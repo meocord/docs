@@ -31,6 +31,7 @@ interface Testing {
     fromApp(app: Class, options?: { controllers?: Class[]; observers?: Class[] }): Builder
   }
   createMockInteraction(type: unknown, overrides?: Record<string, unknown>): Record<string, unknown>
+  createMockUser(props?: Record<string, unknown>): Record<string, unknown>
   createMockMessage(overrides?: Record<string, unknown>): Record<string, unknown>
   createChatInputOptions(options: Record<string, unknown>): unknown
   createModalFields(fields: Record<string, string>): unknown
@@ -261,7 +262,8 @@ export async function runPlayground(
   const steps: Step[] = []
   try {
     for (const dispatch of request.dispatch) {
-      const user = testing.createMockInteraction(discord.User, { id: userId, username })
+      // A person, not a bot: MeoCord answers no bot's message
+      const user = testing.createMockUser({ id: userId, username })
       const from = inGuild ? { user, author: user } : { user, author: user, guild: null, guildId: null, member: null }
       let input: Record<string, unknown>
       try {
