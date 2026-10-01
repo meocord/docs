@@ -14,14 +14,14 @@ formerly: [why-meocord, concepts]
 covers: [4.0/features]
 ---
 
-MeoCord is a framework for Discord bots built on [discord.js](https://discord.js.org). You write a bot as controllers
-and services, and decorators connect them to Discord: `@Command` binds a method to a slash command, a button or a
-modal, and the framework routes each interaction to it.
+MeoCord is a framework for Discord bots built on [discord.js](https://discord.js.org). You write a bot as
+[controllers](guide:glossary#controller) and [services](guide:glossary#service), and decorators connect them to Discord:
+`@Command` binds a method to a slash command, a button or a modal, and the framework routes each interaction to it.
 
 Two parts carry the everyday work. [`respond()`](guide:responses) answers every interaction with the call Discord
-expects for where the answer stands, so a handler says what to send and never which method sends it. And
-[`meocord/testing`](guide:testing) runs a handler exactly as the bot does, through the same pipeline, with mocks of
-discord.js's own classes, so a test passes because the bot works.
+expects for where the answer stands, so a [handler](guide:glossary#handler) says what to send and never which method
+sends it. And [`meocord/testing`](guide:testing) runs a handler exactly as the bot does, through the same pipeline, with
+mocks of discord.js's own classes, so a test passes because the bot works.
 
 Every call a handler receives passes through that pipeline. Guards decide whether it runs, interceptors wrap it,
 validation and pipes check and shape its input, cooldowns limit how often it runs, and exception filters decide what the
@@ -80,8 +80,8 @@ The app class lists the controller, with the options discord.js's client is made
 
 ## How it works
 
-A MeoCord bot is a discord.js bot with a container and a router in front of it. Here is a bot from build to shutdown,
-and where each part of this guide sits.
+A MeoCord bot is a discord.js bot with a [container](guide:glossary#container) and a router in front of it. Here is a
+bot from build to shutdown, and where each part of this guide sits.
 
 ### Build
 
@@ -118,10 +118,10 @@ Every interaction, message and reaction goes to the handler it belongs to:
 | A reaction added or removed                  | its emoji, or any emoji                                    | `@ReactionHandler`                 |
 | Any other client event                       | its name                                                   | `@On` and `@Once`                  |
 
-The handler then runs through the [pipeline](guide:how-a-call-runs): `@Defer`'s acknowledgement, guards, interceptors
-around validation, pipes, cooldowns and the handler, all inside exception filters. [Observers](guide:observers) are told
-about the call as it starts and once it has settled. [`respond()`](guide:responses) makes the right call to Discord for
-where the answer stands.
+The handler then runs through the [pipeline](guide:how-a-call-runs): `@Defer`'s
+[acknowledgement](guide:glossary#acknowledgement), guards, interceptors around validation, pipes, cooldowns and the
+handler, all inside exception filters. [Observers](guide:observers) are told about the call as it starts and once it has
+settled. [`respond()`](guide:responses) makes the right call to Discord for where the answer stands.
 
 ### What lives how long
 

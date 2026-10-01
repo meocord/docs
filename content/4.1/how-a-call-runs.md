@@ -43,8 +43,8 @@ The test runs it the way the bot does and reads the order back:
 
 ::example{file="controllers/slash/stages.slash.controller.spec.ts" region="spec"}
 
-The guard runs after `@Defer` has acknowledged the interaction, the interceptor wraps the pipe and the handler, and
-the handler runs last.
+The guard runs after `@Defer` has [acknowledged](guide:glossary#acknowledgement) the interaction, the interceptor wraps
+the pipe and the handler, and the handler runs last.
 
 ## How it works
 
@@ -117,9 +117,9 @@ MeoCord resolves this chain once per handler, so dispatch pays nothing for it.
 
 ## The call's context
 
-Every stage can read the call through [`ExecutionContext`](api:utilities/ExecutionContext): the interaction or
-message, the controller and handler, the handler's params and the metadata on them. A guard injects it through its
-constructor; an interceptor, a filter, a pipe and an observer receive it as an argument.
+Every stage can read the call through [`ExecutionContext`](api:utilities/ExecutionContext): the interaction or message,
+the controller and handler, the handler's params and the [metadata](guide:glossary#metadata) on them. A guard injects it
+through its constructor; an interceptor, a filter, a pipe and an observer receive it as an argument.
 
 `getType()` says what is being handled: `'interaction'`, `'autocomplete'`, `'message'`, `'reaction'` or `'event'`.
 A guard, interceptor or observer declared with `types` runs only for those.
