@@ -51,9 +51,10 @@ test. It gives a bot the structure a web framework gives a server, and with it:
   bot says and the names of its commands.
 - **Routes and params the compiler checks.** A button's `counter/{count:int}` gives its handler `count` as a number,
   and a message command's `pay {to:member} {amount:int}` a member and a number. A handler whose params don't fit its
-  pattern fails to compile, and so does a catalog with a key the default catalog lacks; `expectCompleteCatalog` finds
-  a missing one in a test. See [Components](guide:components#typed-params),
-  [Message command params](guide:message-params) and [Localisation](guide:localisation).
+  pattern fails to compile, and so does a catalog with a key the default catalog lacks; `expectCompleteCatalog`
+  finds a missing message, or a `{param}` its default doesn't take, in a test. See
+  [Components](guide:components#typed-params), [Message command params](guide:message-params) and
+  [Localisation](guide:localisation).
 - **Services by constructor.** A controller or a service names what it needs in its constructor, and MeoCord makes
   each one once, in dependency order. See [Services](guide:services).
 - **A CLI from create to deploy.** `npx {{meocord}} create` starts a project, `generate` scaffolds a controller, service

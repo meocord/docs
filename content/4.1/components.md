@@ -123,7 +123,8 @@ ranking decides which handler runs; [`findRouteConflicts`](api:testing/findRoute
 with different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
 Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
-startup, naming both, since only one of them could ever run.
+startup, naming both, since only one of them could ever run. `meocord register` refuses them too, before it sends any
+command.
 
 ## Select menus
 
