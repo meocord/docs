@@ -71,6 +71,10 @@ and `error` is set when a filter handled one. A guard that returns `false` stops
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="invoke"}
 
+A guard that throws `GuardDeniedError`, a handler that throws `UserError`, and a cooldown's `CooldownError` reject
+`invoke` with that error, where `dispatch` answers the user and resolves with it as `error`. Assert them with
+`await expect(module.invoke(...)).rejects.toThrow(GuardDeniedError)`.
+
 The interaction must be one dispatch routes to the handler, ranking every handler of the module as the bot does. A
 `customId` another handler's pattern takes first rejects, naming the handler that runs, and so does one no pattern
 takes, or a command the handler doesn't handle, so a typo in a test doesn't pass silently. A handler declared under two
@@ -107,17 +111,18 @@ immediate. See [Components](guide:components#collectors).
 
 ## Reading what was sent
 
-[`getResponse(interaction)`](api:testing/getResponse) reports what `respond()` did:
+[`getResponse(interaction)`](api:testing/getResponse) reports every answer a mock interaction got, whether the
+handler made it through `respond()` or with discord.js directly, such as `interaction.reply()` or
+`interaction.followUp()`:
 
 - `state`: where the answer stands, `'unanswered'`, `'deferred'` or `'replied'`;
 - `sent`: whether anything the user can see went out, counting only the calls Discord accepted;
-- `calls`: each Discord call it made, in order, with its payload, and the `error` of one Discord refused.
+- `calls`: each answer, once, in the order made, with what it sent, and the `error` of one Discord refused.
 
 A call a mock rejects, such as a reply refused with 10062 once the three seconds have passed, stays in `calls` with its
 `error`, and doesn't count as sent: the member saw nothing.
 
-An interaction `respond()` never touched reports what discord.js shows on it, with no calls. For messages and
-reactions, read the mock's own methods, such as `message.reply`.
+For messages and reactions, read the mock's own methods, such as `message.reply`.
 
 ## Events and handler setup
 
