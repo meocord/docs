@@ -255,12 +255,13 @@ export class Where {
     expect(inDm).toEqual(['bot-dm true false  ', 'null ada', '13 ada  '])
   })
 
-  it('is one person and one member through the run, and gives each step only the messages it sent', async () => {
+  it('is one person and one member through the run, and records each direct message to them on its own step', async () => {
     const source = `
-import { type ChatInputCommandInteraction, type GuildMember, type Message } from 'discord.js'
+import { type ChatInputCommandInteraction, type GuildMember, type Message, type MessageReaction } from 'discord.js'
 import { respond } from 'meocord/common'
-import { Command, Controller, MessageHandler, On } from 'meocord/decorator'
+import { Command, Controller, MessageHandler, On, ReactionHandler } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
+import { type ReactionHandlerOptions } from 'meocord/interface'
 @Controller()
 export class Same {
   @MessageHandler('hello')
@@ -270,18 +271,26 @@ export class Same {
 
   @MessageHandler('dm')
   async dm(message: Message) {
-    await message.member!.user.send('by member')
+    await message.member!.user.send('message, by user')
+    await message.member!.send('message, by member')
   }
 
   @Command('who', CommandType.SLASH)
   async who(interaction: ChatInputCommandInteraction) {
     const member = interaction.member as GuildMember
     await respond(interaction).send({ content: String(member.user === interaction.user) })
-    await interaction.user.send('by user')
+    await interaction.user.send('slash, by user')
+    await member.send('slash, by member')
+  }
+
+  @ReactionHandler('⭐')
+  async star(_reaction: MessageReaction, { user }: ReactionHandlerOptions) {
+    await user.send('reaction, by user')
   }
 
   @On('guildMemberAdd')
   async joined(member: GuildMember) {
+    await member.user.send('event, by user')
     await member.send(String(member.guild.members.cache.get(member.id) === member))
   }
 }
@@ -291,6 +300,7 @@ export class Same {
         { kind: 'message', content: 'hello' },
         { kind: 'message', content: 'dm' },
         { kind: 'slash', command: 'who', options: {} },
+        { kind: 'reaction', action: 'add', emoji: '⭐', content: 'nice' },
         { kind: 'event', event: 'guildMemberAdd' },
       ]),
     ).steps.map(step =>
@@ -298,12 +308,20 @@ export class Same {
     )
     expect(steps).toEqual([
       [['reply', 'hi']],
-      [['author.send', 'by member']],
+      [
+        ['dm', 'message, by user'],
+        ['dm', 'message, by member'],
+      ],
       [
         ['reply', 'true'],
-        ['user.send', 'by user'],
+        ['dm', 'slash, by user'],
+        ['dm', 'slash, by member'],
       ],
-      [['send', 'true']],
+      [['dm', 'reaction, by user']],
+      [
+        ['dm', 'event, by user'],
+        ['dm', 'true'],
+      ],
     ])
   })
 
@@ -327,7 +345,7 @@ export class App {}
     expect(first.calls).toEqual([{ method: 'reply', payload: 'claimed' }])
     expect(again).toMatchObject({ ran: false, error: { name: 'CooldownError' } })
     expect(again.calls).toEqual([
-      { method: 'author.send', payload: expect.objectContaining({ content: expect.stringContaining('!daily') }) },
+      { method: 'dm', payload: expect.objectContaining({ content: expect.stringContaining('!daily') }) },
     ])
   })
 
@@ -501,7 +519,7 @@ describe('reactions, gateway events and user selects', () => {
       ]),
     )
     expect(result.steps[0]).toMatchObject({ ran: true, handlers: ['WelcomeController.greet'] })
-    expect(result.steps[0].calls).toEqual([{ method: 'send', payload: 'Welcome to MeoCord Playground!' }])
+    expect(result.steps[0].calls).toEqual([{ method: 'dm', payload: 'Welcome to MeoCord Playground!' }])
     expect(result.steps[1]).toMatchObject({ ran: false, handlers: [], calls: [] })
   })
 
