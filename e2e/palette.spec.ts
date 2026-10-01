@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from './test'
 import { axe } from './axe'
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Search the documentation' })

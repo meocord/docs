@@ -30,3 +30,4 @@ CLAUDE.md
 # Each tutorial step's version of the examples, written and removed by `bun run examples:check`
 /examples/*/.steps/
 build.log
+/e2e-results/

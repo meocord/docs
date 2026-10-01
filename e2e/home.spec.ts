@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './test'
 import { cutServer, recordShifts } from './partial-paint'
 
 test('the panel paints the finished run without any script', async ({ browser }) => {

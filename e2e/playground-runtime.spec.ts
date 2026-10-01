@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { expect, test, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from './test'
 
 // The runtimes the build wrote, as the site will embed them
 const manifest = JSON.parse(readFileSync('.playground/manifest.json', 'utf8')) as {

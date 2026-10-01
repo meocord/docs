@@ -113,6 +113,17 @@ jobs:
       - run: bun --bun x playwright install --with-deps chromium firefox webkit
       # Everything but the timed runs, which have runners of their own below
       - run: bun run test:e2e --grep-invert @performance
+      # A total doesn't show a spec that stopped running: the specs that must run are checked by name
+      - name: Check the must-run specs ran
+        if: success() || failure()
+        run: bun scripts/check-e2e-ran.ts e2e-results/results.json
+      # Every test's outcome, passed and skipped ones included, kept from every run
+      - if: success() || failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-results
+          path: e2e-results
+          retention-days: 14
       # Every docs route under next dev: its validation errors never reach the production build
       - run: bun run check:dev-routes
       - if: failure()

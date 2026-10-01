@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from './test'
 import { axe } from './axe'
 
 // The Guide page that embeds a playground: components.md's typed route params, the counter button

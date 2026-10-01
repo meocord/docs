@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { expect, test } from './test'
 
 // On a desktop each pane is a header that stays put over a body that scrolls.
 const sidebar = (page: Page) => page.locator('[data-sidebar]:visible')
