@@ -142,12 +142,13 @@ A shared store can be down, restarting or cut off. When it throws, rejects or do
 ::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
 
 - **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown
-  that can't be checked isn't known to allow it. The fallback answers an interaction privately with
-  `meocord.cooldown.storeDown`, "Cooldowns can't be checked right now: try again shortly." A message command can't be
-  answered privately in its channel: with `messages.dmOnError` on, its author gets a direct message once per outage
-  (`meocord.dm.error`, or `meocord.cooldown.storeDown` in a direct message). Without it, the command is skipped
-  silently. An [exception filter](guide:exception-filters) that catches `CooldownStoreError` can say it another way,
-  or in the user's language, and [observers](guide:observers) see the outcome `'error'`, with that error.
+  that can't be checked isn't known to allow it. A call the store counts after the timeout is given back, so the
+  refused caller loses no use. The fallback answers an interaction privately with `meocord.cooldown.storeDown`,
+  "Cooldowns can't be checked right now: try again shortly." A message command can't be answered privately in its
+  channel: with `messages.dmOnError` on, its author gets a direct message once per outage (`meocord.dm.error`, or
+  `meocord.cooldown.storeDown` in a direct message). Without it, the command is skipped silently. An
+  [exception filter](guide:exception-filters) that catches `CooldownStoreError` can say it another way, or in the
+  user's language, and [observers](guide:observers) see the outcome `'error'`, with that error.
 - **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
 
 Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many
