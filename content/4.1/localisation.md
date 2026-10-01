@@ -96,7 +96,8 @@ interaction still reports the command's default name, so `@Command('warn', ...)`
 `t.localizations(key)` returns only the locales whose catalog has the message, so Discord's own fallback applies to
 the rest. Discord shows a name or a description as written, so it takes only a message without parameters: a key whose
 message takes one doesn't compile, or, in a catalog TypeScript can't read, throws as the app loads. A translation that
-uses a parameter is left out, and [`expectCompleteCatalog`](#testing-a-catalog) reports it.
+uses a parameter is left out, and [`expectCompleteCatalog`](#testing-a-catalog) reports it. A helper of your own
+that passes a key on to `t.localizations()` types it as `LocalizationKey<typeof catalog>`, from `meocord/common`.
 
 A [presenter](guide:presenters) gets the user's locale as `context.locale`, for a loading view and error titles in
 their language.
