@@ -90,7 +90,8 @@ deferral is deleted and the message is sent privately, rather than made public.
 
 Once a message uses Components V2, its edits keep the flag, and content and embeds are dropped from them. When an
 edit sends an embed again whose image is one of the message's own attachments, the image's URL is pointed at
-`attachment://`, so the image survives the edit.
+`attachment://`, so the image survives the edit. The loading and error views a [presenter](guide:presenters) draws
+can carry files of their own; one added to a message by an edit keeps the message's attachments.
 
 ## Gotchas
 
