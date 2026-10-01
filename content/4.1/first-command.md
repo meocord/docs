@@ -20,7 +20,7 @@ it, and the app class that lists the controller. This page builds `/greet`, whic
 ## When to use it
 
 Every command, button and form in a MeoCord bot follows this shape, so write this one first: the chapters after it add
-options, components and stages to the same three parts. To scaffold them instead, run
+options, components and [stages](guide:glossary#stage) to the same three parts. To scaffold them instead, run
 `npx meocord generate controller slash greeting`: it writes a controller, its builder and its spec, and
 [the CLI](guide:cli) lists every generator.
 
@@ -76,8 +76,8 @@ enough for slash commands, which arrive without further intents.
 
 ## Testing
 
-`MeoCordTestingModule` runs the handler through the same pipeline the bot does, with no Discord connection, and
-`getResponse` reports what `respond()` sent:
+`MeoCordTestingModule` runs the handler through the same [pipeline](guide:glossary#pipeline) the bot does, with no
+Discord connection, and `getResponse` reports what `respond()` sent:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 

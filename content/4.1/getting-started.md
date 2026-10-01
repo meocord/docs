@@ -12,9 +12,9 @@ requires: [overview]
 api: [configuration/MeoCordConfig]
 ---
 
-The `create` command writes a project that runs as it is: a sample of each kind of handler, a spec beside each, and the
-scripts to build, test and lint it. You give it a bot token, and `meocord start --dev` puts it online, rebuilding and
-restarting as you edit.
+The `create` command writes a project that runs as it is: a sample of each kind of [handler](guide:glossary#handler), a
+spec beside each, and the scripts to build, test and lint it. You give it a bot token, and `meocord start --dev` puts it
+online, rebuilding and restarting as you edit.
 
 ## When to use it
 
@@ -52,9 +52,9 @@ range. `create` runs before there is a project, so it names the package to insta
 ### What the project starts with
 
 A working example of each kind of handler: a slash command, a button, a select menu, a modal, a context menu, a message
-handler and a reaction handler, plus a guard, a presenter, a service and a spec for each. The samples answer through
-`respond()`, acknowledge slow work with `@Defer`, and limit how often they run with `@Cooldown`.
-[Project structure](guide:project-structure) walks through the files.
+handler and a reaction handler, plus a guard, a [presenter](guide:glossary#presenter), a service and a spec for each.
+The samples answer through `respond()`, acknowledge slow work with `@Defer`, and limit how often they run with
+`@Cooldown`. [Project structure](guide:project-structure) walks through the files.
 
 ### The token and the test server
 
