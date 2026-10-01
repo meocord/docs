@@ -1,14 +1,9 @@
+import { ChatInputCommandInteraction, Role } from 'discord.js'
 import {
-  ChatInputCommandInteraction,
-  Collection,
-  type GuildMember,
-  type GuildMemberRoleManager,
-  type Role,
-} from 'discord.js'
-import {
-  createMock,
   createMockGuild,
   createMockInteraction,
+  createMockMember,
+  createMockUser,
   inspectHandler,
   MeoCordTestingModule,
 } from 'meocord/testing'
@@ -30,12 +25,10 @@ describe('MuteSlashController', () => {
   })
 
   it('runs for a member with the moderator role, by its ID', async () => {
-    const moderator = createMock<Role>({ id: ROLE_IDS.moderator, name: 'moderator' })
-    const guild = createMockGuild({ id: '444444444444444444', roles: [moderator] })
-    const member = createMock<GuildMember>({
-      roles: createMock<GuildMemberRoleManager>({ cache: new Collection([[moderator.id, moderator]]) }),
-    })
-    const interaction = createMockInteraction(ChatInputCommandInteraction, { guildId: guild.id, guild, member })
+    const moderator = createMockInteraction(Role, { id: ROLE_IDS.moderator, name: 'moderator' })
+    const user = createMockUser()
+    const guild = createMockGuild({ members: [createMockMember({ user, roles: [moderator] })] })
+    const interaction = createMockInteraction(ChatInputCommandInteraction, { user, guildId: guild.id, guild })
 
     await expect(module.invoke(MuteSlashController, 'mute', interaction)).resolves.toEqual({ ran: true })
   })
