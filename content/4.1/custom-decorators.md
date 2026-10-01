@@ -74,9 +74,9 @@ what the framework stores: it throws as the decorator applies.
 
 ## Gotchas
 
-- **`applyDecorators` runs its guards in the reverse of stacking.** It applies its list first to last, so
-  `applyDecorators(UseGuard(A), UseGuard(B))` runs `B` before `A`, where `@UseGuard(A)` stacked above `@UseGuard(B)`
-  runs `A` first. For a set order, pass both to one `UseGuard(A, B)`, which runs them as listed.
+- **A bot written for 4.0 relied on the reverse order.** 4.0's `applyDecorators(UseGuard(A), UseGuard(B))` ran `B`
+  before `A`; 4.1 runs `A` first, as stacking them does. To keep the old order, list them the other way round; see
+  the [upgrade guide](guide:migrating#applydecorators-applies-its-decorators-in-the-order-they-stack).
 - **A method-only decorator can't go on a controller.** `@Defer` and `@Validate` apply to handlers only, so a custom
   decorator that includes them does too.
 
