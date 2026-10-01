@@ -46,7 +46,9 @@ describe('AnnounceApp', () => {
 
     // The presenter shows it as an embed, its title translated too
     expect(getResponse(again).calls[0].payload).toMatchObject({
-      embeds: [{ title: 'Ups!', description: 'Pelan-pelan: coba lagi dalam 45 detik.' }],
+      embeds: [
+        { title: 'Ups!', description: `Pelan-pelan: coba lagi <t:${Math.ceil((Date.now() + 45_000) / 1000)}:R>.` },
+      ],
     })
     expect(again.ephemeral).toBe(true)
   })

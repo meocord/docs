@@ -34,8 +34,9 @@ describe("MeoCord's own texts", () => {
   // #endregion usage
 
   it('gives a filter the text MeoCord would answer with', () => {
-    expect(translateError(new CooldownError(12_000, 'user'), t, Locale.Indonesian)).toBe(
-      'Pelan-pelan: coba lagi dalam 12 detik.',
+    // The wait's end as a Discord timestamp, which Discord words in the reader's language
+    expect(translateError(new CooldownError(12_000, 'user'), t, Locale.Indonesian)).toMatch(
+      /^Pelan-pelan: coba lagi <t:\d+:R>\.$/,
     )
   })
 

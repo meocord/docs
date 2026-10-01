@@ -66,9 +66,8 @@ const id = {
       channel: 'saluran',
     },
     cooldown: {
-      seconds: 'Pelan-pelan: coba lagi dalam {seconds} detik.',
-      minutes: 'Pelan-pelan: coba lagi dalam {minutes} menit {seconds} detik.',
-      wholeMinutes: 'Pelan-pelan: coba lagi dalam {minutes} menit.',
+      // {when} is a Discord timestamp, which Discord words in the reader's language: "dalam 45 detik"
+      until: 'Pelan-pelan: coba lagi {when}.',
       storeDown: 'Cooldown tidak bisa diperiksa sekarang: coba lagi sebentar lagi.',
     },
     fallback: {
