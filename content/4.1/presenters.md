@@ -7,15 +7,25 @@ summary: Decide how MeoCord's loading view and error answers look, in your bot's
 learn:
   - Write a presenter for the loading and error views
   - Style an error by whether the user caused it
+  - Draw a view as an image and attach it
   - Register it on the app and test it without a module
 requires: [responses, defer]
-api: [responses/ResponsePresenter, responses/ResponseContext, responses/PresentedError, responses/ResponseView]
+api:
+  [
+    responses/ResponsePresenter,
+    responses/ResponseContext,
+    responses/PresentedError,
+    responses/ResponseView,
+    responses/ResponseFile,
+    responses/MessageResponseContext,
+  ]
 since: 4.1.0
 ---
 
-MeoCord answers for you in three places: the loading view [`@Defer`](guide:defer) adds while a handler runs, the
-error answer the built-in fallback sends when a call fails, and the reply of the built-in `!help`. A presenter decides
-how those look. What they say is decided elsewhere, by exception filters and the fallback.
+MeoCord answers for you in a few places: the loading view [`@Defer`](guide:defer) adds while a handler runs, the
+error answer the built-in fallback sends when a call fails, a message command's error replies, and the reply of the
+built-in `!help`. A presenter decides how those look, as text or as an image it draws. What they say is decided
+elsewhere, by exception filters and the fallback.
 
 ## When to use it
 
@@ -41,9 +51,9 @@ danger colour.
 
 ## How it works
 
-`loading()` and `error()` each return a view, `{ text, title?, color?, emoji?, components? }`. MeoCord renders it
-as an embed, or as a Components V2 container on a message that uses Components V2. A view with no `color` takes the
-theme's primary colour.
+`loading()` and `error()` each return a view, `{ text, title?, color?, emoji?, components?, files?, image?,
+thumbnail? }`, or a promise of one. MeoCord renders it as an embed, or as a Components V2 container on a message that
+uses Components V2. A view with no `color` takes the theme's primary colour.
 
 Each method gets a [`ResponseContext`](api:responses/ResponseContext):
 
@@ -63,9 +73,57 @@ Without a presenter, the loading view is "Working on it…" with the theme's loa
 errors are titled "Oops!" in the colour of their tone, both in the user's language where the app
 [translates MeoCord's texts](guide:localisation).
 
+## Drawing a view
+
+A view can carry `files`, such as an image the presenter drew, and MeoCord attaches and shows them. This presenter
+draws each error as a card with [meo-canvas](https://www.npmjs.com/package/meo-canvas), in the colour of its tone:
+
+::example{file="presenters/card.renderer.ts" region="renderer"}
+
+::example{file="presenters/card.presenter.ts" region="presenter"}
+
+A file is an `AttachmentBuilder`, or `{ name, data }` with the bytes as a `Buffer` or `Uint8Array`. In an embed, the
+first image is the embed's image. In a Components V2 container, images go in a gallery below the text, and other
+files below it as file components. `image` and `thumbnail` name one of the files, or a URL: the embed's image and
+thumbnail, or the container's leading image and the text's thumbnail. A file the view's own `components` show by
+`attachment://<name>` isn't shown again.
+
+Each method may draw asynchronously, and a slow drawing never misses Discord's three seconds:
+
+- The loading view is drawn after `@Defer` acknowledges the call. Its files leave the message when the lock does.
+- For an error on an interaction not yet acknowledged, MeoCord acknowledges it privately first, and the drawn view
+  replaces the acknowledgement. If the drawing fails, MeoCord's own error view answers instead.
+- A view added to a message by an edit keeps the message's own attachments.
+
+Discord takes at most 10 attachments on a message, counting the ones a message the view is added to keeps, and each
+file within the interaction's attachment size limit, or 20 MiB without one. A view past either is sent without its
+files, and a warning says why. A send Discord refuses as too large, such as one with a file given as a path or a
+stream, whose size can't be checked first, is sent again without its files. Either way, the image and thumbnail that
+named a dropped file go with it, and the user still gets the answer.
+
+## Message command errors
+
+A message command can't be answered privately, so its errors are replies and direct messages: the usage reply, a
+guard's or validation's reason, a `UserError`'s message, and the direct messages
+[`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) send. They're plain text,
+unless the presenter has a third, optional method, `messageError(context, error)`, which draws them as views. The
+card presenter above has one, so a message command's errors get the same card.
+
+Its [`MessageResponseContext`](api:responses/MessageResponseContext) has the `message` in place of an interaction:
+
+| Field     | What it is                                                                 |
+| --------- | -------------------------------------------------------------------------- |
+| `message` | The message being answered.                                                |
+| `locale`  | The server's preferred locale, or the translator's default locale in a DM. |
+| `mode`    | Always `'embed'`: a reply is a new message, drawn as an embed.             |
+| `theme`   | The call's resolved theme, as `ResponseContext` has it.                    |
+
+The `error` it gets is a `PresentedError`, as `error()` gets. The view is sent as an embed with its files, under the
+same limits. When `messageError` throws, the failure is logged and the author gets no reply.
+
 ## The help reply
 
-The built-in [`!help`](guide:message-commands) writes plain text. A presenter with a third, optional method,
+The built-in [`!help`](guide:message-commands) writes plain text. A presenter with another optional method,
 `messageHelp(help, message)`, writes it instead: `help` is the [`MessageHelp`](api:types/MessageHelp) the built-in
 found, a list of commands, one command, a parent's subcommands, or that nothing matched, and the method returns the
 text or the options `message.reply` takes, such as an embed. [Message commands](guide:message-commands) shows one.
@@ -78,10 +136,16 @@ A presenter is plain code, so its test needs no module. Give it a context with a
 
 ::example{file="presenters/brand.presenter.spec.ts"}
 
+A drawn view's test checks the file it carries. The card presenter's draws a real PNG:
+
+::example{file="presenters/card.presenter.spec.ts"}
+
 ## Gotchas
 
 - **A presenter styles, it doesn't word.** The `message` it gets is what a filter or the fallback chose; change the
   words there, not here.
+- **A file over Discord's limits is dropped, not the answer.** When a drawn image doesn't show, look for the
+  warning, which names the file and the limit.
 - **A context built by hand needs `theme`,** and a `PresentedError` needs `tone`. Use `createMockTheme()` for the
   theme in a test.
 
