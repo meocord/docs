@@ -68,8 +68,11 @@ the handler left off: it replies, edits the deferred reply or follows up, whiche
 When an error is thrown, MeoCord tries the filters closest to the handler first:
 
 1. the method's `@UseFilter`;
-2. the controller's;
+2. the controller's, then each base class's, up from the class that declares or inherits the handler;
 3. the global ones, from `@MeoCord({ filters })`.
+
+So a subclass's filter for one error is tried before a catch-all on its base, whether the handler is its own or
+inherited.
 
 Within one list, the first filter whose `@Catch` matches handles the error. An error no filter handles goes to the
 built-in fallback. A filter that throws is logged, and the fallback answers the original error.
