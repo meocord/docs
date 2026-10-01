@@ -80,10 +80,16 @@ files to that repository.
 the bot reads it as it starts. It registers the commands to `commands.developmentGuild`, or globally without one, and
 only when they changed since the last development start; `--force-register` sends them anyway.
 
-A bot that can't log in, or exits on its own, leaves watch mode running: the next change starts it again. When watch
-mode itself can't start, as when an `rsbuild` hook in `meocord.config.ts` throws, `start --dev` exits with code 1, as
-`build` does. In a terminal, it clears the screen as it starts and keeps your scrollback; `build` and `start --prod`
-never clear it, and write no escape codes into piped output such as a CI log or `docker logs`.
+A restart stops the running bot as Ctrl+C does, so its [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) run
+before the new one starts, on every platform, Windows included. One save makes one restart, even when it makes two
+builds of the same output.
+
+A bot that can't log in, or exits on its own, leaves watch mode running: the next change starts it again. So does a
+rebuild that can't start, as when a saved `meocord.config.ts` has an `rsbuild` hook that throws: the bot keeps running
+its last build, watch mode says why, and saving again retries. When watch mode itself can't start, `start --dev` stops
+the bot it started and exits with code 1, as `build` does. In a terminal, it clears the screen as it starts and keeps
+your scrollback; `build` and `start --prod` never clear it, and write no escape codes into piped output such as a CI
+log or `docker logs`.
 
 For production, build once and start the build:
 
