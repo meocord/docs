@@ -38,8 +38,13 @@ was added or removed, `action`.
 
 1. **Match.** A reaction's emoji is compared with each handler's. Every handler that matches runs: in each
    controller, those for the emoji first, then those for every emoji.
-2. **Fetch.** Before they run, the reacted-to message is fetched, so `reaction.message` is complete even for a
-   message sent before the bot started. A reaction on a message the bot can no longer read is skipped.
+2. **Fetch.** `reaction.message` is the copy of the message the gateway keeps current. When the bot holds the message
+   only by its id, as for one sent before it started, MeoCord fetches it before your handlers run, so it is complete.
+   A reaction that arrives without its count, with `Partials.Reaction`, is fetched too, so `reaction.count` is a
+   number. The cached copy can lag Discord only rarely: after a reconnect that could not resume, which misses the edits
+   made meanwhile, or for a poll's counts when the bot lacks the `GuildMessagePolls` intent. A handler that needs the
+   message straight from Discord calls `await reaction.message.fetch()` itself. A reaction to a message the bot can no
+   longer read, deleted or in a channel it lost access to, is skipped.
 3. **Pipeline.** Each handler's [guards](guide:guards), interceptors and [filters](guide:exception-filters)
    run around it, as they do for a command.
 
