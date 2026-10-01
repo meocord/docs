@@ -103,7 +103,7 @@ bot does.
 
 - **Nothing runs.** Reactions need the `GuildMessageReactions` intent, or `DirectMessageReactions` in DMs.
   For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials.
-- **A reaction in a DM.** It needs `DirectMessageReactions` and the `Channel` partial. Since discord.js 14.26.2,
+- **A reaction in a DM.** It needs `DirectMessageReactions`. Since discord.js 14.26.2,
   discord.js drops a reaction in a DM channel it has not cached, because Discord's reaction event names the channel by
   its id alone, with no type. MeoCord fetches that channel once, on its first reaction, and delivers the reaction to
   your handlers and to any `messageReactionAdd` or `messageReactionRemove` listener of your own. Later reactions in
