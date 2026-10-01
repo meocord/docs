@@ -10,7 +10,7 @@ import { cpSync, existsSync, readdirSync, readFileSync, realpathSync, rmSync, st
 import path from 'path'
 import prettier from 'prettier'
 import { paths, ROOT } from './lib/layout.js'
-import { asOf, READING_ORDER, stepIndex, stepProblems, stepsIn } from './lib/steps.js'
+import { asOf, readingOrder, stepIndex, stepProblems, stepsIn } from './lib/steps.js'
 import { readVersions } from './lib/versions.js'
 
 const config = readVersions(paths.versions)
@@ -50,7 +50,7 @@ async function checkSteps(line: string, dir: string): Promise<string[]> {
     (a, b) => stepIndex(a)! - stepIndex(b)!,
   )
   const first = Math.min(...steps.map(step => stepIndex(step)!))
-  const pages = [...(first > 0 ? [READING_ORDER[first - 1]] : []), ...steps]
+  const pages = [...(first > 0 ? [readingOrder()[first - 1]] : []), ...steps]
   const root = path.join(dir, '.steps')
   try {
     for (const page of pages) {

@@ -27,6 +27,8 @@ const context: GuideContext = {
         "import { Command, Controller } from 'meocord/decorator'\n// #region count\nexport class Counter {}\n// #endregion count\n",
       'src/button/uses-service.ts':
         "import { Greeter } from '../services/greeter'\nimport type { X } from './x'\nexport {}\n",
+      // Code that doesn't compress, so its link runs past what one carries
+      'src/button/long.ts': `// ${Array.from({ length: 900 }, (_, index) => ((index * 7919) % 65_521).toString(36)).join(' ')}\nexport {}\n`,
     },
     compare: { 'src/discordjs/ping.ts': 'export {}\n' },
   },
@@ -524,6 +526,15 @@ describe('::playground', () => {
       'content/4.1/guards.md: dispatch step 2: select needs a customId',
       'content/4.1/guards.md: a ::playground takes file, region, dispatch, expect, not from',
       'content/4.1/guards.md: a ::playground expects "refused" or nothing, not "answered"',
+    ])
+  })
+
+  it('refuses a file too long for the "Open in playground" link its page builds, as the build would', () => {
+    const body = chapterBody('::playground{file="button/long.ts" dispatch="/ping"}')
+    expect(check({ ...valid(), guards: page(guards, body) })).toEqual([
+      expect.stringMatching(
+        /^content\/4\.1\/guards\.md: examples\/4\.1\/src\/button\/long\.ts is too long for its "Open in playground" link: [\d,]+ characters encoded, over the 1,800 a link carries\.$/,
+      ),
     ])
   })
 })
