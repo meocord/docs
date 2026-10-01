@@ -67,12 +67,17 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 - **An interaction has the channel it came from.** In a server, `channel` is a text channel of that server, the one
   its `guild` caches under `channelId`; in a DM, it's the user's DM channel. Its `send()` resolves, and its type
   guards, such as `isTextBased()`, answer as discord.js's do.
+- **A channel you give sets where the mock is.** Given to `createMockInteraction` or `createMockMessage`, it sets the
+  `channelId`, `guildId` and `guild` you leave out: a DM channel makes the mock a DM, and a server's channel puts it in
+  that server. A server's channel that names no server goes in the mock's. A channel in another server than the
+  `guild` you give, or a DM channel beside a `guildId`, is refused, naming both.
 - **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role,
   and `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or
   permission guard runs on a mock as it does in Discord.
 - **A select menu has picked nothing unless given.** Its `values` are an empty array, and so are the collections of
   what its kind picks: `users` and `members`, `roles`, or `channels`, each an empty `Collection`. Give the choices a
-  test needs in the overrides.
+  test needs in the overrides, as the `Collection`s discord.js holds: its `values` are then their ids, as Discord sends
+  them.
 - **Locales are set as Discord sends them.** `locale` is `'en-US'`, and `guildLocale` is `'en-US'` in a server and
   `null` in a DM, so a [translator](guide:localisation) works on a default mock.
 
@@ -96,7 +101,9 @@ the real resolver finds them:
 ::example{file="testing/mocks.spec.ts" region="options"}
 
 - A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that
-  reads only one of the two is caught.
+  reads only one of the two is caught. A user option carries its user, and in a server its member: `getMember()` is
+  `null` in a DM, and a member you give answers `getUser()` with its user.
+- A whole number is an integer option and a fraction a number option, so `getInteger()` is `null` for `1.5`.
 - A getter of the wrong type returns `null`. Asked with `required: true`, an option that is missing or of the wrong
   type throws.
 - `subcommandGroup`, `subcommand` and `focused` are reserved names: the last names the option an autocomplete is
@@ -123,8 +130,9 @@ test build.
 - **`createMockUser()`** mocks a person, `bot: false`. A DM to the user, or to a member of theirs, goes through the
   user's one DM channel, which `createDM()` resolves to.
 - **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
-  type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches.
-  Give one to `createMockMessage({ channel })` to send a message there.
+  type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches,
+  with the channel as their `channel`. Give one to `createMockMessage({ channel })` to send a message there, or to an
+  interaction to have it come from there.
 - **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface. A type has no
   shape at runtime, so every property is a mock function, data included: `if (settings.enabled)` always passes. Pass
   the values the code reads, `createMock<Settings>({ enabled: false })`.
