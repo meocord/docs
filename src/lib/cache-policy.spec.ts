@@ -9,6 +9,7 @@ import {
   playgroundFrameCsp,
   prereleaseRedirect,
   STATIC_FILE_CSP,
+  UNSTORED,
   VERSIONED_PAGE,
 } from '@/lib/cache-policy'
 
@@ -92,10 +93,18 @@ describe('playground assets', () => {
     expect(pathKind('/playground/4.1.0-beta.7.abcdef0123.wasm')).toBe('page')
   })
 
-  it("caches a line's hashed frame as immutable, under its own policy", () => {
+  it("never stores a line's frame, whose policy names the site, while what it loads stays immutable", () => {
     expect(pathKind('/playground/4.1.0-beta.7.0123456789.html')).toBe('playground-frame')
-    expect(cacheControlFor('/playground/4.1.0-beta.7.0123456789.html')).toBe(IMMUTABLE)
+    expect(cacheControlFor('/playground/4.1.0-beta.7.0123456789.html')).toBe(UNSTORED)
     expect(isInertPath('/playground/4.1.0-beta.7.0123456789.html')).toBe(false)
+    for (const loaded of [
+      '/playground/frame.abcdef0123.js',
+      '/playground/4.1.0-beta.7.0123456789.js',
+      '/playground/swc.abcdef0123.wasm',
+    ]) {
+      expect(cacheControlFor(loaded), loaded).toBe(IMMUTABLE)
+      expect(isInertPath(loaded), loaded).toBe(true)
+    }
   })
 })
 
