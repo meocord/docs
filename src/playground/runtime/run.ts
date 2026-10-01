@@ -139,7 +139,14 @@ interface Context {
   discord: Record<string, unknown>
   enums: { ReactionHandlerAction: { ADD: unknown; REMOVE: unknown } }
   module: TestingModule
-  caller: { user: Record<string, unknown>; userId: string; username: string; server: Record<string, unknown> | null }
+  caller: {
+    user: Record<string, unknown>
+    userId: string
+    username: string
+    server: Record<string, unknown> | null
+    /** The caller as the server's member, or null in a DM. */
+    member: Record<string, unknown> | null
+  }
   /** The handlers the recorder heard start for the current input. */
   reached: string[]
 }
@@ -163,6 +170,9 @@ const interactionCalls = (testing: Testing, interaction: unknown) => () =>
     ...(call.payload !== undefined && { payload: toJson(call.payload) }),
     ...(call.error !== undefined && { error: describeError(call.error).message }),
   }))
+
+/** How a run names a direct message to the caller, sent through its user or its member. */
+const DM = 'dm'
 
 /**
  * The calls a mock's `method` received, such as a message's replies or a member's direct messages, named
@@ -206,23 +216,36 @@ function serverOf(testing: Testing): Record<string, unknown> {
   return guild
 }
 
+/** The caller as a member of `guild`: the one its member cache holds, put there when it holds none. */
+function memberIn(
+  testing: Testing,
+  discord: Record<string, unknown>,
+  guild: Record<string, unknown>,
+  user: Record<string, unknown>,
+): Record<string, unknown> {
+  const members = (guild.members as { cache: Map<string, Record<string, unknown>> }).cache
+  const id = user.id as string
+  const member =
+    members.get(id) ??
+    testing.createMockInteraction(discord.GuildMember, { guild, user, id, displayName: user.username })
+  members.set(id, member)
+  return member
+}
+
 /** A dispatch as MeoCord receives it, from the caller it comes from. */
 function prepare(dispatch: Dispatch, context: Context): Prepared {
   const { testing, discord, module, caller } = context
-  const { user, server } = caller
+  const { user, server, member } = caller
   const { InteractionContextType } = discord as { InteractionContextType: { Guild: number; BotDM: number } }
   // In the server, as a member of it, or in a DM with the bot, as Discord reports each
   const from = server
-    ? { user, guild: server, guildId: server.id, context: InteractionContextType.Guild }
+    ? { user, member, guild: server, guildId: server.id, context: InteractionContextType.Guild }
     : { user, guild: null, guildId: null, member: null, context: InteractionContextType.BotDM }
   // A message the caller sent: its author is the caller, as the member it is in the server
   const sent = (content: string) => testing.createMockMessage({ content, guild: server, author: user })
   const interaction = (type: string, overrides: Record<string, unknown>): Prepared => {
     const input = testing.createMockInteraction(discord[type], { ...from, ...overrides })
-    const answered = interactionCalls(testing, input)
-    // A handler may also message the caller directly
-    const messaged = mockCalls(user, 'send', 'user.send')
-    return { send: async () => fromCall(await module.dispatch(input)), calls: () => [...answered(), ...messaged()] }
+    return { send: async () => fromCall(await module.dispatch(input)), calls: interactionCalls(testing, input) }
   }
   switch (dispatch.kind) {
     case 'slash': {
@@ -257,13 +280,7 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
       })
     case 'message': {
       const message = sent(dispatch.content)
-      const replies = mockCalls(message, 'reply')
-      const messaged = mockCalls(message.author as Record<string, unknown>, 'send', 'author.send')
-      return {
-        send: async () => fromCall(await module.dispatch(message)),
-        // In a server, MeoCord tells the author of a refused or failed command in a direct message
-        calls: () => [...replies(), ...messaged()],
-      }
+      return { send: async () => fromCall(await module.dispatch(message)), calls: mockCalls(message, 'reply') }
     }
     case 'reaction': {
       // Someone else's message, in the same place
@@ -281,25 +298,15 @@ function prepare(dispatch: Dispatch, context: Context): Prepared {
       }
     }
     case 'event': {
-      // The caller as the member the server holds, the one its other inputs come from
-      const guild = server ?? serverOf(testing)
-      const members = (guild.members as { cache: Map<string, Record<string, unknown>> }).cache
-      const member =
-        members.get(caller.userId) ??
-        testing.createMockInteraction(discord.GuildMember, {
-          guild,
-          user,
-          id: caller.userId,
-          displayName: caller.username,
-        })
-      members.set(caller.userId, member)
+      // The caller as the server's member; a caller in a DM joins a server of this event's own
+      const joined = member ?? memberIn(testing, discord, serverOf(testing), user)
       return {
         // An event names no handler; the recorder heard which ran
         send: async () => {
-          const { ran } = await module.emit(dispatch.event, member)
+          const { ran } = await module.emit(dispatch.event, joined)
           return { ran: ran > 0, handlers: [...context.reached] }
         },
-        calls: mockCalls(member, 'send'),
+        calls: member ? () => [] : mockCalls(joined, 'send', DM),
       }
     }
   }
@@ -401,6 +408,7 @@ export async function runPlayground(
   // same place and person, and the server's member for the caller is the same throughout
   const server = inGuild ? serverOf(testing) : null
   const user = mockUser(testing, userId, username)
+  const member = server ? memberIn(testing, discord, server, user) : null
   try {
     for (const dispatch of request.dispatch) {
       const context: Context = {
@@ -408,9 +416,13 @@ export async function runPlayground(
         discord,
         enums,
         module: testingModule,
-        caller: { user, userId, username, server },
+        caller: { user, userId, username, server, member },
         reached,
       }
+      // A direct message to the caller, from whichever input: through the user, or the member, whose mock sends
+      // apart from its user's
+      const messaged = [user, ...(member ? [member] : [])].map(each => mockCalls(each, 'send', DM))
+      const sentTo = () => messaged.flatMap(read => read())
       let prepared: Prepared
       try {
         prepared = prepare(dispatch, context)
@@ -426,7 +438,7 @@ export async function runPlayground(
           ran: outcome.ran,
           handlers: outcome.handlers,
           ...(outcome.error !== undefined && { error: describeError(outcome.error) }),
-          calls: prepared.calls(),
+          calls: [...prepared.calls(), ...sentTo()],
         })
       } catch (error) {
         // An error no filter handled: the fallback has answered it, and dispatch rethrows it; the handler
@@ -436,7 +448,7 @@ export async function runPlayground(
           ran: reached.length > 0,
           handlers: [...reached],
           error: describeError(error),
-          calls: prepared.calls(),
+          calls: [...prepared.calls(), ...sentTo()],
         })
       }
     }

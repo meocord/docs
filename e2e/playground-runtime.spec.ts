@@ -255,7 +255,7 @@ test.describe('the playground runtime', () => {
       dispatch: [{ kind: 'event', event: 'guildMemberAdd' }],
     })
     expect(event.steps[0]).toMatchObject({ ran: true, handlers: ['WelcomeController.greet'] })
-    expect(event.steps[0].calls).toEqual([{ method: 'send', payload: 'Welcome to MeoCord Playground!' }])
+    expect(event.steps[0].calls).toEqual([{ method: 'dm', payload: 'Welcome to MeoCord Playground!' }])
     const select = await run(page, {
       source: example('controllers/select-menu/assign.select-menu.controller.ts'),
       dispatch: [{ kind: 'userselect', customId: 'assign/7', users: ['100000000000000001', '14'] }],
