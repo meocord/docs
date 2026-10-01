@@ -102,8 +102,8 @@ bot from build to shutdown, and where each part of this guide sits.
    listeners to the client, and logs in. A failed factory or login rejects `start()` and sets the exit code to 1.
 3. **Ready.** When Discord says the client is ready, whatever isn't made yet, such as the controllers and the services
    only injected, is resolved, and the `onReady` hooks run in dependency order; see
-   [Lifecycle hooks](guide:lifecycle-hooks). Alongside, the commands the builders describe are registered; see
-   [Slash commands](guide:slash-commands).
+   [Lifecycle hooks](guide:lifecycle-hooks). Alongside, the commands the [builders](guide:glossary#builder) describe
+   are registered; see [Slash commands](guide:slash-commands).
 
 ### Dispatch
 

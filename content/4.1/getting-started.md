@@ -19,7 +19,8 @@ online, rebuilding and restarting as you edit.
 ## When to use it
 
 Start here for a new bot. To move a discord.js bot to MeoCord, create the project the same way and bring its commands
-over one controller at a time; [Coming from discord.js](guide:coming-from/discordjs) shows how each part maps.
+over one [controller](guide:glossary#controller) at a time; [Coming from discord.js](guide:coming-from/discordjs) shows
+how each part maps.
 
 You need:
 
@@ -52,9 +53,9 @@ range. `create` runs before there is a project, so it names the package to insta
 ### What the project starts with
 
 A working example of each kind of handler: a slash command, a button, a select menu, a modal, a context menu, a message
-handler and a reaction handler, plus a guard, a [presenter](guide:glossary#presenter), a service and a spec for each.
-The samples answer through `respond()`, acknowledge slow work with `@Defer`, and limit how often they run with
-`@Cooldown`. [Project structure](guide:project-structure) walks through the files.
+handler and a reaction handler, plus a [guard](guide:glossary#guard), a [presenter](guide:glossary#presenter), a service
+and a spec for each. The samples answer through `respond()`, acknowledge slow work with `@Defer`, and limit how often
+they run with `@Cooldown`. [Project structure](guide:project-structure) walks through the files.
 
 ### The token and the test server
 
