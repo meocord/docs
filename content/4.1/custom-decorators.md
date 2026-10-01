@@ -43,8 +43,9 @@ A handler takes it like any decorator:
 
 ## How it works
 
-`applyDecorators` returns a decorator that applies each one it was given, in the order listed, to the class or the
-method it decorates. It works on a controller as well as on a handler, as long as every decorator in it does.
+`applyDecorators` returns a decorator that applies each one it was given to the class or the method it decorates, as
+they would apply written one above the other: `applyDecorators(A, B)` does what `@A @B` does, so guards run in the
+order listed. It works on a controller as well as on a handler, as long as every decorator in it does.
 
 The handler ends up with exactly what the combined decorators give it, and
 [`inspectHandler`](api:testing/inspectHandler) shows it:
