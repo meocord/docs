@@ -52,6 +52,15 @@ handler all see one answer. Interceptors and exception filters reach it as `cont
 Before each call, it reads where the answer stands from the interaction itself, as `state`: `'unanswered'`,
 `'deferred'` or `'replied'`. Answers made directly through discord.js, or by a collector, count too.
 
+Answers asked for together go out one after another, in the order they were made, each from where the last left the
+interaction. Two `send()` calls at once reply and then edit, rather than both replying, and so do a `send()` in flight
+and the error the fallback answers with. When Discord refuses an answer, the state stays right:
+
+- An acknowledgement that fails leaves the interaction unanswered, so the next `send()` replies rather than throwing
+  that failure again.
+- A reply or an update refused with 40060, because the interaction was answered elsewhere, still throws, and the next
+  `send()` edits that answer.
+
 ## The calls
 
 | Call                                    | What it does                                                                                                                                                 |
@@ -61,7 +70,7 @@ Before each call, it reads where the answer stands from the interaction itself, 
 | `edit(payload, options?)`               | Edits the answer, as `send()` does once answered.                                                                                                            |
 | `followUp(payload, options?)`           | Another message after the answer.                                                                                                                            |
 | `delete()`                              | Deletes the answer.                                                                                                                                          |
-| `modal(modal)`                          | Shows a modal. It must be the first response, so this throws once the interaction is acknowledged.                                                           |
+| `modal(modal)`                          | Shows a modal. It must be the first response, so this throws once the interaction is acknowledged, or while another answer is in flight.                     |
 | `error(error, { message, visibility })` | Shows an error in the [presenter's](guide:presenters) style, and never throws. `'private'` shows it only to the user who made the call.                      |
 
 `options` is `{ fill?: boolean }`. An embed with no colour, or a Components V2 container with no accent, takes the
@@ -90,6 +99,8 @@ edit sends an embed again whose image is one of the message's own attachments, t
   warning on or off with `@MeoCord({ warnUnanswered })`.
 - **`modal()` has to come first.** Call it before anything acknowledges the interaction, and leave
   [`@Defer`](guide:defer) off a handler that shows a modal.
+- **A modal has no message to edit.** After `modal()`, `send()`, `edit()` and `delete()` throw, saying so. Answer in
+  the handler of the modal's submit, which gets an interaction of its own.
 - **`ephemeral: true` is deprecated in discord.js.** It's still read as the private flag, but write
   `flags: MessageFlags.Ephemeral` in new code.
 

@@ -54,7 +54,9 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 - **Type guards run discord.js's logic.** `isButton()`, `isRepliable()`, `isChatInputCommand()` and the rest answer
   from the class the mock was made from. They're still mock functions, so a test can override one.
 - **Replies follow Discord's rules.** Replying or deferring twice throws, and `followUp()`, `editReply()` and
-  `deleteReply()` throw before any reply. An autocomplete's `respond()` works once, and refuses more than 25 choices.
+  `deleteReply()` throw before any reply. After a command shows a modal, `editReply()`, `fetchReply()` and
+  `deleteReply()` reject with Unknown Message (10008), since there's no reply. An autocomplete's `respond()` works
+  once, and refuses more than 25 choices.
 - **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot,
   each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
   give them one `user`, or one message `author`, to count them together. Ids you give are kept.
