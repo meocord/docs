@@ -32,7 +32,8 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 ## How it works
 
 - **Where.** On any controller or service the app binds: listed in `@MeoCord({ controllers, services })`,
-  or injected by one. The instance is created when the first event arrives.
+  or injected by one. The instance is created when the first event arrives. `@Command`, `@MessageHandler`,
+  `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
 - **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
   interceptors on the method or class apply, and the app's global ones. A guard receives the event's
   arguments, and `ExecutionContext.getType()` is `'event'`.

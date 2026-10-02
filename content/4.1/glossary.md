@@ -30,7 +30,8 @@ a `meocord` group in any catalog translates MeoCord's own texts. See [Localisati
 [Services and injection](guide:services).
 
 **Controller.** A class decorated with `@Controller` whose methods are handlers. One instance serves the whole app.
-See [Your first command](guide:first-command).
+Commands, components, messages and reactions reach only the controllers in `@MeoCord({ controllers })`; such a handler
+on a service never runs, and the bot warns at startup. See [Your first command](guide:first-command).
 
 **Cooldown.** A limit on how often a handler runs, per user, channel, server or everyone. See
 [Cooldowns](guide:cooldowns).
