@@ -75,7 +75,7 @@ const id = {
       error: 'Terjadi kesalahan saat menjalankan perintah.',
     },
     dm: {
-      error: 'Terjadi kesalahan saat menjalankan {command} di {channel} pada {server}. Coba lagi nanti.',
+      error: '{command} di {channel} pada {server}: {reason}',
       cooldown: '{command} di {channel} pada {server}: {wait}',
     },
     presenter: {
