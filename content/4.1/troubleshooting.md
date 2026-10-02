@@ -174,6 +174,11 @@ lookup. See [Autocomplete](guide:autocomplete#gotchas).
 | 50001 | Missing Access                            | The bot can't see the channel. Check its role and the channel's permissions.                                                       |
 | 50013 | Missing Permissions                       | The bot can see the channel but lacks the permission the call needs, such as Manage Messages to delete one.                        |
 
+When one of MeoCord's own answers is refused, such as an error reply or a usage reply, the refusal is logged at debug
+level when it's a state Discord reports, like these. A body Discord could not read is logged as an error, with its
+cause, since only the code that built it can fix it: `50035` (Invalid Form Body), `50109` (invalid JSON) or `50006`
+(an empty message).
+
 A test can make a mock reject with any of them through [`createDiscordError(code)`](api:testing/createDiscordError);
 see [Discord's errors](guide:mocks#discords-errors).
 

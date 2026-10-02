@@ -299,13 +299,13 @@ are case-sensitive. An alias and a pattern count the same way.
 
 ## Testing
 
-`resolveRoute(App, { content })` returns the handler a message reaches, with the params its pattern captures,
-from decorator metadata alone. A message that starts with a mention of the bot needs the bot's id, as `botId`, and
-`dm: true` resolves it as a direct message, where only handlers whose scope fits run. `resolveRoute` can't call a
-prefix function, so for an app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError`
-without one.
-`module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage replies
-and the built-in help included:
+`resolveRoute(App, { content })` returns the handler a message reaches, with the params its pattern captures, from
+decorator metadata alone. A message that starts with a mention of the bot needs the bot's id, as `botId`, and `dm: true`
+resolves it as a direct message, where only handlers whose scope fits run: one scoped to servers, or with a `member`,
+`role` or `channel` param, isn't returned, as dispatch answers such a message with its usage. `resolveRoute` can't call
+a prefix function, so for an app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError`
+without one. `module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage
+replies and the built-in help included:
 
 ::example{file="controllers/message/economy.message.controller.spec.ts" region="spec"}
 
