@@ -138,9 +138,9 @@ It prints where to wire the part up: a controller goes in `@MeoCord({ controller
 first time something injects it.
 
 Once the files are written, `generate` formats them with the project's own ESLint, in one run, and says
-"Formatting with your project's ESLint..." while it waits. The files stay whatever ESLint does. When it
-can't run, or reports problems it can't fix, `generate` says "Could not format the generated files:" and why, and still
-exits 0. A project without ESLint skips the step.
+"Formatting with your project's ESLint..." while it waits. When it can't run, or reports problems it can't fix,
+`generate` says "Could not format the generated files:" and why, and still exits 0. Either way, the files are kept, with
+whatever ESLint fixed. A project without ESLint skips the step.
 
 ### Controllers
 

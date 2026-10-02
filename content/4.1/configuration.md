@@ -116,9 +116,9 @@ you ship a source mapper of your own. `meocord start` then passes no flag, and t
 
 Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config before `main.ts`, so every value the
 files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
-reads the files Bun reads for `NODE_ENV` development, production or test, the same on node and Bun, under
-`meocord start` and under `node dist/main.js`; for an environment of your own, pick the files with a variable of your
-own, as below:
+reads the files Bun reads for its mode: the production files in a production build and the development files in a
+development build, however the bot is started, on node and Bun alike, and `.env.test` where it runs from source under
+`NODE_ENV=test`. For an environment of your own, pick the files with a variable of your own, as below:
 
 ::example{file="config/env-files.meocord.config.ts" region="config"}
 
@@ -198,11 +198,11 @@ modified:
 
 Some things need no rule of your own:
 
-- **Imported images, fonts, SVG, media, PDFs, text files** and the other kinds `src/types/assets.d.ts` lists are
-  emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready for `fs`, a
-  canvas or a Discord attachment. A file of another kind, WebAssembly aside, which the build handles itself, needs a
-  rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts, from where its `dist`
-  is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
+- **Imported images, fonts, SVG, media, PDFs, text files** and the other kinds `src/types/assets.d.ts` declares as a
+  path are emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready
+  for `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build
+  handles itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts,
+  from where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
 - **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
   error, naming the file. `output.filename.image`, and `svg`, `font`, `media` and `assets`, accept a function to keep
   both.
