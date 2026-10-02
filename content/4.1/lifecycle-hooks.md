@@ -47,8 +47,8 @@ warning, and the hooks after it wait for it.
 
 ## onShutdown
 
-`onShutdown` runs on SIGINT or SIGTERM, before the client is destroyed, in reverse order, so a class stops
-before the classes it uses. The bot waits for the whole sequence up to `shutdownTimeout` in
+`onShutdown` runs on SIGINT, SIGTERM or [`app.stop()`](#stopping-from-code), before the client is destroyed, in reverse
+order, so a class stops before the classes it uses. The bot waits for the whole sequence up to `shutdownTimeout` in
 [`meocord.config.ts`](guide:configuration), 10 seconds by default, then shuts down whether or not it finished.
 
 - A second signal more than a second after the first exits at once. One sooner counts as the same request,
@@ -56,6 +56,17 @@ before the classes it uses. The bot waits for the whole sequence up to `shutdown
 - If the bot never became ready, because the login failed, no `onShutdown` hook runs.
 - A signal while the `onReady` hooks are still running shuts down only the classes whose `onReady` finished,
   and those without one. No further `onReady` starts.
+
+## Stopping from code
+
+`await app.stop()` stops the bot without a signal, as an owner-only shutdown command, a graceful restart or an
+integration test needs. It runs the `onShutdown` hooks under `shutdownTimeout` and closes the client, and leaves the
+process running.
+
+- With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it.
+- A stop while the bot logs in ends that login, so its `start()` rejects.
+- Calls after the first wait for it. A stopped app doesn't start again; create a new one with `MeoCordFactory.create`.
+- A signal while `stop()` runs waits for its hooks to finish rather than exiting at once.
 
 ## Failures
 
