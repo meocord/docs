@@ -97,7 +97,7 @@ is published, rather than wait for the hourly run. The maintainer sets up:
 
 1. A GitHub App owned by the `meocord` organization, installed on `meocord/docs` only, with the
    repository permissions **Contents: Read and write**, **Pull requests: Read and write** and **Actions:
-   Read and write**, and nothing else. No webhook. Actions write is what lets meocord's release workflow
+   Read and write**, beside the **Metadata: Read** GitHub gives every app, and nothing else. No webhook. Actions write is what lets meocord's release workflow
    start `sync-versions.yml`; this workflow's own token asks for contents and pull requests only.
 2. An environment named `docs-bot` in `meocord/docs`, with deployment branches limited to `main`,
    holding the variable `DOCS_BOT_CLIENT_ID` (the app's client ID) and the secret `DOCS_BOT_PRIVATE_KEY`
