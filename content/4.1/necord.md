@@ -77,7 +77,7 @@ A Necord text command receives its words as strings, and `NecordModule`'s `prefi
 ::example{from="compare" file="necord/roll.command.ts" region="command"}
 
 In MeoCord a message command is a pattern. Each param is checked before the handler runs, here by a schema, and a
-message that leaves out a param gets the command's usage in reply, and one the schema refuses gets the reason:
+message that leaves out a required param gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 

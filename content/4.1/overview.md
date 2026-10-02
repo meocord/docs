@@ -96,9 +96,10 @@ bot from build to shutdown, and where each part of this guide sits.
 1. **Create.** The factory reads `@MeoCord`'s options and the built config, then makes one container. It binds the
    discord.js `Client`, made from `clientOptions`, the translator, the handler registry, the shard context, the cooldown
    store, and every controller and service the app lists, with everything they inject, as
-   [singletons](#what-lives-how-long). It builds the component routes once, so a pattern it can't read stops the bot
-   here. With [process sharding](guide:sharding), the first process instead becomes a manager that starts the shards,
-   each of which runs these steps itself.
+   [singletons](#what-lives-how-long). It builds the message and component routes once, so a message pattern it can't
+   read, or two patterns that match the same messages or customIds, stop the bot here. With
+   [process sharding](guide:sharding), the first process instead becomes a manager that starts the shards, each of
+   which runs these steps itself.
 2. **Log in.** `start()` first makes every provided value, waiting for async factories, and the services `@MeoCord`
    lists, so their constructors run before login. It then attaches MeoCord's listeners to the client and logs in. A
    failed factory or login rejects `start()` and sets the exit code to 1.

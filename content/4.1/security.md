@@ -117,8 +117,9 @@ built with.
 ## Build it
 
 The feedback bot runs on its own server. Invite it to the server where it's used, with only what it needs: the `bot` and
-`applications.commands` scopes, and **View Channel**, **Send Messages**, **Embed Links** and **Read Message History** in
-the review channel and wherever members mention it. It needs no privileged intents: `Guilds`, `GuildMessages` and
+`applications.commands` scopes, **View Channel**, **Send Messages** and **Embed Links** in the review channel and
+wherever members mention it, **Read Message History** where they mention it, and **View Channel** and **Send Messages**
+in the server's system channel for its welcome. It needs no privileged intents: `Guilds`, `GuildMessages` and
 `GuildMessageReactions` are all it asks for.
 
 Make the review channel visible to the staff alone. The guard stops anyone else from deciding, but anyone who can see

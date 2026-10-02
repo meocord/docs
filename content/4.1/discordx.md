@@ -76,8 +76,8 @@ message to `executeCommand`:
 
 ::example{from="compare" file="discordx/roll.ts" region="command"}
 
-In MeoCord a message command is a pattern, and MeoCord reads every message itself. A message that leaves out a param
-gets the command's usage in reply, and one the schema refuses gets the reason:
+In MeoCord a message command is a pattern, and MeoCord reads every message itself. A message that leaves out a required
+param gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
