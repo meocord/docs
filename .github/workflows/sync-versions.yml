@@ -4,10 +4,12 @@ name: Sync versions
 # registry integrity and its Sigstore provenance, and opens a pull request for review.
 #
 # The pull request is opened as the docs bot, a GitHub App installed on this repository only with
-# contents and pull-requests write: one opened with the workflow's own token would not run the
-# checks. The app's credentials live in the `docs-bot` environment, which only this workflow on
-# main may use: the variable DOCS_BOT_CLIENT_ID and the secret DOCS_BOT_PRIVATE_KEY. The token is
-# minted after the sync, so nothing the sync downloads runs while it exists.
+# contents, pull-requests and actions write: one opened with the workflow's own token would not run
+# the checks. This workflow's token asks for contents and pull requests only; actions write is for
+# meocord's release workflow, which starts this one after a publish. The app's credentials live in
+# the `docs-bot` environment, which only this workflow on main may use: the variable
+# DOCS_BOT_CLIENT_ID and the secret DOCS_BOT_PRIVATE_KEY. The token is minted after the sync, so
+# nothing the sync downloads runs while it exists.
 on:
   schedule:
     - cron: '17 * * * *'
