@@ -132,7 +132,7 @@ before `next.handle()` and validated and piped after it; a filter sees them as t
 
 - **A direct call runs only the guards.** Calling a controller method yourself runs its guards, and no interceptors,
   validation, pipes, cooldowns or filters. Run it with the [testing module](guide:testing) to get every stage.
-- **A global stage runs for events too.** A global guard that reads `interaction.user` throws on a `messageCreate`
+- **A global stage runs for events too.** A global guard that reads `interaction.user.id` throws on a `messageCreate`
   handler; declare `types: ['interaction']`.
 - **`@Defer` on a message or event handler stops the bot at startup,** since there is nothing to acknowledge.
 

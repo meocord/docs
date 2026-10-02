@@ -11,7 +11,7 @@ import { CommandType } from 'meocord/enum'
 
 // #region route
 // One definition for the button you send and the handler that receives it
-export const ticketAction = route('ticket/{id}/{action}')
+export const ticketAction = route('ticket/{id}/{action:close|reopen}')
 
 @Controller()
 export class TicketButtonController {

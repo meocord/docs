@@ -24,9 +24,10 @@ since: 4.1.0
 Errors in a call come in two kinds. Some are the user's own mistake, such as too few coins, and the user should be
 told what to change. Others are faults in the bot, which the user can do nothing about.
 
-For the first kind, throw [`UserError`](api:responses/UserError): MeoCord shows its message only to the user who made
-the call. For anything else, the built-in fallback answers with a generic message and logs the error. When you want
-another answer, an exception filter catches the error first and answers it your own way.
+For the first kind, throw [`UserError`](api:responses/UserError): MeoCord shows its message to the user who made the
+call, privately for an interaction and as a reply to a message. For anything else, the built-in fallback answers with a
+generic message and logs the error. When you want another answer, an exception filter catches the error first and
+answers it your own way.
 
 ## When to use it
 
@@ -119,9 +120,11 @@ It says "An error occurred while executing the command." for a fault, and "Comma
 `CooldownError` and a `ValidationError` show their own message, only to the caller: on a public deferred command, the
 deferral is deleted and the message follows up privately.
 
-After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's
-or validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
-seconds. Other errors of message, reaction and event handlers are only logged.
+After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's or
+validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
+seconds, as is a command's usage when a word has the wrong type. Other errors of message, reaction and event handlers
+are only logged, unless `messages: { dmOnError }` or `dmOnCooldown` tells a message command's author in a direct
+message.
 
 ## Failures never end the process
 
