@@ -93,8 +93,8 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
   or only with `meocord register`. A builder that throws stops registration rather than dropping its command; see
   [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration) and
   [Registering commands](guide:slash-commands#registering-commands).
-- **Sharding**, in one process or a process per shard, with `ShardContext.call` to reach every shard. See
-  [Sharding](guide:sharding).
+- **Sharding**, in one process or a process per shard, with `ShardContext.call` to reach every shard, its results
+  typed as the JSON they arrive as. See [Sharding](guide:sharding).
 - **Self-contained builds** pack native addons into `dist`, and run on Bun as on Node.js. `optionalExternals` covers
   packages a dependency tries to load and runs without. See [Self-contained builds](guide:self-contained-builds).
 - **`logLevel`** in `meocord.config.ts`, or `MEOCORD_LOG_LEVEL` for one run, sets which lines the logger prints. See
