@@ -1,7 +1,6 @@
 import { Client } from 'discord.js'
 import { createMockClient, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
-import { GreetingService } from '@src/services/greeting.service'
 import { StatusService } from '@src/services/status.service'
 
 describe('StatusService', () => {
@@ -10,7 +9,6 @@ describe('StatusService', () => {
     const module = MeoCordTestingModule.create({
       providers: [
         { provide: StatusService, useClass: StatusService },
-        { provide: GreetingService, useClass: GreetingService },
         { provide: Client, useValue: client },
       ],
     }).compile()

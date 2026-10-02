@@ -36,16 +36,16 @@ and replaces the loading view with the answer.
 
 ## How it works
 
-1. **Before any guard runs,** `@Defer` acknowledges: a deferred reply for a command, shown as "thinking…", or an
-   invisible deferred update for a button, a select menu or a modal from a message.
+1. **Before any guard runs,** `@Defer` acknowledges: a deferred reply for a command or a modal sent from one, shown as
+   "thinking…", or an invisible deferred update for a button, a select menu or a modal from a message.
 2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks a component's message: its
    controls are disabled, the clicked button shows the theme's loading emoji, and the
    [presenter's](guide:presenters) loading view is added.
 3. **When the handler answers,** `send()` without `components` puts the message's controls back as they were before
    the lock, a button disabled on purpose included, and removes the loading view. `components: []` clears them.
 
-A handler that returns without answering has its message put back too. When the handler throws, the error is shown
-to the user privately, and the message is restored.
+A handler that returns without answering has its message put back too. When a component's handler throws, the error
+is shown to the user privately, and the message is restored.
 
 ## Guards under @Defer
 
@@ -62,13 +62,13 @@ touched.
 
 ## Options
 
-| Option                  | Default   | What it does                                                                                    |
-| ----------------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| `ephemeral`             | `false`   | Makes a command's deferred reply private.                                                       |
-| `disable`               | `'all'`   | `'clicked'` disables only the control used, so the others stay usable. `'none'` skips the lock. |
-| `mode`                  | `'eager'` | `'auto'` acknowledges only if the handler hasn't answered after `after` milliseconds.           |
-| `after`                 | `1500`    | For `'auto'`; never later than 2.5 seconds after the interaction was created.                   |
-| `suppressNotifications` | `false`   | New messages, such as a first reply after `'auto'` waited, and follow-ups, don't notify.        |
+| Option                  | Default   | What it does                                                                                         |
+| ----------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `ephemeral`             | `false`   | Makes a command's deferred reply private.                                                            |
+| `disable`               | `'all'`   | `'clicked'` disables only the control used, so the others stay usable. `'none'` skips the lock.      |
+| `mode`                  | `'eager'` | `'auto'` acknowledges only if the handler hasn't answered after `after` milliseconds.                |
+| `after`                 | `1500`    | For `'auto'`; never later than 2.5 seconds after the interaction was created.                        |
+| `suppressNotifications` | `false`   | New messages, such as a first reply sent before `'auto'` acknowledged, and follow-ups, don't notify. |
 
 Code that locks a message itself calls `respond(interaction).lock()`, which takes `disable` the same way; its options
 type is [`ResponseLockOptions`](api:responses/ResponseLockOptions) from `meocord/common`.
@@ -83,8 +83,9 @@ A slow one is acknowledged at 1.5 seconds and then locked, as under `'eager'`.
 
 ### Locking only the clicked control
 
-With `disable: 'clicked'`, two buttons of one message can run at once. Each is disabled while its own handler runs
-and comes back when that handler finishes, and the loading view stays until both have.
+With `disable: 'clicked'`, two buttons of one message can run at once. Each is disabled while its own handler runs and
+comes back when that handler finishes. The loading view stays until both have finished, unless one answers with
+`send()`, whose answer replaces it.
 
 ::example{file="controllers/button/card.button.controller.ts" region="clicked"}
 

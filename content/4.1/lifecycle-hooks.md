@@ -40,10 +40,10 @@ too. Guards are created per call and get none.
 process should do one-off work: `true` for a bot in one process, and with
 [process sharding](guide:sharding) only in the process running shard 0.
 
-The hooks run one at a time, each class after the classes it injects. Classes with no dependency between them
-run in declaration order: the `providers` first, then the `services`, the `controllers` and the observers.
-Command registration runs alongside and never delays them. A hook still running after 10 seconds is named in a
-warning, and the hooks after it wait for it.
+The hooks run one at a time, each class after the classes it injects. Classes with no dependency between them run in
+declaration order: the app's cooldown store first, then the `providers`, the `services`, the `controllers` and the
+observers. Command registration runs alongside and never delays them. A hook still running after 10 seconds is named in
+a warning, and the hooks after it wait for it.
 
 ## onShutdown
 
@@ -54,8 +54,8 @@ order, so a class stops before the classes it uses. The bot waits for the whole 
 - A second signal more than a second after the first exits at once. One sooner counts as the same request,
   since a terminal's Ctrl+C can arrive twice.
 - If the bot never became ready, because the login failed, no `onShutdown` hook runs.
-- A signal while the `onReady` hooks are still running shuts down only the classes whose `onReady` finished,
-  and those without one. No further `onReady` starts.
+- A signal while the `onReady` hooks are still running shuts down only the classes the hooks had reached: those
+  whose `onReady` finished, and those before them without one. No further `onReady` starts.
 
 ## Stopping from code
 

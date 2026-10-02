@@ -66,10 +66,10 @@ Run the script as `(script, keys, args) => redis.eval(script, keys.length, ...ke
 
 ### Redis Cluster
 
-A handler's keys usually sit in different slots, which one script can't reach. The store then counts each key with
-a script of its own, in order, so a call one cooldown refuses has counted against those before it. Pass
-`{ hashTag: 'handler' }` to keep each handler's keys in one slot, and its cooldowns in one step. Every call to that
-handler then lands on that slot.
+A handler's keys usually sit in different slots, which one script can't reach. The store then counts each key with a
+script of its own, in order, and gives back the uses counted before a refusal, so a refused call counts against none
+unless a give-back fails. Pass `{ hashTag: 'handler' }` to keep each handler's keys in one slot, and its cooldowns in
+one step. Every call to that handler then lands on that slot.
 
 ### Process sharding on one host
 

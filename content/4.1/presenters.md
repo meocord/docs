@@ -90,17 +90,19 @@ thumbnail, or the container's leading image and the text's thumbnail. A file the
 
 Each method may draw asynchronously, and a slow drawing never misses Discord's three seconds:
 
-- The loading view is drawn after `@Defer` acknowledges the call. Its files leave the message when the lock does.
+- The loading view is drawn after `@Defer` acknowledges the call. Its files leave the message when the lock does. The
+  handler waits for it, so a drawing that takes more than a second is given up on, with a warning, and MeoCord's
+  loading view is shown instead.
 - For an error on an interaction not yet acknowledged, MeoCord acknowledges it privately first, and the drawn view
   replaces the acknowledgement.
 - A view added to a message by an edit keeps the message's own attachments.
 
 A presenter that fails never leaves the user without an answer. When `error()` or `messageError()` throws, rejects, or
-returns a view MeoCord can't render, such as a colour that is no colour or an empty text, MeoCord's own answer goes
-out instead: its error view, or the plain text a message command gets without `messageError`. When MeoCord's fallback
-is answering, the failure is then logged as the call's fault, and a testing module's `dispatch` rejects with it; a
-`respond().error()` of your own logs it. A `loading()` that fails the same way is replaced by MeoCord's loading view,
-with a warning naming the presenter, and the handler still runs.
+returns a view MeoCord can't render, such as a colour that is no colour or an empty text, MeoCord's own answer goes out
+instead: its error view, or the plain text a message command gets without `messageError`. When MeoCord's fallback is
+answering, the failure is then logged as the call's fault, and a testing module's `dispatch` rejects with it; a
+`respond().error()` of your own logs it. A `loading()` that fails or is late the same way is replaced by MeoCord's
+loading view, with a warning naming the presenter, and the handler still runs.
 
 Discord takes at most 10 attachments on a message, counting the ones a message the view is added to keeps, and each
 file within the interaction's attachment size limit, or 20 MiB without one. A view past either is sent without its

@@ -30,26 +30,26 @@ instead.
 
 ::example{file="services/help.service.ts" region="service"}
 
-Inject it like any [service](guide:services). `list({ kind: 'command' })` returns one entry per slash command and
-subcommand, and `/help` replies with a line for each.
+Inject it like any [service](guide:services). `list({ kind: 'command' })` returns one entry per slash command,
+subcommand and context menu command, and `/help` replies with a line for each.
 
 ## How it works
 
-The registry reads the handlers of every controller and service the app binds, once, on the first `list()`. Entries
-come in the order their classes were bound.
+The registry reads the handlers of every controller and service the app binds, once, on the first `list()`. Entries come
+class by class, in the order the app makes them, each class after what it injects.
 
 `list({ kind, controller })` filters by what a handler handles, by the class declaring it, or both, and narrows the
 entries' type to that kind. Every entry has `controller`, `method`, `kind` and `name`:
 
-| `kind`         | `name`                                         | Also                                                                            |
-| -------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
-| `command`      | The command, or a subcommand's full path       | `commandType`, `command` (the registered JSON), `description`                   |
-| `component`    | The custom ID pattern, such as `profile/{uid}` | `commandType`                                                                   |
-| `modal`        | The custom ID pattern                          | `commandType`                                                                   |
-| `autocomplete` | The command path, then the option it completes |                                                                                 |
-| `message`      | The pattern, or none for every message         | `command`, `aliases`, `description`, `scope`, `usage(prefix)`, `matches(words)` |
-| `reaction`     | The emoji, or none for every reaction          |                                                                                 |
-| `event`        | The client event                               | `once`                                                                          |
+| `kind`         | `name`                                         | Also                                                                                      |
+| -------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `command`      | The command, or a subcommand's full path       | `commandType`, `command` (the registered JSON), `description`                             |
+| `component`    | The custom ID pattern, such as `profile/{uid}` | `commandType`                                                                             |
+| `modal`        | The custom ID pattern                          | `commandType`                                                                             |
+| `autocomplete` | The command path, then the option it completes |                                                                                           |
+| `message`      | The pattern, or none for every message         | `command`, `aliases`, `description`, `scope`, `hidden`, `usage(prefix)`, `matches(words)` |
+| `reaction`     | The emoji, or none for every reaction          |                                                                                           |
+| `event`        | The client event                               | `once`                                                                                    |
 
 A subcommand's `description` is its own, and a context menu command has none.
 

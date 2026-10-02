@@ -89,7 +89,7 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 ## Overrides
 
 The second argument sets properties as the mock is built. It's the only way to set what discord.js makes read-only,
-such as a modal's `customId` and `fields`, a component's `message`, a context menu's `targetUser`, or the `client`.
+such as a modal's `customId` and `fields`, a context menu's `targetUser`, or the `client`.
 A misspelled property name is a compile error.
 
 To put a command somewhere a user-installed app can be used, set `context` and `authorizingIntegrationOwners`:
@@ -118,30 +118,31 @@ test build. A file upload field takes an array of `Attachment`s: `createModalFie
 
 ## Messages, servers and the rest
 
-- **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()` and
-  the rest throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`, and builders or JSON for
-  the last three. What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's
+- **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()` and the
+  rest throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`, and builders or JSON for
+  `components` and `embeds`. What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's
   `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
-- **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the
-  bot sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that
-  user, made and cached when there's none. Every message from that author has the same member, and so does an
-  interaction given the same `user` in the same server.
+- **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the bot
+  sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that user,
+  made and cached when there's none. Every message from that author in one `guild` you give has the same member, and so
+  does an interaction given the same `user` and `guild`.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
-- **`createMockClient()`** has real, empty caches, and one bot user, the same in every mock, as `client.user`.
+- **`createMockClient()`** has real, empty `users` and `channels` caches, and one bot user, the same in every mock, as
+  `client.user`.
 - **`createMockMember({ user, guild, roles, nickname })`** makes a member with the roles given; see
   [Members and roles](#members-and-roles).
 - **`createMockUser()`** mocks a person, `bot: false`. A DM to the user, or to a member of theirs, goes through the
   user's one DM channel, which `createDM()` resolves to.
 - **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
-  type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches,
-  with the channel as their `channel`. Give one to `createMockMessage({ channel })` to send a message there, or to an
-  interaction to have it come from there.
+  type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches, with
+  the channel as their `channel`, or a thread's members as their `thread`. Give one to `createMockMessage({ channel })`
+  to send a message there, or to an interaction to have it come from there.
 - **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface. A type has no
   shape at runtime, so every property is a mock function, data included: `if (settings.enabled)` always passes. Pass
   the values the code reads, `createMock<Settings>({ enabled: false })`.
 
-Two messages from one `author` count against that member's cooldown, as they would from one person in Discord:
+Two messages from one `author` count against that user's cooldown, as they would from one person in Discord:
 
 ::example{file="testing/mock-author.spec.ts" region="author"}
 
@@ -173,15 +174,18 @@ server's, and a manager's `fetch(id)` finds what the server caches:
 
 A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup:
 
-| Method                                                          | Resolves to                                          |
-| --------------------------------------------------------------- | ---------------------------------------------------- |
-| `send()`, `reply()`, `crosspost()`, `forward()`, `fetchReply()` | a mock message                                       |
-| a manager's `fetch(id)`, or `fetch({ user })` and the like      | its cached item with that id, or a new one it caches |
-| a manager's `fetch()` for a list                                | an empty `Collection`                                |
-| a manager's `create()` and `edit()`                             | a mock of its item                                   |
-| `createDM()`                                                    | a mock DM channel                                    |
-| a structure's own `edit()`, `fetch()`, `delete()` and setters   | the structure itself                                 |
-| any other method that returns a promise                         | `undefined`                                          |
+| Method                                                                                                                        | Resolves to                                          |
+| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `send()`, a message's `reply()`, `crosspost()`, `forward()`, and an interaction's `editReply()`, `followUp()`, `fetchReply()` | a mock message                                       |
+| an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`, `showModal()`                                        | `undefined`                                          |
+| a manager's `fetch(id)`, or `fetch({ user })` and the like                                                                    | its cached item with that id, or a new one it caches |
+| a manager's `fetch()` for a list                                                                                              | an empty `Collection`                                |
+| a manager's `create()` and `edit()`                                                                                           | a mock of its item                                   |
+| `createDM()`                                                                                                                  | a mock DM channel                                    |
+| a structure's own `edit()`, `fetch()`, `delete()` and setters, but for a message                                              | the structure itself                                 |
+| a message's `edit()`                                                                                                          | a new mock message                                   |
+| a message's `delete()`, `pin()` and `unpin()`                                                                                 | `undefined`                                          |
+| any other method that returns a promise                                                                                       | `undefined`                                          |
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
 
@@ -225,8 +229,9 @@ with its `error`, without counting it as sent:
 
 ## Gotchas
 
-- **A read-only property can't be assigned after creation.** TypeScript refuses `interaction.customId = …`, as
-  discord.js declares it read-only. Set it in the overrides, where a misspelling is caught too.
+- **A read-only property can't be assigned after creation.** TypeScript refuses `modal.customId = …` on a
+  `ModalSubmitInteraction`, as discord.js declares it read-only. Set it in the overrides, where a misspelling is caught
+  too.
 - **A MeoCord mock you configure once is reset after the first test.** Set return values in the test that relies on
   them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you

@@ -92,10 +92,10 @@ checks every token where it's set; see [Valid tokens](#valid-tokens).
 | `info`    | `#1699AE` | ℹ️    | —                       |
 | `loading` | —         | ⏳    | —                       |
 
-The colours keep the hues of 4.0's `Theme`, with their lightness moved until each gives at least 3:1 against every
-surface an embed's stripe or a container's accent sits on in Discord's light, dark, darker and midnight themes: the
-contrast WCAG 2.1 asks of a graphic that carries meaning. A test in MeoCord holds every default to it, so a default
-that changes still reads on light and dark alike.
+The success, warning, danger and info colours keep the hues of 4.0's `Theme`, with their lightness moved until each
+gives at least 3:1 against every surface an embed's stripe or a container's accent sits on in Discord's light, dark,
+darker and midnight themes: the contrast WCAG 2.1 asks of a graphic that carries meaning. A test in MeoCord holds every
+default to it, so a default that changes still reads on light and dark alike.
 
 ### Valid tokens
 
@@ -106,7 +106,7 @@ that changes still reads on light and dark alike.
   custom one written `<:name:id>` or `<a:name:id>`. A shortcode such as `':smile:'` isn't one. A custom emoji must also
   be one the bot may use, such as an emoji the application owns.
 - **A button style** is `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`.
-- **A role MeoCord reserves** is refused in any group, in JavaScript as in TypeScript.
+- **A role MeoCord reserves** is refused in `colors`, `emojis` or `buttons`, in JavaScript as in TypeScript.
 
 Each problem is named with its key path and what to give instead, such as
 `theme.colors.primary: '#GGG' is not a colour: give a 6-digit hex string such as '#7680F4', …`. MeoCord's groups are
@@ -144,9 +144,10 @@ To send one message as written, pass `{ fill: false }` as the second argument to
 `followUp()`, as `/banner` does above. The next message is filled again. What you send around `respond()`, with
 `interaction.reply()`, is never touched.
 
-MeoCord's replies to a message are plain text, which a theme leaves as it is: a usage error, a guard's or validation's
-reason, and a `UserError`'s message. With `@MeoCord({ messages: { replyEmoji: true } })` each of them begins with the
-call's `emojis.warning`, as do the direct messages of `dmOnError` and `dmOnCooldown`, and the built-in help with its
+MeoCord's replies to a message, a usage error, a guard's or validation's reason, and a `UserError`'s message, are plain
+text, which a theme leaves as it is unless the [presenter](guide:presenters#message-command-errors) draws them with
+`messageError`. With `@MeoCord({ messages: { replyEmoji: true } })` each of them begins with the call's
+`emojis.warning`, as do the direct messages of `dmOnError` and `dmOnCooldown`, and the built-in help with its
 `emojis.info`: see [Usage errors](guide:message-commands#usage-errors).
 
 ## Per server and per user
@@ -157,8 +158,8 @@ server's, in a server or in a DM.
 ::example{file="app-with-theme-for.ts" region="app"}
 
 Each resolver returns part of a theme, or `undefined` for none, at once or as a promise. Results are cached for
-`ttlSeconds`, and calls that ask at the same time share one lookup. When a server's theme changes, clear its cached
-result so the next call looks it up again:
+`themeCache.ttlSeconds`, five minutes by default, and calls that ask at the same time share one lookup. When a server's
+theme changes, clear its cached result so the next call looks it up again:
 
 ::example{file="controllers/slash/theme-settings.slash.controller.ts" region="invalidate"}
 

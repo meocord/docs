@@ -57,8 +57,8 @@ They differ in where the handler comes from, and in what happens to an error:
 | An error no filter handles | rejects, and the fallback doesn't run         | the fallback answers, then it rejects |
 | The user's own outcome     | a refusal rejects                             | answered, and resolves with `error`   |
 
-The user's own outcome is a usage reply, an unknown command, or the refusal of a guard, a cooldown, a validation or
-a `UserError`. Both wait for the module's [observers](guide:observers) before they resolve.
+The user's own outcome is a usage reply, an unknown command, or the refusal of a guard, a cooldown or the cooldown
+store, a validation or a `UserError`. Both wait for the module's [observers](guide:observers) before they resolve.
 
 ## Running a handler with invoke
 
@@ -96,8 +96,8 @@ patterned handler and every `@MessageHandler()` listener at once, and a reaction
 
 ### When nothing matches
 
-An input no route takes is answered as the bot answers it: "Command not found!" for an interaction. The call
-resolves with the error, and no handler in `handlers`:
+An input no route takes is answered as the bot answers it: "Command not found!" for an interaction, and an empty list
+for an autocomplete. The call resolves with the error, and no handler in `handlers`:
 
 ::example{file="testing/dispatch.spec.ts" region="not-found"}
 
@@ -116,7 +116,7 @@ handler made it through `respond()` or with discord.js directly, such as `intera
 `interaction.followUp()`:
 
 - `state`: where the answer stands, `'unanswered'`, `'deferred'` or `'replied'`;
-- `sent`: whether anything the user can see went out, counting only the calls Discord accepted;
+- `sent`: whether a reply, an update, an edit or a follow-up went out, counting only the calls Discord accepted;
 - `calls`: each answer, once, in the order made, with what it sent, and the `error` of one Discord refused.
 
 A call a mock rejects, such as a reply refused with 10062 once the three seconds have passed, stays in `calls` with its
