@@ -54,11 +54,11 @@ once. See [Registering commands](guide:slash-commands#registering-commands).
 **Exception filter.** A class that handles the errors of the types it names, from any stage of a call or from the
 handler. See [Exception filters](guide:exception-filters).
 
-**Fallback.** What answers an error no exception filter handles. After an interaction, a guard's reason, invalid input
-and a `UserError` are shown only to the user, and any other error gets a generic message and is logged. After a message,
-a usage error, a guard's reason and a `UserError` are replied to, and an unexpected error is logged, and told to the
-author in a direct message only with `dmOnError`. It also answers a component no route takes, "Command not found!". See
-[The built-in fallback](guide:exception-filters#the-built-in-fallback).
+**Fallback.** What answers an error no exception filter handles. After an interaction, a guard's reason, a cooldown,
+invalid input and a `UserError` are shown only to the user, and any other error gets a generic message and is logged.
+After a message, a usage error, a guard's reason and a `UserError` are replied to, and an unexpected error is logged,
+and told to the author in a direct message only with `dmOnError`. It also answers a component no route takes, "Command
+not found!". See [The built-in fallback](guide:exception-filters#the-built-in-fallback).
 
 **Guard.** A class that decides whether a handler runs. A new one is made for every call, unless it's bound: supplied
 by a provider, listed in `services` or injected by another class, in which case every call shares one instance. See

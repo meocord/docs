@@ -96,8 +96,9 @@ patterned handler and every `@MessageHandler()` listener at once, and a reaction
 
 ### When nothing matches
 
-An input no route takes is answered as the bot answers it: "Command not found!" for an interaction, and an empty list
-for an autocomplete. The call resolves with the error, and no handler in `handlers`:
+An input no route takes is answered as the bot answers it: "Command not found!" for an interaction, and the call
+resolves with that error; an empty list for an autocomplete, and the call resolves with no error. Either way, `handlers`
+is empty:
 
 ::example{file="testing/dispatch.spec.ts" region="not-found"}
 

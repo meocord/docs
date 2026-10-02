@@ -31,7 +31,8 @@ instead.
 ::example{file="services/help.service.ts" region="service"}
 
 Inject it like any [service](guide:services). `list({ kind: 'command' })` returns one entry per slash command,
-subcommand and context menu command, and `/help` replies with a line for each.
+subcommand and context menu command. The service keeps the slash ones, by their `commandType`, and `/help` replies with
+a line for each.
 
 ## How it works
 
