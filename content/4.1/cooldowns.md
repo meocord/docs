@@ -72,7 +72,7 @@ requests.
 
 | Option    | Default  | What it does                                                                                     |
 | --------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `seconds` | none     | The window's length, from `0.001` to `9007199254740`, counted in whole milliseconds.             |
+| `seconds` | none     | The window's length, from `0.001` to `4320000000000`, counted in whole milliseconds.             |
 | `uses`    | `1`      | Calls allowed within the window.                                                                 |
 | `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`.                      |
 | `bypass`  | none     | `(context) => boolean`: exempts a call without counting it, one from an owner for instance.      |
