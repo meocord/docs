@@ -122,8 +122,8 @@ before it logs in. The message names where the theme was set, then each token it
 anywhere the call runs: in the handler, in a service or a presenter it calls, and in a timer or a promise it starts.
 A guard, an interceptor or a filter reads the same theme as `context.getTheme()`.
 
-Outside any call, as in a scheduled job, `useTheme()` returns the running app's theme, or MeoCord's defaults before
-an app has started.
+Outside any call, as in a scheduled job or an `onShutdown` hook, `useTheme()` returns the app's theme from when its
+start begins until it has shut down, and MeoCord's defaults before and after.
 
 ### Collectors and listeners
 

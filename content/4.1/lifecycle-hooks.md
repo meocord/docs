@@ -60,10 +60,13 @@ order, so a class stops before the classes it uses. The bot waits for the whole 
 ## Stopping from code
 
 `await app.stop()` stops the bot without a signal, as an owner-only shutdown command, a graceful restart or an
-integration test needs. It runs the `onShutdown` hooks under `shutdownTimeout` and closes the client, and leaves the
-process running.
+integration test needs. It runs the `onShutdown` hooks under `shutdownTimeout` and closes the client. A bot in one
+process keeps its process running.
 
-- With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it.
+- With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it. The
+  manager's `stop()` keeps the manager running; a shard's ends that shard's process with the others.
+- A client that fails to close, or a shard the manager has to kill, sets `process.exitCode` to 1, unless another code is
+  set, as a signal's shutdown would.
 - A stop while the bot logs in ends that login, so its `start()` rejects.
 - Calls after the first wait for it. A stopped app doesn't start again; create a new one with `MeoCordFactory.create`.
 - A signal while `stop()` runs waits for its hooks to finish rather than exiting at once.

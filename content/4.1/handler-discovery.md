@@ -74,7 +74,8 @@ listing that is not a help command.
 
 `get` and `getAll` read metadata declared on a handler, the method's first and then its controller's, as
 `ExecutionContext` does. A category made with `createMetadata` and set on each controller groups a help command's
-lines: `handler.get(Category) ?? 'Other'`. [Custom decorators](guide:custom-decorators) shows how to make one.
+lines: `handler.get(Category) ?? 'Other'`. [Custom decorators](guide:custom-decorators) shows how to make one. A
+string or symbol key still works, and is deprecated as it is on `ExecutionContext`.
 
 ## Testing
 
