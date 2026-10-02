@@ -106,9 +106,13 @@ the real resolver finds them:
   reads only one of the two is caught. `getAttachment()` returns the `Attachment` given, and `null` for an option
   not given. A user option carries its user, and in a server its member: `getMember()` is
   `null` in a DM, and a member you give answers `getUser()` with its user.
-- A whole number is an integer option and a fraction a number option, so `getInteger()` is `null` for `1.5`.
-- A getter of the wrong type returns `null`. Asked with `required: true`, an option that is missing or of the wrong
-  type throws.
+- Each getter reads its option as discord.js does, and throws discord.js's own error: a `TypeError` with its `code`. A
+  getter of another type throws, whether or not it's asked with `required: true`: `getInteger()` on `1.5`, a number
+  option, throws `Option "x" is of type: 10; expected 4.`, while a whole number reads as either. A user or member read
+  as a role, or a role read as a user or member, is `null`, or that error when asked with `required: true`, since the
+  option may be a mentionable one.
+- A missing option asked with `required: true` throws `Required option "x" not found.`, and `getSubcommand()` throws
+  when there's none, unless given `false`, as in discord.js.
 - `subcommandGroup`, `subcommand` and `focused` are reserved names: the last names the option an autocomplete is
   typing.
 
