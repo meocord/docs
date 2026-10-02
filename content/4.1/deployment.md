@@ -57,9 +57,10 @@ works, and so does setting the variables in the service manager or container, wh
 and protect. The config's dotenv leaves variables that are already set alone, so the environment wins over the file.
 A production build reads `.env.production` and `.env.production.local` beside `.env`, and never the development files.
 
-On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, Bun
-loads `.env.development` before any code runs, so its values win over `.env.production`. The bot warns, naming the
-files and each variable that has its development value where the production files give another:
+On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, or set
+to anything but `production` or `test`, such as `staging`, Bun loads `.env.development` before any code runs, so its
+values win over `.env.production`. The bot warns, naming `NODE_ENV`, the files, and each variable that has its
+development value where the production files give another:
 
 ```text
 Bun loaded .env.development because NODE_ENV is unset, and this is a production build, so DATABASE_URL has its development value; set NODE_ENV=production, or start with `bun --no-env-file`.
