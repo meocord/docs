@@ -78,6 +78,9 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   what its kind picks: `users` and `members`, `roles`, or `channels`, each an empty `Collection`. Give the choices a
   test needs in the overrides, as the `Collection`s discord.js holds: its `values` are then their ids, as Discord sends
   them.
+- **An interaction has a client.** One made without a `client` gets one from `createMockClient()`, as a message does:
+  its user is in `client.users.cache`, its channel in `client.channels.cache` once read, and `client.user` is the
+  mock bot.
 - **Locales are set as Discord sends them.** `locale` is `'en-US'`, and `guildLocale` is `'en-US'` in a server and
   `null` in a DM, so a [translator](guide:localisation) works on a default mock.
 
@@ -101,7 +104,8 @@ the real resolver finds them:
 ::example{file="testing/mocks.spec.ts" region="options"}
 
 - A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that
-  reads only one of the two is caught. A user option carries its user, and in a server its member: `getMember()` is
+  reads only one of the two is caught. `getAttachment()` returns the `Attachment` given, and `null` for an option
+  not given. A user option carries its user, and in a server its member: `getMember()` is
   `null` in a DM, and a member you give answers `getUser()` with its user.
 - A whole number is an integer option and a fraction a number option, so `getInteger()` is `null` for `1.5`.
 - A getter of the wrong type returns `null`. Asked with `required: true`, an option that is missing or of the wrong
