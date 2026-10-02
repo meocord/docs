@@ -26,7 +26,8 @@ you maintain yourself; you then lose the import-cycle warning below unless you a
 
 ::example{file="config/eslint-config.ts" region="config"}
 
-`typescriptConfig` is the part of the default export that lints TypeScript. Spread it, and add your rules over its own.
+`typescriptConfig` is MeoCord's own entry in the default export: its parser, plugins and rules for TypeScript, applied
+after typescript-eslint's recommended and stylistic sets. Spread it, and add your rules over its own.
 
 ## How it works
 
@@ -63,8 +64,8 @@ error reaches no [exception filter](guide:exception-filters) and can end the bot
 
 ## Gotchas
 
-- **A warning doesn't fail `lint`** unless it runs with `--max-warnings=0`, as a CI job may. Run it that way to hold
-  cycles out of the main branch.
+- **A warning doesn't fail `lint`.** To hold cycles out of the main branch, run `npx eslint --max-warnings=0` in CI;
+  passed through `npm run lint --`, the flag reaches `tsc`, which rejects it.
 - **A file in no tsconfig** fails to lint with type information. List it in `tsconfig.eslint.json`.
 
 ## Next steps

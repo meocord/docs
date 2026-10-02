@@ -12,9 +12,9 @@ requires: [overview]
 api: [configuration/MeoCordConfig]
 ---
 
-The `create` command writes a project that runs as it is: a sample of each kind of [handler](guide:glossary#handler), a
-spec beside each, and the scripts to build, test and lint it. You give it a bot token, and `meocord start --dev` puts it
-online, rebuilding and restarting as you edit.
+The `create` command writes a project that runs as it is: a sample of the common kinds of
+[handler](guide:glossary#handler), a spec beside each, and the scripts to build, test and lint it. You give it a bot
+token, and `meocord start --dev` puts it online, rebuilding and restarting as you edit.
 
 ## When to use it
 
@@ -52,15 +52,17 @@ range. `create` runs before there is a project, so it names the package to insta
 
 ### What the project starts with
 
-A working example of each kind of handler: a slash command, a button, a select menu, a modal, a context menu, a message
-handler and a reaction handler, plus a [guard](guide:glossary#guard), a [presenter](guide:glossary#presenter), a service
-and a spec for each. The samples answer through `respond()`, acknowledge slow work with `@Defer`, and limit how often
-they run with `@Cooldown`. [Project structure](guide:project-structure) walks through the files.
+A working example of the common kinds of handler: a slash command, a button, a select menu, a modal, a context menu, a
+message handler and a reaction handler, plus a [guard](guide:glossary#guard), a [presenter](guide:glossary#presenter), a
+service and a spec for each. The interaction samples answer through `respond()`, acknowledge slow work with `@Defer`,
+and limit how often they run with `@Cooldown`. [Project structure](guide:project-structure) walks through the files.
 
 ### The token and the test server
 
-`meocord.config.ts` reads the token from `DISCORD_TOKEN` in the environment, and loads `.env` for it. The config is
-committed and `.env` is ignored by git, so a token can't be pushed by accident. Building needs no token; starting does.
+`meocord.config.ts` reads the token from `DISCORD_TOKEN` in the environment, which it fills from the `.env` files:
+`.env.<mode>.local`, `.env.local` (not under `test`), `.env.<mode>` and `.env`, the first to set a variable winning, and
+a value set in the shell winning over all of them. The config is committed and every `.env` file but `.env.example` is
+ignored by git, so a token can't be pushed by accident. Building needs no token; starting does.
 
 `.env` also takes `DEV_GUILD_ID`, a test server's ID. In development, every command is registered to that server, where
 a change shows at once; without it, commands are registered globally, where Discord can take a while to show them. See
@@ -74,9 +76,10 @@ npx meocord start --build --prod  # a production build, then start it
 npx meocord start --prod          # start the last production build
 ```
 
-`--dev` watches the source, `meocord.config.ts`, `tsconfig.json` and `.env`. A change rebuilds the bot, stops the
-running one, running its `onShutdown` hooks as Ctrl+C does, and starts the new one once the old one has exited; a change
-to `.env` restarts it without a rebuild. If
+`--dev` watches the source, `meocord.config.ts`, `tsconfig.json` and the `.env` files (`.env`, `.env.local`,
+`.env.development`, `.env.development.local`). A change rebuilds the bot, stops the running one, running its
+`onShutdown` hooks as Ctrl+C does, and starts the new one once the old one has exited; a change to one of the `.env`
+files restarts it without a rebuild. If
 the bot can't log in, as with a token Discord refuses, watch mode says so and keeps watching: fix the token in `.env`,
 or the code, and it starts the bot again.
 

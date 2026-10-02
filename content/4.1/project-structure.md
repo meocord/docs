@@ -13,8 +13,8 @@ api: [decorators/MeoCord, configuration/MeoCordConfig]
 ---
 
 The `create` command writes a project laid out by kind: controllers in one folder, services in another. Nothing in it is
-required by MeoCord except `meocord.config.ts` at the root and the entry point, `src/main.ts`; the folders are a
-convention `meocord generate` follows, and you can lay a bot out by feature instead.
+required by MeoCord except `meocord.config.ts` and `tsconfig.json` at the root and the entry point, `src/main.ts`; the
+folders are a convention `meocord generate` follows, and you can lay a bot out by feature instead.
 
 ## When to use it
 
@@ -24,7 +24,8 @@ with.
 ## Example
 
 The layout the `create` command writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
-lockfile. It makes the folder a git repository, with the project, lockfile included, as its first commit. For pnpm it adds a `pnpm-workspace.yaml`, and for npm an
+lockfile. Unless the folder is already inside a git repository, it makes it one, with the project, lockfile included,
+as its first commit. For pnpm it adds a `pnpm-workspace.yaml`, and for npm an
 `allowScripts` field in `package.json`. Both turn off the dependency install scripts the app doesn't need, those of
 `@swc/core` and `unrs-resolver`, and for npm `fsevents`, so pnpm 11 and later install without stopping and npm 11.16 and
 later without a warning:
@@ -57,7 +58,7 @@ later without a warning:
     └── types/              # declarations for asset imports, and for theme tokens of your own
 ```
 
-Each sample has a `.spec.ts` beside it.
+Each sample controller, guard, presenter and service has a `.spec.ts` beside it; the command builders don't.
 
 ## How it works
 
@@ -110,7 +111,8 @@ its imports.
 
 The build reads your `paths` as TypeScript does: from `compilerOptions.baseUrl` when your `tsconfig.json` sets one,
 else from the `tsconfig.json` itself. A `baseUrl` it only inherits through `extends` isn't applied to the `paths` it
-sets, so declare those relative to the project's own `tsconfig.json`.
+sets, so declare those relative to the project's own `tsconfig.json`. On TypeScript 6, which a generated app uses,
+`baseUrl` is deprecated, so declare `paths` relative to `tsconfig.json`, as the generated one does.
 
 ### The three tsconfigs
 
@@ -128,8 +130,10 @@ app.
 ```text
 dist/
 ├── main.js                 # the bot, bundled
+├── main.js.map             # its source map, so stack traces point at src
 ├── meocord.config.mjs      # the config, compiled, which the bot loads at startup
-├── assets/                 # images, fonts and media your code imports
+├── assets/                 # the files your code imports: images, fonts, media and the rest
+├── meocord.platform.json   # the platform native addons were built for, with bundleDependencies only
 └── node_modules/           # native addons, with bundleDependencies only
 ```
 

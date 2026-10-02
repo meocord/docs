@@ -35,9 +35,11 @@ Build it as usual, with `npx meocord build --prod`. The server needs `dist/` alo
 ```text
 dist/
 ├── main.js
-├── assets/
-├── node_modules/          (native addons only, if you use any)
+├── main.js.map
+├── meocord.config.mjs
 ├── package.json
+├── assets/                (if the bot imports any)
+├── node_modules/          (native addons, externals and installed optional externals, with what they need)
 └── meocord.platform.json  (if there are native addons)
 ```
 
@@ -73,8 +75,8 @@ online, with a message naming both.
 
 ## Externals
 
-`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those are copied into
-`dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
+`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings
+are copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
 `optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. See
 [the options](guide:configuration#options).
 

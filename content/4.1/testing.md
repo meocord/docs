@@ -125,7 +125,9 @@ npm run test:coverage   # with a coverage report
 ::example{file="config/vitest.setup.ts" region="setup"}
 
 Tests don't load `.env`, so a real token never reaches a spec unless you ask for it, and tests run the same before
-and after a build. A project whose tests need its variables adds `import 'dotenv/config'` to `vitest.setup.ts`.
+and after a build. A project whose tests need its variables loads the files `meocord.config.ts` reads under test, in
+`vitest.setup.ts`: `config({ path: ['.env.test.local', '.env.test', '.env'], quiet: true })`, with `config` from
+`dotenv`.
 
 ## What tests can't tell you
 
