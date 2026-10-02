@@ -64,19 +64,19 @@ a reply in the channel can't be private, unless the app turns on
 `@Cooldown` works on interaction and message handlers. On a controller, it applies to each of its handlers apart, so
 a controller's `uses: 3` gives every handler three.
 
-A message command whose params name members, users, roles or channels is checked sooner too. Before they're fetched
-from Discord, the call is checked against its cooldowns without being counted, so a call on cooldown costs no
+A message command whose params name members, users, roles or channels is checked sooner too. Before they're fetched from
+Discord, the call is checked against its cooldowns without `by`, without being counted, so a call on cooldown costs no
 requests.
 
 ## Options
 
-| Option    | Default  | What it does                                                                                     |
-| --------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `seconds` | none     | The window's length, from `0.001` to `4320000000000`, counted in whole milliseconds.             |
-| `uses`    | `1`      | Calls allowed within the window.                                                                 |
-| `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`.                      |
-| `bypass`  | none     | `(context) => boolean`: exempts a call without counting it, one from an owner for instance.      |
-| `by`      | none     | `(context, params) => string \| number \| undefined`: counts calls apart by a value of the call. |
+| Option    | Default  | What it does                                                                                                          |
+| --------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `seconds` | none     | The window's length, from `0.001` to `4320000000000`, counted in whole milliseconds.                                  |
+| `uses`    | `1`      | Calls allowed within the window.                                                                                      |
+| `per`     | `'user'` | Whose calls count together: `'user'`, `'guild'`, `'channel'` or `'global'`.                                           |
+| `bypass`  | none     | `(context) => boolean`, or a promise of one: exempts a call without counting it, one from an owner for instance.      |
+| `by`      | none     | `(context, params) => string \| number \| undefined`, or a promise of one: counts calls apart by a value of the call. |
 
 Outside a server, `'guild'` and `'channel'` count per user.
 
@@ -156,15 +156,15 @@ A shared store can be down, restarting or cut off. When it throws, rejects or do
 
 ::example{file="recipes/cooldown-stores/app-store-failure.ts" region="app"}
 
-- **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown
-  that can't be checked isn't known to allow it. A call the store counts after the timeout is given back, so the
-  refused caller loses no use. The fallback answers an interaction privately with `meocord.cooldown.storeDown`,
-  "Cooldowns can't be checked right now: try again shortly." A message command can't be answered privately in its
-  channel: with `messages.dmOnError` on, its author gets a direct message once per outage, `meocord.dm.error` with
-  that text as its reason, or `meocord.cooldown.storeDown` alone for a command sent in a direct message. Without it,
-  the command is skipped silently. An [exception filter](guide:exception-filters) that catches `CooldownStoreError`
-  can say it another way, or in the user's language, and [observers](guide:observers) see the outcome `'error'`, with
-  that error.
+- **`'deny'`**, the default, refuses the call with `CooldownStoreError` from `meocord/common`, since a cooldown that
+  can't be checked isn't known to allow it. A call the store counts after the timeout is given back, by a store that
+  supports it as the built-in ones do, so the refused caller loses no use. The fallback answers an interaction privately
+  with `meocord.cooldown.storeDown`, "Cooldowns can't be checked right now: try again shortly." A message command can't
+  be answered privately in its channel: with `messages.dmOnError` on, its author gets a direct message once per outage,
+  `meocord.dm.error` with that text as its reason, or `meocord.cooldown.storeDown` alone for a command sent in a direct
+  message. Without it, the command is skipped silently. An [exception filter](guide:exception-filters) that catches
+  `CooldownStoreError` can say it another way, or in the user's language, and [observers](guide:observers) see the
+  outcome `'error'`, with that error.
 - **`'allow'`** runs the call without counting it, keeping the bot available while the store is down.
 
 Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many
@@ -174,7 +174,8 @@ failing call.
 
 ## Testing
 
-Each testing module counts in a fresh in-memory store, so a test starts with every cooldown unused:
+Each testing module counts in a fresh in-memory store, unless its `app` names a `cooldownStore`, which it uses as the
+bot does, so a test starts with every cooldown unused:
 
 ::example{file="controllers/slash/daily.slash.controller.spec.ts" region="spec"}
 

@@ -61,11 +61,12 @@ fail with what it throws, so the filters and the fallback answer the error.
 
 One instance of an interceptor serves every call, so it can inject services and hold a cache; keep per-call state in
 local variables. For the same reason, it can't inject `ExecutionContext`, which belongs to one call. The bot refuses to
-start if one does, and the context is `intercept`'s first argument instead.
-
-Options for one use go through `{ provide, params }`, read with `context.getParams()`:
+start if one does, and the context is `intercept`'s first argument instead. The reporting interceptor injects its
+reporter:
 
 ::example{file="interceptors/reporting.interceptor.ts" region="interceptor"}
+
+Options for one use go through `{ provide, params }`, read with `context.getParams()`.
 
 ## Where interceptors apply
 

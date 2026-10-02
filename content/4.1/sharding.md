@@ -92,7 +92,7 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
   takes the method's default.
 - **Failures:** a process that throws, lacks the service or takes more than 10 seconds gives an error result, and the
   others still answer.
-- **This process:** `ids`, `count` and `isPrimary` describe its shards.
+- **This process:** `ids` and `isPrimary` describe its shards, and `count` how many the bot runs in all.
 
 `broadcastEval` is there too, but it turns its function into a string, which a minified bundle can break; prefer
 `call`.

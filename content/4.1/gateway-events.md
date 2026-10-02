@@ -31,9 +31,9 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 
 ## How it works
 
-- **Where.** On any controller or service the app binds: listed in `@MeoCord({ controllers, services })`,
-  or injected by one. The instance is created when the first event arrives. `@Command`, `@MessageHandler`,
-  `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
+- **Where.** On any controller or service the app binds: listed in `@MeoCord({ controllers, services })`, or injected by
+  one. The handler runs on the class's one instance, the same one the rest of the app injects. `@Command`,
+  `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
 - **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
   interceptors on the method or class apply, and the app's global ones. A guard receives the event's
   arguments, and `ExecutionContext.getType()` is `'event'`.
@@ -70,8 +70,8 @@ Intents. If Discord refuses one at login, the bot says which, and `app.start()` 
 
 ## Testing
 
-`module.emit(event, ...args)` sends an event to the module's handlers through the same pipeline, and resolves
-to how many ran:
+`module.emit(event, ...args)` sends an event to the module's handlers through the same pipeline, and resolves to
+`{ ran }`, how many handlers ran:
 
 ::example{file="controllers/event/welcome.controller.spec.ts" region="spec"}
 

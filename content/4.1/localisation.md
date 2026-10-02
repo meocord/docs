@@ -79,8 +79,9 @@ Locales are discord.js `Locale` values, such as `en-GB`, `es-419` or `zh-TW`. A 
 A key no catalog has a message for, or one that names a group of messages, comes back as the key itself, rather than
 throwing. In development, the translator logs a warning naming it, once for each key.
 
-Command names are read when a builder's class is decorated, which is why the translator is made at module scope. An
-interaction still reports the command's default name, so `@Command('warn', ...)` routes `/peringatan` too.
+Command names are read when a controller's `@Command` builds its builder, as the controller's module loads, which is why
+the translator is made at module scope. An interaction still reports the command's default name, so
+`@Command('warn', ...)` routes `/peringatan` too.
 
 ## Choosing the language
 
@@ -153,8 +154,9 @@ presenter's "Working on it…" and "Oops!". Add a `meocord` group to any catalog
 ::example{file="locales/id.ts" region="meocord"}
 
 Each text is looked up on its own, so a line a language leaves out stays in MeoCord's English. The keys and their
-English are in [`MeoCordMessages`](api:types/MeoCordMessages): a key MeoCord lacks, or a `{param}` its English text
-lacks, does not compile, and the error names the text and the params it takes.
+English are in [`MeoCordMessages`](api:types/MeoCordMessages): a key MeoCord lacks does not compile, nor, in a catalog
+TypeScript keeps the text of, a `{param}` its English text lacks, and the error names the text and the params it takes.
+[`expectCompleteCatalog`](#testing-a-catalog) checks the params of any catalog.
 
 Answers to an interaction are in the user's language; replies to a message, the direct messages about it, and
 `!help`, in the server's preferred language, or the default locale's in a direct message. MeoCord's English stands
@@ -206,9 +208,10 @@ id: meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usag
   typed from the message text, which TypeScript keeps only for a literal; a catalog that has lost it is refused
   with a compile error saying so. Other languages may be plain objects, or JSON; their parameters are then checked
   only by [`expectCompleteCatalog`](#testing-a-catalog).
-- **Discord limits command names to 32 lowercase characters, and descriptions to 100.** A builder handed a longer
-  one fails when its class is decorated, naming the builder and the command. A raw command body that breaks them is
-  caught at registration instead: nothing is registered, the error lists each field, and the bot stays up.
+- **Discord limits command names to 32 lowercase characters, and descriptions to 100.** A builder handed a longer one
+  fails when the controller that uses it is decorated, naming the handler, the builder and the command. A raw command
+  body whose localised names or descriptions break them is caught at registration instead: nothing is registered, the
+  error lists each field, and the bot stays up.
 - **Injecting `Translator` needs [`@MeoCord({ i18n })`](api:decorators/MeoCord#i18n).** Without it, the bot stops at
   startup with a message saying what to pass.
 - **`labelKey` needs `@MeoCord({ i18n })`, and a message in the default catalog.** `@MeoCord` refuses one
@@ -247,8 +250,8 @@ Check every language is complete:
 
 ::example{file="tutorial/i18n.spec.ts" region="spec"}
 
-Switch your Discord to Bahasa Indonesia and run `/masukan`: the form, the thanks and the loading view are in
-Indonesian, and the review post is in the server's language.
+Switch your Discord to Bahasa Indonesia and run `/masukan`: the form and the thanks are in Indonesian, and the review
+post is in the server's language. Approve a report, and the loading view is in your language too.
 
 ## Next steps
 

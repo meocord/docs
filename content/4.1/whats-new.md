@@ -11,12 +11,13 @@ since: 4.1.0
 formerly: []
 ---
 
-4.1 adds to 4.0 without breaking it: a 4.0 bot and its tests build and run without edits. A few fixes change what a
-bot does at runtime, and [Upgrading from 4.0 to 4.1](guide:migrating#upgrading-from-40-to-41) lists each, with what to
-check. Every release's notes are in the [changelog](guide:changelog).
+4.1 adds to 4.0, and most 4.0 bots and their tests build and run without edits. A few 4.0 patterns now stop the bot,
+fail to compile or change a test's result, and a few fixes change what a bot does at runtime;
+[Upgrading from 4.0 to 4.1](guide:migrating#upgrading-from-40-to-41) lists each, with what to check. Every release's
+notes are in the [changelog](guide:changelog).
 
 > [!NOTE]
-> 4.1 is in beta. This page describes 4.1.0-beta.8, and a later beta may still change a detail before 4.1.0 is
+> 4.1 is in beta. This page describes 4.1.0-beta.10, and a later beta may still change a detail before 4.1.0 is
 > released.
 
 ## Answering Discord
