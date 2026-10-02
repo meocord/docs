@@ -62,10 +62,12 @@ describe("the Guide's playgrounds", () => {
         expect(step.ran, JSON.stringify(step.input)).toBe(true)
       }
       if (refused) {
-        // A refusal tells the caller why, as a cooldown or a user error does; a crash would not
+        // A refusal tells the caller why, as a cooldown or a user error does, in words of its own, such as a cooldown's
+        // Discord timestamp; a crash gets MeoCord's generic fault
         const last = result.steps.at(-1)!
         expect(last.error, JSON.stringify(last.input)).toBeDefined()
-        expect(JSON.stringify(last.calls)).toContain(JSON.stringify(last.error!.message).slice(1, -1))
+        expect(last.calls.length, JSON.stringify(last.input)).toBeGreaterThan(0)
+        expect(JSON.stringify(last.calls)).not.toContain('An error occurred while executing the command.')
       }
       expect(result.steps.flatMap(step => step.calls).length).toBeGreaterThan(0)
     },
