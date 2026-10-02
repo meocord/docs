@@ -36,10 +36,11 @@ Build it as usual, with `npx meocord build --prod`. The server needs `dist/` alo
 dist/
 ├── main.js
 ├── main.js.map
+├── main.js.LICENSE.txt    (in a production build)
 ├── meocord.config.mjs
 ├── package.json
 ├── assets/                (if the bot imports any)
-├── node_modules/          (native addons, externals and installed optional externals, with what they need)
+├── node_modules/          (if needed: native addons, externals and installed optional externals, with what they need)
 └── meocord.platform.json  (if there are native addons)
 ```
 

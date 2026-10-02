@@ -112,7 +112,7 @@ its imports.
 The build reads your `paths` as TypeScript does: from `compilerOptions.baseUrl` when your `tsconfig.json` sets one,
 else from the `tsconfig.json` itself. A `baseUrl` it only inherits through `extends` isn't applied to the `paths` it
 sets, so declare those relative to the project's own `tsconfig.json`. On TypeScript 6, which a generated app uses,
-`baseUrl` is deprecated, so declare `paths` relative to `tsconfig.json`, as the generated one does.
+`baseUrl` is deprecated, and the generated `tsconfig.json` declares its `paths` without it.
 
 ### The three tsconfigs
 
@@ -133,7 +133,7 @@ dist/
 ├── main.js.map             # its source map, so stack traces point at src
 ├── meocord.config.mjs      # the config, compiled, which the bot loads at startup
 ├── assets/                 # the files your code imports: images, fonts, media and the rest
-├── meocord.platform.json   # the platform native addons were built for, with bundleDependencies only
+├── meocord.platform.json   # the platform native addons were built for, when a self-contained build packs one
 └── node_modules/           # native addons, with bundleDependencies only
 ```
 

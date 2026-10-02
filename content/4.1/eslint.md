@@ -55,9 +55,11 @@ npm install --save-dev eslint-import-resolver-typescript
 
 ## Promises nothing waits for
 
-`meocord/eslint` turns on `@typescript-eslint/no-floating-promises`. A promise nothing awaits, such as an
-interceptor's `next.handle()` called without `await` or `return`, rejects outside every handler MeoCord runs, so its
-error reaches no [exception filter](guide:exception-filters) and can end the bot. For each one it reports:
+`meocord/eslint` turns on `@typescript-eslint/no-floating-promises`. A promise nothing awaits, such as
+`respond(interaction).send()` or a database write left without `await`, rejects outside every handler MeoCord runs, so
+its error reaches no [exception filter](guide:exception-filters) and can end the bot. An interceptor's `next.handle()`
+left that way runs the code after it before the handler finishes, so that code never sees the handler's result or
+error. For each one it reports, either:
 
 - `await` it, or `return` it, where the code after it should wait, as an interceptor's `next.handle()` always should;
 - or write `void` before it where it's meant to run on its own, and handle its failure with `.catch()`.

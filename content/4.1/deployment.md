@@ -54,8 +54,8 @@ package.json
 container.
 
 The bot finds its config and its assets beside `dist/main.js`, from wherever it's started, so `dist` can be built in CI
-or on another machine and copied over. A bot with native addons is the exception: build it on the platform it runs on,
-as [Self-contained builds](guide:self-contained-builds#native-addons-and-platforms) explains.
+or on another machine and copied over. A self-contained build with native addons is the exception: build it on the
+platform it runs on, as [Self-contained builds](guide:self-contained-builds#native-addons-and-platforms) explains.
 
 The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file in the directory
 the bot starts from, normally the project root beside `dist`, works, and so does setting the variables in the service
