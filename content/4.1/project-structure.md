@@ -24,7 +24,10 @@ with.
 ## Example
 
 The layout the `create` command writes, besides a README, `.gitignore`, `.prettierrc.mjs` and the package manager's
-lockfile, and it makes the folder a git repository:
+lockfile, and it makes the folder a git repository. For pnpm it adds a `pnpm-workspace.yaml`, and for npm an
+`allowScripts` field in `package.json`. Both turn off the dependency install scripts the app doesn't need, those of
+`@swc/core` and `unrs-resolver`, and for npm `fsevents`, so pnpm 11 and later install without stopping and npm 11.16 and
+later without a warning:
 
 ```text
 .
