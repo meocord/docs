@@ -52,9 +52,9 @@ The handler ends up with exactly what the combined decorators give it, and
 
 ::example{file="controllers/slash/shop.slash.controller.spec.ts" region="spec"}
 
-A decorator of your own that passes options on types them with the wrapped decorator's options type from
-`meocord/interface`: `CooldownOptions` for `@Cooldown`, `DeferOptions` for `@Defer`, and `GuardOptions`,
-`InterceptorOptions`, `ObserverOptions` and `ValidateOptions` for the stage classes and `@Validate`.
+A decorator of your own that passes options on types them with the wrapped decorator's options type: `DeferOptions`
+from `meocord/decorator` for `@Defer`, and from `meocord/interface`, `CooldownOptions` for `@Cooldown`, and
+`GuardOptions`, `InterceptorOptions`, `ObserverOptions` and `ValidateOptions` for the stage classes and `@Validate`.
 
 ## Facts about a handler
 
