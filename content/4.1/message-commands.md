@@ -191,8 +191,10 @@ nothing happened. Two options send them a direct message instead, both off by de
 
 ::example{file="app-message-dm.ts" region="app"}
 
-- `dmOnError` tells the author the command failed, naming it, the channel and the server: "Something went wrong
-  running !leaderboard in #general on Cat Cafe. Try again later." The error is still logged.
+- `dmOnError` tells the author the command failed, naming it, the channel and the server, and why, as the fallback
+  would answer: "!leaderboard in #general on Cat Cafe: An error occurred while executing the command." When the
+  cooldown store is down, the reason is "Cooldowns can't be checked right now: try again shortly." The error is still
+  logged.
 - `dmOnCooldown` tells the author how long to wait, once per wait: retrying before it ends sends nothing more. The
   notice is counted in the app's cooldown store, so with a [shared store](guide:recipes/cooldown-stores) it holds across
   shards.
