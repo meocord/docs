@@ -92,16 +92,18 @@ a paragraph of such images alone, such as a README's row of badges, which the si
 
 `.github/workflows/sync-versions.yml` runs `versions:sync` hourly and on demand, and opens a pull request
 with what it added. It opens the pull request as a GitHub App, because one opened with the workflow's own
-token would not run the checks. The maintainer sets up:
+token would not run the checks. meocord's release workflow starts it too, as the same app, once a version
+is published, rather than wait for the hourly run. The maintainer sets up:
 
 1. A GitHub App owned by the `meocord` organization, installed on `meocord/docs` only, with the
-   repository permissions **Contents: Read and write** and **Pull requests: Read and write** and nothing
-   else. No webhook.
+   repository permissions **Contents: Read and write**, **Pull requests: Read and write** and **Actions:
+   Read and write**, and nothing else. No webhook. Actions write is what lets meocord's release workflow
+   start `sync-versions.yml`; this workflow's own token asks for contents and pull requests only.
 2. An environment named `docs-bot` in `meocord/docs`, with deployment branches limited to `main`,
    holding the variable `DOCS_BOT_CLIENT_ID` (the app's client ID) and the secret `DOCS_BOT_PRIVATE_KEY`
    (a private key generated for the app).
 
 The workflow mints a token that lasts an hour, and only after the sync has run, so nothing the sync
-downloads runs while the token exists. The app can push branches and open pull requests in this
-repository, and nothing more: it is in no branch-protection bypass list. Revoke its key in the app's
+downloads runs while the token exists. The app can push branches, open pull requests and start workflows in
+this repository, and nothing more: it is in no branch-protection bypass list. Revoke its key in the app's
 settings if it leaks.
