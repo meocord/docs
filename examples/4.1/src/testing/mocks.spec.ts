@@ -41,8 +41,9 @@ describe('mock interactions', () => {
 
     expect(interaction.options.getSubcommand(true)).toBe('ban')
     expect(interaction.options.getString('reason')).toBe('spam')
-    // A required option that is absent throws, as in discord.js
-    expect(() => interaction.options.getNumber('missing', true)).toThrow()
+    // An option of another type, or a required one that is absent, throws discord.js's error
+    expect(() => interaction.options.getString('days')).toThrow('Option "days" is of type: 4; expected 3.')
+    expect(() => interaction.options.getNumber('missing', true)).toThrow('Required option "missing" not found.')
     // data is nested under the subcommand path, as MeoCord reads it to build a handler's params
     expect(interaction.options.data[0]).toMatchObject({
       name: 'admin',
