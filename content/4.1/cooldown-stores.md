@@ -182,8 +182,8 @@ It checks that:
 It uses real time with short windows, so it takes a few seconds. Each case counts under keys of its own, so it can
 run against a database that outlives the test. It can't see whether every key expires; check that yourself.
 
-Every `windowMs` a store gets is a whole number of milliseconds, from 1 to 9007199254740000: `@Cooldown` rounds
-`seconds` to the millisecond and refuses one outside `0.001` to `9007199254740`. A database that takes only whole
+Every `windowMs` a store gets is a whole number of milliseconds, from 1 to 4320000000000000: `@Cooldown` rounds
+`seconds` to the millisecond and refuses one outside `0.001` to `4320000000000`. A database that takes only whole
 milliseconds, as Redis's `PEXPIRE` does, can store it as it is.
 
 ## Next steps
