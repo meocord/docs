@@ -459,3 +459,43 @@ describe("anchors the window's own ids leave free", () => {
     )
   })
 })
+
+describe('an object type with a method', () => {
+  it('writes a method as a method, its rest parameter spread, and a function-typed property as an arrow', () => {
+    const rest = { id: id++, name: 'args', variant: 'param', kind: 32768, flags: { isRest: true } }
+    const type = {
+      type: 'reflection',
+      declaration: decl({
+        name: '__type',
+        kind: 65536,
+        children: [
+          decl({
+            name: 'toJSON',
+            kind: 2048,
+            signatures: [
+              sig({
+                name: 'toJSON',
+                parameters: [{ ...rest, type: { type: 'array', elementType: str('any') } }],
+                type: { type: 'inferred', name: 'R' },
+              }),
+            ],
+          }),
+          decl({
+            name: 'run',
+            kind: 1024,
+            type: {
+              type: 'reflection',
+              declaration: decl({
+                name: '__type',
+                kind: 65536,
+                signatures: [sig({ name: '__type', type: str('void') })],
+              }),
+            },
+          }),
+        ],
+      }),
+    }
+
+    expect(text(model.type(type as never))).toBe('{ toJSON(...args: any[]): infer R; run: () => void }')
+  })
+})

@@ -204,7 +204,7 @@ const SAFE_NAME = /^[A-Za-z_$][\w$]*$/
 type OptionRow = Omit<ApiParam, 'anchor'> & { anchorKey?: string }
 
 /** The interfaces whose members show on the page of what takes one, as a parameter or an option. */
-const OPTIONS_TYPE = /(?:Options|Settings|Overrides)$/
+export const OPTIONS_TYPE = /(?:Options|Settings|Overrides)$/
 
 /**
  * One line's API, from its TypeDoc JSON, for the reference pages: every documented symbol with
@@ -852,13 +852,20 @@ export class ApiModel {
     const children = declaration.children ?? []
     if (children.length === 0) return [{ text: '{}' }]
     const tokens: Token[] = [{ text: '{ ' }]
-    children.forEach((child, index) => {
-      if (index > 0) tokens.push({ text: '; ' })
-      tokens.push({
-        text: `${child.flags?.isReadonly ? 'readonly ' : ''}${propertyKey(child.name, (child as Declaration).computedName)}${child.flags?.isOptional ? '?' : ''}: `,
-      })
-      tokens.push(...(child.signatures?.[0] ? this.#reflection(child, 'top') : this.#maybe(child.type)))
+    const members = children.flatMap(child => {
+      const key = `${propertyKey(child.name, (child as Declaration).computedName)}${child.flags?.isOptional ? '?' : ''}`
+      // A method, as `toJSON(...args: any[]): R`, one member per overload; a property with a function type stays an arrow
+      if (child.signatures?.length)
+        return child.signatures.map(signature => [
+          { text: key },
+          ...this.#typeParams(signature.typeParameters),
+          ...this.#paramsCode(signature),
+          { text: ': ' },
+          ...this.#maybe(signature.type),
+        ])
+      return [[{ text: `${child.flags?.isReadonly ? 'readonly ' : ''}${key}: ` }, ...this.#maybe(child.type)]]
     })
+    members.forEach((member, index) => tokens.push(...(index > 0 ? [{ text: '; ' }] : []), ...member))
     tokens.push({ text: ' }' })
     return tokens
   }
