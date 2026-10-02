@@ -177,6 +177,12 @@ page:
 | `cooldownStore`, `cooldownStoreFailure`, `cooldownStoreTimeoutMs` | [Cooldowns](guide:cooldowns)                 |
 | `observers`                                                       | [Observers](guide:observers)                 |
 
+To share options between app classes, type the object as `MeoCordOptions` from `meocord/decorator`. Its `guards`,
+`interceptors` and `filters` are checked against the classes they hold, as in `@MeoCord` itself, so a filter in
+`guards` is refused. Typed plainly, it takes any `params` on a `{ provide, params }` entry. To have those checked too,
+give the entries as its type arguments, guards, then interceptors, then filters, as in
+`MeoCordOptions<[{ provide: typeof ChannelGuard }]>`, or write them in `@MeoCord({...})`.
+
 `activities` lists the bot's statuses, shown in order: the first once it's ready, then the next every 10 seconds,
 starting again after the last.
 

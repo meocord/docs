@@ -46,6 +46,8 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **Stage params**: a guard, interceptor, filter or pipe can declare the params it takes, and each
   `{ provide, params }` given for it is checked against them when the code compiles. See
   [Settings for one use](guide:guards#settings-for-one-use).
+- **`MeoCordOptions`** names `@MeoCord`'s options, so a base shared by two app classes keeps the checks `@MeoCord`
+  makes. See [The app's options](guide:configuration#the-apps-options).
 - **Interceptors** run around a handler, for timing, logging, caching or mapping errors. See
   [Interceptors](guide:interceptors).
 - **Exception filters** decide what the user is told when a call throws, and **`UserError`** tells the user about
