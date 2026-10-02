@@ -120,7 +120,8 @@ reads the files Bun reads, the same on node and Bun, under `meocord start` and u
 
 ::example{file="config/env-files.meocord.config.ts" region="config"}
 
-The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development, and
+The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development and runs the bot as
+development, whatever `NODE_ENV` the shell holds, so it reads and watches the development files, and
 `meocord build --prod` writes `production` into the config it compiles. A more specific file wins, and a variable the
 shell sets wins over every file, so `.env.local` can hold your own values beside the committed `.env.development`.
 
@@ -195,10 +196,12 @@ modified:
 
 Some things need no rule of your own:
 
-- **Images, fonts, SVG and media** are emitted to `dist/assets/`, and importing one gives its absolute path on disk,
+- **Every imported file**, images, fonts, SVG and media, and any other kind, such as a PDF, a text file or
+  WebAssembly, is emitted to `dist/assets/` under its own name, and importing one gives its absolute path on disk,
   ready for `fs`, a canvas or a Discord attachment. Nothing is inlined as a data URI.
-- **Asset file names:** `output.filename.image`, and `svg`, `font` and `media`, accept a function, for two files
-  that share a name in different folders.
+- **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
+  error, naming the file. `output.filename.image`, and `svg`, `font`, `media`, `assets` and `wasm`, accept a function
+  to keep both.
 - **Raw bundler rules** go through `tools.rspack`, as above.
 - **Source maps:** `source-map` in production and `cheap-module-source-map` in development. Change them with
   `output.sourceMap.js`. An `eval` devtool is built as the same map without the eval, with a warning: the bundle
