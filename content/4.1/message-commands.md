@@ -107,6 +107,11 @@ fills:
 
 ::example{file="app-with-guild-prefix.ts" region="app"}
 
+A prefix function that finds no prefix for a message, returning an empty list, `undefined` or `null`, lets no prefix
+start a command for it; a mention still does when `mention` is on. Return `''` to take the message as it is. A handler
+with its own `prefix`, or `prefix: false`, runs for a message both it and the function could start, whatever the order
+of your controllers.
+
 A prefix function that throws goes to the app's global [exception filters](guide:exception-filters), then the
 built-in fallback, and the handlers for every message still run.
 
@@ -120,9 +125,16 @@ Only one patterned handler runs for a message: the most specific one that matche
 4. Patterns still equal go to the one whose first differing word is literal: `roll {x}` beats `{verb} 6`.
 
 A handler whose `scope` fits where the message was sent comes first, so `help` can have a server handler and a
-DM handler. The order is fixed at startup: declaration order and file layout never decide it. Two patterns
-that match exactly the same messages stop the bot at startup, naming both handlers. Then every
-`@MessageHandler()` without a pattern runs, whether or not a pattern matched.
+DM handler. The order is fixed at startup: declaration order and file layout never decide it. Two handlers that can
+take the same messages stop the bot at startup, naming both: the same pattern behind starts that overlap, such as one
+handler's own `'!'` and another's `['!', '?']`, or one's own `'!'` beside the app's `'!'`:
+
+```text
+A.roll: "roll" and "roll" in B.roll match the same messages, so only one of them could ever answer those. Change one pattern, or give one its own prefix.
+```
+
+An app's prefix function gives its prefixes only as each message arrives, so a handler using it is refused only beside
+another that uses it too. Then every `@MessageHandler()` without a pattern runs, whether or not a pattern matched.
 
 ## Usage errors
 

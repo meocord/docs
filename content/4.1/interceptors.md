@@ -52,10 +52,12 @@ message command's cooldown check before its params are fetched, which runs befor
 
 - **It calls `next.handle()` once** to run the rest of the call and gets the handler's result.
 - **It returns without calling it** to skip the handler, answering from a cache, say. Observers still see the outcome
-  `'ran'`.
+  `'ran'`. In development, one that leaves the interaction unanswered this way is named in a warning, as a handler is.
 - **It catches the error `next.handle()` throws** and throws another, which the filters then receive.
 
-Call `next.handle()` at most once: each call runs the handler again.
+Call `next.handle()` at most once: each call runs the handler again. Return or await what it returns. One left
+without a rejection handler, as `next.handle().then(log)` leaves it, still has the call end when the handler does and
+fail with what it throws, so the filters and the fallback answer the error.
 
 One instance of an interceptor serves every call, so it can inject services and hold a cache; keep per-call state in
 local variables. For the same reason, it can't inject `ExecutionContext`, which belongs to one call. The bot refuses to
@@ -107,6 +109,10 @@ Generate an interceptor with `npx meocord g i <name>`.
 - **`next.handle()` called twice runs the handler twice,** with its side effects. Keep its promise if you need the
   result in two places.
 - **An interceptor doesn't see denied calls.** Guards run before it; count refusals in an observer.
+- **A handler raced against a timeout can throw after the call has ended.** Nothing is left to report it then, so
+  MeoCord warns, naming both: "Racing returned before Shop.buy finished, which then threw; nothing caught it, so the
+  call could not report it:", then the error. Forwarding it into a promise that has already settled, as
+  `(error) => reject(error)` does, discards it unseen: race with `Promise.race`, or handle the error where it arrives.
 
 ## Next steps
 

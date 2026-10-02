@@ -74,8 +74,8 @@ Fix what it names. The common ones:
   `A.swap: "swap {a}" and "swap {b}" in B.swap match the same messages, …`. See
   [Errors at startup](guide:message-commands#errors-at-startup), which lists each one.
 - **"`Class.method`: "…" and "…" in `Other.method` match the same … customIds"** Two component handlers of one
-  type take the same ids, so only one could ever run. `MeoCordFactory.create()` and `meocord register` refuse them,
-  the second before it sends any command. Change one pattern; see
+  type take the same ids, so only one could ever run. `MeoCordFactory.create()`, `meocord register` and
+  `MeoCordTestingModule.compile()` refuse them, `register` before it sends any command. Change one pattern; see
   [Overlapping patterns](guide:components#overlapping-patterns).
 - **"`Class.method`: @Validate and @UsePipe are for interaction and patterned message handlers, …"** They check a
   handler's options, customId params, modal fields or pattern params, and a message handler without a pattern, a
@@ -135,7 +135,9 @@ Discord gives an interaction three seconds for its first answer, and nothing arr
   [exception filter](guide:exception-filters) handles, but a filter that handles one and sends nothing leaves the
   interaction unanswered.
 - **The handler never answered.** In development, MeoCord warns once for each handler that ends without answering,
-  or defers and never follows up, and names it. See [Responses](guide:responses#gotchas).
+  or defers and never follows up, and names it. An interceptor that returned before the handler ran or finished is
+  named instead: "Shop.buy: its interceptor Cached returned before the handler ran, without answering the
+  interaction, …". See [Responses](guide:responses#gotchas).
 
 A test shows the guard case: the call doesn't run, and nothing is sent.
 
