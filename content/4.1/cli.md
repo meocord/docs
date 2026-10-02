@@ -38,11 +38,13 @@ npx meocord start --prod         # start that build
 ```
 
 Inside a project, `npx meocord` runs the version the project installed. Keep `start --dev` running while you work,
-and add a part with `generate` beside it: the new files rebuild the bot like any other change.
+and add a part with `generate` beside it: the bot rebuilds and restarts once something imports the new files, as
+adding a controller to `src/app.ts` does.
 
 ## How it works
 
-`build`, `start` and `register` read `meocord.config.ts` first:
+`build`, `start --dev` and any command given `--build` read `meocord.config.ts` first; `start --prod` and `register`
+read the config the last build compiled into `dist/`, and `meocord.config.ts` only when there is none:
 
 - a file that fails to load stops them with its file and line;
 - an option of the wrong type stops them with a list of every problem;
@@ -54,8 +56,10 @@ with code 1, so a script or a CI job stops too.
 `build` and `start` build for development unless they're given `-p, --prod`, which wins when both `-d` and `-p` are
 given. `register` works the other way round: it registers as production does, unless it's given `-d, --dev`.
 
-The bot runs on the runtime you launched the CLI with: `bun run start:prod` runs it under Bun, and `npm run start:prod`
-under Node. [Which runtime the bot runs on](guide:deployment#which-runtime-the-bot-runs-on) covers pinning one.
+The bot runs on the runtime you launched the CLI with. In an app created with npm, yarn or pnpm, `bun run start:prod`
+runs it under Bun and `npm run start:prod` under Node; an app created with bun has `bun --bun` in its scripts, so they
+run it under Bun however they're started. [Which runtime the bot runs
+on](guide:deployment#which-runtime-the-bot-runs-on) covers pinning one.
 
 ## Creating a project
 
@@ -76,9 +80,10 @@ files to that repository.
 ## Development and production
 
 `start --dev` builds the bot as it starts, then watches the project: a change rebuilds it and restarts the bot, and
-`meocord.config.ts` and `tsconfig.json` are watched too. A change to `.env` restarts the bot without a rebuild, since
-the bot reads it as it starts. It registers the commands to `commands.developmentGuild`, or globally without one, and
-only when they changed since the last development start; `--force-register` sends them anyway.
+`meocord.config.ts` and `tsconfig.json` are watched too. A change to `.env`, `.env.local`, `.env.development` or
+`.env.development.local` restarts the bot without a rebuild, since the bot reads them as it starts, as development
+whatever `NODE_ENV` the shell holds. It registers the commands to `commands.developmentGuild`, or globally without one,
+and only when they changed since the last development start; `--force-register` sends them anyway.
 
 A restart stops the running bot as Ctrl+C does, so its [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) run
 before the new one starts, on every platform, Windows included. One save makes one restart, even when it makes two
@@ -133,7 +138,7 @@ It prints where to wire the part up: a controller goes in `@MeoCord({ controller
 first time something injects it.
 
 Once the files are written, `generate` formats them with the project's own ESLint, in one run, and says
-"Formatting with your project's ESLint..." while it waits. The files are kept as written whatever ESLint does. When it
+"Formatting with your project's ESLint..." while it waits. The files stay whatever ESLint does. When it
 can't run, or reports problems it can't fix, `generate` says "Could not format the generated files:" and why, and still
 exits 0. A project without ESLint skips the step.
 
@@ -172,8 +177,8 @@ Where a controller sits is only a convention: `@MeoCord({ controllers })` is wha
 ## Gotchas
 
 - **`generate` never overwrites.** When a file it would write exists, it names the files and writes nothing.
-- **`generate` runs from the project's root,** beside `package.json`; anywhere else, it refuses rather than scatter
-  files. A name can't leave its folder: `..`, a leading `/` and a drive letter are refused.
+- **`generate` runs from the project's root,** beside `package.json`; in a folder without a `package.json`, it refuses
+  rather than scatter files. A name can't leave its folder: `..`, a leading `/` and a drive letter are refused.
 - **`start --prod` runs the last build.** After changing code, build again, or use `start --build --prod`.
 - **`--message` is for context menus only.** On any other type, `generate` refuses it.
 

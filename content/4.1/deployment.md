@@ -21,8 +21,8 @@ page puts one on a server and keeps it running: under a container, a service man
 ## When to use it
 
 Deploy once the bot does what you want in your test server. For a server with no `node_modules` at all, build it
-self-contained first: [Self-contained builds](guide:self-contained-builds) covers what changes, and the rest of this
-page applies unchanged.
+self-contained first: [Self-contained builds](guide:self-contained-builds) covers what changes, chiefly that the
+server needs `dist/` alone, with no install step. The rest of this page applies as it is.
 
 ## Example
 
@@ -49,29 +49,32 @@ package.json
 <lockfile>
 ```
 
-`start --prod` runs the build in `dist/` as it is. The bot compiles `meocord.config.ts` into `dist/` as it builds, so
-`node dist/main.js` starts it the same way, with nothing else to install, which suits a container.
+`start --prod` runs the build in `dist/` as it is. The build compiles `meocord.config.ts` into
+`dist/meocord.config.mjs`, so `node dist/main.js` starts it the same way, with nothing else to install, which suits a
+container.
 
 The bot finds its config and its assets beside `dist/main.js`, from wherever it's started, so `dist` can be built in CI
 or on another machine and copied over. A bot with native addons is the exception: build it on the platform it runs on,
 as [Self-contained builds](guide:self-contained-builds#native-addons-and-platforms) explains.
 
-The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file beside `dist`
-works, and so does setting the variables in the service manager or container, where a file is one more thing to copy
-and protect. The config's dotenv leaves variables that are already set alone, so the environment wins over the file.
-A production build reads `.env.production` and `.env.production.local` beside `.env`, and never the development files.
+The bot reads `DISCORD_TOKEN`, and whatever else your code needs, from the environment. A `.env` file in the directory
+the bot starts from, normally the project root beside `dist`, works, and so does setting the variables in the service
+manager or container, where a file is one more thing to copy and protect. The config's dotenv leaves variables that are
+already set alone, so the environment wins over the file. A production build reads `.env.production.local`,
+`.env.local`, `.env.production` and `.env`, the first file to set a variable winning, and never the development files.
 
 On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, or set
-to anything but `production` or `test`, such as `staging`, Bun loads `.env.development` before any code runs, so its
-values win over `.env.production`. The bot warns, naming `NODE_ENV`, the files, and each variable that has its
-development value where the production files give another:
+to anything but `production`, Bun loads that mode's files before any code runs: `.env.test` under `test`, else
+`.env.development`, for `staging` too. Their values win over `.env.production`. The bot warns, naming `NODE_ENV`, the
+files, and each variable that has another mode's value where the production files give another:
 
 ```text
 Bun loaded .env.development because NODE_ENV is unset, and this is a production build, so DATABASE_URL has its development value; set NODE_ENV=production, or start with `bun --no-env-file`.
 ```
 
 It says nothing when the development files agree with the production ones. `bun --no-env-file dist/main.js` works
-too. `meocord start --prod` sets `NODE_ENV` already.
+too. `meocord start --prod` sets `NODE_ENV=production` when it's unset; a value already set, such as `staging`, is
+passed to the bot as it is.
 
 > [!WARNING]
 > Keep the token out of the image, the repository and the logs. Anyone who has it controls the bot.
@@ -178,10 +181,11 @@ the bot the only process, and it receives the signal itself.
 
 ## Which runtime the bot runs on
 
-`start` runs the bot on the runtime you launched it with, with nothing to configure: `bun run start:prod` runs
-`dist/main.js` under Bun, and `npm run start:prod` under Node. When the CLI itself runs on Node, the runner that
-launched it decides: `bun run` points `npm_execpath` at its own binary, and npm, pnpm and yarn at a `.js` file, which
-falls through to Node.
+`start` runs the bot on the runtime you launched it with, with nothing to configure. An app created with bun runs its
+scripts as `bun --bun meocord …`, so the CLI and the bot run on Bun whichever runner starts them. In an app created with
+npm, yarn or pnpm, `bun run start:prod` runs `dist/main.js` under Bun, and `npm run start:prod` under Node. When the CLI
+itself runs on Node, the runner that launched it decides: `bun run` points `npm_execpath` at its own binary, and npm,
+pnpm and yarn at a `.js` file, which falls through to Node.
 
 The choice matters for more than tidiness. It spares a Bun-only image a second runtime just to launch, and it picks
 the allocator, which matters for a bot doing heavy native work such as canvas rendering. Development runs the bundle
@@ -195,8 +199,9 @@ MEOCORD_RUNTIME=/usr/local/bin/bun npm run start:prod
 
 The runtime above is the bot's. The CLI's own process is chosen by its `#!/usr/bin/env node` line, which stays as it
 is because npm on Windows builds its `.cmd` launcher from it. On a machine with no Node, Bun stands in for `node`, so
-`bun run start:prod` runs the CLI and the bot on Bun with nothing to set. Where Node is installed and you want the CLI
-on Bun too, tell Bun to ignore the line, per command with `bun --bun meocord start --prod`, or once for the project:
+`bun run start:prod` runs the CLI and the bot on Bun with nothing to set, and an app created with bun has `bun --bun`
+in its scripts already. Where Node is installed and an app created with npm, yarn or pnpm wants the CLI on Bun too, tell
+Bun to ignore the line, per command with `bun --bun meocord start --prod`, or once for the project:
 
 ```toml
 # bunfig.toml
