@@ -253,6 +253,9 @@ or an alias:
 
 - It answers only after a prefix or a mention. `help: { command: 'commands', aliases: ['h'] }` names other
   words.
+- It runs the app's `@MeoCord({ guards })` first, as a command does, and so does a parent's list of subcommands: a
+  guard that returns `false` leaves the message unanswered, and one that throws `GuardDeniedError` gets its reason as
+  the reply.
 - The list leaves out a command with a guard, on its method or its controller, and one marked `hidden`: `!ban`
   is missing above, since `OutranksTargetGuard` decides who may use it. Named, either is shown. A command that
   works only in servers is left out in a DM.

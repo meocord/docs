@@ -114,7 +114,7 @@ the real resolver finds them:
   typing.
 
 A modal's submitted fields come from `createModalFields({ body: 'It crashed' })`, which discord.js doesn't let a
-test build.
+test build. A file upload field takes an array of `Attachment`s: `createModalFields({ screenshot: [attachment] })`.
 
 ## Messages, servers and the rest
 
