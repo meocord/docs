@@ -16,10 +16,6 @@ fail to compile or change a test's result, and a few fixes change what a bot doe
 [Upgrading from 4.0 to 4.1](guide:migrating#upgrading-from-40-to-41) lists each, with what to check. Every release's
 notes are in the [changelog](guide:changelog).
 
-> [!NOTE]
-> 4.1 is in beta. This page describes 4.1.0-beta.10, and a later beta may still change a detail before 4.1.0 is
-> released.
-
 ## Answering Discord
 
 - **`respond(interaction)`** is one place to answer an interaction. It acknowledges, sends, follows up and reports
