@@ -91,7 +91,8 @@ Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
   privileged `MessageContent` intent when it mentions the bot, and in direct messages, so a mention-only bot
   needs no such intent.
 - `caseSensitive: true` matches the prefix, a pattern's literal words, its choice words and its flag names in the case
-  written. Param values always keep the case they were typed in.
+  written. Param values keep the case they were typed in, except a choice word, which the handler receives as the
+  pattern writes it.
 
 A handler can set its own `prefix`, `caseSensitive` and `mention: 'only'`. Its prefix replaces the app's, though a
 mention still counts when the app takes one. `prefix: ''` matches the message with no prefix, and `prefix: false`

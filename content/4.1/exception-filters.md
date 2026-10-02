@@ -25,9 +25,9 @@ Errors in a call come in two kinds. Some are the user's own mistake, such as too
 told what to change. Others are faults in the bot, which the user can do nothing about.
 
 For the first kind, throw [`UserError`](api:responses/UserError): MeoCord shows its message to the user who made the
-call, privately for an interaction and as a reply to a message. For anything else, the built-in fallback answers with a
-generic message and logs the error. When you want another answer, an exception filter catches the error first and
-answers it your own way.
+call, privately for an interaction and as a reply to a message; from a reaction or another event it is only logged. For
+anything else, the built-in fallback answers with a generic message and logs the error. When you want another answer, an
+exception filter catches the error first and answers it your own way.
 
 ## When to use it
 
@@ -122,9 +122,10 @@ deferral is deleted and the message follows up privately.
 
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's or
 validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
-seconds, as is a command's usage when a word has the wrong type. Other errors of message, reaction and event handlers
-are only logged, unless `messages: { dmOnError }` or `dmOnCooldown` tells a message command's author in a direct
-message.
+seconds, as is a command's usage for words it can't take, such as a missing word, one of the wrong type, an unknown
+flag, a member not found, or a command used in a server that runs only in DMs or the other way round. Other errors of
+message, reaction and event handlers are only logged, unless `messages: { dmOnError }` or `dmOnCooldown` tells a message
+command's author in a direct message.
 
 ## Failures never end the process
 

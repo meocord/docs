@@ -54,7 +54,7 @@ again.
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
 it is on: `Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, `meocord.config.ts:` for its settings, or the
-build's folder, such as `dist:`. The rest names the decorator and the problem, and a second line, `in src/…`, names the
+build's folder, such as `dist:`. The rest names the decorator and the problem, and a last line, `in src/…`, names the
 file it comes from when MeoCord can tell. Such as:
 
 ```text
@@ -144,8 +144,8 @@ version (5.0). Each warning names the handler or the filter, and says what to wr
 - **"@MessageHandler('') on `Class.method` is deprecated; in the next major version (5.0) it is refused."** An empty
   pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
   pattern is built from.
-- **"… handlers in classes that are not controllers never run"** A command, component, message or reaction handler
-  sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
+- **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
+  handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
   [Messages and reactions](#messages-and-reactions).
 
 The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
@@ -226,8 +226,8 @@ see [Discord's errors](guide:mocks#discords-errors).
   For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials. See
   [Reactions](guide:reactions#gotchas).
 - **A handler on a service never runs.** Commands, components, messages and reactions reach only the app's
-  `@MeoCord({ controllers })`. The bot warns at startup, "… handlers in classes that are not controllers never run",
-  naming each one; move it to a controller. See
+  `@MeoCord({ controllers })`. The bot warns at startup, "… never run: MeoCord dispatches only to
+  @MeoCord({ controllers })", or "never runs" for one handler, naming each one; move it to a controller. See
   [the upgrade guide](guide:migrating#a-handler-on-a-class-that-isnt-a-controller-logs-a-warning).
 - **`@On(event)` never runs.** Most events need an intent. The bot warns at startup, "The … intent is not in
   clientOptions.intents, so Discord will not send what … handles", naming the handler. See

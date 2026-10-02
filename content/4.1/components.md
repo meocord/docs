@@ -82,9 +82,9 @@ the button you send and the handler that receives it share one definition:
 ::playground{file="controllers/button/ticket.button.controller.ts" region="route" dispatch="/ticket; button ticket/42/close"}
 
 `build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a button's or a
-select menu's handler whose params name something the route doesn't capture. A `/` or `%` inside a value is encoded, and
-the handler receives it decoded, so a value never spills into the next segment. An empty value, or an id longer than
-Discord's 100 characters, throws.
+select menu's handler whose params name something other than the route's params and, for a select menu, its choices. A
+`/` or `%` inside a value is encoded, and the handler receives it decoded, so a value never spills into the next
+segment. An empty value, or an id longer than Discord's 100 characters, throws.
 
 ### Typed params
 
@@ -103,8 +103,8 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
   here.
 - **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`.
 - **The handler's params are checked when the code compiles**, for a pattern written as a string as for a route:
-  `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a name the pattern
-  doesn't capture, such as `{ uid }` for `stats/{id}`. A form's handler may name its fields.
+  `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a name other than the
+  route's params and a select menu's choices, such as `{ uid }` for `stats/{id}`. A form's handler may name its fields.
 - **A customId holds text the bot wrote**, so there is no `member` or `channel` type, as a message command has. Capture
   the ID, `{userId}`, and fetch it in the handler; `{target:member}` stops the bot where it's declared.
 
