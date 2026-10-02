@@ -1,7 +1,7 @@
 import { type MessageReaction, type PartialMessageReaction } from 'discord.js'
 import { Controller, ReactionHandler } from 'meocord/decorator'
 import { ReactionHandlerAction } from 'meocord/enum'
-import { type ReactionHandlerOptions } from 'meocord/interface'
+import { type ReactionEvent } from 'meocord/interface'
 import { FeedbackNotFoundError } from '@src/tutorial/feedback.errors'
 import { FeedbackService } from '@src/tutorial/feedback.service'
 import { FeedbackSettings } from '@src/tutorial/feedback.settings'
@@ -19,18 +19,18 @@ export class ReviewReactionController {
   ) {}
 
   @ReactionHandler('✅')
-  async approve(reaction: MessageReaction | PartialMessageReaction, options: ReactionHandlerOptions) {
+  async approve(reaction: MessageReaction | PartialMessageReaction, options: ReactionEvent) {
     await this.decide(reaction, options, 'approved')
   }
 
   @ReactionHandler('❌')
-  async reject(reaction: MessageReaction | PartialMessageReaction, options: ReactionHandlerOptions) {
+  async reject(reaction: MessageReaction | PartialMessageReaction, options: ReactionEvent) {
     await this.decide(reaction, options, 'rejected')
   }
 
   private async decide(
     reaction: MessageReaction | PartialMessageReaction,
-    { user, action }: ReactionHandlerOptions,
+    { user, action }: ReactionEvent,
     status: 'approved' | 'rejected',
   ) {
     // MeoCord fetched the message before this ran, so its author and text are there
