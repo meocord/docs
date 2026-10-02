@@ -48,10 +48,11 @@ The app gives MeoCord the translator, which is what makes its own texts follow t
   `t.forGuild(guild)`. See [Choosing the language](guide:localisation#choosing-the-language).
 - **One route.** Discord reports a command by its default name whatever language the member sees, so the route is
   `announce` in every language.
-- **MeoCord's own texts.** With `@MeoCord({ i18n: t })`, what MeoCord answers itself goes through the same
-  translator: cooldown refusals, "Command not found!", the generic error, and the presenter's "Working on it…" and
-  "Oops!". Answers to an interaction are in the user's language. A second announcement within the minute is refused
-  in the author's language, such as "Pelan-pelan: coba lagi dalam 45 detik." under the title "Ups!".
+- **MeoCord's own texts.** With `@MeoCord({ i18n: t })`, what MeoCord answers itself goes through the same translator:
+  cooldown refusals, "Command not found!", the generic error, and the presenter's "Working on it…" and "Oops!". Answers
+  to an interaction are in the user's language. A second announcement within the minute is refused in the author's
+  language, such as "Pelan-pelan: coba lagi {when}." under the title "Ups!", where `{when}` is a Discord timestamp each
+  member's app shows in their own language and counts down.
 - **Checked when it compiles.** The keys of the `meocord` group and their `{params}` are those of
   [`MeoCordMessages`](api:types/MeoCordMessages), so a misspelt key or a param MeoCord doesn't pass fails to
   compile.
