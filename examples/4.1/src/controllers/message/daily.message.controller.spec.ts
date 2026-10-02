@@ -24,7 +24,9 @@ describe('DailyMessageController', () => {
     // The testing module still rejects with the error, after the fallback has answered it
     await expect(module.dispatch(message)).rejects.toThrow('The leaderboard store is down')
     expect(message.author.send).toHaveBeenCalledWith(
-      expect.objectContaining({ content: expect.stringContaining('Something went wrong running !leaderboard') }),
+      expect.objectContaining({
+        content: expect.stringMatching(/^!leaderboard in .+: An error occurred while executing the command\.$/),
+      }),
     )
     expect(message.reply).not.toHaveBeenCalled()
   })

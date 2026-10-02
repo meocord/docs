@@ -159,6 +159,13 @@ A store without `release` keeps such a call counted. Under `'allow'` the call ra
 `testCooldownStore` checks a store's `release` when it gives one. A release still under way when the bot stops
 finishes before the store's `onShutdown` runs, so a store can close its connection there.
 
+### Telling one wait from the next
+
+A refusal can also give `retryTimestamp`: when the next call is allowed, as a Unix timestamp in milliseconds on the
+store's own clock, the same for every refusal in one wait. `messages.dmOnCooldown` tells one wait from the next by
+it, so a retry whose answer arrives late, or from another shard sharing the store, isn't told about the same wait
+again. The built-in stores give it. A store without it is told apart by `retryAfterMs` and the bot's clock instead.
+
 ### Checking a store
 
 `testCooldownStore` from `meocord/testing` runs the behaviour `MemoryCooldownStore` defines against yours, under
@@ -169,7 +176,8 @@ Vitest, Jest or any runner with `describe`, `it` and `expect`:
 It checks that:
 
 - a key allows `uses` calls within the window, and the window slides;
-- `retryAfterMs` counts from the oldest call still in the window;
+- `retryAfterMs` counts from the oldest call still in the window, and every refusal in one wait gives the same
+  `retryTimestamp`, when the store gives one;
 - each key counts on its own, and calls in the same millisecond stay distinct;
 - of several concurrent calls at the limit, exactly one passes;
 - a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
