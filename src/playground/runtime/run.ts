@@ -175,6 +175,8 @@ const ANSWERS = ['reply', 'deferReply', 'editReply', 'followUp', 'deleteReply', 
  */
 class SendLog {
   private entries: RecordedCall[] = []
+  /** The labels of the recorded calls being made: one made inside another of its label is the same message. */
+  private making = new Set<string>()
 
   /** Starts a step. */
   start() {
@@ -188,12 +190,16 @@ class SendLog {
    */
   record(target: Record<string, unknown>, method: string, label = method) {
     const write = (call: RecordedCall) => this.entries.push(call)
+    const making = this.making
     target[method] = new Proxy(target[method] as (...args: unknown[]) => unknown, {
       apply(mock, self, args: unknown[]) {
+        // A member's direct message goes through its user's, so the user's send is the member's, written once
+        if (making.has(label)) return Reflect.apply(mock, self, args)
         const payload = toJson(args[0])
         const call: RecordedCall = { method: label, ...(payload !== undefined && { payload }) }
         write(call)
         const failed = (error: unknown) => (call.error = describeError(error).message)
+        making.add(label)
         try {
           const result: unknown = Reflect.apply(mock, self, args)
           const then = (result as { then?: unknown } | null)?.then
@@ -202,6 +208,8 @@ class SendLog {
         } catch (error) {
           failed(error)
           throw error
+        } finally {
+          making.delete(label)
         }
       },
     })
