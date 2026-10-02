@@ -153,8 +153,9 @@ A form's handler receives its submitted fields, keyed by their `customId`, besid
 
 ::playground{file="controllers/modal-submit/feedback.modal.controller.ts" region="modal" dispatch="modal feedback/42 body='The bot is fast.'"}
 
-A command opens the form with `respond(interaction).modal(...)`, and its `customId` routes the submission here. When a
-field or a choice shares a name with a captured value, the captured value wins, and development logs a warning.
+A command opens the form with `respond(interaction).modal(...)`, and its `customId` routes the submission here. A file
+upload field arrives as an array of the uploaded `Attachment`s. When a field or a choice shares a name with a captured
+value, the captured value wins, and development logs a warning.
 
 ## Collectors
 

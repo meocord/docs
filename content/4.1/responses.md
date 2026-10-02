@@ -97,8 +97,8 @@ can carry files of their own; one added to a message by an edit keeps the messag
 
 - **A handler that never answers leaves the user with "The application did not respond".** In development, MeoCord
   warns once for each handler that ends without answering, or defers and never follows up, and names it, or the
-  interceptor that returned before the handler ran or finished. Turn the warning on or off with
-  `@MeoCord({ warnUnanswered })`.
+  interceptor that returned before the handler ran or finished, the outermost when several did. Turn the warning on
+  or off with `@MeoCord({ warnUnanswered })`.
 - **`modal()` has to come first.** Call it before anything acknowledges the interaction, and leave
   [`@Defer`](guide:defer) off a handler that shows a modal.
 - **A modal has no message to edit.** After `modal()`, `send()`, `edit()` and `delete()` throw, saying so. Answer in

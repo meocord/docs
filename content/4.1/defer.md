@@ -101,8 +101,9 @@ the controls it shows, as Discord's JSON:
 
 - **Answer through `respond()`.** `interaction.reply()` fails once `@Defer` has acknowledged; `respond()` edits
   the deferred reply instead.
-- **`@Defer` is for interaction handlers.** On a message, reaction, event or autocomplete handler, it throws when
-  the controller loads.
+- **`@Defer` is for interaction handlers.** On a message, reaction, event or autocomplete handler, it's refused in
+  one line, as the controller loads when it's written above the handler's decorator, and as the app is created when
+  it's below: `Chat.hi: @Defer is for interaction handlers, and this is a message handler. Remove @Defer from it.`
 - **A modal can't follow it.** A handler that shows a modal must leave `@Defer` off.
 
 ## Next steps

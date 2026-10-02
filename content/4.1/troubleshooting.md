@@ -150,9 +150,9 @@ Discord gives an interaction three seconds for its first answer, and nothing arr
   [exception filter](guide:exception-filters) handles, but a filter that handles one and sends nothing leaves the
   interaction unanswered.
 - **The handler never answered.** In development, MeoCord warns once for each handler that ends without answering,
-  or defers and never follows up, and names it. An interceptor that returned before the handler ran or finished is
-  named instead: "Shop.buy: its interceptor Cached returned before the handler ran, without answering the
-  interaction, …". See [Responses](guide:responses#gotchas).
+  or defers and never follows up, and names it. An interceptor that returned before the handler ran or finished, the
+  outermost when several did, is named instead: "Shop.buy: its interceptor Cached returned before the handler ran,
+  without answering the interaction, …". See [Responses](guide:responses#gotchas).
 
 A test shows the guard case: the call doesn't run, and nothing is sent.
 
