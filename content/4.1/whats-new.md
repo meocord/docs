@@ -92,7 +92,7 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 ## Building and shipping
 
 - **Command registration** is configurable: globally or to servers, to a development server under `--dev`, at startup
-  or only with `meocord register`. A builder that throws stops registration rather than dropping its command; see
+  or only with `meocord register`. A builder that throws is named in the registration error; see
   [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration) and
   [Registering commands](guide:slash-commands#registering-commands).
 - **Sharding**, in one process or a process per shard, with `ShardContext.call` to reach every shard, its results
