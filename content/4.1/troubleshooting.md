@@ -36,6 +36,20 @@ discord.js's `GatewayIntentBits`.
 of every option of the wrong type. An option MeoCord doesn't know, often a typo, is only a warning. See
 [Configuration](guide:configuration#options).
 
+**"MeoCord config not found at … (working directory …)."** The bot looks for `meocord.config.mjs` beside its bundle,
+and there's none. Run `meocord build`, and start the bot from the `dist` it writes.
+
+**"MeoCord config at … failed to load: …"** The compiled config is there, but loading it threw, for the reason the
+message gives. When that's a package that isn't installed, the message names it:
+
+```text
+MeoCord config at /srv/bot/dist/meocord.config.mjs failed to load: Cannot find package 'dotenv' imported from /srv/bot/dist/meocord.config.mjs. Install dotenv in the project, then run `meocord build`.
+```
+
+When the config doesn't import the missing package itself, the message names the installed package that does, as
+"Install `name`, which `other` imports, in the project". Otherwise it says to fix `meocord.config.ts`, then build
+again.
+
 ### One line naming a class, and exit code 1
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it as one line that starts with what it is on:
@@ -64,7 +78,8 @@ Fix what it names. The common ones:
   ```
 
   Two classes of one name are refused when either uses `@Cooldown` or `@Once`, in any mode. With process sharding,
-  any two controllers or services are, since `ShardContext.call` finds a service in another shard by its class name.
+  any two controllers, services or provided classes are, since `ShardContext.call` finds a class in another shard by
+  its name.
   Rename one of the classes.
 
 - **"`Class.method`: @MessageHandler('…'): …"** A message pattern MeoCord can't read stops the bot there, such as a

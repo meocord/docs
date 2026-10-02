@@ -78,8 +78,18 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
   class of the same name in another.
 - **What crosses:** only JSON, arguments and results alike, in every mode: in one process and in a test too, a `Date`
   arrives as a string, a `Map` as `{}` and a function as `undefined`, and a value JSON can't write, such as a
-  `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers or services
-  share a name.
+  `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers, services or
+  provided classes share a name.
+- **Types:** each result is typed as it arrives, as `Jsonified<T>` from `meocord/core` gives it: a method returning
+  `Promise<Date>` gives `string` values. A param JSON would change, such as a `Date`, can't be passed, and the compile
+  error names the type to declare instead:
+
+  ```text
+  Argument of type 'Date' is not assignable to parameter of type '{ 'This argument arrives as JSON, so declare the param as': string; }'.
+  ```
+
+- **Arguments** go by position, so an `undefined` one arrives as `undefined`, not `null`, and it or one left out
+  takes the method's default.
 - **Failures:** a process that throws, lacks the service or takes more than 10 seconds gives an error result, and the
   others still answer.
 - **This process:** `ids`, `count` and `isPrimary` describe its shards.
@@ -98,7 +108,8 @@ result passed as JSON, as between processes:
 
 - **A cooldown counted per process** lets a user through once per shard. Bind `ShardedCooldownStore`, or a shared
   store such as Redis.
-- **Two classes with the same name** stop a process-sharded bot at startup, since `call` finds a service by name.
+- **Two classes with the same name** stop a process-sharded bot at startup, provided classes included, since `call`
+  finds a class by name.
 - **`broadcastEval` breaks under minification.** Use `call`, which sends only a name and JSON.
 
 ## Next steps
