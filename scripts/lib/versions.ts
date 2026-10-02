@@ -107,14 +107,6 @@ export function newestIn(line: Line): string {
   return [...line.versions].sort(semver.rcompare)[0]
 }
 
-/** The lines the aliases point at: `latest` is the current line, `next` the one in prerelease, if any. */
-export function aliases(config: VersionsConfig): { latest?: string; next?: string } {
-  return {
-    latest: config.lines.find(line => line.status === 'current')?.line,
-    next: config.lines.find(line => line.status === 'prerelease')?.line,
-  }
-}
-
 /** Whose signature a version must carry, or `'integrity-only'` for a version listed as having none. */
 export function identityFor(config: VersionsConfig, version: string): string | 'integrity-only' {
   if (config.provenance.integrityOnly.includes(version)) return 'integrity-only'

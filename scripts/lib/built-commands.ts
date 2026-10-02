@@ -5,7 +5,8 @@
  */
 
 import { packageSpec, PACKAGE_SPEC } from './package-spec'
-import { aliases, type VersionsConfig } from './versions'
+import { aliases } from './line-aliases'
+import { type VersionsConfig } from './versions'
 
 /** Text as a reader gets it, and where: the page's URL, and the file it was read from. */
 export interface BuiltText {
