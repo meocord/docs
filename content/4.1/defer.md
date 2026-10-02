@@ -70,8 +70,8 @@ touched.
 | `after`                 | `1500`    | For `'auto'`; never later than 2.5 seconds after the interaction was created.                   |
 | `suppressNotifications` | `false`   | New messages, such as a first reply after `'auto'` waited, and follow-ups, don't notify.        |
 
-Code that locks a message itself calls `respond(interaction).lock()`, which takes `disable` the same way; its
-options type is `ResponseLockOptions` from `meocord/common`.
+Code that locks a message itself calls `respond(interaction).lock()`, which takes `disable` the same way; its options
+type is [`ResponseLockOptions`](api:responses/ResponseLockOptions) from `meocord/common`.
 
 ### Acknowledging only when needed
 
