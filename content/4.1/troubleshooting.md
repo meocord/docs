@@ -135,7 +135,7 @@ refusing the connection, so the bot stopped before login with the cause. Fix wha
 Some mistakes a 4.0 bot could start with only warn in 4.1, so the bot still starts, and stop it in the next major
 version (5.0). Each warning names the handler or the filter, and says what to write instead:
 
-- **"Broken: @Catch takes error classes, and its first is undefined, so it matches no error."** An entry in a filter's
+- **"Broken: @Catch's first entry, undefined, which matches no error, is deprecated; …"** An entry in a filter's
   `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
   other types it lists. Import the class where it's defined, or move it out of the cycle. See
   [Exception filters](guide:exception-filters#gotchas).
@@ -143,8 +143,9 @@ version (5.0). Each warning names the handler or the filter, and says what to wr
   pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
   pattern is built from.
 
-A warning that ends "will be removed in the next major version (5.0). Use … instead." names an API that still works,
-and is logged once. See [the upgrade guide](guide:migrating#upgrading-from-40-to-41).
+The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
+major version (5.0). Use … instead." names an API that still works, and is logged once. See
+[the upgrade guide](guide:migrating#upgrading-from-40-to-41).
 
 ## A command doesn't show up in Discord
 
