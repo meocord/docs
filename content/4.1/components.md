@@ -117,14 +117,16 @@ Between equally literal patterns, the one with fewer parameters wins, then the o
 values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
 `page/5` and leaves `page/last` to the other, in whatever order they're declared.
 
-MeoCord warns at startup about every pair of patterns of one component type that can both take an id: the two above,
-`page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`. The bot still starts, and the
-ranking decides which handler runs; [`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns
+MeoCord warns once at startup about every pair of patterns of one component type that can both take an id: the two
+above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`. For each pair it names the
+handler that runs and why, and where the next major version (5.0) would run the other one, what to do. The bot still
+starts, and the ranking decides which handler runs; `MeoCordTestingModule.compile()` gives the same warning, and
+[`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns
 with different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
 Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
 startup, naming both, since only one of them could ever run. `meocord register` refuses them too, before it sends any
-command.
+command, as do the shard manager, before it spawns a shard, and `MeoCordTestingModule.compile()`.
 
 ## Select menus
 
