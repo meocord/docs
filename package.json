@@ -73,7 +73,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "buffer": "^6.0.3",
     "discord.js": "^14.27.0",
-    "dotenv": "^18.0.3",
+    "dotenv": "^18.0.5",
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
