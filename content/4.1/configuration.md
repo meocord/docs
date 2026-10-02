@@ -203,6 +203,8 @@ Some things need no rule of your own:
   for `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build
   handles itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts,
   from where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
+  An imported WebAssembly module goes to `dist/assets/` as `<hash>.module.wasm`, so two modules of one name stay apart;
+  a wasm file read through `new URL('./file.wasm', import.meta.url)` keeps its own name.
 - **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
   error, naming the file. `output.filename.image`, and `svg`, `font`, `media` and `assets`, accept a function to keep
   both.
