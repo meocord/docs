@@ -74,8 +74,8 @@ A handler that wants bots' reactions sets `bots: true`:
 
 ::example{file="controllers/reaction/pin.reaction.controller.ts" region="bots"}
 
-A user discord.js holds only in part is fetched to tell whether it is a bot, and the reaction is skipped if
-that fails.
+To skip a bot's reaction for the handlers that leave bots out, a user discord.js holds only in part is fetched; if that
+fails, only the handlers with `bots: true` run.
 
 ## Every message
 
@@ -85,7 +85,8 @@ patterned handler the message matched, if any:
 ::playground{file="controllers/message/keyword.message.controller.ts" region="controller" dispatch="message ping"}
 
 - It never runs for a message from a bot, or for one with no text.
-- Its guards only filter what it takes. A denial gets no reply, and is logged at debug level.
+- Its guards only filter what it takes: a denial gets no reply, and one a guard throws as `GuardDeniedError` is logged
+  at debug level.
 - It reads the message's text, so the bot needs the `MessageContent` intent, as the gotchas below
   explain.
 
@@ -116,8 +117,8 @@ bot does.
 
 ## Build it
 
-When the bot files feedback from chat it replies `Filed as feedback #3`. Staff can decide it by reacting to that
-reply: ✅ approves, ❌ rejects.
+When the bot files feedback from chat it replies `Filed as feedback #3. Thank you!`. Staff can decide it by reacting to
+that reply: ✅ approves, ❌ rejects.
 
 ::example{file="tutorial/review.reaction.controller.ts" region="reactions"}
 

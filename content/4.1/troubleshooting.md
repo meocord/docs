@@ -52,9 +52,10 @@ again.
 
 ### One line naming a class, and exit code 1
 
-MeoCord refuses a mistake it can see as the bot loads, and reports it as one line that starts with what it is on:
-`Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, `meocord.config.ts:` for its settings, or the build's
-folder, such as `dist:`. The rest names the decorator and the problem, such as:
+MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
+it is on: `Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, `meocord.config.ts:` for its settings, or the
+build's folder, such as `dist:`. The rest names the decorator and the problem, and a second line, `in src/…`, names the
+file it comes from when MeoCord can tell. Such as:
 
 ```text
 SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
@@ -123,8 +124,9 @@ Fix what it names. The common ones:
 
 ### Other startup errors
 
-What MeoCord can't see as the bot loads, such as a provider that fails, reaches the generated `main.ts`, which logs
-it as "Error during startup:" with the error, and the process exits 1.
+What MeoCord can't see as the bot loads reaches the generated `main.ts`, which logs it as "Error during startup:" with
+the error, and the process exits 1. A failure MeoCord explains itself, such as a provider that fails, is logged once, in
+MeoCord's words, and `main.ts` doesn't log it again.
 
 **"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
 refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
@@ -142,6 +144,9 @@ version (5.0). Each warning names the handler or the filter, and says what to wr
 - **"@MessageHandler('') on `Class.method` is deprecated; in the next major version (5.0) it is refused."** An empty
   pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
   pattern is built from.
+- **"… handlers in classes that are not controllers never run"** A command, component, message or reaction handler
+  sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
+  [Messages and reactions](#messages-and-reactions).
 
 The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
 major version (5.0). Use … instead." names an API that still works, and is logged once. See

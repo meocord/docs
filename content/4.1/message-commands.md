@@ -90,12 +90,12 @@ Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
   message, addressed to the bot already, starts as usual. Discord sends a message's text without the
   privileged `MessageContent` intent when it mentions the bot, and in direct messages, so a mention-only bot
   needs no such intent.
-- `caseSensitive: true` matches the prefix and a pattern's literal words in the case written. Param values
-  always keep the case they were typed in.
+- `caseSensitive: true` matches the prefix, a pattern's literal words, its choice words and its flag names in the case
+  written. Param values always keep the case they were typed in.
 
-A handler can set its own `prefix`, `caseSensitive` and `mention: 'only'`. Its prefix replaces the app's,
-though a mention still counts. `prefix: ''` matches the message with no prefix, and `prefix: false` matches it
-exactly as it is, never after a mention:
+A handler can set its own `prefix`, `caseSensitive` and `mention: 'only'`. Its prefix replaces the app's, though a
+mention still counts when the app takes one. `prefix: ''` matches the message with no prefix, and `prefix: false`
+matches it exactly as it is, never after a mention:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="prefixes"}
 
@@ -159,8 +159,8 @@ guard's or validation's reason, a `UserError`'s message, whether a command or an
 threw it, and the direct messages of `dmOnError` and `dmOnCooldown`:
 
 ```text
-⚠️ Usage: !roll <sides>
-sides: "lots" is not a valid whole number
+⚠️ Usage: !pay <to> <amount> [note…]
+amount: "lots" is not a valid whole number
 ```
 
 To draw these replies and direct messages instead, give the app's [presenter](guide:presenters) a `messageError`
@@ -183,9 +183,9 @@ handler:
                !config set <key> <value…>
 ```
 
-A handler of its own, `config` or `config {key}`, still takes such a message. A subcommand with a
-[guard](guide:guards), and one whose options say `hidden: true`, is left out of the list, since the list runs
-no guards and must not name what a caller may be refused; named, it still gets its own usage.
+A handler of its own, `config` or `config {key}`, still takes such a message. A subcommand with a [guard](guide:guards),
+and one whose options say `hidden: true`, is left out of the list, since the list runs only the app's guards and must
+not name what a handler's own guard may refuse; named, it still gets its own usage.
 
 ## Telling the author privately
 
@@ -299,10 +299,10 @@ one line that begins with the handler and its pattern, such as
 | Braces inside a word, `'a{b}'`                   | `"a{b}" is not a param: a param is a whole word, …`                                         |
 | `scope: 'dm'` on a command with a `member` param | `scope is 'dm', but {target:member} is found only in a server.`                             |
 
-Two patterns that match the same messages stop the bot too, naming both handlers: `… match the same messages, so
-only one of them could ever run. Change one pattern, or give one its own prefix.` They match alike when they take the
-same prefix and differ only in param names, as `'roll {sides}'` and `'roll {count}'` do, or only in case, unless both
-are case-sensitive. An alias and a pattern count the same way.
+Two patterns that match the same messages stop the bot too, naming both handlers: `… match the same messages, so only
+one of them could ever answer those. Change one pattern, or give one its own prefix.` They match alike when they take
+the same prefix and differ only in param names or types, as `'roll {sides}'` and `'roll {count:int}'` do, or only in
+case, unless both are case-sensitive. An alias and a pattern count the same way.
 
 ## Testing
 
@@ -331,9 +331,8 @@ See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
   startup when it is missing. Messages from bots never reach a handler.
 - **A keyword stops working after adding a prefix.** The app's prefix applies to every patterned handler, so
   `'ping'` then needs `!ping`. Give a handler that should match the bare message `{ prefix: false }`.
-- **Two handlers, one pattern.** Patterns that differ only in param names, such as `'roll {sides}'` and
-  `'roll {count}'`, match the same messages and stop the bot at startup. Change one, or give one its own
-  prefix.
+- **Two handlers, one pattern.** Patterns that differ only in param names or types, such as `'roll {sides}'` and
+  `'roll {count:int}'`, match the same messages and stop the bot at startup. Change one, or give one its own prefix.
 - **An empty pattern runs for every message.** `@MessageHandler('')`, often a pattern built from a value that is
   empty, runs as `@MessageHandler()` does, and logs a warning naming the handler. It is deprecated, and stops the bot
   in the next major version (5.0). Write `@MessageHandler()` for a listener.
