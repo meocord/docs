@@ -41,7 +41,7 @@ const DOCUMENT_CSP = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const redirect = prereleaseRedirect(pathname, DOC_ALIASES.next)
+  const redirect = prereleaseRedirect(pathname, DOC_ALIASES)
   const response = redirect
     ? NextResponse.redirect(new URL(redirect + request.nextUrl.search, request.url), 307)
     : NextResponse.next()

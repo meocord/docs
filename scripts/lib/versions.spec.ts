@@ -2,9 +2,9 @@ import { mkdtempSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { describe, expect, it } from 'vitest'
+import { aliases } from './line-aliases'
 import {
   addVersion,
-  aliases,
   allVersions,
   findLine,
   identityFor,

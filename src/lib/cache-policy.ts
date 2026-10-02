@@ -113,10 +113,10 @@ export function isPlaygroundAsset(pathname: string): boolean {
 }
 
 /**
- * Where `/docs/next/…` points, or undefined for any other path. A 307, because the line in
- * prerelease changes with every new line.
+ * Where `/docs/next/…` points: the line in prerelease, or the latest line once none is, so a link to it keeps working;
+ * undefined for any other path. A 307, because the line in prerelease changes with every new line.
  */
-export function prereleaseRedirect(pathname: string, nextLine: string): string | undefined {
+export function prereleaseRedirect(pathname: string, lines: { latest: string; next?: string }): string | undefined {
   const match = /^\/docs\/next(\/.*)?$/.exec(pathname)
-  return match ? `/docs/${nextLine}${match[1] ?? ''}` : undefined
+  return match ? `/docs/${lines.next ?? lines.latest}${match[1] ?? ''}` : undefined
 }

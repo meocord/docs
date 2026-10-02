@@ -41,14 +41,20 @@ describe('cacheControlFor', () => {
 })
 
 describe('prereleaseRedirect', () => {
+  const beta = { latest: '4.0', next: '4.1' }
+
   it('points next and its pages at the prerelease line', () => {
-    expect(prereleaseRedirect('/docs/next', '4.1')).toBe('/docs/4.1')
-    expect(prereleaseRedirect('/docs/next/guides/defer', '4.1')).toBe('/docs/4.1/guides/defer')
+    expect(prereleaseRedirect('/docs/next', beta)).toBe('/docs/4.1')
+    expect(prereleaseRedirect('/docs/next/guides/defer', beta)).toBe('/docs/4.1/guides/defer')
+  })
+
+  it('points next at the latest line once nothing is in prerelease, so its links keep working', () => {
+    expect(prereleaseRedirect('/docs/next/guides/defer', { latest: '4.1' })).toBe('/docs/4.1/guides/defer')
   })
 
   it('leaves other paths alone', () => {
-    expect(prereleaseRedirect('/docs/nextjs', '4.1')).toBeUndefined()
-    expect(prereleaseRedirect('/docs/latest', '4.1')).toBeUndefined()
+    expect(prereleaseRedirect('/docs/nextjs', beta)).toBeUndefined()
+    expect(prereleaseRedirect('/docs/latest', beta)).toBeUndefined()
   })
 })
 
