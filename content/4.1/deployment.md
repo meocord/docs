@@ -58,9 +58,15 @@ and protect. The config's dotenv leaves variables that are already set alone, so
 A production build reads `.env.production` and `.env.production.local` beside `.env`, and never the development files.
 
 On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, Bun
-loads `.env.development` before any code runs, so its values win over `.env.production`, and the bot warns, naming
-each variable that has its development value. `bun --no-env-file dist/main.js` works too. `meocord start --prod` sets
-`NODE_ENV` already.
+loads `.env.development` before any code runs, so its values win over `.env.production`. The bot warns, naming the
+files and each variable that has its development value where the production files give another:
+
+```text
+Bun loaded .env.development because NODE_ENV is unset, and this is a production build, so DATABASE_URL has its development value; set NODE_ENV=production, or start with `bun --no-env-file`.
+```
+
+It says nothing when the development files agree with the production ones. `bun --no-env-file dist/main.js` works
+too. `meocord start --prod` sets `NODE_ENV` already.
 
 > [!WARNING]
 > Keep the token out of the image, the repository and the logs. Anyone who has it controls the bot.
