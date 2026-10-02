@@ -75,8 +75,9 @@ word are the bot's own:
 
 ::example{from="compare" file="discordjs/prefix.ts" region="prefix"}
 
-In MeoCord it is a pattern. The app sets the prefix once, each param is typed and checked before the handler runs,
-and a message that leaves out a param gets the command's usage in reply, and one the schema refuses gets the reason:
+In MeoCord it is a pattern. The app sets the prefix once, each param is checked before the handler runs, here by a
+schema, and a message that leaves out a required param gets the command's usage in reply, and one the schema refuses
+gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 

@@ -79,8 +79,8 @@ message listeners only when asked, and takes the prefix:
 
 ::example{from="compare" file="sapphire/commands/roll.ts" region="command"}
 
-In MeoCord a message command is a pattern. The app sets the prefix, a schema types each param, and a message that
-leaves out a param gets the command's usage in reply, and one the schema refuses gets the reason:
+In MeoCord a message command is a pattern. The app sets the prefix, the pattern or a schema types each param, and a
+message that leaves out a required param gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 

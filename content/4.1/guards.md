@@ -29,7 +29,8 @@ A guard decides whether a handler runs. It's a class with one method, `canActiva
 call through and `false` to stop it. To tell the user why they were stopped, it throws
 [`GuardDeniedError`](api:responses/GuardDeniedError) with the reason instead.
 
-Guards run before anything that fetches from Discord or counts a call. Only `@Defer`'s acknowledgement comes first, so a
+Guards run before anything that fetches from Discord or counts a call. Before an interaction's or a message's guards,
+only `@Defer`'s acknowledgement comes first; a reaction's partial message or user is fetched before its guards. So a
 caller they refuse costs the bot almost nothing.
 
 ## When to use it
@@ -65,7 +66,8 @@ everything else in the call: the fetch of a message's entities, interceptors, va
 | throws `UserError`        | stops, and the user is told the message; observers see `'refused'`   |
 | throws anything else      | goes to the [exception filters](guide:exception-filters) as an error |
 
-The first guard that doesn't allow the call ends it; the ones after it don't run.
+A `GuardDeniedError` or a `UserError` passes through the exception filters too, so a filter that catches it answers
+in its place. The first guard that doesn't allow the call ends it; the ones after it don't run.
 
 A new guard instance is made for every call, and it injects services like any class, so keep what must outlast one
 call, such as counts, in a service.
@@ -155,7 +157,8 @@ menu with an empty list.
 ## Testing
 
 The [testing module](guide:testing) runs guards as the bot does. `invoke` resolves with `ran: false` when a guard
-returned `false`, and rejects with the `GuardDeniedError` one threw; `dispatch` answers it as the bot does:
+returned `false`, and rejects with the `GuardDeniedError` one threw, unless a filter handles it; `dispatch` answers it
+as the bot does:
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="invoke"}
 
