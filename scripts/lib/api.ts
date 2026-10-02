@@ -177,6 +177,8 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
       excludePrivate: true,
       excludeInternal: true,
       readme: 'none',
+      // A recursive alias, such as Jsonified's nested conditionals, passes TypeDoc's default of 10 and turns into `...`
+      maxTypeConversionDepth: 40,
       plugin: [],
       logLevel: LogLevel.Error,
     },
