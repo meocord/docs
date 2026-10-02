@@ -82,7 +82,7 @@ The bot suggests values for an option as the member types it:
 
 ## Message commands
 
-A member sends `!roll 20 for initiative`, and the pattern hands the handler its values, typed:
+A member sends `!roll 20 for initiative`, and the pattern and its schema hand the handler its values, typed:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 

@@ -76,8 +76,8 @@ message to `executeCommand`:
 
 ::example{from="compare" file="discordx/roll.ts" region="command"}
 
-In MeoCord a message command is a pattern, and MeoCord reads every message itself. A message that names the command
-but doesn't fit it gets the command's usage in reply:
+In MeoCord a message command is a pattern, and MeoCord reads every message itself. A message that leaves out a param
+gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
@@ -103,7 +103,7 @@ In MeoCord the listener receives the event's arguments as they are, and the app 
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
-::example{file="app.ts" region="app"}
+::example{file="app-beyond-commands.ts" region="app"}
 
 ## Testing
 

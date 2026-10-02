@@ -42,9 +42,10 @@ The spec submits an id the menu never offered, and checks that it's ignored:
 
 ### Other menus
 
-The same routing serves the four entity select menus, each with its own `CommandType`. A user select hands the
-handler `users` and `members` beside `values`, a role select `roles`, and a channel select `channels`. Check what
-they send, as the handler here checks a string menu's values, before acting on it.
+The same routing serves the four entity select menus, each with its own `CommandType`. A user select hands the handler
+`users` and `members` beside `values`, a role select `roles`, a channel select `channels`, and a mentionable select
+`users`, `members` and `roles`. Check what they send, as the handler here checks a string menu's values, before acting
+on it.
 
 ## Next steps
 

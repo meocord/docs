@@ -79,8 +79,8 @@ message listeners only when asked, and takes the prefix:
 
 ::example{from="compare" file="sapphire/commands/roll.ts" region="command"}
 
-In MeoCord a message command is a pattern. The app sets the prefix, each param's type is written in the pattern, and
-a message that names the command but doesn't fit it gets the command's usage in reply:
+In MeoCord a message command is a pattern. The app sets the prefix, a schema types each param, and a message that
+leaves out a param gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
@@ -112,7 +112,7 @@ its location:
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
-::example{file="app.ts" region="app"}
+::example{file="app-beyond-commands.ts" region="app"}
 
 ## Testing
 
@@ -123,12 +123,12 @@ discord.js objects:
 
 ## What you gain
 
-Translations and subcommands are built in: typed [catalogs](guide:localisation), where a missing key fails to
-compile, and [subcommand handlers](guide:subcommands) on the parent command's builder. Guards apply to buttons,
-select menus and modals as well as to commands, and [`meocord/testing`](guide:testing) runs a handler through the
-same pipeline the bot uses. Scheduled work is a service that starts in `onReady` and stops in `onShutdown`, as
-[Scheduled tasks](guide:recipes/scheduled) shows. MeoCord is built for TypeScript, so a JavaScript bot moves to it
-as it moves over, and its decorators and typed params become what the compiler checks.
+Translations and subcommands are built in: typed [catalogs](guide:localisation), where a key the default catalog lacks
+or a param left out fails to compile, and [subcommand handlers](guide:subcommands) on the parent command's builder.
+Guards apply to buttons, select menus and modals as well as to commands, and [`meocord/testing`](guide:testing) runs a
+handler through the same pipeline the bot uses. Scheduled work is a service that starts in `onReady` and stops in
+`onShutdown`, as [Scheduled tasks](guide:recipes/scheduled) shows. MeoCord is built for TypeScript, so a JavaScript bot
+moves to it as it moves over, and its decorators and typed params become what the compiler checks.
 
 ## Moving over
 

@@ -63,9 +63,9 @@ The input is one object, the handler's second argument:
 | Message command with pattern | its pattern's params                                                                    |
 
 Invalid input throws [`ValidationError`](api:responses/ValidationError), whose `issues` list each problem and where it
-is. The built-in fallback answers it only to the caller: privately after an interaction, and after a message command
-as a reply that's deleted like a usage reply. Schema libraries write their messages in English; an
-[exception filter](guide:exception-filters) that maps the issues to your own words is where to translate them.
+is. The built-in fallback answers it: privately after an interaction, and after a message command as a reply in the
+channel that's deleted like a usage reply. Schema libraries write their messages in English; an [exception
+filter](guide:exception-filters) that maps the issues to your own words is where to translate them.
 
 ::example{file="controllers/slash/remind.slash.controller.spec.ts" region="spec"}
 
@@ -99,8 +99,8 @@ fit the parameter fails to compile.
 ## Which handlers take them
 
 `@Validate` and `@UsePipe` apply to command, component and modal handlers, and to message handlers with a pattern.
-Autocomplete, reaction and event handlers, and a message handler for every message, have no params to check: the bot
-refuses to start with either on them.
+Autocomplete, reaction and event handlers, and a message handler for every message, don't take them: the bot refuses to
+start with either on them.
 
 ## Gotchas
 

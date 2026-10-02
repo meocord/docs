@@ -95,7 +95,7 @@ read the same values. For an interaction no handler matched, it has no controlle
 - Not a message no handler matches otherwise: most of a server's traffic would reach the observers for nothing.
 
 `@Observer({ types: ['interaction'] })` limits an observer to those calls, as `ExecutionContext.getType()` reports
-them.
+them; an autocomplete's type is `'autocomplete'`.
 
 ## An audit log
 
@@ -107,7 +107,8 @@ deferred and never answered, which leaves the user on "thinking…":
 ## Tracing a call
 
 `onSettled` receives the same context object as `onStart` for the same call, so a `WeakMap` pairs them. That gives a
-span for every call, a denied one or one no handler matched included:
+span for every call that reaches a handler, a denied one included. An interaction no handler matched gets `onSettled`
+only, so it has no span:
 
 ::example{file="observers/call-span.observer.ts" region="observer"}
 
