@@ -163,6 +163,18 @@ theme changes, clear its cached result so the next call looks it up again:
 
 ::example{file="controllers/slash/theme-settings.slash.controller.ts" region="invalidate"}
 
+To look a theme up with the app's services, such as a user's choice saved in a database, give `themeFor` a class
+implementing [`ThemeResolver`](api:configuration/ThemeResolver), decorated with `@Service()`. Its `guild()` and
+`user()` methods are the resolvers, each optional. The class is resolved from the app's container, as the cooldown store
+is: it isn't listed in `providers`, its constructor injects the app's services and providers, and it runs `OnReady` and
+`OnShutdown` as a service does. Its results are cached as the functions' are, so the service that saves a choice
+injects `ThemeCache` and clears it:
+
+::example{file="app-with-theme-resolver.ts" region="resolver"}
+
+A call's theme is looked up once, as the call starts, and holds for the whole call. The call that saves a new choice
+still answers in the old palette, and the user's next call gets the new one.
+
 A resolver that throws, or passes `themeForTimeoutMs`, leaves its layer out of that call, and the call goes on. A
 result that isn't a valid theme is left out with a warning.
 
@@ -206,6 +218,9 @@ lists the old values if you want to keep them.
   `satisfies ThemeOverride`.
 - **A theme from a database must be a plain object.** A class instance, such as an ORM row, is refused: return
   `row.toObject()` or `{ ...row }`.
+- **A `ThemeResolver` class declares its resolvers as methods.** `user = () => …` is a property of each instance, not
+  of the class, so a class with only such properties is refused. Without `@Service()`, a constructor that injects is
+  refused too.
 - **A `user` resolver runs for every message a message handler takes.** Keep it cheap; its result is cached per
   user.
 

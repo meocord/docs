@@ -66,6 +66,12 @@ resolver shows each lookup:
 
 ::example{file="testing/themes.spec.ts" region="theme-for"}
 
+`overrideThemeFor` takes a class implementing `ThemeResolver` too, in place of functions, and functions in place of
+the app's class. The module binds the class as the app does, so `overrideProvider` replaces the class, or a service it
+injects:
+
+::example{file="testing/themes.spec.ts" region="theme-for-class"}
+
 A service or presenter tested without a module runs in a theme with
 [`withTheme(theme, fn)`](api:testing/withTheme). It takes a whole theme that
 [`createMockTheme(overrides?)`](api:testing/createMockTheme) builds, frozen, with the overrides merged over the
