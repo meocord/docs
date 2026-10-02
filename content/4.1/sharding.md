@@ -80,9 +80,9 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
   arrives as a string, a `Map` as `{}` and a function as `undefined`, and a value JSON can't write, such as a
   `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers, services or
   provided classes share a name.
-- **Types:** each result is typed as it arrives, as `Jsonified<T>` from `meocord/core` gives it: a method returning
-  `Promise<Date>` gives `string` values. A param JSON would change, such as a `Date`, can't be passed, and the compile
-  error names the type to declare instead:
+- **Types:** each result is typed as it arrives, as [`Jsonified<T>`](api:types/Jsonified) from `meocord/core` gives it:
+  a method returning `Promise<Date>` gives `string` values. A param JSON would change, such as a `Date`, can't be
+  passed, and the compile error names the type to declare instead:
 
   ```text
   Argument of type 'Date' is not assignable to parameter of type '{ 'This argument arrives as JSON, so declare the param as': string; }'.
