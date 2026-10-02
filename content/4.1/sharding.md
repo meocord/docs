@@ -47,9 +47,14 @@ once, and nothing else changes. Unset, `sharding` leaves `clientOptions.shards` 
   shard has stayed up for five minutes;
 - stops everything and exits 1 when a shard can't log in because the token is invalid or Discord refuses its intents,
   rather than restarting it forever, and says which privileged intents to enable;
+- stops everything and exits 1 when a shard refuses the app, as it does for two services with one name or native addons
+  built for another platform, since every shard would refuse it alike. It logs
+  `Shard N cannot start; stopping every shard.` with the reason on a line of its own, and `meocord start --dev` isn't
+  told the bot failed to log in;
 - on SIGINT or SIGTERM, asks each shard to shut down through its `onShutdown` hooks, waits up to `shutdownTimeout` plus
   five seconds, and kills any shard still running, on Windows too. A second signal more than a second after the first
-  kills them at once.
+  kills them at once. [`app.stop()`](guide:lifecycle-hooks#stopping-from-code) does the same from any process,
+  manager or shard.
 
 Each shard process runs the whole application with its own container, and its lifecycle hooks run in it. `onReady`'s
 `primary` is `true` only in the process running shard 0. Under `meocord start --dev`, every shard runs in one process,

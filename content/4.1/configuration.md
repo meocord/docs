@@ -177,8 +177,8 @@ page:
 | `cooldownStore`, `cooldownStoreFailure`, `cooldownStoreTimeoutMs` | [Cooldowns](guide:cooldowns)                 |
 | `observers`                                                       | [Observers](guide:observers)                 |
 
-`activities` lists the bot's statuses. Once it's ready, it shows one of them, picked at random, and picks again every
-10 seconds.
+`activities` lists the bot's statuses, shown in order: the first once it's ready, then the next every 10 seconds,
+starting again after the last.
 
 ## The build hook
 
