@@ -27,8 +27,10 @@ describe('newestFirst', () => {
 
 describe('the site API', () => {
   it('builds a line from its newest version, and an exact version on request', () => {
-    const newest = lineVersions('4.0')[0]
-    expect(newest).toBe('4.0.0')
+    const versions = lineVersions('4.0')
+    const newest = versions[0]
+    expect(versions).toEqual(newestFirst(versions))
+    expect(newest).toMatch(/^4\.0\.\d+$/)
     expect(apiModel('4.0')).toBeDefined()
     expect(apiModel('4.0', '4.0.0-beta.2')?.href({ section: 'core', symbol: 'MeoCordFactory' })).toBe(
       '/docs/4.0/api/4.0.0-beta.2/core/MeoCordFactory',

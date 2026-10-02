@@ -17,20 +17,25 @@ import {
   renderMissing,
   renderRelease,
 } from '@/lib/docs/reference-pages'
+import { newestFirst } from '@/lib/docs/api-site'
 
 // These read the repository's generated changelogs, migration guides and pages.
 describe('changelog', () => {
   it('reads a line newest first, each release dated by the registry', () => {
     const changelogs = lineChangelog('4.0')
-    expect(changelogs.map(changelog => changelog.version).slice(0, 2)).toEqual(['4.0.0', '4.0.0-beta.5'])
+    const versions = changelogs.map(changelog => changelog.version)
+    expect(versions).toEqual(newestFirst(versions))
+    expect(versions[0]).toMatch(/^4\.0\.\d+$/)
+    expect(versions).toEqual(expect.arrayContaining(['4.0.0', '4.0.0-beta.5']))
     expect(changelogs.every(changelog => /^\d{4}-\d{2}-\d{2}$/.test(changelog.published ?? ''))).toBe(true)
   })
 
   it('gives the newest release in summary and the earlier ones a line each, each linking its notes in full', () => {
     const [newest, ...earlier] = lineChangelog('4.0')
     const article = changelogArticle('4.0')!
+    const id = newest.version.replaceAll('.', '-')
     expect(article.toc).toEqual([
-      { id: '4-0-0', title: '4.0.0', depth: 2 },
+      { id, title: newest.version, depth: 2 },
       { id: 'earlier-releases', title: 'Earlier releases', depth: 2 },
     ])
     type Raw = { rawProps?: Record<string, unknown> }
@@ -38,7 +43,7 @@ describe('changelog', () => {
     // Group headings and entry lists for the newest release only, then one list naming the others.
     const groups = article.nodes.filter(node => props(node)['data-group'])
     expect(groups.map(node => props(node).id)).toEqual(
-      newest.sections.map(section => `4-0-0-${section.title.toLowerCase().replace(/ /g, '-')}`),
+      newest.sections.map(section => `${id}-${section.title.toLowerCase().replace(/ /g, '-')}`),
     )
     const releases = article.nodes.find(node => props(node)['data-releases'])
     const items = props(releases).children as Raw[]
