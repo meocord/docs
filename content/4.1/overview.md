@@ -44,7 +44,8 @@ test. It gives a bot the structure a web framework gives a server, and with it:
   module from the app class itself. See [Testing](guide:testing), [Mocks](guide:mocks) and
   [Invoke and dispatch](guide:invoke-and-dispatch).
 - **One pipeline around every call.** Guards, interceptors, validation, pipes, cooldowns and exception filters run in a
-  fixed order around every handler, each set on one method, a controller or the whole bot. See
+  fixed order around every handler. Guards, interceptors and filters are set on one method, a controller or the whole
+  bot, cooldowns on a method or a controller, and validation and pipes on a method. See
   [How a call runs](guide:how-a-call-runs).
 - **Cooldowns and translations built in.** [`@Cooldown`](guide:cooldowns) counts per user, server, channel or resource,
   in memory or [in Redis](guide:recipes/cooldown-stores), and [typed catalogs](guide:localisation) translate what the
@@ -95,11 +96,12 @@ bot from build to shutdown, and where each part of this guide sits.
 1. **Create.** The factory reads `@MeoCord`'s options and the built config, then makes one container. It binds the
    discord.js `Client`, made from `clientOptions`, the translator, the handler registry, the shard context, the cooldown
    store, and every controller and service the app lists, with everything they inject, as
-   [singletons](#what-lives-how-long). With [process sharding](guide:sharding), the first process instead becomes a
-   manager that starts the shards, each of which runs these steps itself.
+   [singletons](#what-lives-how-long). It builds the component routes once, so a pattern it can't read stops the bot
+   here. With [process sharding](guide:sharding), the first process instead becomes a manager that starts the shards,
+   each of which runs these steps itself.
 2. **Log in.** `start()` first makes every provided value, waiting for async factories, and the services `@MeoCord`
-   lists, so their constructors run before login. It then builds the component routes once, attaches MeoCord's
-   listeners to the client, and logs in. A failed factory or login rejects `start()` and sets the exit code to 1.
+   lists, so their constructors run before login. It then attaches MeoCord's listeners to the client and logs in. A
+   failed factory or login rejects `start()` and sets the exit code to 1.
 3. **Ready.** When Discord says the client is ready, whatever isn't made yet, such as the controllers and the services
    only injected, is resolved, and the `onReady` hooks run in dependency order; see
    [Lifecycle hooks](guide:lifecycle-hooks). Alongside, the commands the [builders](guide:glossary#builder) describe

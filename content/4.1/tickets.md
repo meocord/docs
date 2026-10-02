@@ -40,9 +40,9 @@ The guard lets through the member who opened the ticket, and anyone whose permis
   submit handler's params, keyed by their `customId`. See [Modals](guide:components#modals).
 - **The answer to the form.** A form opened from a command, not from a button on a message, has no message to
   update, so `send()` replies. The confirmation is private.
-- **One ticket every ten minutes.** `@Cooldown({ uses: 1, seconds: 600 })` counts each member's calls apart. A
-  second try in that time is told only to that member how long to wait, such as "Slow down: try again in 9m 12s."
-  The call is counted as the form opens, so a form closed without sending still counts.
+- **One ticket every ten minutes.** `@Cooldown({ uses: 1, seconds: 600 })` counts each member's calls apart. A second
+  try in that time is told only to that member when they can try again, as a time Discord shows in their own language
+  and counts down. The call is counted as the form opens, so a form closed without sending still counts.
 - **Who can close it.** The route carries the id of the member who opened the ticket, and the guard reads it from
   the params. Anyone else is told privately why they can't, and the handler never runs.
 - **Closing.** The handler updates the button's message, then locks and archives the thread, so members can still
@@ -56,7 +56,8 @@ The guard lets through the member who opened the ticket, and anyone whose permis
 
 ### Permissions
 
-The bot needs Create Private Threads and Send Messages in Threads in the channel.
+The bot needs Create Private Threads and Send Messages in Threads in the channel, and Manage Threads to lock a ticket as
+it closes.
 
 ### Staff in the thread
 

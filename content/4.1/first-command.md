@@ -89,9 +89,9 @@ mocks for every interaction type.
 - **A new controller does nothing until it's in `controllers`.** `meocord generate` doesn't edit `src/app.ts`, so add
   each class it writes there yourself.
 - **A command's name is lowercase,** at most 32 characters, with no spaces: Discord refuses others, and the builder
-  throws as the bot starts, naming the builder and the command.
-- **A method called directly skips the pipeline.** In a test, go through `invoke`, so guards, cooldowns and filters run
-  as they do in the bot.
+  throws as the controller loads, naming the builder and the command.
+- **A method called directly skips most of the pipeline.** Only its own and its controller's guards run. In a test, go
+  through `invoke`, so global guards, validation, cooldowns and filters run as they do in the bot.
 
 ## Next steps
 

@@ -38,8 +38,9 @@ A message command's words are read in two steps around the [guards](guide:guards
 
 1. **Parse.** Before the guards, each word is read without asking Discord: numbers, words to choose from,
    flags, and the shape of each mention or ID. A word of the wrong type gets the usage reply.
-2. **Fetch.** Once the guards let the call through, each member, user, role and channel the cache lacks is
-   fetched. The handler, `@Validate`, pipes and `@Cooldown({ by })` get the entities themselves.
+2. **Fetch.** Once the guards let the call through, each member, user and channel the cache lacks is fetched; a role is
+   read from the cache, or found by its name, in the first step. The handler, `@Validate`, pipes and `@Cooldown({ by })`
+   get the entities themselves.
 
 So a caller the guards refuse costs no request to Discord. Each ID is fetched once, however many messages ask
 for it at the same time, and members go 100 to a request.
@@ -59,10 +60,10 @@ for it at the same time, and members go 100 to a request.
 | words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set |
 | your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                    |
 
-The handler's params are checked against the pattern when the code compiles. A name the pattern doesn't have,
-a type its value doesn't fit, or an optional param declared as always there is an error in the editor.
-[`ParamsOf`](api:types/ParamsOf) gives the type a pattern produces, for a helper that takes the same params.
-An untyped param is text that `@Validate` or a pipe may change, so it isn't checked.
+The handler's params are checked against the pattern when the code compiles. A name the pattern doesn't have, a type its
+value doesn't fit, or an optional param declared as always there is an error in the editor.
+[`ParamsOf`](api:types/ParamsOf) gives the type a pattern produces, for a helper that takes the same params. An untyped
+param is text that `@Validate` or a pipe may change, so only whether it is optional is checked.
 
 ### Several optional params
 

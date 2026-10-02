@@ -39,8 +39,8 @@ The app lists the provider. The store needs no listing, because the controller i
 ## How it works
 
 - **Before login.** `start()` makes every provided value first, awaiting an async factory, so no class ever
-  injects a promise. A database that refuses the connection rejects `start()`: the generated `main.ts` logs the
-  reason and sets the exit code to 1, and the bot never logs in.
+  injects a promise. A database that refuses the connection rejects `start()`: MeoCord logs which factory failed and
+  why, the exit code is set to 1, and the bot never logs in.
 - **One pool.** A provided value is made once, so every store that injects `DATABASE` shares the same pool.
 - **Closing it.** The value the factory returns has an `onShutdown` hook of its own. Hooks stop in reverse
   dependency order, so the pool closes after every class that injects it has stopped. See

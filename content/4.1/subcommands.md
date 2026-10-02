@@ -20,8 +20,8 @@ each subcommand gets a method of its own.
 ## When to use it
 
 Use subcommands when several actions belong under one name: `/ticket open`, `/ticket close` and `/ticket list` read
-as one feature, and share one entry in Discord's command list. Discord allows up to 25 subcommands per command, and
-one level of groups.
+as one feature, and share one entry in Discord's command list. Discord allows up to 25 subcommands or groups in a
+command, 25 subcommands in each group, and one level of groups.
 
 For actions that don't share a theme, separate [slash commands](guide:slash-commands) are easier to find. For a
 choice between a few values of one action, a string option with choices is simpler than a subcommand per value.
@@ -69,11 +69,12 @@ An option inside a subcommand is autocompleted by the subcommand's path and the 
 
 - **A subcommand handler with a builder stops the bot.** The builder is asked to build a command named by the path,
   `settings notify email`, and discord.js refuses the spaces, so the controller fails to load with
-  `SettingsCommandBuilder could not build "settings notify email": Invalid string format…`. A builder that sets the
-  name `settings` itself is registered once, with a warning that the command is built more than once. Give subcommand
-  handlers `CommandType.SLASH`.
-- **A typo in the path falls back silently.** `@Command('settings notfy email', …)` never matches, so the command's
-  own handler runs instead. Test each path with `invoke`, which refuses a path its handler doesn't handle.
+  `the builder SettingsCommandBuilder is declared on "settings notify email", which is a subcommand path…`, which says
+  to declare the handler with `CommandType.SLASH`. A builder that sets the name `settings` itself is registered once,
+  with a warning that the builder of `settings` describes the path. Give subcommand handlers `CommandType.SLASH`.
+- **A typo in the path.** `@Command('settings notfy email', …)` never matches, so the command's own handler runs
+  instead. The bot warns as it starts that the path is not a subcommand its builder registers. Test each path with
+  `invoke` too, which refuses a path its handler doesn't handle.
 
 ## Next steps
 

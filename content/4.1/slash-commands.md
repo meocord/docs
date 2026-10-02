@@ -43,8 +43,8 @@ interaction, and the options the member typed, keyed by name. It answers private
 
 ## How it works
 
-1. **At startup**, once the bot is ready, MeoCord calls each builder's `build(commandName)` with the name from
-   `@Command`, and registers the commands with Discord in one bulk update per scope.
+1. **As the controller loads**, `@Command` calls its builder's `build(commandName)` with the name it was given. Once
+   the bot is ready, MeoCord registers the commands with Discord in one bulk update per scope.
 2. **When a member runs one**, Discord sends a `ChatInputCommandInteraction`. MeoCord finds the handler by the
    command's name, and by its subcommand path when it has one.
 3. **The handler runs** through the [pipeline](guide:how-a-call-runs): `@Defer`, guards, interceptors, validation

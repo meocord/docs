@@ -5,7 +5,7 @@ import { Observer } from 'meocord/decorator'
 import { type DispatchObserver, type DispatchResult } from 'meocord/interface'
 import { RefusalLog } from '@src/services/refusal-log.service'
 
-// Told only about interactions: commands, components, modals and autocomplete
+// Told only about interactions: commands, components and modals; autocomplete is a type of its own
 @Observer({ types: ['interaction'] })
 export class AuditObserver implements DispatchObserver {
   private readonly logger = new Logger(AuditObserver.name)

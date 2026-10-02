@@ -76,7 +76,7 @@ word are the bot's own:
 ::example{from="compare" file="discordjs/prefix.ts" region="prefix"}
 
 In MeoCord it is a pattern. The app sets the prefix once, each param is typed and checked before the handler runs,
-and a message that names the command but doesn't fit it gets the command's usage in reply:
+and a message that leaves out a param gets the command's usage in reply, and one the schema refuses gets the reason:
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
@@ -101,7 +101,7 @@ In MeoCord, an event is a decorated method, and the app class lists the controll
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
-::example{file="app.ts" region="app"}
+::example{file="app-beyond-commands.ts" region="app"}
 
 ## Shared logic
 

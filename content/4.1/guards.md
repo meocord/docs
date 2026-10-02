@@ -29,8 +29,8 @@ A guard decides whether a handler runs. It's a class with one method, `canActiva
 call through and `false` to stop it. To tell the user why they were stopped, it throws
 [`GuardDeniedError`](api:responses/GuardDeniedError) with the reason instead.
 
-Guards run before anything that costs a request to Discord or counts a call, so a caller they refuse costs the bot
-nothing.
+Guards run before anything that fetches from Discord or counts a call. Only `@Defer`'s acknowledgement comes first, so a
+caller they refuse costs the bot almost nothing.
 
 ## When to use it
 
@@ -51,8 +51,8 @@ A stranger pressing the button is told privately that it isn't theirs, and the h
 
 ## How it works
 
-A guard runs after [`@Defer`](guide:defer)'s acknowledgement and before everything else in the call: the fetch of a
-message's entities, interceptors, validation, cooldowns and the handler.
+A guard runs after [`@Defer`](guide:defer)'s acknowledgement, and after a message command's words are read, and before
+everything else in the call: the fetch of a message's entities, interceptors, validation, cooldowns and the handler.
 [How a call runs](guide:how-a-call-runs) shows the whole order.
 
 `canActivate` can be async. Its answer means:
@@ -61,7 +61,7 @@ message's entities, interceptors, validation, cooldowns and the handler.
 | ------------------------- | -------------------------------------------------------------------- |
 | returns `true`            | goes on to the next guard, then the rest of the call                 |
 | returns `false`           | stops silently; observers see the outcome `'denied'`                 |
-| throws `GuardDeniedError` | stops, and the user is told the error's message, only them           |
+| throws `GuardDeniedError` | stops, and the user is told the error's message                      |
 | throws `UserError`        | stops, and the user is told the message; observers see `'refused'`   |
 | throws anything else      | goes to the [exception filters](guide:exception-filters) as an error |
 
@@ -119,8 +119,8 @@ one. Read your server's role IDs from `.env`, adding `ADMIN_ROLE_ID` and `MODERA
 
 ::example{file="guards/role-ids.ts" region="role-ids"}
 
-A decorator reads them when your controller loads, and that works: MeoCord loads `meocord.config.ts`, and the
-`dotenv/config` import at its top, before your application's code.
+A decorator reads them when your controller loads, and that works: MeoCord loads `meocord.config.ts`, which loads your
+`.env` files with dotenv at its top, before your application's code.
 
 `ExecutionContext` also gives the guard the handler's params with `getHandlerParams()`, raw, before validation and
 pipes, and the call's type, controller and handler. Only guards inject it; the other stages receive it as an argument.
@@ -142,20 +142,20 @@ themselves.
 
 ## Refusing a call
 
-`GuardDeniedError`'s message is shown only to the user who made the call:
+`GuardDeniedError`'s message goes to the user who made the call:
 
 - after an interaction, privately, as a reply or a follow-up, whichever the answer allows;
-- after a message command, as a reply without a ping, deleted after
+- after a message command, as a reply in the channel without a ping, deleted after
   `@MeoCord({ messages: { deleteUsageRepliesAfter } })` seconds.
 
-A guard that denies a handler for every message, or an event handler, answers nothing, since it only filters what the
-handler takes. Before an autocomplete, a guard must not answer at all: returning `false` closes the menu with an empty
-list.
+A guard that denies a handler for every message, a reaction handler or an event handler answers nothing, since it only
+filters what the handler takes. Before an autocomplete, a guard must not answer at all: returning `false` closes the
+menu with an empty list.
 
 ## Testing
 
-The [testing module](guide:testing) runs guards as the bot does, and `invoke` resolves with `ran: false` when one
-stopped the call:
+The [testing module](guide:testing) runs guards as the bot does. `invoke` resolves with `ran: false` when a guard
+returned `false`, and rejects with the `GuardDeniedError` one threw; `dispatch` answers it as the bot does:
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="invoke"}
 
