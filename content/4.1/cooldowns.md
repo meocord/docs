@@ -65,8 +65,8 @@ a reply in the channel can't be private, unless the app turns on
 a controller's `uses: 3` gives every handler three.
 
 A message command whose params name members, users, roles or channels is checked sooner too. Before they're fetched from
-Discord, the call is checked against its cooldowns without `by`, without being counted, so a call on cooldown costs no
-requests.
+Discord, the call is checked, without being counted, against those of its cooldowns that have no `by`, so a call on
+cooldown costs no requests.
 
 ## Options
 
@@ -174,8 +174,8 @@ failing call.
 
 ## Testing
 
-Each testing module counts in a fresh in-memory store, unless its `app` names a `cooldownStore`, which it uses as the
-bot does, so a test starts with every cooldown unused:
+Each testing module counts in a fresh in-memory store, so a test starts with every cooldown unused. A module whose `app`
+names a `cooldownStore` counts in that store instead, as the bot does:
 
 ::example{file="controllers/slash/daily.slash.controller.spec.ts" region="spec"}
 

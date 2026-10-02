@@ -88,9 +88,8 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 
 ## Overrides
 
-The second argument sets properties as the mock is built. It's the only way to set what discord.js makes read-only,
-such as a modal's `customId` and `fields`, a context menu's `targetUser`, or the `client`.
-A misspelled property name is a compile error.
+The second argument sets properties as the mock is built. It's the only way to set what discord.js makes read-only, such
+as a modal's `customId` and `fields`, or the `client`. A misspelled property name is a compile error.
 
 To put a command somewhere a user-installed app can be used, set `context` and `authorizingIntegrationOwners`:
 
@@ -136,7 +135,7 @@ test build. A file upload field takes an array of `Attachment`s: `createModalFie
   user's one DM channel, which `createDM()` resolves to.
 - **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
   type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches, with
-  the channel as their `channel`, or a thread's members as their `thread`. Give one to `createMockMessage({ channel })`
+  the channel as their `channel`, and as `thread` on a thread's `members`. Give one to `createMockMessage({ channel })`
   to send a message there, or to an interaction to have it come from there.
 - **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface. A type has no
   shape at runtime, so every property is a mock function, data included: `if (settings.enabled)` always passes. Pass
@@ -182,7 +181,7 @@ A method that returns a promise in discord.js resolves, so `await` and `.catch()
 | a manager's `fetch()` for a list                                                                                              | an empty `Collection`                                |
 | a manager's `create()` and `edit()`                                                                                           | a mock of its item                                   |
 | `createDM()`                                                                                                                  | a mock DM channel                                    |
-| a structure's own `edit()`, `fetch()`, `delete()` and setters, but for a message                                              | the structure itself                                 |
+| a structure's own `edit()`, `fetch()`, `delete()` and setters, but a message's `edit()` and `delete()`                        | the structure itself                                 |
 | a message's `edit()`                                                                                                          | a new mock message                                   |
 | a message's `delete()`, `pin()` and `unpin()`                                                                                 | `undefined`                                          |
 | any other method that returns a promise                                                                                       | `undefined`                                          |

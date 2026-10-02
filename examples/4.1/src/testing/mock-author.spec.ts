@@ -21,7 +21,7 @@ describe('mocks from one user', () => {
     await module.dispatch(retry)
 
     expect(first.reply).toHaveBeenCalledWith('You claimed 100 coins. Come back tomorrow.')
-    // The same author, so the same member's cooldown refuses the second
+    // The same author, so the same user's cooldown refuses the second
     expect(retry.reply).not.toHaveBeenCalled()
   })
   // #endregion author
