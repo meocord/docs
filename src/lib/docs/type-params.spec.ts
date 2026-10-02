@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import { isComputedType, propertyKey, type Token } from '@/lib/docs/api-model'
+import { isComputedType, OPTIONS_TYPE, propertyKey, type Token } from '@/lib/docs/api-model'
 
 // The package the 4.1 examples pin, whose own declarations TypeScript reads here, apart from TypeDoc
 const pkgDir = realpathSync('examples/4.1/node_modules/meocord')
@@ -222,29 +222,61 @@ describe('option rows', () => {
     expect(text(guards.type)).toContain('[K in keyof G]')
   })
 
-  it("follow the declaration's order, as @MeoCord's options do", async () => {
-    // @MeoCord's options object as its declaration orders it
-    let written: string[] = []
+  it("follow the declaration's order, as @MeoCord's options do, for every function that takes options", async () => {
+    // Each options interface's members, and each function's parameters' object types, as the declarations order them
+    const shapes = new Map<string, string[]>()
+    const takes: [fn: string, param: string, type: ts.TypeNode][] = []
+    const names = (members: ts.NodeArray<ts.TypeElement>) =>
+      members.flatMap(member => (member.name && ts.isIdentifier(member.name) ? [member.name.text] : []))
     for (const file of declarationFiles(path.join(pkgDir, 'dist', 'types'))) {
       const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true)
       const visit = (node: ts.Node) => {
-        const options =
-          ts.isFunctionDeclaration(node) && node.name?.text === 'MeoCord' ? node.parameters[0]?.type : undefined
-        if (options && ts.isTypeLiteralNode(options))
-          written = options.members.flatMap(member =>
-            member.name && ts.isIdentifier(member.name) ? [member.name.text] : [],
-          )
+        if (ts.isInterfaceDeclaration(node) && OPTIONS_TYPE.test(node.name.text))
+          shapes.set(node.name.text, names(node.members))
+        if (ts.isFunctionDeclaration(node) && node.name)
+          for (const param of node.parameters)
+            if (param.type && ts.isIdentifier(param.name)) takes.push([node.name.text, param.name.text, param.type])
         ts.forEachChild(node, visit)
       }
       visit(source)
     }
-    const { apiModel } = await import('@/lib/docs/api-site')
-    const meocord = apiModel('4.1', version)!.symbol('decorators', 'MeoCord')!
-    const rows = meocord.signatures[0]!.params.filter(param => param.option && param.name.split('.').length === 2).map(
-      param => param.name.slice('options.'.length),
+    // An object typed inline, an options interface named, generic or not, as `MeoCordOptions<G, I, F>` is, or an
+    // intersection of them, as `CooldownOptions<P> & { by?: … }` is
+    const expected = (type: ts.TypeNode): string[] | undefined => {
+      if (ts.isTypeLiteralNode(type)) return names(type.members)
+      if (ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName)) return shapes.get(type.typeName.text)
+      if (!ts.isIntersectionTypeNode(type)) return undefined
+      const parts = type.types.map(expected)
+      // A member the intersection names twice, as `by` narrowed, is one member
+      return parts.every(part => part !== undefined) ? [...new Set(parts.flat())] : undefined
+    }
+    const { apiModel, apiSections } = await import('@/lib/docs/api-site')
+    const model = apiModel('4.1', version)!
+    const functions = new Map(
+      apiSections(model).flatMap(section =>
+        section.symbols.flatMap(listing => {
+          const symbol = model.symbol(section.slug, listing.name)
+          return symbol?.kind === 'function' ? [[symbol.name, symbol] as const] : []
+        }),
+      ),
     )
-    expect(written.slice(0, 2)).toEqual(['controllers', 'clientOptions'])
-    expect(rows).toEqual(written)
+    const compared: string[] = []
+    for (const [fn, param, type] of takes) {
+      const written = expected(type)
+      const symbol = functions.get(fn)
+      if (!written?.length || !symbol) continue
+      const rows = symbol.signatures
+        .map(signature =>
+          signature.params
+            .filter(row => row.option && row.name.startsWith(`${param}.`) && row.name.split('.').length === 2)
+            .map(row => row.name.slice(param.length + 1)),
+        )
+        .find(list => list.length > 0)
+      expect(rows, `${fn}(${param})`).toEqual(written)
+      compared.push(fn)
+    }
+    // @MeoCord's options, typed as the generic MeoCordOptions, are among them
+    expect(compared).toEqual(expect.arrayContaining(['MeoCord', 'Controller', 'Cooldown', 'Defer']))
   })
 
   it("list every interface's members in its declaration's order", async () => {

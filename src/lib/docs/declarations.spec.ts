@@ -39,7 +39,10 @@ function shape(node: ts.Node, source: ts.SourceFile): string {
     if (child.kind === ts.SyntaxKind.ExportKeyword || child.kind === ts.SyntaxKind.DeclareKeyword) return
     children.push(shape(child, source))
   })
-  return children.length > 0 ? `${ts.SyntaxKind[node.kind]}(${children.join(',')})` : node.getText(source)
+  // A member with nothing in it, as `constructor();` is, reads as its text without the `;` that ends it
+  return children.length > 0
+    ? `${ts.SyntaxKind[node.kind]}(${children.join(',')})`
+    : node.getText(source).replace(/;$/, '')
 }
 
 /** The name the top-level `@param` at a parameter's position gives it, if its declaration has one. */
