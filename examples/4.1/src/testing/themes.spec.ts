@@ -4,6 +4,7 @@ import { Command, Controller, MeoCord, Service } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
 import { createMockInteraction, createMockTheme, getResponse, MeoCordTestingModule, withTheme } from 'meocord/testing'
 import { describe, expect, it, vi } from 'vitest'
+import { PrefsService, UserThemes } from '@src/app-with-theme-resolver'
 
 @Service()
 class Receipts {
@@ -64,6 +65,21 @@ describe('testing themes', () => {
     expect(guild).toHaveBeenCalledTimes(2)
   })
   // #endregion theme-for
+
+  // #region theme-for-class
+  it('replaces the service a themeFor class injects', async () => {
+    const module = MeoCordTestingModule.create({ app: ShopApp, controllers: [ShopController] })
+      .overrideThemeFor(UserThemes)
+      .overrideProvider(PrefsService)
+      .useValue({ themeOf: async () => ({ colors: { primary: '#26A042' } }) })
+      .compile()
+    const click = createMockInteraction(ButtonInteraction, { customId: 'shop/buy' })
+
+    await module.invoke(ShopController, 'buy', click)
+
+    expect(colourOf(click)).toBe(resolveColor('#26A042'))
+  })
+  // #endregion theme-for-class
 
   // #region mock-theme
   it('runs a service in a theme, with no module', () => {
