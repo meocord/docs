@@ -191,6 +191,10 @@ see [Discord's errors](guide:mocks#discords-errors).
 - **Reactions are missed.** Reactions need the `GuildMessageReactions` intent, or `DirectMessageReactions` in DMs.
   For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials. See
   [Reactions](guide:reactions#gotchas).
+- **A handler on a service never runs.** Commands, components, messages and reactions reach only the app's
+  `@MeoCord({ controllers })`. The bot warns at startup, "… handlers in classes that are not controllers never run",
+  naming each one; move it to a controller. See
+  [the upgrade guide](guide:migrating#a-handler-on-a-class-that-isnt-a-controller-logs-a-warning).
 - **`@On(event)` never runs.** Most events need an intent. The bot warns at startup, "The … intent is not in
   clientOptions.intents, so Discord will not send what … handles", naming the handler. See
   [Intents](guide:gateway-events#intents).
