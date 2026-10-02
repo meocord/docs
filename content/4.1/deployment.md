@@ -141,8 +141,9 @@ pm2 start dist/main.js --name my-bot --kill-timeout 12000
 pm2 save
 ```
 
-Start it from the project's root, or set `cwd` in an ecosystem file: the bot finds `.env` and
-`dist/meocord.config.mjs` from the working directory. pm2 waits 1.6 seconds for a process to stop by default;
+Start it from the project's root, or set `cwd` in an ecosystem file: the bot reads `.env` from the working directory.
+It finds `dist/meocord.config.mjs` and its assets beside `dist/main.js`, in a development build as in a production
+one, however pm2 starts it. pm2 waits 1.6 seconds for a process to stop by default;
 `--kill-timeout` gives the bot's [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) longer than `shutdownTimeout`.
 
 ## Registering commands on deploy

@@ -105,6 +105,10 @@ Either layout works, and both can live in one project. A few things belong at th
 `vitest.config.ts` gives Vitest the same alias. Prefer it to long relative paths: a file moved to another folder keeps
 its imports.
 
+The build reads your `paths` as TypeScript does: from `compilerOptions.baseUrl` when your `tsconfig.json` sets one,
+else from the `tsconfig.json` itself. A `baseUrl` it only inherits through `extends` isn't applied to the `paths` it
+sets, so declare those relative to the project's own `tsconfig.json`.
+
 ### The three tsconfigs
 
 | File                   | Checks                                    | Why it exists                                                             |

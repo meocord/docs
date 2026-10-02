@@ -144,7 +144,7 @@ A store that connects can do it in its own [lifecycle hooks](guide:lifecycle-hoo
 services', and a call that comes meanwhile waits for it, up to `cooldownStoreTimeoutMs`; one that would wait longer
 meets the [`cooldownStoreFailure`](guide:cooldowns#when-the-store-fails) policy. Its `onShutdown` runs after the
 services', once the calls under way have finished, along with every store operation they started, so the store closes
-after its last write.
+after its last write. A service that injects `CooldownStore` gets the app's store, whose hooks still run once.
 
 ### Giving back a refused call's use
 

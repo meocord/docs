@@ -135,8 +135,8 @@ imports:
 APP_ENV=staging node dist/main.js
 ```
 
-Start the bot from the project root: the `.env` files and `dist/meocord.config.mjs` are both found from the working
-directory, so set `cwd` in pm2 and `WORKDIR` in a Dockerfile.
+Start the bot from the project root: the `.env` files are read from the working directory, so set `cwd` in pm2 and
+`WORKDIR` in a Dockerfile. `dist/meocord.config.mjs` is found beside the bundle wherever the bot starts.
 
 ## Your own settings
 
