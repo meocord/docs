@@ -1,4 +1,4 @@
-import { resolveStoredHref, type VersionsManifest } from '@/lib/urls'
+import { canonicalDocsPath, type VersionsManifest } from '@/lib/urls'
 /** Files served from public/, whose names do not change between deploys. */
 const STATIC_FILE = /\.(?:ico|png|jpe?g|gif|webp|avif|svg|webmanifest|woff2?|ttf|txt)$/
 
@@ -123,12 +123,36 @@ export function prereleaseRedirect(pathname: string, lines: { latest: string; ne
 }
 
 /**
- * Where the current line's number URL points: its `latest` URL, the one the site links to, so each page has one
- * address and one place in the sidebar. What `resolveStoredHref` keeps bound to its line, an exact version's API and
- * a missing page, keeps its URL; undefined for those and any other path. A 307, because the current line changes.
+ * Whether a page may move a reader permanently: only where the mapping can never change. An exact version always
+ * belongs to its line, and an older line's pages stay as they are; the current line's page is reached through
+ * `latest`, which reaches another line once the current one changes, so its moves are temporary.
  */
-export function currentLineRedirect(pathname: string, versions: VersionsManifest): string | undefined {
-  if (pathKind(pathname) !== 'versioned-page') return undefined
-  const canonical = resolveStoredHref(pathname, versions)
+export function permanentMove(move: 'exact-version' | 'line-page', lineIsCurrent: boolean): boolean {
+  return move === 'exact-version' || !lineIsCurrent
+}
+
+/**
+ * Where a docs path points when it is not the one URL its page answers at, as `canonicalDocsPath` gives it: the current
+ * line's number URL to `latest`, and a page bound to its line by design, reached through `latest`, to its line's
+ * number, so each page has one address and one place in the sidebar. Undefined for a path at its own URL and any
+ * other path. A 307, because the current line changes.
+ */
+export function canonicalRedirect(pathname: string, versions: VersionsManifest): string | undefined {
+  if (pathKind(pathname) !== 'versioned-page' && !/^\/docs\/latest(?:\/|$)/.test(pathname)) return undefined
+  const canonical = canonicalDocsPath(pathname, versions)
   return canonical === pathname ? undefined : canonical
+}
+
+/**
+ * Where the proxy sends a docs path, in one hop: `/docs/next/…` to the line in prerelease, or once none is, to the one
+ * URL its page answers at under `latest`; any other path to its one URL, as `canonicalRedirect` gives it. Undefined for
+ * a path already at its one URL.
+ */
+export function docsRedirect(
+  pathname: string,
+  aliases: { latest: string; next?: string },
+  versions: VersionsManifest,
+): string | undefined {
+  const next = prereleaseRedirect(pathname, aliases)
+  return next ? canonicalDocsPath(next, versions) : canonicalRedirect(pathname, versions)
 }

@@ -197,3 +197,28 @@ export function resolveStoredHref(href: string, versions: VersionsManifest): str
   const entry = versions.lines.find(candidate => candidate.line === line)
   return entry?.status === 'current' ? `/docs/latest${rest}` : href
 }
+
+const LATEST_PATH = /^\/docs\/latest(?=[/?#]|$)(.*)$/s
+const EXACT_API = /^\/api\/([^/?#]+)\//
+const MISSING = /^\/missing\//
+
+/**
+ * The one URL a docs path answers at. The current line's number URL is its `latest` URL, as `resolveStoredHref` emits
+ * it; a page bound to its line by design, reached through `latest`, is at its line's number: an exact version's API
+ * under its version's line, a missing page under the current line. Any other path is its own.
+ *
+ * @example
+ * canonicalDocsPath('/docs/4.1/guards', versions) // '/docs/latest/guards' while 4.1 is current
+ * canonicalDocsPath('/docs/latest/api/4.0.0/core/Logger', versions) // '/docs/4.0/api/4.0.0/core/Logger'
+ */
+export function canonicalDocsPath(pathname: string, versions: VersionsManifest): string {
+  const latest = LATEST_PATH.exec(pathname)
+  if (!latest) return resolveStoredHref(pathname, versions)
+  const rest = latest[1]
+  const version = EXACT_API.exec(rest)?.[1]
+  if (version && VERSION.test(version) && versions.lines.some(entry => entry.line === lineOf(version))) {
+    return `/docs/${lineOf(version)}${rest}`
+  }
+  const current = versions.lines.find(entry => entry.status === 'current')?.line
+  return current && MISSING.test(rest) ? `/docs/${current}${rest}` : pathname
+}

@@ -3,12 +3,11 @@ import { DOC_ALIASES, DOC_LINES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import {
   cacheControlFor,
-  currentLineRedirect,
+  docsRedirect,
   isInertPath,
   isPlaygroundAsset,
   pathKind,
   playgroundFrameCsp,
-  prereleaseRedirect,
   STATIC_FILE_CSP,
 } from '@/lib/cache-policy'
 
@@ -42,7 +41,7 @@ const DOCUMENT_CSP = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const redirect = prereleaseRedirect(pathname, DOC_ALIASES) ?? currentLineRedirect(pathname, DOC_LINES)
+  const redirect = docsRedirect(pathname, DOC_ALIASES, DOC_LINES)
   const response = redirect
     ? NextResponse.redirect(new URL(redirect + request.nextUrl.search, request.url), 307)
     : NextResponse.next()

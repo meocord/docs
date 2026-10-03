@@ -26,6 +26,12 @@ describe('proxy', () => {
     expect(response.headers.get('Location')).toBe('https://docs.test/docs/latest/guards?tab=bun')
   })
 
+  it('sends a missing page reached through latest to the current line, where it is bound', () => {
+    const response = proxy(request('/docs/latest/missing/features'))
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe(`https://docs.test/docs/${CURRENT}/missing/features`)
+  })
+
   it('gives public files the flat-deny policy', () => {
     const response = proxy(request('/icon-32.png'))
     expect(response.headers.get('Content-Security-Policy')).toBe(STATIC_FILE_CSP)

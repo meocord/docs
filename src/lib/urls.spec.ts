@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canonicalDocsPath,
   docsHref,
   entrySegment,
   lineOf,
@@ -132,6 +133,29 @@ describe('docsHref', () => {
       'not a valid member name',
     )
     expect(() => docsHref({ kind: 'missing', line: '4.1', id: 'A' }, BETA)).toThrow('not a valid page id')
+  })
+})
+
+describe('canonicalDocsPath', () => {
+  it("gives the current line's number URL as latest, and other lines their number", () => {
+    expect(canonicalDocsPath('/docs/4.1/guards', STABLE)).toBe('/docs/latest/guards')
+    expect(canonicalDocsPath('/docs/4.0/guards', STABLE)).toBe('/docs/4.0/guards')
+    expect(canonicalDocsPath('/docs/4.0/guards', BETA)).toBe('/docs/latest/guards')
+  })
+
+  it("puts a line-bound page reached through latest at its line's number", () => {
+    expect(canonicalDocsPath('/docs/latest/api/4.0.0-beta.0/common/Logger', STABLE)).toBe(
+      '/docs/4.0/api/4.0.0-beta.0/common/Logger',
+    )
+    expect(canonicalDocsPath('/docs/latest/missing/features', STABLE)).toBe('/docs/4.1/missing/features')
+    expect(canonicalDocsPath('/docs/latest/missing/features', BETA)).toBe('/docs/4.0/missing/features')
+  })
+
+  it('leaves every other path as it is', () => {
+    expect(canonicalDocsPath('/docs/latest/guards', STABLE)).toBe('/docs/latest/guards')
+    expect(canonicalDocsPath('/docs/latest/api/decorators/Defer', STABLE)).toBe('/docs/latest/api/decorators/Defer')
+    expect(canonicalDocsPath('/docs/latest/api/5.0.0/core/Logger', STABLE)).toBe('/docs/latest/api/5.0.0/core/Logger')
+    expect(canonicalDocsPath('/', STABLE)).toBe('/')
   })
 })
 
