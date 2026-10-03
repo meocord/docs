@@ -67,8 +67,9 @@ The first argument is the command path, so subcommands work as they do for `@Com
 ## When no handler claims an option
 
 MeoCord answers with an empty list, and logs which command and option have no handler, so the menu shows empty rather
-than loading until it times out. An error no filter handles does the same; a filter that catches one answers
-it itself, with `interaction.respond([])`.
+than loading until it times out. An error no filter handles does the same. A filter that catches the handler's
+own error answers it itself, with `interaction.respond([])`; after a guard's or a pipe's error, MeoCord still closes
+the menu if the filter didn't.
 
 ## Gotchas
 
