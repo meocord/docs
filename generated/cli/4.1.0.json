@@ -1,0 +1,590 @@
+{
+  "schemaVersion": 1,
+  "meocordVersion": "4.1.0",
+  "name": "meocord",
+  "description": "CLI for managing the MeoCord application",
+  "usage": "[options] [command]",
+  "options": [
+    {
+      "flags": "-V, --version",
+      "short": "-V",
+      "long": "--version",
+      "description": "output the version number",
+      "value": null,
+      "mandatory": false,
+      "default": null,
+      "defaultDescription": null,
+      "choices": null,
+      "env": null,
+      "negate": false
+    }
+  ],
+  "commands": [
+    {
+      "name": "show",
+      "path": [
+        "show"
+      ],
+      "aliases": [],
+      "summary": null,
+      "description": "Display information",
+      "usage": "[options]",
+      "arguments": [],
+      "options": [
+        {
+          "flags": "-w, --warranty",
+          "short": "-w",
+          "long": "--warranty",
+          "description": "Display warranty disclaimer",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-c, --license",
+          "short": "-c",
+          "long": "--license",
+          "description": "Display license",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        }
+      ],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": []
+    },
+    {
+      "name": "create",
+      "path": [
+        "create"
+      ],
+      "aliases": [],
+      "summary": null,
+      "description": "Create a new MeoCord application",
+      "usage": "[options] <app-name>",
+      "arguments": [
+        {
+          "name": "app-name",
+          "description": "Name of the application and of the directory it is created in, such as my-bot",
+          "required": true,
+          "variadic": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null
+        }
+      ],
+      "options": [
+        {
+          "flags": "--use-npm",
+          "short": null,
+          "long": "--use-npm",
+          "description": "Use npm as the package manager",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "--use-yarn",
+          "short": null,
+          "long": "--use-yarn",
+          "description": "Use Yarn as the package manager",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "--use-pnpm",
+          "short": null,
+          "long": "--use-pnpm",
+          "description": "Use pnpm as the package manager",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "--use-bun",
+          "short": null,
+          "long": "--use-bun",
+          "description": "Use Bun as the package manager",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        }
+      ],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": []
+    },
+    {
+      "name": "build",
+      "path": [
+        "build"
+      ],
+      "aliases": [],
+      "summary": null,
+      "description": "Build the application",
+      "usage": "[options]",
+      "arguments": [],
+      "options": [
+        {
+          "flags": "-d, --dev",
+          "short": "-d",
+          "long": "--dev",
+          "description": "Build in development mode",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-p, --prod",
+          "short": "-p",
+          "long": "--prod",
+          "description": "Build in production mode",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        }
+      ],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": []
+    },
+    {
+      "name": "start",
+      "path": [
+        "start"
+      ],
+      "aliases": [],
+      "summary": null,
+      "description": "Start the application",
+      "usage": "[options]",
+      "arguments": [],
+      "options": [
+        {
+          "flags": "-b, --build",
+          "short": "-b",
+          "long": "--build",
+          "description": "Pre-build before starting",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-d, --dev",
+          "short": "-d",
+          "long": "--dev",
+          "description": "Start in development mode",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-p, --prod",
+          "short": "-p",
+          "long": "--prod",
+          "description": "Start in production mode",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "--force-register",
+          "short": null,
+          "long": "--force-register",
+          "description": "Register commands even when unchanged since the last development start",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        }
+      ],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": []
+    },
+    {
+      "name": "register",
+      "path": [
+        "register"
+      ],
+      "aliases": [],
+      "summary": null,
+      "description": "Register the application commands with Discord, without starting the bot",
+      "usage": "[options]",
+      "arguments": [],
+      "options": [
+        {
+          "flags": "-b, --build",
+          "short": "-b",
+          "long": "--build",
+          "description": "Build before registering",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-d, --dev",
+          "short": "-d",
+          "long": "--dev",
+          "description": "Register as development does, to commands.developmentGuild",
+          "value": null,
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        },
+        {
+          "flags": "-g, --guild <id>",
+          "short": "-g",
+          "long": "--guild",
+          "description": "Register every command to this guild only",
+          "value": {
+            "name": "id",
+            "required": true,
+            "variadic": false
+          },
+          "mandatory": false,
+          "default": null,
+          "defaultDescription": null,
+          "choices": null,
+          "env": null,
+          "negate": false
+        }
+      ],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": []
+    },
+    {
+      "name": "generate",
+      "path": [
+        "generate"
+      ],
+      "aliases": [
+        "g"
+      ],
+      "summary": null,
+      "description": "Generate components",
+      "usage": "[options] [command]",
+      "arguments": [],
+      "options": [],
+      "helpText": {
+        "before": null,
+        "after": null
+      },
+      "commands": [
+        {
+          "name": "controller",
+          "path": [
+            "generate",
+            "controller"
+          ],
+          "aliases": [
+            "co"
+          ],
+          "summary": null,
+          "description": "Generate a controller component",
+          "usage": "[options] <type> <name>",
+          "arguments": [
+            {
+              "name": "type",
+              "description": "Type of the controller (e.g., button, context-menu, etc.)",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": [
+                "button",
+                "modal-submit",
+                "select-menu",
+                "user-select-menu",
+                "role-select-menu",
+                "mentionable-select-menu",
+                "channel-select-menu",
+                "reaction",
+                "message",
+                "slash",
+                "autocomplete",
+                "context-menu",
+                "primary-entry-point"
+              ]
+            },
+            {
+              "name": "name",
+              "description": "Name of the controller",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [
+            {
+              "flags": "--message",
+              "short": null,
+              "long": "--message",
+              "description": "For a context-menu controller: a message context menu command, rather than a user one",
+              "value": null,
+              "mandatory": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null,
+              "env": null,
+              "negate": false
+            }
+          ],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "service",
+          "path": [
+            "generate",
+            "service"
+          ],
+          "aliases": [
+            "s"
+          ],
+          "summary": null,
+          "description": "Generate a service component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the service.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "guard",
+          "path": [
+            "generate",
+            "guard"
+          ],
+          "aliases": [
+            "gu"
+          ],
+          "summary": null,
+          "description": "Generate a guard component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the guard.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "interceptor",
+          "path": [
+            "generate",
+            "interceptor"
+          ],
+          "aliases": [
+            "i"
+          ],
+          "summary": null,
+          "description": "Generate an interceptor component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the interceptor.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "filter",
+          "path": [
+            "generate",
+            "filter"
+          ],
+          "aliases": [
+            "f"
+          ],
+          "summary": null,
+          "description": "Generate an exception filter component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the exception filter.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "pipe",
+          "path": [
+            "generate",
+            "pipe"
+          ],
+          "aliases": [
+            "pi"
+          ],
+          "summary": null,
+          "description": "Generate a pipe component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the pipe.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        },
+        {
+          "name": "observer",
+          "path": [
+            "generate",
+            "observer"
+          ],
+          "aliases": [
+            "ob"
+          ],
+          "summary": null,
+          "description": "Generate a dispatch observer component",
+          "usage": "[options] <name>",
+          "arguments": [
+            {
+              "name": "name",
+              "description": "Name of the observer.",
+              "required": true,
+              "variadic": false,
+              "default": null,
+              "defaultDescription": null,
+              "choices": null
+            }
+          ],
+          "options": [],
+          "helpText": {
+            "before": null,
+            "after": null
+          },
+          "commands": []
+        }
+      ]
+    }
+  ]
+}
