@@ -48,7 +48,8 @@ it before the bot logs in, and injects it into the classes that ask for it. Clos
 ## Does the bot reload while I edit it?
 
 Yes. `meocord start --dev` rebuilds on every change and restarts the bot, one bot at a time. It watches
-`meocord.config.ts` and `tsconfig.json` too. Commands go to `commands.developmentGuild`, if set, where they update at
+`meocord.config.ts` and `tsconfig.json` too, and a change to a development `.env` file restarts the bot without a
+rebuild. Commands go to `commands.developmentGuild`, if set, where they update at
 once, and they're registered only when they changed. See
 [Development and production](guide:cli#development-and-production).
 

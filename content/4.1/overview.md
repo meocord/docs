@@ -59,9 +59,9 @@ test. It gives a bot the structure a web framework gives a server, and with it:
   [Localisation](guide:localisation#parameters-in-other-languages).
 - **Services by constructor.** A controller or a service names what it needs in its constructor, and MeoCord makes
   each one once, in dependency order. See [Services](guide:services).
-- **A CLI from create to deploy.** `npx {{meocord}} create` starts a project, `generate` scaffolds a controller, service
-  or guard with its spec, `start --dev` rebuilds and restarts on every change, and `build` and `register` ship it. See
-  [The CLI](guide:cli).
+- **A CLI from create to deploy.** `npx {{meocord}} create` starts a project, `generate` scaffolds a controller,
+  service, guard, interceptor, filter, pipe or observer with its spec, `start --dev` rebuilds and restarts on every
+  change, and `build` and `register` ship it. See [The CLI](guide:cli).
 
 It covers every interaction Discord sends, from slash commands, subcommands and autocomplete to buttons, the five
 select menus, modals, context menus and activity entry points, plus messages, reactions and any gateway event.
@@ -134,7 +134,8 @@ settled. [`respond()`](guide:responses) makes the right call to Discord for wher
 | interceptors, exception filters, pipes and observers | `ExecutionContext`      |
 | the `Client`, translator and cooldown store          | the handler's arguments |
 
-So a service or a field on a controller holds state across calls, and a guard holds none. A test shows it: one
+So a service or a field on a controller holds state across calls, and a guard holds none, unless it's bound: supplied
+by a provider, listed in `services` or injected by another class. A test shows it: one
 controller and one service serve two calls, and each call gets its own guard.
 
 ::playground{file="concepts/lifetimes.ts" region="lifetimes" dispatch="button visit; button visit"}
@@ -200,8 +201,9 @@ may add one.
 
 ## Good to know
 
-- **A modern core.** MeoCord runs on discord.js 14, with Node.js 22.13+ or Bun. What a plugin would add elsewhere is a
-  plain [service](guide:services) here: injected where it's needed, and tested like the rest of the bot.
+- **A modern core.** MeoCord runs on discord.js 14.27 or a later 14.x, with Node.js 22.13+ or Bun. What a plugin would
+  add elsewhere is a plain [service](guide:services) here: injected where it's needed, and tested like the rest of the
+  bot.
 - **Built for TypeScript.** The compiler checks each handler's params against its route or pattern, and each catalog's
   keys against the default one's, and `npx {{meocord}} create` starts every project in TypeScript.
 - **One process, one bot.** A process logs in with the token its `meocord.config.ts` gives, so each bot keeps its own
