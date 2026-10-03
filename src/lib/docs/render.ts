@@ -49,7 +49,7 @@ export function renderGuide(line: string, slug: string) {
 
 /**
  * A Guide page's content: its title and summary, what it teaches and what to read first, its body, the
- * API entries it covers, and the pages before and after it in reading order.
+ * API entries it covers, what the example bots show of it, and the pages before and after it in reading order.
  */
 export function guideArticle(line: string, view: GuideView): Child[] {
   const { page } = view
@@ -113,6 +113,14 @@ export function guideArticle(line: string, view: GuideView): Child[] {
               })),
             ),
           ],
+        })
+      : null,
+    view.bots
+      ? Aside({
+          key: 'bots',
+          'data-guide-bots': true,
+          'aria-labelledby': 'guide-bots',
+          children: [H2('Example bots', { key: 'heading', id: 'guide-bots' }), ...view.bots],
         })
       : null,
     view.previous || view.next

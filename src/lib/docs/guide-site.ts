@@ -1,4 +1,5 @@
-import { CHAPTERS, guidePath, guideRendered, readGuide, type GuidePage } from '../../../scripts/lib/guide'
+import { botsIllustrating, readExampleBots, type ExampleBots } from '../../../scripts/lib/example-bots'
+import { CHAPTERS, guideFolder, guidePath, guideRendered, readGuide, type GuidePage } from '../../../scripts/lib/guide'
 import { resolveExample } from '../../../scripts/lib/pages'
 import type { Crumb, NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import type { GlyphName } from '@/components/shell/icons'
@@ -31,6 +32,14 @@ const entries = new Map<string, Entry[]>()
 export function guideEntries(line: string): Entry[] {
   if (!entries.has(line)) entries.set(line, readGuide(line))
   return entries.get(line)!
+}
+
+const botLists = new Map<string, ExampleBots | undefined>()
+
+/** A line's example bots, as content/<line>/example-bots.json lists them. */
+function exampleBots(line: string): ExampleBots | undefined {
+  if (!botLists.has(line)) botLists.set(line, readExampleBots(guideFolder(line)))
+  return botLists.get(line)
 }
 
 /**
@@ -136,6 +145,8 @@ export interface GuideView {
   /** Where the page sits in the chapters, for a page of one: `{ index: 3, total: 41 }`, counted from 1. */
   progress?: { index: number; total: number }
   requires: { title: string; href: string }[]
+  /** What the example bots show that the page teaches, as a list; none when no bot illustrates it. */
+  bots?: Lowered['nodes']
   /** How many playgrounds the page embeds; a page with one loads the playground's island. */
   playgrounds: number
 }
@@ -178,6 +189,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
   const link = (neighbour?: Entry) =>
     neighbour && { title: neighbour.page.title, href: guidePageHref(line, neighbour.page) }
   const byId = new Map(all.map(candidate => [candidate.page.id, candidate.page]))
+  const illustrated = botsIllustrating(exampleBots(line), pagePath)
 
   return {
     page,
@@ -192,6 +204,10 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
       const required = byId.get(id)
       return required ? [{ title: required.title, href: guidePageHref(line, required) }] : []
     }),
+    bots:
+      illustrated === undefined
+        ? undefined
+        : lowerMarkdown(illustrated, { href: url => resolveGuideLink(line, url) }).nodes,
     playgrounds,
   }
 }

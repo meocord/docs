@@ -522,13 +522,20 @@ export const Prose = createNode('article', {
       }),
     ),
 
-    // After the body: the API entries the page teaches, then the pages before and after it.
-    '& [data-guide-api]': {
-      margin: 'theme.space.12 0 0',
-      paddingTop: 'theme.space.6',
-      borderTop: 'theme.line.width solid theme.line.hairline',
-    },
-    '& [data-guide-api] h2': { margin: '0 0 theme.space.3', fontSize: 'theme.type.h3.size' },
+    // After the body: the API entries the page teaches, the example bots showing it, then the pages around it.
+    ...Object.fromEntries(
+      ['[data-guide-api]', '[data-guide-bots]'].flatMap(aside => [
+        [
+          `& ${aside}`,
+          {
+            margin: 'theme.space.12 0 0',
+            paddingTop: 'theme.space.6',
+            borderTop: 'theme.line.width solid theme.line.hairline',
+          },
+        ],
+        [`& ${aside} h2`, { margin: '0 0 theme.space.3', fontSize: 'theme.type.h3.size' }],
+      ]),
+    ),
     '& [data-pager]': {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',

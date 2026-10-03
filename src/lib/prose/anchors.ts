@@ -75,6 +75,11 @@ export const headingText = (written: string) =>
     .replace(/^#{1,6}\s+/, '')
     .replace(/\s+#*\s*$/, '')
 
+/** Each anchor a page gives, with the text of its heading or term as written: `where-guards-apply` → `Where guards apply`. */
+export function pageSections(markdown: string, options: AnchorOptions = {}): Map<string, string> {
+  return new Map(anchorsOf(parseMarkdown(markdown), markdown, options).map(anchor => [anchor.id, anchor.text]))
+}
+
 /** The anchors a page's links may name: every heading's, and every term's on a page that defines terms. */
 export function pageAnchorSet(markdown: string, options: AnchorOptions = {}): Set<string> {
   return new Set(anchorIds(parseMarkdown(markdown), markdown, options).values())

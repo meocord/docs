@@ -30,7 +30,25 @@ write(
   '## Providers\n\nText, in a project from `npx {{meocord}} create my-bot`.',
 )
 write('how-a-call-runs', `title: How a call runs\nchapter: pipeline\norder: 1\nsummary: The order.\n${learn}`, 'Text.')
-write('tickets', 'title: A ticket system\nchapter: appendix\ngroup: recipes\norder: 1\nsummary: Tickets.', 'Text.')
+write(
+  'tickets',
+  'title: A ticket system\nchapter: appendix\ngroup: recipes\norder: 1\nsummary: Tickets.',
+  'Text.\n\n::example-bot{id="demo"}',
+)
+// One example bot, drawn by the ticket recipe here, that illustrates Guards
+writeFileSync(
+  path.join(root, 'content', '4.1', 'example-bots.json'),
+  JSON.stringify({
+    repository: 'https://github.com/meocord/examples',
+    bots: [
+      {
+        id: 'demo',
+        title: 'Demo',
+        shows: [{ what: 'A `guard`', files: ['src/a.guard.ts'], guide: ['guards#how-it-works'] }],
+      },
+    ],
+  }),
+)
 write('broken', 'title: Broken\nchapter: nowhere', 'Text.')
 
 // The lines with a playground runtime, as the build's manifest would name them
@@ -137,6 +155,26 @@ describe('the Guide', () => {
     expect(html).toContain('<a href="/docs/4.1/api/decorators/UseGuard">UseGuard</a>')
     expect(html).toContain('<a href="/docs/4.1/how-a-call-runs" rel="prev">')
     expect(html).toContain('The request pipeline · page 3 of 3')
+  })
+
+  it('draws an example bot from its list, and links it from each page it illustrates', () => {
+    const render = (pagePath: string) =>
+      renderToStaticMarkup(Div({ children: guideArticle('4.1', guideView('4.1', pagePath)!) }).render())
+    const drawn = render('recipes/tickets')
+    expect(drawn).toContain(
+      '<a href="https://github.com/meocord/examples/tree/main/demo"><code>demo/</code> on GitHub</a>',
+    )
+    expect(drawn).toContain('. See <a href="/docs/4.1/guards#how-it-works">How it works</a>.')
+    expect(drawn).toContain(
+      '<a href="https://github.com/meocord/examples/blob/main/demo/src/a.guard.ts"><code>a.guard.ts</code></a>',
+    )
+
+    const guards = render('guards')
+    expect(guards).toContain(
+      '<aside data-guide-bots="true" aria-labelledby="guide-bots"><h2 id="guide-bots">Example bots</h2>',
+    )
+    expect(guards).toContain('<a href="/docs/4.1/example-bots#demo">Demo</a>: A <code>guard</code>, in ')
+    expect(render('services')).not.toContain('data-guide-bots')
   })
 
   it("offers the Guide and the API as the sidebar's tabs, marking the one read", () => {

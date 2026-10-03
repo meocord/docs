@@ -485,6 +485,28 @@ describe('checkGuide', () => {
   })
 })
 
+describe('example bots', () => {
+  const exampleBots = {
+    repository: 'https://github.com/meocord/examples',
+    bots: [
+      { id: 'feedback', title: 'Feedback', shows: [{ what: 'A guard', files: ['a.ts'], guide: ['guards#nope'] }] },
+    ],
+  }
+  const examplePage = page(
+    { id: 'example-bots', title: 'Example bots', chapter: 'appendix', group: 'help', order: 1, summary: 'Bots.' },
+    '## Feedback\n\n::example-bot{id="feedback"}',
+  )
+
+  it("checks a bot's Guide pages as links of the page that draws it, with the bots' own rules", () => {
+    expect(check({ ...valid(), 'example-bots': examplePage }, { exampleBots })).toEqual([
+      'content/4.1/example-bots.md: guide:guards#nope names no heading of that page',
+    ])
+    expect(check(valid(), { exampleBots })).toEqual([
+      'content/4.1/example-bots.json: bot "feedback" is drawn 0 times; example-bots draws it once',
+    ])
+  })
+})
+
 describe('::playground', () => {
   it('takes a file of the line with a region and a dispatch that parses, importing only the runtime, and may expect a refusal', () => {
     const body = chapterBody(

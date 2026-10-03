@@ -3,7 +3,7 @@ id: faq
 title: FAQ
 chapter: appendix
 group: help
-order: 3
+order: 4
 summary: Short answers to what people ask first, about runtimes, JavaScript, discord.js, state, databases and tests.
 requires: []
 api: [decorators/MeoCord, testing/MeoCordTestingModule]

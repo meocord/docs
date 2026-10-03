@@ -26,6 +26,7 @@ import {
   reservedProblems,
   unembeddedRegions,
 } from './lib/guide.js'
+import { readExampleBots } from './lib/example-bots.js'
 import { HOME_EXAMPLE, HOME_LINE } from '../src/config/home.js'
 import { unmappedPages, type LiveRoutes } from './lib/live-routes.js'
 import { markdownAnchors } from './lib/migrating.js'
@@ -189,6 +190,7 @@ for (const line of config.lines) {
     apiSymbols,
     migratingAnchors: migrating ? new Set(markdownAnchors(migrating)) : undefined,
     coverable,
+    exampleBots: readExampleBots(dir),
     generated: Object.fromEntries(
       [[CONFIG_REFERENCE_SLUG, configReferenceText(line.line, config)]].filter(
         (entry): entry is [string, string] => entry[1] !== undefined,
