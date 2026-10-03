@@ -87,8 +87,9 @@ discordx's documentation names no hook for an error a handler throws, so the bot
 `executeInteraction`, or in the handler. In MeoCord, the error reaches the handler's
 [exception filters](guide:exception-filters) first, then the
 [built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it and tells the member something went
-wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, unless the app
-turns on [`dmOnError`](guide:message-commands#telling-the-author-privately).
+wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, apart from a
+`UserError`, whose message is the reply, unless the app turns on
+[`dmOnError`](guide:message-commands#telling-the-author-privately).
 
 ## Events and startup
 

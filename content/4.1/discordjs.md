@@ -19,9 +19,9 @@ api:
 formerly: [coming-from-discordjs]
 ---
 
-MeoCord runs on discord.js 14. Every interaction, message and client you handle is the discord.js object you know,
-so what changes is the code around your handlers: routing, registration, error answers, cooldowns and tests. This
-page shows one small bot both ways. The discord.js side is typechecked against discord.js 14.27.0.
+MeoCord runs on discord.js 14, from 14.27.0. Every interaction, message and client you handle is the discord.js object
+you know, so what changes is the code around your handlers: routing, registration, error answers, cooldowns and tests.
+This page shows one small bot both ways. The discord.js side is typechecked against discord.js 14.27.0.
 
 ## What maps to what
 
@@ -83,12 +83,13 @@ gets the reason:
 
 ## Errors
 
-The discord.js bot wraps its listener in `try`/`catch`, and decides there what the member sees. In MeoCord, an error
-a handler throws reaches its [exception filters](guide:exception-filters) first, then the
+The discord.js bot wraps its listener in `try`/`catch`, and decides there what the member sees. In MeoCord, an error a
+handler throws reaches its [exception filters](guide:exception-filters) first, then the
 [built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it and tells the member something went
-wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, unless the app
-turns on [`dmOnError`](guide:message-commands#telling-the-author-privately). A filter answers an error of its own
-type in its own words:
+wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, apart from a
+`UserError`, whose message is the reply, unless the app turns on
+[`dmOnError`](guide:message-commands#telling-the-author-privately). A filter answers an error of its own type in its own
+words:
 
 ::example{file="filters/unknown-account.filter.ts" region="filter"}
 
@@ -128,8 +129,12 @@ same pipeline the bot uses.
 
 ## Moving over
 
-Nothing has to move at once. The `Client` is injectable, so code that works on the client directly can live in a
-service while commands move to controllers one at a time.
+Nothing has to move at once. The `Client` is injectable, so code that works on the client directly can live in a service
+while commands move to controllers one at a time. Until the last one has moved, set `commands.register` to `false` in
+`meocord.config.ts` and keep your own registration, since MeoCord's registration replaces the application's commands in
+each scope with its builders'. A slash command no controller handles goes to the app's
+[exception filters](guide:exception-filters), then gets "Command not found!", so give the app a filter for
+`CommandNotFoundError` while your old listener still answers some.
 
 ## Next steps
 

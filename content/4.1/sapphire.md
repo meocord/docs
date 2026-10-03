@@ -93,9 +93,9 @@ what the member is told:
 
 In MeoCord the [built-in fallback](guide:exception-filters#the-built-in-fallback) logs the error and tells the member
 something went wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only,
-unless the app turns on [`dmOnError`](guide:message-commands#telling-the-author-privately). An
-[exception filter](guide:exception-filters) answers an error of its own type in its own words, on one handler, a
-controller or the whole bot:
+apart from a `UserError`, whose message is the reply, unless the app turns on
+[`dmOnError`](guide:message-commands#telling-the-author-privately). An [exception filter](guide:exception-filters)
+answers an error of its own type in its own words, on one handler, a controller or the whole bot:
 
 ::example{file="filters/unknown-account.filter.ts" region="filter"}
 
