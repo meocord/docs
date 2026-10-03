@@ -50,7 +50,8 @@ export interface Timeout {
 @Service()
 export class ModerationService {
   private readonly pending = new Map<number, Timeout>()
-  private next = 1
+  // Counting from when the bot started, so a button from before a restart matches no proposal made after it
+  private next = Date.now()
   readonly log: (Timeout & { at: Date })[] = []
 
   propose(timeout: Timeout): number {
