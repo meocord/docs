@@ -2420,6 +2420,21 @@
   "meocord/interface:ThemeOverride": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:ThemeResolver": {
+    "since": "4.1.0-beta.12"
+  },
+  "meocord/interface:ThemeResolver.guild": {
+    "since": "4.1.0-beta.12"
+  },
+  "meocord/interface:ThemeResolver.guild(target)": {
+    "since": "4.1.0-beta.12"
+  },
+  "meocord/interface:ThemeResolver.user": {
+    "since": "4.1.0-beta.12"
+  },
+  "meocord/interface:ThemeResolver.user(target)": {
+    "since": "4.1.0-beta.12"
+  },
   "meocord/interface:ThemeResolvers": {
     "since": "4.1.0-beta.5"
   },

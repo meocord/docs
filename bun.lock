@@ -76,7 +76,7 @@
         "@opentelemetry/api": "^1.9.1",
         "discord.js": "^14.27.0",
         "dotenv": "^18.0.5",
-        "meocord": "4.1.0-beta.11",
+        "meocord": "4.1.0-beta.12",
         "pg": "^8.23.0",
         "reflect-metadata": "^0.2.2",
         "zod": "^4.6.5",
@@ -1693,7 +1693,7 @@
 
     "eslint/@eslint-community/eslint-utils": ["@eslint-community/eslint-utils@4.10.1", "", { "dependencies": { "eslint-visitor-keys": "^3.4.3" }, "peerDependencies": { "eslint": "^6.0.0 || ^7.0.0 || >=8.0.0" } }, "sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg=="],
 
-    "examples-4-1/meocord": ["meocord@4.1.0-beta.11", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-yYwTrl7XmTcjuMvlxQW6GyMOGbqIUgswnv9nHSqqcop6aEn75V6UTKENCoE7XJBkzssyyF4GhKZxrpd1pU0zQQ=="],
+    "examples-4-1/meocord": ["meocord@4.1.0-beta.12", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-BIqwb9xJRL6YR+7oAGww42A9PmpddmS51AE8RYON9p6o6oD3Tya8fcEzEn2QOKZFoEJC56y1aXG67nImLk8vrw=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 
