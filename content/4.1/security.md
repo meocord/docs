@@ -97,7 +97,8 @@ or a query never reaches Discord. Keep it that way in your own [exception filter
 messages: say what the member can do about it, not how the bot failed.
 
 Answer with anything personal privately, with `flags: MessageFlags.Ephemeral`. Log IDs rather than message content, and
-never log the config, which holds the token.
+never log the config, which holds the token. MeoCord's `Logger` prints the token as `[redacted]` wherever it appears;
+`console.log` does not.
 
 A command that's expensive, or that posts where others see it, takes a [cooldown](guide:cooldowns). `per: 'guild'`
 limits a whole server, for a command that costs the bot the same whoever runs it.

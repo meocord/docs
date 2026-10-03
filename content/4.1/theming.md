@@ -58,7 +58,8 @@ only what it changes, over the one beneath it:
 
 1. MeoCord's defaults;
 2. [`@MeoCord({ theme })`](api:decorators/MeoCord#theme), the app's theme;
-3. [`@UseTheme`](api:decorators/UseTheme) on each class, from a base class down to the controller;
+3. [`@UseTheme`](api:decorators/UseTheme) on each class, from a base class down to the controller, as far up as
+   `@Controller({ inheritStages })` lets the controller inherit;
 4. `@UseTheme` on the handler;
 5. the server's theme, then the user's, from [`themeFor`](#per-server-and-per-user).
 
@@ -123,7 +124,7 @@ anywhere the call runs: in the handler, in a service or a presenter it calls, an
 A guard, an interceptor or a filter reads the same theme as `context.getTheme()`.
 
 Outside any call, as in a scheduled job or an `onShutdown` hook, `useTheme()` returns the app's theme from when its
-start begins until it has shut down, and MeoCord's defaults before and after.
+start begins until the start fails or the app has shut down, and MeoCord's defaults otherwise.
 
 ### Collectors and listeners
 
@@ -175,8 +176,9 @@ injects `ThemeCache` and clears it:
 A call's theme is looked up once, as the call starts, and holds for the whole call. The call that saves a new choice
 still answers in the old palette, and the user's next call gets the new one.
 
-A resolver that throws, or passes `themeForTimeoutMs`, leaves its layer out of that call, and the call goes on. A
-result that isn't a valid theme is left out with a warning.
+A resolver that throws, or passes `themeForTimeoutMs`, leaves its layer out of that call, and the call goes on. That
+server or user isn't asked again for 10 seconds, so its calls meanwhile go without it too. A result that isn't a valid
+theme is left out with a warning.
 
 ## Adding tokens of your own
 
@@ -200,7 +202,8 @@ compare against [`createMockTheme()`](api:testing/createMockTheme), a whole them
 ::example{file="controllers/slash/store.slash.controller.spec.ts" region="spec"}
 
 To run a service in a theme without a module, use `withTheme(theme, fn)`. See
-[Mocks](guide:mocks) for both.
+[Testing recipes](guide:testing-recipes#themes) for both, and for `overrideThemeFor`, which replaces the app's
+`themeFor` in a module.
 
 ## From the Theme class
 
@@ -246,4 +249,4 @@ green and a rejection grey, and 📝 shows while each is saved.
 
 - [Presenters](guide:presenters): style MeoCord's loading and error views from the theme and the error's tone.
 - [Answering with respond()](guide:responses): what `respond()` sends, and where the theme fills it.
-- [Mocks](guide:mocks): themes, and everything else a test builds.
+- [Testing recipes](guide:testing-recipes#themes): themes and `themeFor` under test.

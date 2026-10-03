@@ -53,9 +53,10 @@ The app gives MeoCord the translator, which is what makes its own texts follow t
   to an interaction are in the user's language. A second announcement within the minute is refused in the author's
   language, such as "Pelan-pelan: coba lagi {when}." under the title "Ups!", where `{when}` is a Discord timestamp each
   member's app shows in their own language and counts down.
-- **Checked when it compiles.** The keys of the `meocord` group and their `{params}` are those of
-  [`MeoCordMessages`](api:types/MeoCordMessages), so a misspelt key or a param MeoCord doesn't pass fails to
-  compile.
+- **Checked when it compiles.** The keys of the `meocord` group are those of
+  [`MeoCordMessages`](api:types/MeoCordMessages), so a misspelt key fails to compile. The Indonesian catalog is a
+  plain variable, whose messages TypeScript types as `string`, so a `{param}` MeoCord doesn't pass is caught by
+  `expectCompleteCatalog` in the test below; written inline or with `as const`, it fails to compile too.
 - **What a language leaves out.** Each text is looked up on its own, so a line the Indonesian catalog left out would
   stay in MeoCord's English. This catalog translates all of them.
 

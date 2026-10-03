@@ -61,12 +61,13 @@ interaction gets it privately. A message command's refusal is skipped, since
 a reply in the channel can't be private, unless the app turns on
 [`dmOnCooldown`](guide:message-commands#telling-the-author-privately), which tells the author once per wait.
 
-`@Cooldown` works on interaction and message handlers. On a controller, it applies to each of its handlers apart, so
-a controller's `uses: 3` gives every handler three.
+`@Cooldown` works on command, component and message handlers; on an autocomplete, reaction or event handler it stops
+the bot at startup. On a controller, it applies to each of its command, component and message handlers apart, so a
+controller's `uses: 3` gives every one of them three.
 
-A message command whose params name members, users, roles or channels is checked sooner too. Before they're fetched from
-Discord, the call is checked, without being counted, against those of its cooldowns that have no `by`, so a call on
-cooldown costs no requests.
+A message command that must fetch a member, user, role or channel its params name, or a value of the app's own type,
+is checked sooner too. Before anything is fetched from Discord, the call is checked, without being counted, against
+those of its cooldowns that have no `by`, so a call on cooldown costs no requests.
 
 ## Options
 
@@ -101,17 +102,18 @@ it, such as `({ account }) => account.uid`.
 - The value becomes part of the key the store counts under, encoded so a value holding `:` can't count under another's
   key. `inspectHandler(...).cooldowns` reports `by: true` for a cooldown that has one.
 
-The guard runs first, so a stranger pressing someone else's button is refused without spending the owner's
-check-in:
+The guard runs before the cooldown, so a stranger pressing someone else's button is refused before anything is
+counted, and the owner, counted under their own id, can still check in:
 
 ::example{file="controllers/button/check-in.button.controller.spec.ts" region="spec"}
 
 ## Answering a refused call
 
-A call a cooldown refuses is answered privately with `meocord.cooldown.until`: "Slow down: try again {when}.", where
-`{when}` is the time the wait ends as a Discord timestamp, `<t:…:R>`. Discord words it in the reader's language ("in 5
-minutes", "in 23 hours") and counts it down. The rest of the text is in the user's language where the app
-[translates MeoCord's texts](guide:localisation).
+An interaction a cooldown refuses is answered privately with `meocord.cooldown.until`: "Slow down: try again
+{when}.", where `{when}` is the time the wait ends as a Discord timestamp, `<t:…:R>`. Discord words it in the reader's
+language ("in 5 minutes", "in 23 hours") and counts it down. The rest of the text is in the user's language where the
+app [translates MeoCord's texts](guide:localisation). With `dmOnCooldown`, a message command's author gets the same
+wait by DM, in `meocord.dm.cooldown`, which names the command, channel and server.
 
 To answer another way, catch `CooldownError` in an [exception filter](guide:exception-filters).
 [`error.retryAt`](api:responses/CooldownError#retryAt) is the `Date` the next call is allowed, and

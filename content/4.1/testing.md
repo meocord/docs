@@ -49,7 +49,7 @@ test needs, and returns a builder. `compile()` binds them into a fresh container
   filters, in the bot's order. [Invoke and dispatch](guide:invoke-and-dispatch) covers the two ways to run one.
 
 Pass the app class as `app` to add what `@MeoCord` declares: its global guards, interceptors and filters, its
-presenter, translator, message prefixes, observers and theme, and its cooldown store and policy. The controllers are
+presenter, translator, message options, observers and theme, and its cooldown store and policy. The controllers are
 still the ones you list. A store that injects something, such as a database pool, needs it in `providers`, or a
 `CooldownStore` provider of your own, such as a `MemoryCooldownStore`, in the store's place.
 
@@ -81,8 +81,9 @@ A test lists nothing again, and replaces what it must by token in `providers`, b
 bot does before it logs in; the database factory replaced here never runs, so nothing connects. `fromApp`'s
 `controllers` and `observers` options add a test's own, and the `override*` methods still apply.
 
-The module makes no Discord `Client`: a class that injects one is refused where it is resolved, naming the class,
-until the test provides one, such as `{ provide: Client, useValue: createMockClient() }`.
+The module makes no Discord `Client`: a class that injects one, a guard, interceptor or filter included, is refused
+where it is resolved, naming the class, until the test provides one, such as `{ provide: Client, useValue:
+createMockClient() }`.
 
 ## Lifecycle hooks in a test
 

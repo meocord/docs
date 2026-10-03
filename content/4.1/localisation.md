@@ -208,12 +208,12 @@ id: meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usag
   typed from the message text, which TypeScript keeps only for a literal; a catalog that has lost it is refused
   with a compile error saying so. Other languages may be plain objects, or JSON; their parameters are then checked
   only by [`expectCompleteCatalog`](#testing-a-catalog).
-- **Discord limits command names to 32 lowercase characters, and descriptions to 100.** A builder handed a longer one
-  fails when the handler's `@Command` builds it, naming the handler, the builder and the command. A raw command body
-  whose localised names or descriptions break them is caught at registration instead: nothing is registered, the error
-  lists each field, and the bot stays up.
-- **Injecting `Translator` needs [`@MeoCord({ i18n })`](api:decorators/MeoCord#i18n).** Without it, the bot stops at
-  startup with a message saying what to pass.
+- **Discord limits command and option names to 32 characters, lowercase for slash commands, and descriptions to 100.** A
+  builder handed a longer one fails when the handler's `@Command` builds it, naming the handler, the builder and the
+  command. A raw command body whose localised names or descriptions break them is caught at registration instead:
+  nothing is registered, the error lists each field, and the bot stays up.
+- **Injecting `Translator` needs [`@MeoCord({ i18n })`](api:decorators/MeoCord#i18n).** Without it, any class that
+  injects it, a guard, interceptor or filter included, stops the bot at startup with a message saying what to pass.
 - **`labelKey` needs `@MeoCord({ i18n })`, and a message in the default catalog.** `@MeoCord` refuses one
   without either, where the app is declared.
 

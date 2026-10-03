@@ -53,9 +53,9 @@ again.
 ### One line naming a class, and exit code 1
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
-it is on: `Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, `meocord.config.ts:` for its settings, or the
-build's folder, such as `dist:`. The rest names the decorator and the problem, and a last line, `in src/…`, names the
-file it comes from when MeoCord can tell. Such as:
+it is on: `Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, the app class's name, `meocord.config.ts:` for its
+settings, or the build's folder, such as `dist:`. The rest names the decorator and the problem, and a last line, `in
+src/…`, names the file it comes from when MeoCord can tell. Such as:
 
 ```text
 SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
@@ -74,7 +74,18 @@ Fix what it names. The common ones:
 - **"App: @MeoCord({ providers }): the provider for '…' injects ExecutionContext, but its factory runs once and its
   value is shared, …"** A factory provider lists `ExecutionContext` in its `inject`. Its value is made once for the
   whole app, so it would keep the first call's context for every later call. Inject `ExecutionContext` into a guard
-  instead. The testing module refuses it the same way.
+  instead. The testing module refuses it the same way. A service, interceptor or filter that injects it reads
+  "`Class`: resolved once and shared, so it cannot inject ExecutionContext", and a `useClass` provider's class "the
+  provider for '…' uses `Class`, which injects ExecutionContext"; the fix is the same.
+- **"`Class`: its constructor takes parameters, but `Class` has no decorator, …"** A class is injected, or injects,
+  without its decorator, so TypeScript recorded none of its parameter types. Add what the line says: `@Service()`, or
+  `@Controller()`, `@Guard()`, `@Interceptor()`, `@Catch()` or `@Pipe()` for the class's role. A class from a package
+  gets a provider in `@MeoCord({ providers })` instead. `Logger` and MeoCord's errors read "MeoCord does not inject
+  it"; create them with `new`.
+- **"`Class`: @Command goes on a method, not on a class."** A decorator is on the wrong target, written directly or
+  through `applyDecorators`. Handler decorators such as `@Command`, `@MessageHandler`, `@On`, `@Defer` and
+  `@Validate` go on a method; `@Observer`, `@Interceptor`, `@Catch` and `@Pipe` go on a class, and on a method read
+  "`Class.method`: @Observer goes on a class, not on a method." Move it.
 - **"'a' → 'b' → 'a': each is made before what injects it, so none of them can be made."** Providers or classes
   inject each other in a cycle, which the line names from where it was entered. Move what they share into a provider of
   its own. See [Providers](guide:services#providers).
@@ -147,6 +158,9 @@ version (5.0). Each warning names the handler or the filter, and says what to wr
 - **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
   handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
   [Messages and reactions](#messages-and-reactions).
+- **"@Service on the method `Class.method` is deprecated; in the next major version (5.0) it is refused."**
+  `@Controller`, `@Service`, `@Guard`, `@CommandBuilder` or `@MeoCord` is on a method, where it does nothing. Move it
+  to the class.
 
 The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
 major version (5.0). Use … instead." names an API that still works, and is logged once. See
@@ -218,8 +232,10 @@ see [Discord's errors](guide:mocks#discords-errors).
 
 ## Messages and reactions
 
-- **A message command never runs.** The bot needs the `GuildMessages` intent, and `MessageContent`, which is
-  privileged, to read a message's text; the bot warns at startup when it's missing. Messages from bots never reach
+- **A message command never runs.** In a server, the bot needs the `GuildMessages` intent, and `MessageContent`,
+  which is privileged, to read a message's text; a mention-only command needs no `MessageContent`, and a
+  `scope: 'dm'` command needs `DirectMessages` and `Partials.Channel` instead. The bot warns at startup about what's
+  missing. Messages from bots never reach
   a handler. A pattern matches after the app's prefix, or the handler's own, and only the most specific matching
   pattern runs. See [Which handler runs](guide:message-commands#which-handler-runs).
 - **Reactions are missed.** Reactions need the `GuildMessageReactions` intent, or `DirectMessageReactions` in DMs.
