@@ -4,8 +4,8 @@ import {
   ButtonStyle,
   type ChatInputCommandInteraction,
   EmbedBuilder,
+  LabelBuilder,
   MessageFlags,
-  type ModalActionRowComponentBuilder,
   ModalBuilder,
   type ModalSubmitInteraction,
   TextInputBuilder,
@@ -47,9 +47,9 @@ export class FeedbackController {
     const text = t.for(interaction)
     // #endregion step:localisation
     const input = (id: string, label: string, style: TextInputStyle, maxLength: number) =>
-      new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
-        new TextInputBuilder().setCustomId(id).setLabel(label).setStyle(style).setMaxLength(maxLength),
-      )
+      new LabelBuilder()
+        .setLabel(label)
+        .setTextInputComponent(new TextInputBuilder().setCustomId(id).setStyle(style).setMaxLength(maxLength))
     await respond(interaction).modal(
       new ModalBuilder()
         .setCustomId('feedback/submit')
@@ -57,7 +57,7 @@ export class FeedbackController {
         // #region step:localisation
         .setTitle(text('feedback.modal.title'))
         // #endregion step:localisation
-        .addComponents(
+        .addLabelComponents(
           // before:localisation input('about', 'What is it about?', TextInputStyle.Short, 80),
           // before:localisation input('details', 'Tell us more', TextInputStyle.Paragraph, 1000),
           // #region step:localisation
