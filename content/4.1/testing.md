@@ -27,6 +27,11 @@ The mocks it comes with behave like discord.js, and work under Vitest, Jest, Nod
 - **bun test** asserts through `.mock.calls` too: Bun's matchers, such as `toHaveBeenCalledWith`, accept only Bun's own
   mocks.
 
+Whatever the runner, the tests need decorator metadata compiled in, which MeoCord reads to inject a class's
+dependencies. Under Jest and Node's test runner, compile them with SWC or `tsc` with decorator metadata, as a generated
+app's Vitest config does with SWC; `node --test` on `.ts` files strips the types without transforming decorators, so a
+decorated class fails to load. bun test reads `emitDecoratorMetadata` from tsconfig.json.
+
 ## When to use it
 
 Use a testing module whenever the code under test is a controller, or anything MeoCord resolves for you: a service
