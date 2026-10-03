@@ -6,8 +6,8 @@ import {
   ChannelType,
   type ChatInputCommandInteraction,
   InteractionContextType,
+  LabelBuilder,
   MessageFlags,
-  type ModalActionRowComponentBuilder,
   ModalBuilder,
   type ModalSubmitInteraction,
   PermissionFlagsBits,
@@ -55,10 +55,9 @@ export class TicketController {
   @Cooldown({ uses: 1, seconds: 600 })
   async open(interaction: ChatInputCommandInteraction) {
     const input = (id: string, label: string, style: TextInputStyle) =>
-      new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+      new LabelBuilder().setLabel(label).setTextInputComponent(
         new TextInputBuilder()
           .setCustomId(id)
-          .setLabel(label)
           .setStyle(style)
           .setMaxLength(style === TextInputStyle.Short ? 80 : 1000),
       )
@@ -66,7 +65,7 @@ export class TicketController {
       new ModalBuilder()
         .setCustomId('ticket/create')
         .setTitle('Open a ticket')
-        .addComponents(
+        .addLabelComponents(
           input('subject', 'Subject', TextInputStyle.Short),
           input('details', 'What happened?', TextInputStyle.Paragraph),
         ),

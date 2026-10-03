@@ -143,9 +143,10 @@ Handle it in the feedback controller, where it opens the form a member fills in:
 
 ::example{file="tutorial/feedback.controller.ts" region="open"}
 
-`respond(interaction).modal()` shows a form built with discord.js's `ModalBuilder`. Its `customId`, `feedback/submit`,
-is how the submission finds its handler, which you'll write in [Components](guide:components#build-it). Add
-`FeedbackController` to the app's `controllers`, as in [Your first command](guide:first-command).
+`respond(interaction).modal()` shows a form built with discord.js's `ModalBuilder`, each text input set in a
+`LabelBuilder` that gives it its label. Its `customId`, `feedback/submit`, is how the submission finds its handler,
+which you'll write in [Components](guide:components#build-it). Add `FeedbackController` to the app's `controllers`, as
+in [Your first command](guide:first-command).
 
 Start the bot with `npx meocord start --dev` and run `/feedback` in your test server: the form opens.
 
