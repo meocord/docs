@@ -23,9 +23,10 @@ staff role can use. A verdict marks the post, removes its buttons, and tells the
 
 ::example-bot{id="feedback"}
 
-Besides its token, the bot needs a staff role and a channel for reviews where it can send messages: their IDs go in
-`.env` as `STAFF_ROLE_ID` and `FEEDBACK_CHANNEL_ID`. Feedback is kept in memory, so a restart forgets it, and a review
-button left from before the restart says the feedback is gone.
+Besides its token, the bot needs a staff role, and a channel for reviews where it has View Channel, Send Messages and
+Embed Links, since each review is posted as an embed. Their IDs go in `.env` as `STAFF_ROLE_ID` and
+`FEEDBACK_CHANNEL_ID`, and the bot stops as it starts if either is missing or isn't an ID. Feedback is kept in memory,
+so a restart forgets it, and a review button left from before the restart says the feedback is gone.
 
 ## Running a bot
 
