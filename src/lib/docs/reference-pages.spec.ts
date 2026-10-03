@@ -18,6 +18,12 @@ import {
   renderRelease,
 } from '@/lib/docs/reference-pages'
 import { newestFirst } from '@/lib/docs/api-site'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
+const docs40 = `/docs/${lineSegment('4.0', VERSIONS)}`
 
 // These read the repository's generated changelogs, migration guides and pages.
 describe('changelog', () => {
@@ -52,7 +58,7 @@ describe('changelog', () => {
     const html = renderToStaticMarkup(Div({ children: article.nodes }).render())
     const entries = newest.sections.flatMap(section => section.entries)
     expect(html.match(/<li(?: data-breaking="true")?>/g)?.length).toBe(entries.length + earlier.length)
-    expect(html).toContain(`<a href="/docs/latest/changelog/${newest.version}" data-release-notes="true">`)
+    expect(html).toContain(`<a href="${docs40}/changelog/${newest.version}" data-release-notes="true">`)
   })
 
   it('cuts an entry to its first sentence, without the Changesets credit', () => {
@@ -134,8 +140,8 @@ describe('missing', () => {
   })
 
   it("sends an id the line has a page for to that page, and an old id to the missing page's own", () => {
-    expect(movedMissingHref('4.1', 'command-types')).toBe('/docs/4.1/slash-commands')
-    expect(movedMissingHref('4.0', 'slash-commands')).toBe('/docs/latest/command-types')
+    expect(movedMissingHref('4.1', 'command-types')).toBe(`${docs41}/slash-commands`)
+    expect(movedMissingHref('4.0', 'slash-commands')).toBe(`${docs40}/command-types`)
     expect(movedMissingHref('4.0', 'how-a-handler-runs')).toBe('/docs/4.0/missing/how-a-call-runs')
     expect(movedMissingHref('4.0', 'how-a-call-runs')).toBeUndefined()
   })

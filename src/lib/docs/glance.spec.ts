@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { ApiSignature } from '@/lib/docs/api-model'
 import { callShape, firstSentence, glanceSection } from '@/lib/docs/glance'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
 
 const signature = (params: ApiSignature['params']): ApiSignature => ({
   code: [],
@@ -45,10 +50,10 @@ describe('cheat sheets', () => {
 
   it('lists the cheat sheets as a section of the API', () => {
     expect(glanceSection('4.1').symbols.map(symbol => symbol.href)).toEqual([
-      '/docs/4.1/api/glance/decorators',
-      '/docs/4.1/api/glance/respond',
-      '/docs/4.1/api/glance/testing',
-      '/docs/4.1/api/glance/cli',
+      `${docs41}/api/glance/decorators`,
+      `${docs41}/api/glance/respond`,
+      `${docs41}/api/glance/testing`,
+      `${docs41}/api/glance/cli`,
     ])
   })
 })

@@ -7,6 +7,11 @@ import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { pageAnchors } from '../../../scripts/lib/content'
 import { guidePath, readGuide } from '../../../scripts/lib/guide'
 import { buildKinds, CLAIMS, claims, doors, pipelineDemo } from '@/lib/home/data'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
 
 // The example's `home` region, read here independently of the site's own example resolver.
 function regionFromFile(): string {
@@ -77,10 +82,10 @@ describe('the sections below', () => {
     })
     expect(missing).toEqual([])
     expect(claims().map(claim => claim.href)).toEqual([
-      '/docs/4.1/responses#how-it-works',
-      '/docs/4.1/testing',
-      '/docs/4.1/how-a-call-runs',
-      '/docs/4.1/components#typed-params',
+      `${docs41}/responses#how-it-works`,
+      `${docs41}/testing`,
+      `${docs41}/how-a-call-runs`,
+      `${docs41}/components#typed-params`,
     ])
   })
 
@@ -98,18 +103,18 @@ describe('the sections below', () => {
       'Reactions',
       'Gateway events',
     ])
-    expect(kinds[0].href).toBe('/docs/4.1/what-can-i-build#slash-commands')
+    expect(kinds[0].href).toBe(`${docs41}/what-can-i-build#slash-commands`)
     const lead = renderToStaticMarkup(Div({ children: kinds[0].lead }).render()).replace(/^<div>|<\/div>$/g, '')
     expect(lead).toBe('<p>A member types <code>/echo</code> and picks its options.</p>')
   })
 
   it('opens three doors: the Guide, the reference, and moving from another version or framework', () => {
     const [learn, lookUp, migrate] = doors()
-    expect(learn.links[0]).toEqual({ title: 'Overview', href: '/docs/4.1/overview' })
+    expect(learn.links[0]).toEqual({ title: 'Overview', href: `${docs41}/overview` })
     expect(lookUp.links).toEqual([
-      { title: 'API reference', href: '/docs/4.1/api' },
-      { title: 'CLI', href: '/docs/4.1/api/cli' },
+      { title: 'API reference', href: `${docs41}/api` },
+      { title: 'CLI', href: `${docs41}/api/cli` },
     ])
-    expect(migrate.links[0]).toEqual({ title: 'Migrating to 4.1', href: '/docs/4.1/migrating' })
+    expect(migrate.links[0]).toEqual({ title: 'Migrating to 4.1', href: `${docs41}/migrating` })
   })
 })
