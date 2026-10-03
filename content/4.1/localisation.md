@@ -213,7 +213,8 @@ id: meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usag
   command. A raw command body whose localised names or descriptions break them is caught at registration instead:
   nothing is registered, the error lists each field, and the bot stays up.
 - **Injecting `Translator` needs [`@MeoCord({ i18n })`](api:decorators/MeoCord#i18n).** Without it, any class that
-  injects it, a guard, interceptor or filter included, stops the bot at startup with a message saying what to pass.
+  injects it, a guard, interceptor, filter, pipe or presenter included, stops the bot at startup, naming the class and
+  saying what to pass.
 - **`labelKey` needs `@MeoCord({ i18n })`, and a message in the default catalog.** `@MeoCord` refuses one
   without either, where the app is declared.
 
