@@ -8,6 +8,7 @@ import {
   apiKindParams,
   apiModel,
   apiParams,
+  apiSections,
   cliParams,
   exactApiParams,
   glanceParams,
@@ -59,14 +60,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const target = parse(line, path)
   if (!target) return {}
   if (!target.symbol) {
-    const kind = apiModel(line)
-      ?.sections()
-      .find(section => section.slug === target.section)
+    const model = apiModel(line)
+    const kind = model && apiSections(model).find(section => section.slug === target.section)
     if (!kind) return {}
+    const names = kind.symbols.map(symbol => symbol.name).join(', ')
     return pageMetadata({
       title: `${kind.title} · API`,
       line,
-      description: `MeoCord ${line}'s ${kind.title.toLowerCase()}: ${kind.symbols.map(symbol => symbol.name).join(', ')}.`,
+      description:
+        kind.slug === GLANCE_SECTION
+          ? `MeoCord ${line} at a glance, a cheat sheet per task: ${names}.`
+          : kind.slug === CLI_SECTION
+            ? `The meocord command line of MeoCord ${line}: ${names}.`
+            : `MeoCord ${line}'s ${kind.title.toLowerCase()}: ${names}.`,
       canonical: docsHref({ kind: 'api-index', line, section: target.section }, VERSIONS),
     })
   }

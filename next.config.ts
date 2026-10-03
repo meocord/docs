@@ -33,21 +33,25 @@ const nextConfig: NextConfig = {
     // request time.
     '/**': ['./.search/manifest.json', './.api-layout/*.json'],
   },
-  // Each Guide path in a line whose guides come from its README, sent to that line's page on the topic
+  // `/docs` to the current line, permanently since `latest` always stands for it; and each Guide path in a
+  // line whose guides come from its README, sent to that line's page on the topic
   async redirects() {
     const lines = manifest.lines
       .filter(entry => entry.guides === 'readme')
       .map(({ line }) => ({ line, pages: listPages(line) }))
-    return manifest.lines
-      .filter(entry => entry.guides === 'authored')
-      .flatMap(({ line }) =>
-        guideAliasRedirects(
-          lines,
-          DOC_ALIASES.latest,
-          readGuide(line).map(({ page }) => ({ ...page, path: guidePath(page) })),
-          line,
+    return [
+      { source: '/docs', destination: '/docs/latest', permanent: true },
+      ...manifest.lines
+        .filter(entry => entry.guides === 'authored')
+        .flatMap(({ line }) =>
+          guideAliasRedirects(
+            lines,
+            DOC_ALIASES.latest,
+            readGuide(line).map(({ page }) => ({ ...page, path: guidePath(page) })),
+            line,
+          ),
         ),
-      )
+    ]
   },
   async rewrites() {
     return [
