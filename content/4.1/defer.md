@@ -22,9 +22,9 @@ Put `@Defer()` on any interaction handler that might take more than a moment: on
 or sits behind a guard that does. On a button or a select menu, it also locks the message while the handler works,
 so a user can't click twice.
 
-Leave it off a handler that shows a modal, since a modal must be the first response, and off one that always
-answers at once. For a handler that answers quickly most of the time, `mode: 'auto'` acknowledges only when it has
-to.
+Leave it off a handler that shows a modal, since a modal must be the first response, or use `mode: 'auto'` and show the
+modal before `after` passes; and leave it off one that always answers at once. For a handler that answers quickly most
+of the time, `mode: 'auto'` acknowledges only when it has to.
 
 ## Example
 
@@ -105,7 +105,8 @@ the controls it shows, as Discord's JSON:
 - **`@Defer` is for interaction handlers.** On a message, reaction, event or autocomplete handler, it's refused in
   one line, as the controller loads when it's written above the handler's decorator, and as the app is created when
   it's below: `Chat.hi: @Defer is for interaction handlers, and this is a message handler. Remove @Defer from it.`
-- **A modal can't follow it.** A handler that shows a modal must leave `@Defer` off.
+- **A modal must come first.** Leave `@Defer` off a handler that shows a modal, or use `mode: 'auto'` and show it before
+  `after` passes.
 
 ## Next steps
 

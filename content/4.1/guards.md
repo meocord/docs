@@ -30,8 +30,8 @@ call through and `false` to stop it. To tell the user why they were stopped, it 
 [`GuardDeniedError`](api:responses/GuardDeniedError) with the reason instead.
 
 Guards run before anything that fetches from Discord or counts a call. Before an interaction's or a message's guards,
-only `@Defer`'s acknowledgement comes first; a reaction's partial message or user is fetched before its guards. So a
-caller they refuse costs the bot almost nothing.
+only `@Defer`'s acknowledgement, and the app's `themeFor` lookup when it has one, come first; a reaction's partial
+message or user is fetched before its guards. So a caller they refuse costs the bot almost nothing.
 
 ## When to use it
 
@@ -52,7 +52,8 @@ A stranger pressing the button is told privately that it isn't theirs, and the h
 
 ## How it works
 
-A guard runs after [`@Defer`](guide:defer)'s acknowledgement, and after a message command's words are read, and before
+A guard runs after [`@Defer`](guide:defer)'s acknowledgement and the app's `themeFor` lookup, and after a message
+command's words are read, and before
 everything else in the call: the fetch of a message's entities, interceptors, validation, cooldowns and the handler.
 [How a call runs](guide:how-a-call-runs) shows the whole order.
 
@@ -168,6 +169,8 @@ A guard can also be tested alone, with `createExecutionContext` building the con
 
 ## Gotchas
 
+- **A guard that injects needs `@Guard()`.** Without it, TypeScript records none of its constructor's types, and the
+  bot refuses to start, naming the decorator to add.
 - **Returning `false` tells the user nothing.** On a button, that's often right. On a command, throw
   `GuardDeniedError` so they know why nothing happened.
 - **A global guard runs before event handlers too.** One that reads `interaction.user` throws on an event; declare

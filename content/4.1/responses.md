@@ -80,7 +80,8 @@ theme's primary colour; `{ fill: false }` sends that one message as written.
 
 A private message takes `flags: MessageFlags.Ephemeral`. Each call takes only the flags Discord accepts for it,
 worked out afresh, so a private follow-up never makes the next message private. `send()` and `followUp()` payloads
-are typed, and a flag a call can't take doesn't compile.
+are typed, so a flag no answer takes doesn't compile; one the call made can't take, such as `Ephemeral` on an edit, is
+dropped with a warning in development.
 
 While a command's reply is deferred and nothing has been sent, Discord turns a follow-up into that reply and ignores
 its flags, so `followUp()` sends it as the edit. A private follow-up on a public deferral is the exception: the
@@ -100,7 +101,8 @@ can carry files of their own; one added to a message by an edit keeps the messag
   interceptor that returned before the handler ran or finished, the outermost when several did. Turn the warning on
   or off with `@MeoCord({ warnUnanswered })`.
 - **`modal()` has to come first.** Call it before anything acknowledges the interaction, and leave
-  [`@Defer`](guide:defer) off a handler that shows a modal.
+  [`@Defer`](guide:defer) off a handler that shows a modal, or use `@Defer({ mode: 'auto' })` and show the modal
+  before it acknowledges.
 - **A modal has no message to edit.** After `modal()`, `send()`, `edit()` and `delete()` throw, saying so. Answer in
   the handler of the modal's submit, which gets an interaction of its own.
 - **`ephemeral: true` is deprecated in discord.js.** It's still read as the private flag, but write

@@ -49,8 +49,9 @@ sees a valid roll.
 
 A message goes through three steps before the handler runs:
 
-1. **Start.** The message must begin with a prefix, or a mention of the bot when `mention` is on. A message
-   with neither is chat, and no command handles it.
+1. **Start.** The message must begin with the command's start: a prefix, a mention of the bot when `mention` is on,
+   or nothing at all for an app with no prefix or a handler with `prefix: false`. A message without one is chat, and
+   no command handles it.
 2. **Match.** The rest is split into words, and every pattern is matched against them. Only one patterned
    handler runs: the most specific match, as [Which handler runs](#which-handler-runs) explains.
 3. **Pipeline.** The handler's [guards](guide:guards), [validation and pipes](guide:validation),
@@ -111,7 +112,8 @@ fills:
 A prefix function that finds no prefix for a message, returning an empty list, `undefined` or `null`, lets no prefix
 start a command for it; a mention still does when `mention` is on. Return `''` to take the message as it is. A handler
 with its own `prefix`, or `prefix: false`, runs for a message both it and the function could start, whatever the order
-of your controllers.
+of your controllers; with `mention` on, one with its own `prefix` and the same pattern is refused at startup instead,
+since both take a mention.
 
 A prefix function that throws goes to the app's global [exception filters](guide:exception-filters), then the
 built-in fallback, and the handlers for every message still run.
@@ -134,8 +136,9 @@ handler's own `'!'` and another's `['!', '?']`, or one's own `'!'` beside the ap
 A.roll: "roll" and "roll" in B.roll match the same messages, so only one of them could ever answer those. Change one pattern, or give one its own prefix.
 ```
 
-An app's prefix function gives its prefixes only as each message arrives, so a handler using it is refused only beside
-another that uses it too. Then every `@MessageHandler()` without a pattern runs, whether or not a pattern matched.
+An app's prefix function gives its prefixes only as each message arrives, so beside it a handler is refused only when
+it uses the function too, or when both take a mention because the app's `mention` is on. Then every `@MessageHandler()`
+without a pattern runs, whether or not a pattern matched.
 
 ## Usage errors
 
@@ -285,9 +288,10 @@ can reach, and which guards hide, are not worked out again:
 
 ## Errors at startup
 
-The message routes are built as the bot loads, and a mistake in a pattern stops it before it logs in. The report is
-one line that begins with the handler and its pattern, such as
-`DiceMessageController.swap: @MessageHandler('swap {a} {a}'):`, followed by the problem, and the process exits 1:
+The message routes are built as the bot loads, and a mistake in a pattern stops it before it logs in. The report
+begins with the handler and its pattern, such as
+`DiceMessageController.swap: @MessageHandler('swap {a} {a}'):`, followed by the problem on the same line and, in a
+built app, the source file below it, and the process exits 1:
 
 | Mistake                                          | What follows the handler                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |

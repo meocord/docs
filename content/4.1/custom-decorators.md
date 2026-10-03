@@ -71,15 +71,18 @@ two never collide:
 
 [`SetMetadata(key, value)`](api:utilities/SetMetadata) stores a value under a key of your choosing, read with
 `ExecutionContext.get(key)`. Both are deprecated, and removed in the next major version (5.0): each logs a warning
-once. Use `createMetadata`, whose values are typed and whose key can't collide with another library's.
+once. Use `createMetadata`, whose values are typed and whose key can't collide with another library's. `SetMetadata`
+throws as it applies for a key beginning `meocord:`, where MeoCord keeps its own metadata, and for the two keys
+dependency injection reads; see the
+[upgrade guide](guide:migrating#setmetadata-refuses-meocords-own-keys).
 
 ## Gotchas
 
 - **A bot written for 4.0 relied on the reverse order.** 4.0's `applyDecorators(UseGuard(A), UseGuard(B))` ran `B`
   before `A`; 4.1 runs `A` first, as stacking them does. To keep the old order, list them the other way round; see
   the [upgrade guide](guide:migrating#applydecorators-applies-its-decorators-in-the-order-they-stack).
-- **A method-only decorator can't go on a controller.** `@Defer` and `@Validate` apply to handlers only, so a custom
-  decorator that includes them does too.
+- **A method-only decorator can't go on a controller.** `@Defer`, `@Validate` and `@UsePipe` go on handlers only,
+  and refuse a class as they apply, naming the decorator, so a custom decorator that includes them does too.
 
 ## Next steps
 

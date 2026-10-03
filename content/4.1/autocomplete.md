@@ -67,8 +67,8 @@ The first argument is the command path, so subcommands work as they do for `@Com
 ## When no handler claims an option
 
 MeoCord answers with an empty list, and logs which command and option have no handler, so the menu shows empty rather
-than loading until it times out. An error in the handler does the same, after the error reaches the handler's
-filters.
+than loading until it times out. An error no filter handles does the same; a filter that catches one answers
+it itself, with `interaction.respond([])`.
 
 ## Gotchas
 
@@ -76,12 +76,15 @@ filters.
   as the example does.
 - **A slow lookup misses the three seconds.** Autocomplete can't be deferred. Keep the lookup fast: cache what it
   searches, or search a smaller index.
+- **A handler for an option without autocomplete never runs.** Discord never asks to complete it. The bot warns at
+  startup, and in the next major version (5.0) it refuses to start; turn it on in the builder with
+  `setAutocomplete(true)`.
 - **A suggestion isn't a guarantee.** The member can ignore it and send anything. Check the value when the command
   runs.
-- **Only one handler completes an option.** With two `@Autocomplete` handlers for the same option of one command
-  path, or for every option of one path, the one in the controller listed first runs, and the other never does. The
-  bot warns at startup, naming both, and in the next major version (5.0) it refuses to start. Keep one, or give the
-  other an option or a path of its own.
+- **Only one handler completes an option.** With two `@Autocomplete` handlers for the same option of one command path,
+  or for every option of one path, the one whose controller is listed first, or within one controller the one declared
+  first, runs, and the other never does. The bot warns at startup, naming both, and in the next major version (5.0) it
+  refuses to start. Keep one, or give the other an option or a path of its own.
 
 ## Next steps
 

@@ -93,7 +93,7 @@ patterned handler the message matched, if any:
 ## Testing
 
 `module.invoke` runs one handler with the arguments dispatch would pass. For a reaction, those are the
-reaction and its options:
+reaction and its `ReactionEvent`, `{ user, action }`:
 
 ::example{file="controllers/reaction/star.reaction.controller.spec.ts" region="spec"}
 
