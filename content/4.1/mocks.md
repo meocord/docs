@@ -225,12 +225,17 @@ to reject with:
 - 10062: the three seconds to answer passed;
 - 40060: the interaction was already acknowledged;
 - 50001: missing access;
-- 50027: the fifteen-minute token has expired.
+- 50027: the fifteen-minute token has expired;
+- 10007 and 10013: no such member, and no such user.
 
 `respond()` passes the error on to the handler, and [`getResponse`](api:testing/getResponse) keeps the refused call,
 with its `error`, without counting it as sent:
 
 ::example{file="testing/mocks.spec.ts" region="errors"}
+
+A manager's `fetch(id)` finds or makes the item it's asked for, so a test of an ID that isn't a member, or of a user
+that doesn't exist, rejects the fetch: `guild.members.fetch.mockRejectedValue(createDiscordError(10007))`. A typed
+message param that names that ID is then refused as not a member of the server, as Discord answers it.
 
 ## Gotchas
 
