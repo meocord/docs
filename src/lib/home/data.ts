@@ -54,7 +54,7 @@ export interface PipelineDemo {
 const NARRATION: Record<StageId, string> = {
   defer: 'Acknowledged at once, so a slow handler never runs out Discord’s three seconds.',
   guard:
-    'Guards run next, before anything else of the handler’s. One that throws GuardDeniedError is answered privately, with its reason.',
+    'Guards run next, after the acknowledgement. One that throws GuardDeniedError is answered privately, with its reason.',
   'interceptor:before': 'Interceptors wrap everything after the guards, on the way in.',
   pipe: 'Pipes shape each option before the handler sees it.',
   handler: 'The handler runs with input that has been checked and shaped.',
