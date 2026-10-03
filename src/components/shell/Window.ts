@@ -1,9 +1,9 @@
-import { A, createNode, Div, Footer, Grid, Node, Row } from '@meonode/ui'
+import { A, Div, Footer, Grid, Node, Row } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { safe } from '@/lib/design/css'
 import { Inspector } from '@/components/shell/Inspector'
-import { SheetBody, SheetCard, SheetPane, SidebarBody } from '@/components/nodes'
+import { CreditLink, SheetBody, SheetCard, SheetPane, SidebarBody } from '@/components/nodes'
 import { SidebarPane } from '@/components/shell/panes'
 import { SheetScroll } from '@/components/shell/SheetScroll'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
@@ -27,14 +27,6 @@ export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   wide?: boolean
   children: Children
 }
-
-/** A credit in the footer: a link in the footer's colour, underlined. */
-const CreditLink = createNode('a', {
-  color: 'inherit',
-  textDecoration: 'underline',
-  textUnderlineOffset: '0.18em',
-  css: { '&:hover': { color: 'theme.ink.primary' } },
-})
 
 /** The foot of every page: the credits for what the site is built and drawn with. */
 function SiteFooter({ wide }: { wide?: boolean } = {}) {
