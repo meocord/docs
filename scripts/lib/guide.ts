@@ -9,10 +9,11 @@ import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
 import { EXAMPLE_SOURCE, fenceLanguages, hasRegion, markdownLinks, pageAnchors, withoutCode } from './content'
+import { exampleBotProblems, readExampleBots, withExampleBots, type ExampleBots } from './example-bots'
 import { withPackageSpec } from './package-spec'
 import { newestIn, readVersions, type VersionsConfig } from './versions'
 import { memberAnchor } from '../../src/lib/urls'
-import { displacedTerms } from '../../src/lib/prose/anchors'
+import { displacedTerms, pageSections } from '../../src/lib/prose/anchors'
 import { parseDispatchList } from '../../src/playground/dispatch-list'
 import { outsideModules, READER_MODULES } from '../../src/playground/runtime/modules'
 import { sharedFragment } from '../../src/lib/docs/share-link'
@@ -99,6 +100,7 @@ export const GUIDE_PLAN: Readonly<Record<ChapterId, readonly string[]>> = {
     'coming-from/discordx',
     'coming-from/necord',
     'what-can-i-build',
+    'example-bots',
     'config-reference',
     'troubleshooting',
     'faq',
@@ -293,7 +295,23 @@ export function readGuide(line: string, root?: string): { page: GuidePage; body:
     const { page, body } = readGuidePage(slug, text)
     return page ? [{ page, body }] : []
   })
+  const bots = readExampleBots(dir)
+  const titleOf = refTitles(read)
+  for (const entry of read) entry.body = withExampleBots(entry.body, bots, titleOf)
   return readingOrder(read.map(entry => entry.page)).map(page => read.find(entry => entry.page === page)!)
+}
+
+/** A link's title for a Guide path: its page's, or, with an anchor, the section's heading or term as written. */
+function refTitles(pages: Iterable<{ page: GuidePage; body: string }>): (ref: string) => string | undefined {
+  const byPath = new Map([...pages].map(entry => [guidePath(entry.page), entry]))
+  const sections = new Map<string, Map<string, string>>()
+  return ref => {
+    const [base, anchor] = ref.split('#', 2) as [string, string?]
+    const entry = byPath.get(base)
+    if (!entry || !anchor) return entry?.page.title
+    if (!sections.has(base)) sections.set(base, pageSections(entry.body, entry.page))
+    return sections.get(base)!.get(anchor)
+  }
 }
 
 /** The sections a chapter page has, in order; `required` ones must be there. */
@@ -368,6 +386,8 @@ export interface GuideContext {
   migratingAnchors?: Set<string>
   /** What a `covers` entry may name; without it, only its form is checked. */
   coverable?: Coverable
+  /** The line's example bots, which its Example bots page draws and the pages they illustrate link. */
+  exampleBots?: ExampleBots
   /** The line's generated pages, by slug: pages others link, held to no template. */
   generated?: Record<string, string>
   /**
@@ -748,8 +768,11 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
 
   const orders = new Map<string, string>()
   const known = new Set(pages.keys())
-  for (const [slug, { page, body, anchors }] of pages) {
+  const titleOf = refTitles(pages.values())
+  for (const [slug, { page, body: written, anchors }] of pages) {
     if (generated.has(slug)) continue
+    // A bot's list is checked as the page renders it, its guide: links with the page's own
+    const body = withExampleBots(written, context.exampleBots, titleOf)
     const where = `${folder}/${slug}.md`
     const place = `${page.chapter}/${page.group ?? ''}/${page.order}`
     if (orders.has(place)) problems.push(`${where}: order ${page.order} is also ${orders.get(place)}'s`)
@@ -782,6 +805,14 @@ export function checkGuide(files: Record<string, string>, context: GuideContext)
     checkLinks(where, body, pages, context, anchors, problems, planned)
   }
   checkFormerly(folder, pages, problems, context.coverable)
+  if (context.exampleBots)
+    problems.push(
+      ...exampleBotProblems(
+        folder,
+        context.exampleBots,
+        [...pages.values()].map(({ page, body, anchors }) => ({ pagePath: guidePath(page), body, anchors })),
+      ),
+    )
   // A link or region used more than once on a page is reported once.
   return { problems: [...new Set(problems)], planned: [...new Set(planned)] }
 }

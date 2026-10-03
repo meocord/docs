@@ -3,7 +3,7 @@ id: glossary
 title: Glossary
 chapter: appendix
 group: help
-order: 4
+order: 5
 summary: The words the Guide uses, what each means in MeoCord, and the chapter that explains it.
 requires: []
 api: []

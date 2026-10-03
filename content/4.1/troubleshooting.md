@@ -3,7 +3,7 @@ id: troubleshooting
 title: Troubleshooting
 chapter: appendix
 group: help
-order: 2
+order: 3
 summary: The failures most bots meet, what the bot or Discord says for each, what causes it, and where the fix is.
 requires: []
 api: [responses/GuardDeniedError, decorators/Defer, testing/createDiscordError]

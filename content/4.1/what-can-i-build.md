@@ -107,5 +107,6 @@ Anything else Discord tells the bot, such as a member joining a server:
 ## Next steps
 
 - [Your first command](guide:first-command): build one of these from scratch, and run it.
+- [Example bots](guide:example-bots): whole bots that put these handlers together, with their tests.
 - [How a call runs](guide:how-a-call-runs): what happens between the member's click and your handler.
 - [Services](guide:services): share state and work between handlers, injected where they're needed.

@@ -3,7 +3,7 @@ id: whats-new
 title: What's new in 4.1
 chapter: appendix
 group: help
-order: 5
+order: 6
 summary: What 4.1 adds to a 4.0 bot, area by area, and where the few changes a working bot may notice are listed.
 requires: []
 api: [responses/respond, decorators/Defer, decorators/MessageHandler, decorators/Cooldown, testing/MeoCordTestingModule]
