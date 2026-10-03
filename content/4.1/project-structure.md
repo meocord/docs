@@ -132,7 +132,7 @@ app.
 dist/
 ├── main.js                 # the bot, bundled
 ├── main.js.map             # its source map, so stack traces point at src
-├── main.js.LICENSE.txt     # licence comments from the bundle, in a production build
+├── main.js.LICENSE.txt     # the licence comments a production bundle carries, when it carries any
 ├── meocord.config.mjs      # the config, compiled, which the bot loads at startup
 ├── assets/                 # the files your code imports: images, fonts, media and the rest
 ├── package.json            # marks dist as an ES module, with bundleDependencies only

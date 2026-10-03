@@ -36,7 +36,7 @@ Build it as usual, with `npx meocord build --prod`. The server needs `dist/` alo
 dist/
 ├── main.js
 ├── main.js.map
-├── main.js.LICENSE.txt    (in a production build)
+├── main.js.LICENSE.txt    (the licence comments the bundle carries, which a self-contained build's dependencies generally do)
 ├── meocord.config.mjs
 ├── package.json
 ├── assets/                (if the bot imports any)
@@ -79,8 +79,9 @@ online, with a message naming both.
 `externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings are
 copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
 `optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. Without
-it, a self-contained build warns, naming the dependency and `optionalExternals`. Don't list a name in `externals` as
-well; the build warns about that too. See [the options](guide:configuration#options).
+it, a self-contained build that meets `supports-color` uninstalled warns, naming the dependency and `optionalExternals`.
+Don't list a name in `externals` as well; the build warns about that too. See
+[the options](guide:configuration#options).
 
 discord.js's optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated that way.
 

@@ -87,8 +87,8 @@ Keep `record()` in a database, as in [A database](guide:recipes/database), and p
 ### Restarts
 
 Proposals live in memory, so a restart forgets them, and their buttons then answer that the action was already handled.
-Their ids count from when the bot started, so a button from before a restart never matches a proposal made after it.
-Keep proposals in a database to survive one.
+Their ids are random, so a button from before a restart almost certainly matches no proposal made after it. Keep
+proposals in a database to survive one.
 
 ### Expiring proposals
 

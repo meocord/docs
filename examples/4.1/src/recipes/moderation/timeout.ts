@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -50,12 +51,12 @@ export interface Timeout {
 @Service()
 export class ModerationService {
   private readonly pending = new Map<number, Timeout>()
-  // Counting from when the bot started, so a button from before a restart matches no proposal made after it
-  private next = Date.now()
   readonly log: (Timeout & { at: Date })[] = []
 
   propose(timeout: Timeout): number {
-    const id = this.next++
+    // Random, so a button from before a restart almost certainly matches no proposal made after it
+    let id = randomInt(2 ** 48 - 1)
+    while (this.pending.has(id)) id = randomInt(2 ** 48 - 1)
     this.pending.set(id, timeout)
     return id
   }

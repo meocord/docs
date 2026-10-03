@@ -91,8 +91,8 @@ mocks for every interaction type.
 - **A command's name is lowercase,** at most 32 characters, with no spaces: Discord refuses others, and the builder
   throws as the controller loads, naming the builder and the command.
 - **A method called directly skips most of the pipeline.** Only its own and its controller's guards run. In a test, go
-  through `invoke`, so validation, cooldowns and filters run as they do in the bot, and the app's global guards too when
-  the module is built with `app` or `fromApp`.
+  through `invoke`, so its interceptors, validation, cooldowns and filters run as they do in the bot, and the app's
+  global guards, interceptors and filters too when the module is built with `app` or `fromApp`.
 
 ## Next steps
 

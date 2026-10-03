@@ -34,8 +34,9 @@ npm ci --omit=dev
 npx meocord start --prod
 ```
 
-With Yarn 1, the second line is `yarn install --production`, and with Yarn 2 or later
-`yarn workspaces focus --all --production`; with pnpm, `pnpm install --prod`; with bun, `bun install --production`.
+With Yarn 1, the second line is `yarn install --production`, and with Yarn 4 `yarn workspaces focus --all --production`,
+which Yarn 2 and 3 run after `yarn plugin import workspace-tools`; with pnpm, `pnpm install --prod`; with bun,
+`bun install --production`.
 
 ## How it works
 
