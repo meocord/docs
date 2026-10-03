@@ -65,8 +65,9 @@ store, a validation or a `UserError`. Both wait for the module's [observers](gui
 Pass the arguments dispatch would: the interaction, message or reaction, then the handler's params. Passed alone, an
 interaction gets its params built as dispatch builds them: a command's or an autocomplete's options, or a component's
 `customId` params with a modal's fields or a select menu's choices. A message passed alone gets what its
-`@MessageHandler` pattern captures after the app's prefix, typed as dispatch types it; a word that isn't of its type,
-or a missing param, goes through the handler's filters as a `MessageUsageError`.
+`@MessageHandler` pattern captures after the app's prefix, the handler's own prefix, or a mention, typed as dispatch
+types it; a word that isn't of its type, or a missing param, goes through the handler's filters as a
+`MessageUsageError`.
 
 `invoke` resolves to `{ ran }`. `ran` is `false` when a guard stopped the call or an interceptor skipped the handler,
 and `error` is set when a filter handled one. A guard that returns `false` stops the call with no answer:

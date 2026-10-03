@@ -30,10 +30,10 @@ For something to do in response to Discord, use [gateway events](guide:gateway-e
 
 ## How it works
 
-Every controller and service the app binds gets hooks: those listed in `@MeoCord({ controllers, services })`,
-everything they depend on, what `@MeoCord({ providers })` supplies, the app's cooldown store and its `themeFor`
-class. [Observers](guide:observers) get them too. Guards, interceptors and filters get none, unless one is also listed
-in `services` or injected by a controller or service.
+Every controller and service the app binds gets hooks: those listed in `@MeoCord({ controllers, services })`, everything
+they depend on, what `@MeoCord({ providers })` supplies, the app's cooldown store and its `themeFor` class.
+[Observers](guide:observers) get them too. Guards, interceptors and filters get none, unless the app also binds it:
+listed in `services` or `providers`, or injected by a class that gets hooks.
 
 ## onReady
 

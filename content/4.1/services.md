@@ -141,16 +141,16 @@ fails when the module compiles, naming both:
   Move what both need into a third service. `meocord/eslint` warns about import cycles as you write them, in a
   project with `eslint-import-resolver-typescript`; see [Import cycles](guide:eslint#import-cycles).
 
-- **A class without `@Service()` can't be injected if its constructor takes parameters.** Without a decorator,
-  TypeScript records none of their types, so the bot stops, naming the class:
+- **A class without a decorator can't be injected if its constructor takes parameters.** With no decorator on the class
+  or on a parameter, TypeScript records none of their types, so the bot stops, naming the class:
 
   ```text
   Notes: its constructor takes parameters, but Notes has no decorator, so TypeScript recorded none of their types and
   it cannot be created. Decorate it with @Service(), or give a class from a package a provider in @MeoCord({ providers }).
   ```
 
-  A class from a package gets a provider instead. `Logger` and MeoCord's errors aren't injected at all: create them
-  with `new`.
+  A class from a package gets a provider instead. `Logger` and errors such as `UserError` aren't injected at all: create
+  them with `new`.
 
 - **A factory that throws stops the bot before login,** with the token and the error. So does a token provided
   twice, or one a class injects that nothing provides.

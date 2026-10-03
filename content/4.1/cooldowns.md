@@ -65,7 +65,7 @@ a reply in the channel can't be private, unless the app turns on
 the bot at startup. On a controller, it applies to each of its command, component and message handlers apart, so a
 controller's `uses: 3` gives every one of them three.
 
-A message command that must fetch a member, user, role or channel its params name, or a value of the app's own type,
+A message command that must fetch a member, user or channel its params name, or a value of one of the app's own types,
 is checked sooner too. Before anything is fetched from Discord, the call is checked, without being counted, against
 those of its cooldowns that have no `by`, so a call on cooldown costs no requests.
 
@@ -109,11 +109,12 @@ counted, and the owner, counted under their own id, can still check in:
 
 ## Answering a refused call
 
-An interaction a cooldown refuses is answered privately with `meocord.cooldown.until`: "Slow down: try again
-{when}.", where `{when}` is the time the wait ends as a Discord timestamp, `<t:…:R>`. Discord words it in the reader's
-language ("in 5 minutes", "in 23 hours") and counts it down. The rest of the text is in the user's language where the
-app [translates MeoCord's texts](guide:localisation). With `dmOnCooldown`, a message command's author gets the same
-wait by DM, in `meocord.dm.cooldown`, which names the command, channel and server.
+An interaction a cooldown refuses is answered privately with `meocord.cooldown.until`: "Slow down: try again {when}.",
+where `{when}` is the time the wait ends as a Discord timestamp, `<t:…:R>`. Discord words it in the reader's language
+("in 5 minutes", "in 23 hours") and counts it down. The rest of the text is in the user's language where the app
+[translates MeoCord's texts](guide:localisation). With `dmOnCooldown`, the author of a command sent in a server gets the
+same wait by DM, in `meocord.dm.cooldown`, which names the command, channel and server; a command sent in a DM is
+answered there with `meocord.cooldown.until`.
 
 To answer another way, catch `CooldownError` in an [exception filter](guide:exception-filters).
 [`error.retryAt`](api:responses/CooldownError#retryAt) is the `Date` the next call is allowed, and

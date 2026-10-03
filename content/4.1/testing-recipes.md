@@ -52,7 +52,9 @@ its own, so `respond()` fills it from the theme, and the test reads the colour b
 A testing module runs each call in its theme as the bot does: MeoCord's defaults, the app's theme, each `@UseTheme`,
 then what `themeFor` looks up for the call's server and user. Guards and cooldowns run in the same pipeline, in the
 bot's order. Each module counts cooldowns in a store of its own: a fresh `MemoryCooldownStore`, or a new instance of the
-app's `cooldownStore`, which shares its counts when it keeps them outside the process, as a Redis store does.
+app's `cooldownStore`, which shares its counts when it keeps them outside the process, as a Redis store does. A test
+that provides `CooldownStore` itself gets that store instead, and a `useValue` provider is one instance, shared by every
+module given it.
 
 The helpers here change one of those inputs for one test, and leave the rest as the bot has them.
 
