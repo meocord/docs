@@ -44,9 +44,9 @@ test. It gives a bot the structure a web framework gives a server, and with it:
   module from the app class itself. See [Testing](guide:testing), [Mocks](guide:mocks) and
   [Invoke and dispatch](guide:invoke-and-dispatch).
 - **One pipeline around every call.** Guards, interceptors, validation, pipes, cooldowns and exception filters run in a
-  fixed order around every handler. Guards, interceptors and filters are set on one method, a controller or the whole
-  bot, cooldowns on a method or a controller, and validation and pipes on a method. See
-  [How a call runs](guide:how-a-call-runs).
+  fixed order around each handler they apply to. Guards, interceptors and filters are set on one method, a controller or
+  the whole bot, cooldowns on a method or a controller, and validation and pipes on a method. See [How a call
+  runs](guide:how-a-call-runs).
 - **Cooldowns and translations built in.** [`@Cooldown`](guide:cooldowns) counts per user, server, channel or resource,
   in memory or [in Redis](guide:recipes/cooldown-stores), and [typed catalogs](guide:localisation) translate what the
   bot says and the names of its commands.
