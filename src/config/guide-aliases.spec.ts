@@ -47,5 +47,7 @@ describe('guideAliasRedirects', () => {
     expect(redirects.find(redirect => redirect.source === '/docs/4.0/slash-commands')?.destination).toBe(
       '/docs/4.0/command-types',
     )
+    // Each one's destination depends on versions.json and the pages, so none is permanent
+    expect(redirects.every(redirect => redirect.permanent === false)).toBe(true)
   })
 })
