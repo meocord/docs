@@ -20,6 +20,12 @@ test('every way of reaching a missing page answers 404 with the same page', asyn
     '/docs/latest/no-such-page',
     '/docs/4.1/api/core/NoSuchSymbol',
     '/docs/4.0/missing/no-such-page',
+    // A line versions.json does not list, on each kind of route
+    '/docs/9.9',
+    '/docs/9.9/guards',
+    '/docs/9.9/recipes/no-such-page',
+    '/docs/9.9/changelog/9.9.0',
+    '/docs/9.9/api/decorators/Defer',
   ]) {
     const response = await request.get(path)
     expect(response.status(), path).toBe(404)

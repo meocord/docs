@@ -5,7 +5,7 @@ import { VERSIONS } from '@/config/versions'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 import { hasPlaygroundPage } from '@/lib/docs/guide-site'
 import { renderPlaygroundPage } from '@/lib/docs/playground-page'
-import { lines } from '@/lib/docs/site'
+import { lineParams, lines } from '@/lib/docs/site'
 import { docsHref } from '@/lib/urls'
 
 type Params = { params: Promise<{ line: string }> }
@@ -24,7 +24,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line } = await params
+  const { line } = await lineParams(params)
   if (!hasPlaygroundPage(line)) return {}
   return pageMetadata({
     title: 'Playground',
@@ -43,6 +43,6 @@ async function playgroundPage(line: string) {
 }
 
 export default async function PlaygroundPage({ params }: Params) {
-  const { line } = await params
+  const { line } = await lineParams(params)
   return (await playgroundPage(line)) ?? notFound()
 }

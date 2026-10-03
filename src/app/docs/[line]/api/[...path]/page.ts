@@ -18,6 +18,7 @@ import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs
 import { GLANCE_SECTION, glanceTopic } from '@/lib/docs/glance'
 import { docsHref } from '@/lib/urls'
 import { firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
+import { lineParams } from '@/lib/docs/site'
 
 type Params = { params: Promise<{ line: string; path: string[] }> }
 
@@ -52,7 +53,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line, path } = await params
+  const { line, path } = await lineParams(params)
   const target = parse(line, path)
   if (!target) return {}
   if (!target.symbol) {
@@ -123,7 +124,7 @@ async function apiPage(line: string, path: string[]) {
 }
 
 export default async function ApiPage({ params }: Params) {
-  const { line, path } = await params
+  const { line, path } = await lineParams(params)
   const page = await apiPage(line, path)
   if (page) return page
   // A page by entry point, from before the line's API was arranged by kind, sent to where it is now

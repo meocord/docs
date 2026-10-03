@@ -5,6 +5,7 @@ import { VERSIONS } from '@/config/versions'
 import { changelogParams, changelogSummary, renderRelease, versionChangelog } from '@/lib/docs/reference-pages'
 import { docsHref } from '@/lib/urls'
 import { pageMetadata } from '@/lib/docs/page-metadata'
+import { lineParams } from '@/lib/docs/site'
 
 type Params = { params: Promise<{ line: string; version: string }> }
 
@@ -16,7 +17,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line, version } = await params
+  const { line, version } = await lineParams(params)
   const changelog = versionChangelog(line, version)
   if (!changelog) return {}
   return pageMetadata({
@@ -35,6 +36,6 @@ async function releasePage(line: string, version: string) {
 }
 
 export default async function ReleasePage({ params }: Params) {
-  const { line, version } = await params
+  const { line, version } = await lineParams(params)
   return (await releasePage(line, version)) ?? notFound()
 }
