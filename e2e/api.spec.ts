@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import type { SearchManifest } from '../src/lib/search-manifest'
+import { docs40, docs41, literal } from './lines'
 
 const manifest = JSON.parse(readFileSync('.search/manifest.json', 'utf8')) as SearchManifest
 
@@ -10,22 +11,22 @@ test('a symbol page shows its declaration, links its types, and anchors its memb
     if (message.type() === 'error') violations.push(message.text())
   })
   // 4.1's API is arranged by kind; live-routes.spec checks its old pages by entry point redirect here
-  const response = await page.goto('/docs/4.1/api/controllers/ShardContext')
+  const response = await page.goto(`${docs41}/api/controllers/ShardContext`)
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1, name: 'ShardContext' })).toBeVisible()
   await expect(page.locator('[data-signature]').first()).toContainText('class ShardContext')
   await expect(page.locator('h3#constructor')).toBeVisible()
   await expect(page.locator('nav, aside').getByRole('link', { name: 'Cooldown', exact: true }).first()).toHaveAttribute(
     'href',
-    '/docs/4.1/api/decorators/Cooldown',
+    `${docs41}/api/decorators/Cooldown`,
   )
   expect(violations).toEqual([])
 })
 
 test('a linked type opens its own page', async ({ page }) => {
-  await page.goto('/docs/4.1/api/decorators/Cooldown')
+  await page.goto(`${docs41}/api/decorators/Cooldown`)
   await page.locator('[data-signature] a', { hasText: 'CooldownOptions' }).first().click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/api\/types\/CooldownOptions$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/api/types/CooldownOptions$`))
   await expect(page.getByRole('heading', { level: 1, name: 'CooldownOptions' })).toBeVisible()
 })
 
@@ -35,7 +36,7 @@ test('an exact version has its own page, kept out of search indexes and pointing
   const html = await response.text()
   // Noindex always; its links are followed once the site is indexable, which this build is not.
   expect(html).toContain('<meta name="robots" content="noindex, nofollow"/>')
-  expect(html).toMatch(/<link rel="canonical" href="[^"]*\/docs\/latest\/api\/core\/MeoCordFactory"\/>/)
+  expect(html).toMatch(new RegExp(`<link rel="canonical" href="[^"]*${literal(docs40)}/api/core/MeoCordFactory"/>`))
 })
 
 test('an unknown symbol, entry or path shape is a 404', async ({ request }) => {

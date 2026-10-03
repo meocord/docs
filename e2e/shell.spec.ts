@@ -1,4 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
+import { VERSIONS } from '../src/config/versions'
+
+// The line the version menu lists after the current one
+const other = VERSIONS.lines.find(entry => entry.status !== 'current')!.line
 
 test('the first Tab reaches the skip link, which leads to the content', async ({ page }) => {
   await page.goto('/')
@@ -36,7 +40,7 @@ test('the version menu opens on the current line, moves by arrow keys and hands 
   await expect(items.nth(1)).toBeFocused()
   // Each line links to the same page on it, the current line at its alias.
   await expect(items.first()).toHaveAttribute('href', '/docs/latest/overview')
-  await expect(items.nth(1)).toHaveAttribute('href', '/docs/4.1/overview')
+  await expect(items.nth(1)).toHaveAttribute('href', `/docs/${other}/overview`)
 
   await page.keyboard.press('Escape')
   await expect(menu).toBeHidden()

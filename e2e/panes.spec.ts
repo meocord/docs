@@ -1,5 +1,6 @@
 import { type Page } from '@playwright/test'
 import { expect, test } from './test'
+import { docs40, docs41, literal } from './lines'
 
 // On a desktop each pane is a header that stays put over a body that scrolls.
 const sidebar = (page: Page) => page.locator('[data-sidebar]:visible')
@@ -72,7 +73,7 @@ test('the sidebar’s header stays put and only its navigation scrolls, beside i
 })
 
 test('the sidebar keeps its place as the reader moves on, and a page gone back to keeps its own', async ({ page }) => {
-  await page.goto('/docs/4.1/guards')
+  await page.goto(`${docs41}/guards`)
   // Scrolled past the current link, so going back must keep the reader's place rather than show the link.
   await hideCurrentLink(page)
   expect(await inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(false)
@@ -118,13 +119,13 @@ test('the sidebar keeps a place the reader scrolled it to before the page hydrat
 })
 
 test('a sidebar link to a page read earlier shows its current link, however its sidebar was left', async ({ page }) => {
-  await page.goto('/docs/4.1/guards')
+  await page.goto(`${docs41}/guards`)
   await hideCurrentLink(page)
   await page.locator(`[data-sidebar-body]:visible a[href="${await visibleLink(page)}"]`).click()
   await expect(page).not.toHaveURL(/\/guards$/)
 
   // Following Guards' link is a new visit, not Back: Guards' kept sidebar brings its link into view.
-  await page.locator('[data-sidebar-body]:visible a[href="/docs/4.1/guards"]').click()
+  await page.locator(`[data-sidebar-body]:visible a[href="${docs41}/guards"]`).click()
   await expect(page).toHaveURL(/\/guards$/)
   await expect.poll(() => inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(true)
 })
@@ -151,16 +152,15 @@ test('the current link is brought into view only when it is out of sight', async
 })
 
 test('each line keeps its own sidebar place', async ({ page }) => {
-  await page.goto('/docs/4.1/guards')
+  await page.goto(`${docs41}/guards`)
   await sidebarBody(page).evaluate(body => (body.scrollTop = 300))
 
   await page
     .locator('[data-toolbar]:visible')
     .getByRole('button', { name: /^Documentation version/ })
     .click()
-  // 4.0 is the current line, reached as latest.
   await page.getByRole('menuitem', { name: '4.0' }).click()
-  await expect(page).toHaveURL(/\/docs\/latest\//)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs40)}/`))
   await expect.poll(() => top(sidebarBody(page))).not.toBe(300)
   expect(await inView(page, '[aria-current="page"]', '[data-sidebar-body]')).toBe(true)
 })
