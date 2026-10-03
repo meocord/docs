@@ -41,7 +41,9 @@ the one you have. With node-redis:
 ## How it works
 
 A store is a [service](guide:services) that extends `CooldownStore`. `@Cooldown` calls its `consumeMany(entries)`
-once per call, with every stacked cooldown. Three things make a store correct:
+once per call, with every stacked cooldown the call doesn't bypass. With `messages.dmOnCooldown`, a refused message
+command's notice is counted in the store too, under the refusing key followed by `:notice:`. Three things make a store
+correct:
 
 - **One step.** The check and the record happen together, so two calls at the limit can't both pass.
 - **One clock.** Processes on several hosts count by the database's clock, not each host's own.

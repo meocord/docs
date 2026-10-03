@@ -51,7 +51,8 @@ its own, so `respond()` fills it from the theme, and the test reads the colour b
 
 A testing module runs each call in its theme as the bot does: MeoCord's defaults, the app's theme, each `@UseTheme`,
 then what `themeFor` looks up for the call's server and user. Guards and cooldowns run in the same pipeline, in the
-bot's order, and each module counts cooldowns in a store of its own.
+bot's order. Each module counts cooldowns in a store of its own: a fresh `MemoryCooldownStore`, or a new instance of the
+app's `cooldownStore`, which shares its counts when it keeps them outside the process, as a Redis store does.
 
 The helpers here change one of those inputs for one test, and leave the rest as the bot has them.
 
@@ -102,8 +103,8 @@ With `{ app }`, the app's global guards come first. Through `invoke`, a guard th
 
 ## Cooldowns
 
-Each testing module counts in a fresh store, so the second call within the window is refused and a different user is
-let in:
+Each testing module here counts in a fresh store, so the second call within the window is refused and a different user
+is let in:
 
 ::example{file="controllers/slash/daily.slash.controller.spec.ts" region="spec"}
 
@@ -121,7 +122,8 @@ What a member sees when something goes wrong deserves a test as much as the happ
 - **An error no filter handles** rejects `invoke`, so `await expect(...).rejects.toThrow(...)` checks it. Through
   `dispatch`, the member gets the fallback's answer first, and `getResponse` shows it.
 - **An error a filter handled** resolves, with `error` set, and `getResponse` shows the filter's answer.
-- **A `UserError`** is the member's own outcome: `dispatch` answers it privately and resolves with it.
+- **A `UserError`** is the member's own outcome: `dispatch` resolves with it, after answering an interaction privately,
+  or replying to a message in its channel.
 - **Discord's own errors** come from a mock that rejects with
   [`createDiscordError(code)`](api:testing/createDiscordError). Here the author has closed their DMs, and the review
   must be recorded anyway:

@@ -31,8 +31,9 @@ For something to do in response to Discord, use [gateway events](guide:gateway-e
 ## How it works
 
 Every controller and service the app binds gets hooks: those listed in `@MeoCord({ controllers, services })`,
-everything they depend on, and what `@MeoCord({ providers })` supplies. [Observers](guide:observers) get them
-too. Guards are created per call and get none.
+everything they depend on, what `@MeoCord({ providers })` supplies, the app's cooldown store and its `themeFor`
+class. [Observers](guide:observers) get them too. Guards, interceptors and filters get none, unless one is also listed
+in `services` or injected by a controller or service.
 
 ## onReady
 
@@ -41,9 +42,9 @@ process should do one-off work: `true` for a bot in one process, and with
 [process sharding](guide:sharding) only in the process running shard 0.
 
 The hooks run one at a time, each class after the classes it injects. Classes with no dependency between them run in
-declaration order: the app's cooldown store first, then the `providers`, the `services`, the `controllers` and the
-observers. Command registration runs alongside and never delays them. A hook still running after 10 seconds is named in
-a warning, and the hooks after it wait for it.
+declaration order: the app's cooldown store first, then the `providers`, the `services`, the `themeFor` class, the
+`controllers` and the observers. Command registration runs alongside and never delays them. A hook still running after
+10 seconds is named in a warning, and the hooks after it wait for it.
 
 ## onShutdown
 

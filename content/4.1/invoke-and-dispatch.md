@@ -63,8 +63,10 @@ store, a validation or a `UserError`. Both wait for the module's [observers](gui
 ## Running a handler with invoke
 
 Pass the arguments dispatch would: the interaction, message or reaction, then the handler's params. Passed alone, an
-interaction gets its params built as dispatch builds them: a command's options, or a component's `customId` params
-with a modal's fields or a select menu's choices.
+interaction gets its params built as dispatch builds them: a command's or an autocomplete's options, or a component's
+`customId` params with a modal's fields or a select menu's choices. A message passed alone gets what its
+`@MessageHandler` pattern captures after the app's prefix, typed as dispatch types it; a word that isn't of its type,
+or a missing param, goes through the handler's filters as a `MessageUsageError`.
 
 `invoke` resolves to `{ ran }`. `ran` is `false` when a guard stopped the call or an interceptor skipped the handler,
 and `error` is set when a filter handled one. A guard that returns `false` stops the call with no answer:
@@ -76,9 +78,10 @@ A guard that throws `GuardDeniedError`, a handler that throws `UserError`, and a
 `await expect(module.invoke(...)).rejects.toThrow(GuardDeniedError)`.
 
 The interaction must be one dispatch routes to the handler, ranking every handler of the module as the bot does. A
-`customId` another handler's pattern takes first rejects, naming the handler that runs, and so does one no pattern
-takes, or a command the handler doesn't handle, so a typo in a test doesn't pass silently. A handler declared under two
-patterns gets the params of the one dispatch picks. A mock built without a `customId` or command name isn't checked.
+`customId` another handler's pattern takes first, or a command another handler takes by its subcommand path, rejects,
+naming the handler that runs, and so does one no pattern takes, or a command the handler doesn't handle, so a typo in a
+test doesn't pass silently. A handler declared under two patterns gets the params of the one dispatch picks. A mock
+built without a `customId` or command name isn't checked.
 
 ## Sending input with dispatch
 
@@ -129,7 +132,7 @@ For messages and reactions, read the mock's own methods, such as `message.reply`
 
 To send a gateway event to the module's `@On` and `@Once` handlers, use `module.emit(event, ...args)`. It resolves to
 `{ ran }`, how many handlers ran, and once every handler has settled, rejects if any threw: with that error, or an
-`AggregateError` naming each.
+`AggregateError` holding each in its `errors`.
 
 To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It
 lists the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata

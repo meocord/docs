@@ -74,7 +74,8 @@ typed with what it provides, and `@Inject(token)` asks for it:
 
 ::example{file="services/weather/weather.source.ts" region="token"}
 
-An abstract class is a token and a type at once, so a class that injects it needs no decorator:
+An abstract class is a token and a type at once, so a class that injects it needs no `@Inject`: the parameter's type
+names it.
 
 ::example{file="services/weather/weather.source.ts" region="source"}
 
@@ -108,8 +109,9 @@ Guards, interceptors and exception filters inject services the same way:
 - **A guard** is created for each call, so it may also inject `ExecutionContext`.
 - **An interceptor or a filter** is one instance shared across calls, like a service. It holds no per-call state
   and can't inject `ExecutionContext`; it receives the context as an argument instead.
-- **A factory provider** runs once, so its `inject` can't list `ExecutionContext` either: MeoCord refuses it as the
-  app is created, since its value would keep the first call's context for every later one.
+- **A service, a provided class or a factory provider** is made once, so none of them can inject `ExecutionContext`,
+  or list it in a factory's `inject`: MeoCord refuses it as the app is created, since it would keep the first call's
+  context for every later one.
 
 ## Testing a service
 
@@ -136,7 +138,19 @@ fails when the module compiles, naming both:
   an `import type`. Move what they both need into a third service, or inject the parameter with @Inject(token).
   ```
 
-  Move what both need into a third service. `meocord/eslint` warns about import cycles as you write them.
+  Move what both need into a third service. `meocord/eslint` warns about import cycles as you write them, in a
+  project with `eslint-import-resolver-typescript`; see [Import cycles](guide:eslint#import-cycles).
+
+- **A class without `@Service()` can't be injected if its constructor takes parameters.** Without a decorator,
+  TypeScript records none of their types, so the bot stops, naming the class:
+
+  ```text
+  Notes: its constructor takes parameters, but Notes has no decorator, so TypeScript recorded none of their types and
+  it cannot be created. Decorate it with @Service(), or give a class from a package a provider in @MeoCord({ providers }).
+  ```
+
+  A class from a package gets a provider instead. `Logger` and MeoCord's errors aren't injected at all: create them
+  with `new`.
 
 - **A factory that throws stops the bot before login,** with the token and the error. So does a token provided
   twice, or one a class injects that nothing provides.

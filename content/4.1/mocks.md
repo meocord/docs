@@ -112,7 +112,8 @@ the real resolver finds them:
   as a role, or a role read as a user or member, is `null`, or that error when asked with `required: true`, since the
   option may be a mentionable one.
 - A missing option asked with `required: true` throws `Required option "x" not found.`, and `getSubcommand()` throws
-  when there's none, unless given `false`, as in discord.js.
+  when there's none, unless given `false`, as in discord.js. So does `getChannel()` given `channelTypes`, for a channel
+  of another type, and `getFocused()` when no option is `focused`.
 - `subcommandGroup`, `subcommand` and `focused` are reserved names: the last names the option an autocomplete is
   typing.
 
@@ -121,10 +122,11 @@ test build. A file upload field takes an array of `Attachment`s: `createModalFie
 
 ## Messages, servers and the rest
 
-- **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()` and the
-  rest throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`, and builders or JSON for
-  `components` and `embeds`. What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's
-  `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
+- **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()`,
+  `react()`, `pin()` and `unpin()` throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`,
+  and builders or JSON for `components` and `embeds`. What the content mentions is cached as the gateway delivers it: a
+  `<@id>` in the client's `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel
+  in their caches too.
 - **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the bot
   sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that user,
   made and cached when there's none. Every message from that author in one `guild` you give has the same member, and so
@@ -238,7 +240,7 @@ with its `error`, without counting it as sent:
 - **A MeoCord mock you configure once is reset after the first test.** Set return values in the test that relies on
   them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
-  assign `interaction.options = createChatInputOptions({ … })`.
+  give `options: createChatInputOptions({ … })` in its overrides, or assign it afterwards.
 
 ## Next steps
 
