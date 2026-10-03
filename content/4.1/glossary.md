@@ -33,7 +33,8 @@ a `meocord` group in any catalog translates MeoCord's own texts. See [Localisati
 Commands, components, messages and reactions reach only the controllers in `@MeoCord({ controllers })`; such a handler
 on a service never runs, and the bot warns at startup. See [Your first command](guide:first-command).
 
-**Cooldown.** A limit on how often a handler runs, per user, channel, server or everyone. See
+**Cooldown.** A limit on how often a handler runs, per user, channel, server, everyone, or a value of the call with
+`by`. See
 [Cooldowns](guide:cooldowns).
 
 **Cooldown store.** Where cooldowns count calls: the bot's memory by default, or the shard manager, Redis or a
@@ -56,9 +57,9 @@ handler. See [Exception filters](guide:exception-filters).
 
 **Fallback.** What answers an error no exception filter handles. After an interaction, a guard's reason, a cooldown,
 invalid input and a `UserError` are shown only to the user, and any other error gets a generic message and is logged.
-After a message, a usage error, a guard's reason and a `UserError` are replied to, and an unexpected error is logged,
-and told to the author in a direct message only with `dmOnError`. It also answers a component no route takes, "Command
-not found!". See [The built-in fallback](guide:exception-filters#the-built-in-fallback).
+After a message, a usage error, a guard's reason, invalid input and a `UserError` are replied to, and an unexpected
+error is logged, and told to the author in a direct message only with `dmOnError`. It also answers an interaction no
+handler takes, "Command not found!". See [The built-in fallback](guide:exception-filters#the-built-in-fallback).
 
 **Guard.** A class that decides whether a handler runs. A new one is made for every call, unless it's bound: supplied
 by a provider, listed in `services` or injected by another class, in which case every call shares one instance. See
@@ -76,8 +77,9 @@ caching. See [Interceptors](guide:interceptors).
 **Lock.** What `@Defer` does to a component's message while its handler runs: it disables the controls, marks the one
 clicked, and puts them back afterwards. See [@Defer](guide:defer).
 
-**Message command.** A `@MessageHandler` with a pattern, such as `roll {sides}`, run for a message that matches it
-after the app's prefix. See [Message commands](guide:message-commands).
+**Message command.** A `@MessageHandler` with a pattern, such as `roll {sides}`, run for a message that matches it after
+the app's prefix or a mention of the bot, or as it is when the app sets no prefix. See [Message
+commands](guide:message-commands).
 
 **Metadata.** A fact declared on a handler or a controller with a decorator that `createMetadata` makes, which guards,
 interceptors and the handler registry read. See [Custom decorators](guide:custom-decorators).

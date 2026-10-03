@@ -30,7 +30,7 @@ answers it:
 
 ::example{file="controllers/slash/echo.slash.controller.ts" region="handler"}
 
-[Slash commands](guide:slash-commands) covers options, registering and permissions.
+[Slash commands](guide:slash-commands) covers options, registering and entry point commands.
 
 ## Subcommands
 

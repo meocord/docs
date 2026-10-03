@@ -13,8 +13,9 @@ formerly: []
 
 4.1 adds to 4.0, and most 4.0 bots and their tests build and run without edits. A few 4.0 patterns now stop the bot,
 fail to compile or change a test's result, and a few fixes change what a bot does at runtime;
-[Upgrading from 4.0 to 4.1](guide:migrating#upgrading-from-40-to-41) lists each, with what to check. Every release's
-notes are in the [changelog](guide:changelog).
+[Upgrading from 4.0 to 4.1](guide:migrating#upgrading-from-40-to-41) lists each, with what to check. 4.1 needs
+discord.js 14.27 or a later 14.x and dotenv 18.0.5 or a later 18.x: `npm install discord.js@^14.27.0 dotenv@^18.0.5`.
+Every release's notes are in the [changelog](guide:changelog).
 
 > [!NOTE]
 > 4.1 is in beta. This page describes 4.1.0-beta.10, and a later beta may still change a detail before 4.1.0 is
@@ -32,9 +33,11 @@ notes are in the [changelog](guide:changelog).
   cause to look for. See [Responses](guide:responses#gotchas).
 - **Presenters** decide how MeoCord's own answers look: the loading view, error answers and the built-in `!help`. See
   [Presenters](guide:presenters).
-- **Themes** name the colours, emojis and button styles those answers use by what they mean. `Theme` is deprecated,
-  and its colours changed; see [the upgrade note](guide:migrating#theme-is-deprecated-and-its-colours-changed) and
-  [Theming](guide:theming).
+- **Themes** name the colours, emojis and button styles those answers use by what they mean. `Theme` is deprecated, and
+  its colours changed; see [the upgrade note](guide:migrating#theme-is-deprecated-and-its-colours-changed) and
+  [Theming](guide:theming). A theme can differ per server and per user with `themeFor`, which takes functions or a
+  `ThemeResolver` class that injects the app's services; see [Per server and per
+  user](guide:theming#per-server-and-per-user).
 - **Localisation** translates commands and replies from typed catalogs, and MeoCord's own texts too, with keys,
   params and plurals checked when the code compiles. See [Localisation](guide:localisation).
 
@@ -66,7 +69,8 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
   `ExecutionContext`, and `applyDecorators` combines decorators into one. See
   [Custom decorators](guide:custom-decorators).
 - **Class stages** on a controller cover the handlers its subclasses declare, and class guards cover its autocomplete
-  handlers. See [the upgrade notes](guide:migrating#class-guards-now-cover-inherited-handlers).
+  handlers. See [the upgrade notes](guide:migrating#a-base-controllers-class-stages-cover-its-subclasses) and
+  [the other](guide:migrating#class-guards-now-cover-autocomplete-handlers).
 
 ## Beyond slash commands
 
@@ -81,10 +85,11 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
   [the upgrade note](guide:migrating#message-keywords-match-in-any-case-and-only-one-runs). A message command can
   tell its author about an error or a cooldown in a direct message, with `messages.dmOnError` and
   `messages.dmOnCooldown`. See [Message commands](guide:message-commands) and [Message params](guide:message-params).
-- **Reactions** route by emoji name or id, and never reach a handler from a bot; see
+- **Reactions** route by emoji name or id, and reach a handler from a bot only with `{ bots: true }`; see
   [the upgrade note](guide:migrating#reactions-from-bots-reach-no-handler) and [Reactions](guide:reactions).
 - **Gateway events** with `@On` and `@Once`, through the same pipeline. See [Gateway events](guide:gateway-events).
-- **Lifecycle hooks**: `onReady` and `onShutdown`, in dependency order. See [Lifecycle hooks](guide:lifecycle-hooks).
+- **Lifecycle hooks**: `onReady` and `onShutdown`, in dependency order, and `app.stop()` shuts the bot down from code.
+  See [Lifecycle hooks](guide:lifecycle-hooks).
 - **Providers** supply values, classes and async factories under a token, injected with `@Inject(token)`. See
   [Providers](guide:services#providers).
 - **Handler discovery**: `HandlerRegistry` lists every handler, for a help command. See
@@ -103,12 +108,14 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **`logLevel`** in `meocord.config.ts`, or `MEOCORD_LOG_LEVEL` for one run, sets which lines the logger prints. See
   [Logging](guide:configuration#logging).
 - **Mistakes MeoCord refuses as the bot loads**, such as an invalid pattern or two handlers for one command, are
-  reported as one line that names the class and method, and the bot exits 1. Two handlers of one command, or two
-  component handlers with the same pattern, are among them; see
+  reported as one line that names the class, and the method where there is one, and the bot exits 1. Among them are
+  two handlers of one command, two component handlers with the same pattern, a method-only decorator such as `@Defer`
+  on a class, and a class whose constructor injects but has no decorator; see
   [the upgrade notes](guide:migrating#two-handlers-of-one-command-stop-the-bot) and
   [the other](guide:migrating#two-component-handlers-with-the-same-customid-pattern-stop-the-bot).
-- **`start --dev`** rebuilds and restarts on changes to the source, `meocord.config.ts` and `tsconfig.json`, one bot
-  at a time. See [The CLI](guide:cli#development-and-production).
+- **`start --dev`** rebuilds and restarts on changes to the source, `meocord.config.ts` and `tsconfig.json`, and
+  restarts on a change to a development `.env` file, one bot at a time. See [The
+  CLI](guide:cli#development-and-production).
 - **Import cycles** are a lint warning in `meocord/eslint`. See [ESLint](guide:eslint#import-cycles).
 
 ## Testing
@@ -122,6 +129,7 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **Lifecycle hooks and gateway events** run in a test with `module.init()` and `module.emit()`. See
   [Testing](guide:testing).
 - **Mocks** read the data Discord always sends as Discord sends it, including locales and install contexts, and take
-  values for their properties. See [Mocks](guide:mocks).
+  values for their properties; their option getters throw discord.js's own errors where discord.js would. See
+  [Mocks](guide:mocks) and [Options and fields](guide:mocks#options-and-fields).
 - **`testCooldownStore`** checks a cooldown store you write against the built-in one's behaviour. See
   [Checking a store](guide:recipes/cooldown-stores#checking-a-store).
