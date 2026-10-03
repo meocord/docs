@@ -1,19 +1,24 @@
 import { expect, test } from '@playwright/test'
+import { CURRENT_LINE } from '../src/config/versions'
+import { docs40, docs41, literal } from './lines'
 
 test('a guide renders in the window, at its canonical latest URL', async ({ page }) => {
   const response = await page.goto('/docs/latest/testing')
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1, name: 'Testing' })).toBeVisible()
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/docs\/latest\/testing$/)
+  await expect(page.locator('[data-subtitle]')).toHaveText(new RegExp(`^MeoCord ${literal(CURRENT_LINE)} · `))
+  // 4.0's guides are its README's sections
+  await page.goto(`${docs40}/testing`)
   await expect(page.locator('[data-subtitle]')).toHaveText(/^MeoCord 4\.0 · .*from the README of meocord 4\.0\./)
 })
 
 test('the sidebar lists the line’s pages and marks the one being read', async ({ page }) => {
   // In a Guide, the tab of the section read is current too, but only the page's own link is current as a page
-  await page.goto('/docs/4.1/guards')
+  await page.goto(`${docs41}/guards`)
   const guide = page.getByRole('navigation', { name: 'Documentation' })
   await expect(guide.locator('[aria-current="page"]')).toHaveCount(1)
-  await expect(guide.locator('[aria-current="page"]')).toHaveAttribute('href', '/docs/4.1/guards')
+  await expect(guide.locator('[aria-current="page"]')).toHaveAttribute('href', `${docs41}/guards`)
   await expect(guide.locator('[data-nav-tabs] > a[aria-current="true"]')).toHaveText('Guide')
 
   await page.goto('/docs/latest/guards')
@@ -21,7 +26,8 @@ test('the sidebar lists the line’s pages and marks the one being read', async 
   await expect(nav.getByRole('link')).not.toHaveCount(0)
   await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
   await expect(nav.locator('[aria-current="page"]')).toHaveText('Guards')
-  await nav.getByRole('link', { name: 'Testing' }).click()
+  // Each line's sidebar names the page its own way
+  await nav.locator('a[href="/docs/latest/testing"]').click()
   await expect(page).toHaveURL(/\/docs\/latest\/testing$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Testing' })).toBeVisible()
 })
@@ -35,10 +41,10 @@ test('the table of contents links to the page’s headings', async ({ page }) =>
 })
 
 test('the version switcher keeps the page when the other line has it', async ({ page }) => {
-  await page.goto('/docs/latest/guards')
+  await page.goto(`${docs40}/guards`)
   await page.getByRole('button', { name: /^Documentation version/ }).click()
   await page.getByRole('menuitem', { name: /4\.1/ }).click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/guards$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/guards$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Guards' })).toBeVisible()
 })
 
@@ -53,6 +59,6 @@ test('the home page links into the guides of the line it shows', async ({ page }
   await page.goto('/')
   // The Learn door opens the Guide where a reader starts, the first command after the setup
   await page.locator('[data-door]').first().getByRole('link', { name: 'Your first command' }).click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/first-command$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/first-command$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Your first command' })).toBeVisible()
 })
