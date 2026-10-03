@@ -82,8 +82,8 @@ bot does before it logs in; the database factory replaced here never runs, so no
 `controllers` and `observers` options add a test's own, and the `override*` methods still apply.
 
 The module makes no Discord `Client`: a class that injects one, a guard, interceptor or filter included, is refused
-where it is resolved, naming the class, until the test provides one, such as `{ provide: Client, useValue:
-createMockClient() }`.
+where it is resolved, naming each class of the module that injects it, until the test provides one, such as `{ provide:
+Client, useValue: createMockClient() }`.
 
 ## Lifecycle hooks in a test
 
