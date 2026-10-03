@@ -29,7 +29,8 @@ A handler takes discord.js objects: an interaction, a message, a reaction, the u
 mocks every one of them. A mock keeps its class's prototype chain, so `instanceof` holds at every level and a mock can
 go straight to code that expects the real class.
 
-Every method is a mock function, with `.mock.calls`, which both Vitest's and Jest's matchers read.
+Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. Under Node's test runner
+and bun test, assert through `.mock.calls` itself.
 
 ## When to use it
 
