@@ -52,7 +52,7 @@ describe('withExampleBots', () => {
 describe('botsIllustrating', () => {
   it('lists what each bot shows of a page, linking its section and its files, whatever anchor it names', () => {
     expect(botsIllustrating(bots(), 'guards')).toBe(
-      '- [Feedback](guide:example-bots#feedback): A guard with a reason, in [`staff.guard.ts`](https://github.com/meocord/examples/blob/main/feedback/src/staff.guard.ts)',
+      '- [Feedback](guide:example-bots#feedback): A guard with a reason, in [`staff.guard.ts`](https://github.com/meocord/examples/blob/main/feedback/src/staff.guard.ts).',
     )
     expect(botsIllustrating(bots(), 'recipes/tickets')).toMatch(
       /^- \[Feedback\]\(guide:example-bots#feedback\): A `@Defer` click, in /,
