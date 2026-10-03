@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound, permanentRedirect, redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { moveTo } from '@/lib/docs/moves'
 import { VERSIONS } from '@/config/versions'
 import {
   apiArrangement,
@@ -131,11 +132,11 @@ export default async function ApiPage({ params }: Params) {
   // A page by entry point, from before the line's API was arranged by kind, sent to where it is now
   const target = parse(line, path)
   const moved = target?.symbol && movedApiHref(line, target.version, target.section, target.symbol)
-  if (moved) permanentRedirect(moved)
+  if (moved) moveTo(moved, 'line-page', line)
   // Another line's exact version, or a symbol only an older line has, as an old `latest` URL reaches this line once it
   // is current: sent to that line's page
   const owner = target?.version && versionElsewhere(line, target.version, VERSIONS)
-  if (owner) permanentRedirect(`/docs/${owner}/api/${path.join('/')}`)
+  if (owner) moveTo(`/docs/${owner}/api/${path.join('/')}`, 'exact-version', line)
   const older = target?.symbol && !target.version && olderApiHref(line, target.section, target.symbol)
   return older ? redirect(older) : notFound()
 }

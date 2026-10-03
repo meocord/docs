@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Component, Span } from '@meonode/ui'
 import { DOC_ALIASES } from '@/config/aliases'
+import { lineKey } from '@/lib/line-key'
 
 /** How far each line's sidebar was scrolled, so a page that draws its own opens it there. */
 const offsets = new Map<string, number>()
@@ -60,10 +61,9 @@ export const SidebarScroll = Component(function SidebarScroll() {
   useLayoutEffect(() => {
     const body = anchor.current?.closest<HTMLElement>('[data-sidebar-body]')
     if (!body) return
-    // The docs line, the second segment of /docs/<line>/…, latest read as the line it is, so one line keeps one place
-    // whichever URL reached it; every other page shares one place.
-    const segment = location.pathname.split('/')[2] ?? ''
-    const line = segment === 'latest' ? DOC_ALIASES.latest : segment
+    // The docs line, latest read as the line it stands for, so one line keeps one place whichever URL reached it;
+    // every other page shares one place.
+    const line = lineKey(location.pathname, DOC_ALIASES.latest) ?? ''
 
     const left = places.get(body)
     // Shown for the first time yet already scrolled: the reader moved it before the page hydrated

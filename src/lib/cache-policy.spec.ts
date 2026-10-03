@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   cacheControlFor,
-  currentLineRedirect,
+  canonicalRedirect,
+  docsRedirect,
   IMMUTABLE,
   isInertPath,
   MOVING_PAGE,
   NAMED_FILE,
   pathKind,
+  permanentMove,
   playgroundFrameCsp,
   prereleaseRedirect,
   STATIC_FILE_CSP,
@@ -61,7 +63,7 @@ describe('prereleaseRedirect', () => {
   })
 })
 
-describe('currentLineRedirect', () => {
+describe('canonicalRedirect', () => {
   const beta: VersionsManifest = {
     lines: [
       { line: '4.1', status: 'prerelease' },
@@ -76,22 +78,73 @@ describe('currentLineRedirect', () => {
   }
 
   it("sends the current line's number URL to its latest URL, the one the site links to", () => {
-    expect(currentLineRedirect('/docs/4.1/guards', stable)).toBe('/docs/latest/guards')
-    expect(currentLineRedirect('/docs/4.1', stable)).toBe('/docs/latest')
-    expect(currentLineRedirect('/docs/4.1/api/decorators/Defer', stable)).toBe('/docs/latest/api/decorators/Defer')
-    expect(currentLineRedirect('/docs/4.0/changelog/4.0.1', beta)).toBe('/docs/latest/changelog/4.0.1')
+    expect(canonicalRedirect('/docs/4.1/guards', stable)).toBe('/docs/latest/guards')
+    expect(canonicalRedirect('/docs/4.1', stable)).toBe('/docs/latest')
+    expect(canonicalRedirect('/docs/4.1/api/decorators/Defer', stable)).toBe('/docs/latest/api/decorators/Defer')
+    expect(canonicalRedirect('/docs/4.0/changelog/4.0.1', beta)).toBe('/docs/latest/changelog/4.0.1')
   })
 
-  it("keeps what is bound to its line by design: an exact version's API and a missing page", () => {
-    expect(currentLineRedirect('/docs/4.1/api/4.1.0/decorators/Defer', stable)).toBeUndefined()
-    expect(currentLineRedirect('/docs/4.1/missing/features', stable)).toBeUndefined()
+  it("keeps what is bound to its line by design at its number: an exact version's API and a missing page", () => {
+    expect(canonicalRedirect('/docs/4.1/api/4.1.0/decorators/Defer', stable)).toBeUndefined()
+    expect(canonicalRedirect('/docs/4.1/missing/features', stable)).toBeUndefined()
+    // Reached through latest, each goes to its line's number
+    expect(canonicalRedirect('/docs/latest/api/4.0.0/core/Logger', stable)).toBe('/docs/4.0/api/4.0.0/core/Logger')
+    expect(canonicalRedirect('/docs/latest/api/4.1.0/decorators/Defer', stable)).toBe(
+      '/docs/4.1/api/4.1.0/decorators/Defer',
+    )
+    expect(canonicalRedirect('/docs/latest/missing/features', stable)).toBe('/docs/4.1/missing/features')
   })
 
   it('leaves the other lines, latest itself, and paths outside the docs', () => {
-    expect(currentLineRedirect('/docs/4.0/guards', stable)).toBeUndefined()
-    expect(currentLineRedirect('/docs/4.1/guards', beta)).toBeUndefined()
-    expect(currentLineRedirect('/docs/latest/guards', stable)).toBeUndefined()
-    expect(currentLineRedirect('/palette/4.1.0123456789.json', stable)).toBeUndefined()
+    expect(canonicalRedirect('/docs/4.0/guards', stable)).toBeUndefined()
+    expect(canonicalRedirect('/docs/4.1/guards', beta)).toBeUndefined()
+    expect(canonicalRedirect('/docs/latest/guards', stable)).toBeUndefined()
+    expect(canonicalRedirect('/docs/latest/changelog/4.0.0', stable)).toBeUndefined()
+    expect(canonicalRedirect('/palette/4.1.0123456789.json', stable)).toBeUndefined()
+  })
+})
+
+describe('docsRedirect', () => {
+  const beta: VersionsManifest = {
+    lines: [
+      { line: '4.1', status: 'prerelease' },
+      { line: '4.0', status: 'current' },
+    ],
+  }
+  const stable: VersionsManifest = {
+    lines: [
+      { line: '4.1', status: 'current' },
+      { line: '4.0', status: 'maintained' },
+    ],
+  }
+
+  it('sends next to the line in prerelease, or with none, straight to the one URL its page answers at', () => {
+    expect(docsRedirect('/docs/next/guards', { latest: '4.0', next: '4.1' }, beta)).toBe('/docs/4.1/guards')
+    expect(docsRedirect('/docs/next/guards', { latest: '4.1' }, stable)).toBe('/docs/latest/guards')
+    // A line-bound page in one hop, not by way of latest
+    expect(docsRedirect('/docs/next/api/4.1.0-beta.0/common/Logger', { latest: '4.1' }, stable)).toBe(
+      '/docs/4.1/api/4.1.0-beta.0/common/Logger',
+    )
+    expect(docsRedirect('/docs/next/missing/features', { latest: '4.1' }, stable)).toBe('/docs/4.1/missing/features')
+  })
+
+  it('sends any other path to its one URL, and leaves one already there', () => {
+    expect(docsRedirect('/docs/4.1/guards', { latest: '4.1' }, stable)).toBe('/docs/latest/guards')
+    expect(docsRedirect('/docs/latest/guards', { latest: '4.1' }, stable)).toBeUndefined()
+  })
+})
+
+describe('permanentMove', () => {
+  it('moves a reader permanently only where the mapping can never change', () => {
+    // An exact version always belongs to its line, current or not
+    expect(permanentMove('exact-version', true)).toBe(true)
+    expect(permanentMove('exact-version', false)).toBe(true)
+    // An older line's page for an old path stays where it is
+    expect(permanentMove('line-page', false)).toBe(true)
+  })
+
+  it("moves the current line's reader temporarily, since latest reaches another line when the current one changes", () => {
+    expect(permanentMove('line-page', true)).toBe(false)
   })
 })
 

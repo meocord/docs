@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound, permanentRedirect, redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { moveTo } from '@/lib/docs/moves'
 import { elsewhereHref, guideMeta, lineParams, movedPageHref, pageParams } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
@@ -37,7 +38,7 @@ export default async function GuidePage({ params }: Params) {
   if (page) return page
   // An old page's slug, which its page's `formerly` names, sent to where the page is now
   const moved = movedPageHref(line, slug.join('/'))
-  if (moved) permanentRedirect(moved)
+  if (moved) moveTo(moved, 'line-page', line)
   // Another line's page, as an old `latest` URL reaches this line once it is current: this line's page on its topic,
   // or the older line's page itself
   const elsewhere = elsewhereHref(line, slug.join('/'))

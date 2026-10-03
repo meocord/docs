@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound, permanentRedirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import { moveTo } from '@/lib/docs/moves'
 import { missingArticle, missingParams, movedMissingHref, renderMissing } from '@/lib/docs/reference-pages'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 import { lineParams } from '@/lib/docs/site'
@@ -42,6 +43,6 @@ export default async function MissingPage({ params }: Params) {
   const { line, id } = await lineParams(params)
   // A line that has a page on the topic, or an old id of a topic it lacks, sends the reader where it is now
   const moved = movedMissingHref(line, id)
-  if (moved) permanentRedirect(moved)
+  if (moved) moveTo(moved, 'line-page', line)
   return (await missingPage(line, id)) ?? notFound()
 }
