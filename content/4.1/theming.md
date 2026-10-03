@@ -219,8 +219,8 @@ lists the old values if you want to keep them.
 - **A theme from a database must be a plain object.** A class instance, such as an ORM row, is refused: return
   `row.toObject()` or `{ ...row }`.
 - **A `ThemeResolver` class declares its resolvers as methods.** `user = () => …` is a property of each instance, not
-  of the class, so a class with only such properties is refused. Without `@Service()`, a constructor that injects is
-  refused too.
+  of the class, so it is not read, and a class with only such properties is refused. Without `@Service()`, a
+  constructor that injects is refused too.
 - **A `user` resolver runs for every message a message handler takes.** Keep it cheap; its result is cached per
   user.
 
