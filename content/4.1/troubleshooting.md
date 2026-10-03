@@ -53,9 +53,9 @@ again.
 ### One line naming a class, and exit code 1
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
-it is on: `Class.method:`, `Class:`, `App:` for `@MeoCord`'s options, the app class's name, `meocord.config.ts:` for its
-settings, or the build's folder, such as `dist:`. The rest names the decorator and the problem, and a last line, `in
-src/…`, names the file it comes from when MeoCord can tell. Such as:
+it is on: `Class.method:`, `Class:`, the app class's name, such as `App:`, for `@MeoCord`'s options,
+`meocord.config.ts:` for its settings, or the build's folder, such as `dist:`. The rest names the decorator and the
+problem, and a last line, `in src/…`, names the file it comes from when MeoCord can tell. Such as:
 
 ```text
 SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
@@ -80,8 +80,8 @@ Fix what it names. The common ones:
 - **"`Class`: its constructor takes parameters, but `Class` has no decorator, …"** A class is injected, or injects,
   without its decorator, so TypeScript recorded none of its parameter types. Add what the line says: `@Service()`, or
   `@Controller()`, `@Guard()`, `@Interceptor()`, `@Catch()` or `@Pipe()` for the class's role. A class from a package
-  gets a provider in `@MeoCord({ providers })` instead. `Logger` and MeoCord's errors read "MeoCord does not inject
-  it"; create them with `new`.
+  gets a provider in `@MeoCord({ providers })` instead. `Logger` and errors such as `UserError` read "MeoCord does not
+  inject it"; create them with `new`.
 - **"`Class`: @Command goes on a method, not on a class."** A decorator is on the wrong target, written directly or
   through `applyDecorators`. Handler decorators such as `@Command`, `@MessageHandler`, `@On`, `@Defer` and
   `@Validate` go on a method; `@Observer`, `@Interceptor`, `@Catch` and `@Pipe` go on a class, and on a method read
