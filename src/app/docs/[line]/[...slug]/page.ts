@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound, permanentRedirect } from 'next/navigation'
-import { guideMeta, movedPageHref, pageParams } from '@/lib/docs/site'
+import { guideMeta, lineParams, movedPageHref, pageParams } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -18,7 +18,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line, slug } = await params
+  const { line, slug } = await lineParams(params)
   const meta = guideMeta(line, slug.join('/'))
   return meta ? pageMetadata({ ...meta, line }) : {}
 }
@@ -32,7 +32,7 @@ async function guide(line: string, slug: string) {
 }
 
 export default async function GuidePage({ params }: Params) {
-  const { line, slug } = await params
+  const { line, slug } = await lineParams(params)
   const page = await guide(line, slug.join('/'))
   if (page) return page
   // An old page's slug, which its page's `formerly` names, sent to where the page is now

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
-import { guideMeta, linePages, lines } from '@/lib/docs/site'
+import { guideMeta, linePages, lineParams, lines } from '@/lib/docs/site'
 import { renderGuide } from '@/lib/docs/render'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -22,7 +22,7 @@ function landing(line: string) {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line } = await params
+  const { line } = await lineParams(params)
   const slug = landing(line)
   const meta = slug && guideMeta(line, slug)
   return meta ? pageMetadata({ ...meta, line }) : {}
@@ -36,6 +36,6 @@ async function lineLanding(line: string) {
 }
 
 export default async function LinePage({ params }: Params) {
-  const { line } = await params
+  const { line } = await lineParams(params)
   return (await lineLanding(line)) ?? notFound()
 }

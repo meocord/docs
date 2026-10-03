@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { listPages, loadPage, migratingGuide, resolveExample, type PageEntry } from '../../../scripts/lib/pages'
 import type { GlyphName } from '@/components/shell/icons'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
@@ -13,6 +14,13 @@ import { counterpartIn, guidePath, pageKnownAs, type TopicPage } from '../../../
 /** The lines the site renders pages for: every line versions.json lists, archived ones included. */
 export function lines(): string[] {
   return VERSIONS.lines.map(entry => entry.line)
+}
+
+/** A docs route's params, or a 404 for a line versions.json does not list, before anything reads that line. */
+export async function lineParams<P extends { line: string }>(params: Promise<P>): Promise<P> {
+  const resolved = await params
+  if (!lines().includes(resolved.line)) notFound()
+  return resolved
 }
 
 const guideHref = (line: string, slug: string) => docsHref({ kind: 'guide', line, slug }, VERSIONS)

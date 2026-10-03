@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
-import { lines } from '@/lib/docs/site'
+import { lineParams, lines } from '@/lib/docs/site'
 import { lineChangelog, renderChangelog } from '@/lib/docs/reference-pages'
 import { docsHref } from '@/lib/urls'
 import { pageMetadata } from '@/lib/docs/page-metadata'
@@ -21,7 +21,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { line } = await params
+  const { line } = await lineParams(params)
   if (lineChangelog(line).length === 0) return {}
   return pageMetadata({
     title: 'Changelog',
@@ -40,6 +40,6 @@ async function changelogPage(line: string) {
 }
 
 export default async function ChangelogPage({ params }: Params) {
-  const { line } = await params
+  const { line } = await lineParams(params)
   return (await changelogPage(line)) ?? notFound()
 }
