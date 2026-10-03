@@ -51,6 +51,31 @@ export function lineOf(version: string): string {
   return `${match[1]}.${match[2]}`
 }
 
+/**
+ * The line an exact version belongs to, when a URL puts it under another line, as an old `latest` URL does once
+ * another line is current: `/docs/latest/api/4.0.0/…` reaches 4.1. Undefined for the line's own version, a version of
+ * a line versions.json does not list, and anything that is no version.
+ */
+export function versionElsewhere(line: string, version: string, versions: VersionsManifest): string | undefined {
+  if (!VERSION.test(version)) return undefined
+  const owner = lineOf(version)
+  return owner !== line && versions.lines.some(entry => entry.line === owner) ? owner : undefined
+}
+
+/** The lines versions.json lists before `line`, newest first. */
+export function olderLines(line: string, versions: VersionsManifest): string[] {
+  const rank = (value: string) => value.split('.').map(Number) as [number, number]
+  const before = (a: string, b: string) => {
+    const [aMajor, aMinor] = rank(a)
+    const [bMajor, bMinor] = rank(b)
+    return aMajor < bMajor || (aMajor === bMajor && aMinor < bMinor)
+  }
+  return versions.lines
+    .map(entry => entry.line)
+    .filter(other => before(other, line))
+    .sort((a, b) => (before(a, b) ? 1 : -1))
+}
+
 /** The path segment for a line: `latest` for the current line, otherwise the line itself. */
 export function lineSegment(line: string, versions: VersionsManifest): string {
   const entry = versions.lines.find(candidate => candidate.line === line)

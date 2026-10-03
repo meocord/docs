@@ -4,7 +4,7 @@ import type { GlyphName } from '@/components/shell/icons'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { VERSIONS } from '@/config/versions'
 import { lowerMarkdown, type Lowered } from '@/lib/prose/lower'
-import { docsHref } from '@/lib/urls'
+import { docsHref, olderLines } from '@/lib/urls'
 import { resolveSiteHref } from '@/lib/docs/api-site'
 import { versionOption, versionOptions } from '@/lib/version-options'
 import { firstParagraph } from '@/lib/docs/page-metadata'
@@ -77,6 +77,26 @@ export function linePageWithId(line: string, id: string): LinePage | undefined {
 export function counterpart(line: string, topic: Topic): LinePage | undefined {
   const found = counterpartIn(linePages(line), line, topic.page, topic.line)
   return found && (found.anchor ? { ...found.page, href: `${found.page.href}#${found.anchor}` } : found.page)
+}
+
+/**
+ * Where a path this line has no page at leads, as an old `latest` URL reaches the line once it is current: the line's
+ * own page on the topic of another line's page at that path, the version switcher's way, or else the newest older
+ * line's page at the path. Undefined for a path no other line has a page at.
+ */
+export function elsewhereHref(line: string, path: string): string | undefined {
+  const holders = lines()
+    .filter(other => other !== line)
+    .flatMap(other =>
+      linePages(other)
+        .filter(page => page.path === path)
+        .map(page => ({ page, line: other })),
+    )
+  const here = holders.map(topic => counterpart(line, topic)).find(page => page !== undefined)
+  if (here) return here.href
+  return olderLines(line, VERSIONS)
+    .map(other => holders.find(holder => holder.line === other))
+    .find(holder => holder !== undefined)?.page.href
 }
 
 /** Where the page a line's Guide lists an old slug for lives now; undefined for a slug no page held. */

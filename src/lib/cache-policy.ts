@@ -1,3 +1,4 @@
+import { resolveStoredHref, type VersionsManifest } from '@/lib/urls'
 /** Files served from public/, whose names do not change between deploys. */
 const STATIC_FILE = /\.(?:ico|png|jpe?g|gif|webp|avif|svg|webmanifest|woff2?|ttf|txt)$/
 
@@ -113,10 +114,21 @@ export function isPlaygroundAsset(pathname: string): boolean {
 }
 
 /**
- * Where `/docs/next/…` points: the line in prerelease, or the latest line once none is, so a link to it keeps working;
+ * Where `/docs/next/…` points: the line in prerelease, or `latest` once none is, so a link to it keeps working;
  * undefined for any other path. A 307, because the line in prerelease changes with every new line.
  */
 export function prereleaseRedirect(pathname: string, lines: { latest: string; next?: string }): string | undefined {
   const match = /^\/docs\/next(\/.*)?$/.exec(pathname)
-  return match ? `/docs/${lines.next ?? lines.latest}${match[1] ?? ''}` : undefined
+  return match ? `/docs/${lines.next ?? 'latest'}${match[1] ?? ''}` : undefined
+}
+
+/**
+ * Where the current line's number URL points: its `latest` URL, the one the site links to, so each page has one
+ * address and one place in the sidebar. What `resolveStoredHref` keeps bound to its line, an exact version's API and
+ * a missing page, keeps its URL; undefined for those and any other path. A 307, because the current line changes.
+ */
+export function currentLineRedirect(pathname: string, versions: VersionsManifest): string | undefined {
+  if (pathKind(pathname) !== 'versioned-page') return undefined
+  const canonical = resolveStoredHref(pathname, versions)
+  return canonical === pathname ? undefined : canonical
 }

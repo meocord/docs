@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import manifest from '../versions.json'
+import { docs40 } from './lines'
 
 // The 4.1 line's releases, newest last, so the changelog's checks follow each sync.
 const releases = manifest.lines.find(entry => entry.line === '4.1')?.versions ?? []
@@ -37,7 +38,9 @@ test('the changelog sums up the newest release and links every release to its no
 
 test('a release no line has answers 404, and a line reaches its releases through latest too', async ({ request }) => {
   expect((await request.get('/docs/4.1/changelog/4.1.0-beta.99')).status()).toBe(404)
-  expect((await request.get('/docs/4.1/changelog/4.0.0')).status()).toBe(404)
+  // Another line's release, as an old latest URL reaches a line once another is current, opens on that line
+  const elsewhere = await request.get('/docs/4.1/changelog/4.0.0')
+  expect([elsewhere.status(), new URL(elsewhere.url()).pathname]).toEqual([200, `${docs40}/changelog/4.0.0`])
   expect((await request.get('/docs/latest/changelog/4.0.0')).status()).toBe(200)
 })
 
@@ -52,13 +55,12 @@ test("a line's API reference opens on its index by kind, or on MeoCordFactory by
   expect(html).toContain('<a href="/docs/4.1/api/decorators/Command">')
   expect(html).toContain('<a href="/docs/4.1/api/controllers/ShardContext">')
   // 4.0 is arranged by entry point, and opens where every app starts
-  for (const [path, landing] of [
-    ['/docs/4.0/api', '/docs/latest/api/core/MeoCordFactory'],
-    ['/docs/latest/api', '/docs/latest/api/core/MeoCordFactory'],
-  ]) {
-    const response = await request.get(path, { maxRedirects: 0 })
-    expect(response.status(), path).toBe(307)
-    expect(response.headers().location, path).toBe(landing)
+  for (const path of new Set(['/docs/4.0/api', `${docs40}/api`])) {
+    const response = await request.get(path)
+    expect([response.status(), new URL(response.url()).pathname], path).toEqual([
+      200,
+      `${docs40}/api/core/MeoCordFactory`,
+    ])
   }
   expect((await request.get('/docs/9.9/api')).status()).toBe(404)
 })

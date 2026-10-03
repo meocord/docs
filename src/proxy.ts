@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { DOC_ALIASES } from '@/config/aliases'
+import { DOC_ALIASES, DOC_LINES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE, SITE_URL } from '@/config/site'
 import {
   cacheControlFor,
+  currentLineRedirect,
   isInertPath,
   isPlaygroundAsset,
   pathKind,
@@ -41,7 +42,7 @@ const DOCUMENT_CSP = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const redirect = prereleaseRedirect(pathname, DOC_ALIASES)
+  const redirect = prereleaseRedirect(pathname, DOC_ALIASES) ?? currentLineRedirect(pathname, DOC_LINES)
   const response = redirect
     ? NextResponse.redirect(new URL(redirect + request.nextUrl.search, request.url), 307)
     : NextResponse.next()

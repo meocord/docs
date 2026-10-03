@@ -3,17 +3,27 @@ import { NextRequest } from 'next/server'
 import { proxy } from '@/proxy'
 import { playgroundFrameCsp, STATIC_FILE_CSP, UNSTORED, VERSIONED_PAGE } from '@/lib/cache-policy'
 import { SITE_URL } from '@/config/site'
+import { DOC_LINES } from '@/config/aliases'
 
 const request = (path: string) => new NextRequest(new URL(path, 'https://docs.test'))
+// A line that is not current answers at its number; the current one at latest
+const CURRENT = DOC_LINES.lines.find(entry => entry.status === 'current')!.line
+const OTHER = DOC_LINES.lines.find(entry => entry.status !== 'current')!.line
 
 describe('proxy', () => {
   it('noindexes and sets the document policy on a page', () => {
-    const response = proxy(request('/docs/4.0/intro'))
+    const response = proxy(request(`/docs/${OTHER}/intro`))
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow')
     expect(response.headers.get('Cache-Control')).toBe(VERSIONED_PAGE)
     expect(response.headers.get('Content-Security-Policy')).toContain(
       "script-src '__CSP_HASHES__' 'self' 'wasm-unsafe-eval'",
     )
+  })
+
+  it("sends the current line's number URL to latest, as a 307 that carries the query", () => {
+    const response = proxy(request(`/docs/${CURRENT}/guards?tab=bun`))
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('https://docs.test/docs/latest/guards?tab=bun')
   })
 
   it('gives public files the flat-deny policy', () => {

@@ -10,6 +10,7 @@ import {
   exactApiParams,
   lineVersions,
   newestFirst,
+  olderApiHref,
   resolveSiteHref,
 } from '@/lib/docs/api-site'
 
@@ -93,5 +94,20 @@ describe('the site API by kind', () => {
     // A line by entry point, and a link that is not to the API, resolve as stored links do
     expect(resolveSiteHref('/docs/4.0/api/core/MeoCordFactory')).toBe('/docs/latest/api/core/MeoCordFactory')
     expect(resolveSiteHref('/docs/4.1/guards#testing')).toBe('/docs/4.1/guards#testing')
+  })
+})
+
+describe('olderApiHref', () => {
+  // 4.1 dropped these, which latest URLs reached while 4.0 was current
+  it.each([
+    ['interface', 'CommandMetadata'],
+    ['enum', 'MetadataKey'],
+  ])("sends 4.1's missing %s/%s to the newest older line's page", (section, symbol) => {
+    expect(olderApiHref('4.1', section, symbol)).toBe(apiModel('4.0')?.href({ section, symbol }))
+  })
+
+  it('leaves a symbol no older line has, and a line with none older', () => {
+    expect(olderApiHref('4.1', 'core', 'NoSuchSymbol')).toBeUndefined()
+    expect(olderApiHref('4.0', 'core', 'MeoCordFactory')).toBeUndefined()
   })
 })

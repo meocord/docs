@@ -8,7 +8,7 @@ import type { Layouts } from '@/lib/docs/api-layout'
 import { API_KINDS, ApiModel, type ApiScheme, type ApiSection, type SinceData } from '@/lib/docs/api-model'
 import { cliManifest, cliSection } from '@/lib/docs/cli-site'
 import { GLANCE_TOPICS, glanceSection } from '@/lib/docs/glance'
-import { docsHref, lineOf, resolveStoredHref } from '@/lib/urls'
+import { docsHref, lineOf, olderLines, resolveStoredHref } from '@/lib/urls'
 
 const semverParts = (version: string) => {
   const [core, pre] = version.split('-', 2)
@@ -157,6 +157,23 @@ export function movedApiHref(line: string, version: string | undefined, entry: s
   const model = apiModel(line, version)
   const location = model?.locate(entry, symbol)
   return model && location && location.section !== entry ? model.href(location) : undefined
+}
+
+/**
+ * Where a symbol this line's API lacks is documented, as an old `latest` URL reaches the line once it is current: the
+ * newest older line's page for it, by the URL's section, as an entry point or a kind, or by its name alone. Undefined
+ * when no older line has it.
+ */
+export function olderApiHref(line: string, section: string, symbol: string): string | undefined {
+  for (const other of olderLines(line, VERSIONS)) {
+    const model = apiModel(other)
+    if (!model) continue
+    const location = model.symbol(section, symbol)
+      ? { section, symbol }
+      : (model.locate(section, symbol) ?? model.find(symbol))
+    if (location) return model.href(location)
+  }
+  return undefined
 }
 
 const layouts = new Map<string, Layouts>()
