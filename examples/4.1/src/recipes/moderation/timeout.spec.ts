@@ -20,10 +20,14 @@ describe('TimeoutController', () => {
   const target = createMockInteraction(User, { id: '999' })
 
   // A click in a server whose member fetch resolves the target, whose timeout() the test controls
-  const click = (action: 'confirm' | 'cancel', member = createMockInteraction(GuildMember, { id: '999' })) => {
+  const click = (
+    action: 'confirm' | 'cancel',
+    id: number,
+    member = createMockInteraction(GuildMember, { id: '999' }),
+  ) => {
     const guild = createMockGuild()
     guild.members.fetch.mockResolvedValue(member as never)
-    const customId = timeoutAnswer.build({ ownerId: '111', id: 1, action })
+    const customId = timeoutAnswer.build({ ownerId: '111', id, action })
     const interaction = createMockInteraction(ButtonInteraction, { customId, user: moderator, guildId: '1', guild })
     return { interaction, member }
   }
@@ -34,37 +38,38 @@ describe('TimeoutController', () => {
       options: createChatInputOptions({ member: target, minutes: 10, reason: 'Spam' }),
     })
     await module.invoke(TimeoutController, 'propose', interaction)
-    return interaction
+    const payload = JSON.parse(JSON.stringify(getResponse(interaction).calls[0].payload))
+    const customIds: string[] = payload.components[0].components.map(
+      (button: { custom_id: string }) => button.custom_id,
+    )
+    // The proposal's id, the third segment of its buttons' customIds
+    return { interaction, customIds, id: Number(customIds[0].split('/')[2]) }
   }
 
   it('asks the moderator to confirm, privately, with buttons naming the proposal', async () => {
-    const interaction = await propose()
+    const { interaction, customIds, id } = await propose()
 
-    const payload = JSON.parse(JSON.stringify(getResponse(interaction).calls[0].payload))
-    expect(payload.components[0].components.map((button: { custom_id: string }) => button.custom_id)).toEqual([
-      'timeout/111/1/confirm',
-      'timeout/111/1/cancel',
-    ])
+    expect(customIds).toEqual([`timeout/111/${id}/confirm`, `timeout/111/${id}/cancel`])
     expect(interaction.ephemeral).toBe(true)
   })
 
   it('times the member out on confirmation, once, and logs it', async () => {
-    await propose()
-    const { interaction, member } = click('confirm')
+    const { id } = await propose()
+    const { interaction, member } = click('confirm', id)
 
     await module.invoke(TimeoutController, 'answer', interaction)
 
     expect(member.timeout).toHaveBeenCalledWith(600_000, 'Spam')
     expect(module.get(ModerationService).log).toMatchObject([{ targetId: '999', minutes: 10, reason: 'Spam' }])
 
-    const again = click('confirm')
+    const again = click('confirm', id)
     await module.invoke(TimeoutController, 'answer', again.interaction)
     expect(again.member.timeout).not.toHaveBeenCalled()
   })
 
   it('does nothing to the member on Cancel', async () => {
-    await propose()
-    const { interaction, member } = click('cancel')
+    const { id } = await propose()
+    const { interaction, member } = click('cancel', id)
 
     await module.invoke(TimeoutController, 'answer', interaction)
 
@@ -73,8 +78,8 @@ describe('TimeoutController', () => {
   })
 
   it('tells the moderator when Discord refuses for missing permissions', async () => {
-    await propose()
-    const { interaction, member } = click('confirm')
+    const { id } = await propose()
+    const { interaction, member } = click('confirm', id)
     member.timeout.mockRejectedValue(createDiscordError(RESTJSONErrorCodes.MissingPermissions))
 
     const { error } = await module.invoke(TimeoutController, 'answer', interaction)

@@ -56,12 +56,13 @@ A filter on the controller turns Discord's refusal into a message the moderator 
   [Typed params](guide:components#typed-params).
 - **Once only.** The first click takes the proposal, so a second click on either button answers that it was
   already handled, and times no one out.
-- **Only the moderator.** The guard reads `ownerId` from the route's params and throws
-  [`GuardDeniedError`](api:responses/GuardDeniedError), so anyone else is told privately that the button isn't
-  theirs.
-- **When Discord refuses.** Discord answers `MissingPermissions`, 50013, when the bot's role lacks Moderate Members,
-  or sits below the member's highest role. `member.timeout()` rejects, and the filter answers that in words the
-  moderator can act on, privately. Any other Discord error gets the default message.
+- **Only the moderator.** The proposal is private, so only the moderator sees its buttons. The guard checks anyway,
+  reading `ownerId` from the route's params and throwing [`GuardDeniedError`](api:responses/GuardDeniedError), so any
+  other click is refused privately.
+- **When Discord refuses.** Discord answers `MissingPermissions`, 50013, when the bot's role lacks Moderate Members, or
+  sits below the member's highest role. `member.timeout()` rejects, and the filter answers that in words the moderator
+  can act on, privately. Any other Discord error gets the default message, privately, and isn't logged, since the filter
+  handled it; log it in the filter to keep it.
 
 ### Testing it
 
@@ -85,8 +86,9 @@ Keep `record()` in a database, as in [A database](guide:recipes/database), and p
 
 ### Restarts
 
-Proposals live in memory, so a restart forgets them, and their buttons then answer that the action was already
-handled. Keep them in a database to survive one.
+Proposals live in memory, so a restart forgets them, and their buttons then answer that the action was already handled.
+Their ids count from when the bot started, so a button from before a restart never matches a proposal made after it.
+Keep proposals in a database to survive one.
 
 ### Expiring proposals
 
