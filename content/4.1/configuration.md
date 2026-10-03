@@ -51,7 +51,7 @@ it was built with, until the next `meocord build --prod`.
 | -------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
 | `discordToken`       | none    | The bot token. Read it from the environment rather than writing it here.                                              |
 | `appName`            | none    | Starts every log line.                                                                                                |
-| `logLevel`           | `'log'` | The least severe line the bot prints; `'debug'` in development. See [Logging](#logging).                              |
+| `logLevel`           | `'log'` | The least severe line the bot prints; `'debug'` while `NODE_ENV` is `development`. See [Logging](#logging).           |
 | `sourceMappedStacks` | `true`  | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                   |
 | `shutdownTimeout`    | `10000` | Milliseconds shutdown waits for the `onShutdown` hooks, all of them together.                                         |
 | `commands`           | global  | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                    |
@@ -78,7 +78,8 @@ Each option, with its full type, its default and the version it first appeared i
 | `'error'`  | errors only                    |
 | `'silent'` | nothing                        |
 
-Without it, the bot prints `'debug'` in development, as under `meocord start --dev`, and `'log'` otherwise.
+Without it, the bot prints `'debug'` while `NODE_ENV` is `development`, as under `meocord start --dev`, and `'log'`
+otherwise, `NODE_ENV` unset included. A self-contained build goes by the mode it was built in.
 
 To change the level for one run, without a rebuild, set `MEOCORD_LOG_LEVEL`. It wins over `logLevel`, ignores letter
 case, so `DEBUG` works, and can be set in `.env`. An unknown value is ignored, with a warning. `logLevel` applies to
@@ -117,8 +118,10 @@ you ship a source mapper of your own. `meocord start` then passes no flag, and t
 Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config before `main.ts`, so every value the
 files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
 reads the files Bun reads for its mode: the production files in a production build and the development files in a
-development build, however the bot is started, on node and Bun alike, and `.env.test` where it runs from source under
-`NODE_ENV=test`. For an environment of your own, pick the files with a variable of your own, as below:
+development build, however the bot is started, and `.env.test` where it runs from source under `NODE_ENV=test`. On Bun,
+a production build started with `NODE_ENV` unset also gets the values of `.env.development`, which Bun loads first: set
+`NODE_ENV=production`, as [Deployment](guide:deployment#how-it-works) explains. For an environment of your own, pick the
+files with a variable of your own, as below:
 
 ::example{file="config/env-files.meocord.config.ts" region="config"}
 
@@ -159,7 +162,8 @@ MeoCord runs every factory before the bot logs in. When a value is missing, the 
 
 ::example{file="services/settings/settings.spec.ts" region="spec"}
 
-A test of `ReportService` provides `SETTINGS` with `useValue` instead, as [Services](guide:services#providers) shows.
+A test of `ReportService` provides `SETTINGS` with `useValue` instead, as [Services](guide:services#testing-a-service)
+shows.
 
 ## The app's options
 
