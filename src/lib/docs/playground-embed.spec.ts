@@ -2,6 +2,11 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { playgroundEmbed } from '@/lib/docs/playground-embed'
 import { decodeShared } from '@/playground/share'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
 
 const FRAME = '/playground/4.1.0-beta.7.0123456789.html'
 const directive = {
@@ -22,7 +27,7 @@ describe('playgroundEmbed', () => {
     expect(out).toContain('<span id="playground-inputs-0">Dispatches <code>as dm; button counter/41</code></span>')
     expect(out).toContain('aria-live="polite"')
     const open = /<a href="([^"]*)" hidden="" data-playground-open="true">Open in playground<\/a>/.exec(out)
-    expect(open?.[1]).toMatch(/^\/docs\/4\.1\/playground#v1\.[\w-]+$/)
+    expect(open?.[1]).toMatch(new RegExp(`^${docs41.replaceAll('.', '\\.')}/playground#v1\\.[\\w-]+$`))
     const request = JSON.parse(
       /data-playground-request="([^"]*)"/
         .exec(out)![1]
