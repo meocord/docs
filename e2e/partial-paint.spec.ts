@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { type Cut, cutServer, recordShifts } from './partial-paint'
+import { docs41 } from './lines'
 
 /*
  * A page painted before all of it has arrived draws what it has; nothing the rest brings may move it.
@@ -17,7 +18,7 @@ const PAGES: { path: string; cuts: Cut[] }[] = [
     ],
   },
   {
-    path: '/docs/4.1/guards',
+    path: `${docs41}/guards`,
     cuts: [
       { selector: '[data-search-trigger]', at: 'close' },
       { selector: 'h1', at: 'close' },
@@ -25,7 +26,7 @@ const PAGES: { path: string; cuts: Cut[] }[] = [
     ],
   },
   {
-    path: '/docs/4.1/api/decorators/Command',
+    path: `${docs41}/api/decorators/Command`,
     cuts: [
       { selector: '[data-search-trigger]', at: 'close' },
       { selector: '[data-signature]', at: 'open' },

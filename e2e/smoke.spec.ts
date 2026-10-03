@@ -1,7 +1,11 @@
 import { type APIRequestContext } from '@playwright/test'
+import { VERSIONS } from '../src/config/versions'
+import { literal } from './lines'
 import { expect, test } from './test'
 
 const NOINDEX = 'noindex, nofollow'
+// The line in prerelease, which `next` names; with none, `next` reaches the current line at latest
+const prerelease = VERSIONS.lines.find(entry => entry.status === 'prerelease')?.line
 
 async function headersOf(request: APIRequestContext, path: string) {
   const response = await request.get(path, { maxRedirects: 0 })
@@ -90,10 +94,10 @@ test('the same page is byte-identical for every reader', async ({ request }) => 
   expect(second).toBe(first)
 })
 
-test('next is a 307 to the prerelease line, with the site headers', async ({ request }) => {
+test('next is a 307 to the prerelease line, or to latest without one, with the site headers', async ({ request }) => {
   const { status, headers } = await headersOf(request, '/docs/next/intro')
   expect(status).toBe(307)
-  expect(headers.location).toMatch(/\/docs\/\d+\.\d+\/intro$/)
+  expect(headers.location).toMatch(new RegExp(`/docs/${prerelease ? literal(prerelease) : 'latest'}/intro$`))
   expect(headers['x-robots-tag']).toBe(NOINDEX)
 })
 
