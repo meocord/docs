@@ -74,7 +74,7 @@ The [`outcome`](api:types/DispatchOutcome) is one of:
 | Outcome       | When                                                                                                                                            |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `'ran'`       | The call settled without an error, an interceptor that answered without the handler included.                                                   |
-| `'denied'`    | A guard returned `false` (no `error`), or `GuardDeniedError` was thrown; `deniedBy` names the guard only when a guard threw it.                 |
+| `'denied'`    | A guard returned `false` (no `error`), or `GuardDeniedError` was thrown; `deniedBy` names the guard, unless the handler threw it itself.        |
 | `'cooldown'`  | A [cooldown](guide:cooldowns) refused it with `CooldownError`.                                                                                  |
 | `'invalid'`   | [Validation](guide:validation) refused its input with `ValidationError`, or a message named a command it doesn't fit, with `MessageUsageError`. |
 | `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                 |
