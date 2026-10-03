@@ -5,7 +5,9 @@ import {
   lineOf,
   lineSegment,
   memberAnchor,
+  olderLines,
   resolveStoredHref,
+  versionElsewhere,
   type VersionsManifest,
 } from '@/lib/urls'
 
@@ -130,6 +132,42 @@ describe('docsHref', () => {
       'not a valid member name',
     )
     expect(() => docsHref({ kind: 'missing', line: '4.1', id: 'A' }, BETA)).toThrow('not a valid page id')
+  })
+})
+
+describe('versionElsewhere', () => {
+  it('names the line an exact version belongs to when a URL puts it under another line, as a latest URL does', () => {
+    // A 4.0 version's page under latest, once 4.1 is current
+    expect(versionElsewhere('4.1', '4.0.0-beta.0', STABLE)).toBe('4.0')
+    expect(versionElsewhere('4.1', '4.0.0', STABLE)).toBe('4.0')
+    // A 4.1 prerelease's page under latest, while 4.0 is current
+    expect(versionElsewhere('4.0', '4.1.0-beta.3', BETA)).toBe('4.1')
+  })
+
+  it("leaves the line's own version, a line versions.json lacks, and what is no version", () => {
+    expect(versionElsewhere('4.1', '4.1.0', STABLE)).toBeUndefined()
+    expect(versionElsewhere('4.1', '3.9.0', STABLE)).toBeUndefined()
+    expect(versionElsewhere('4.1', 'common', STABLE)).toBeUndefined()
+  })
+})
+
+describe('olderLines', () => {
+  it('lists the lines before a line, newest first, whatever their status', () => {
+    expect(olderLines('4.1', BETA)).toEqual(['4.0', '3.9'])
+    expect(olderLines('4.0', BETA)).toEqual(['3.9'])
+    expect(olderLines('4.1', STABLE)).toEqual(['4.0'])
+    expect(olderLines('4.0', STABLE)).toEqual([])
+  })
+
+  it('orders lines by number, not as versions.json lists them', () => {
+    const shuffled: VersionsManifest = {
+      lines: [
+        { line: '4.0', status: 'maintained' },
+        { line: '4.10', status: 'current' },
+        { line: '4.9', status: 'maintained' },
+      ],
+    }
+    expect(olderLines('4.10', shuffled)).toEqual(['4.9', '4.0'])
   })
 })
 

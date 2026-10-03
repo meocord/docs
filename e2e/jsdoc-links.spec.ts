@@ -25,16 +25,19 @@ test("every docs link in the pinned meocord's declarations resolves on the site"
 })
 
 test('a Guide slug lands on the page that holds its topic, in each line', async ({ request }) => {
+  // A line's pages answer at its number, or at latest while it is current
+  const segment = (line: string) =>
+    manifest.lines.find(entry => entry.line === line)?.status === 'current' ? 'latest' : line
   // 4.1 serves the Guide's own page at the slug
-  expect((await request.get('/docs/4.1/slash-commands', { maxRedirects: 0 })).status()).toBe(200)
+  expect((await request.get(`/docs/${segment('4.1')}/slash-commands`, { maxRedirects: 0 })).status()).toBe(200)
   // Another line finds its own page for the topic, by the page the Guide's covers, whatever its slug there
   for (const [slug, own] of [
     ['slash-commands', 'command-types'],
     ['context-menus', 'command-types'],
     ['components', 'command-parameters'],
   ]) {
-    const older = await request.get(`/docs/4.0/${slug}`, { maxRedirects: 0 })
-    expect(older.headers().location, slug).toBe(`/docs/4.0/${own}`)
+    const older = await request.get(`/docs/${segment('4.0')}/${slug}`, { maxRedirects: 0 })
+    expect(older.headers().location, slug).toBe(`/docs/${segment('4.0')}/${own}`)
   }
   // A line without the topic's page says where it is instead: a page, but no page for a JSDoc link.
   const missing = await request.get('/docs/4.0/reactions')

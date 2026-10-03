@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { VERSIONS } from '@/config/versions'
 import { changelogParams, changelogSummary, renderRelease, versionChangelog } from '@/lib/docs/reference-pages'
-import { docsHref } from '@/lib/urls'
+import { docsHref, versionElsewhere } from '@/lib/urls'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 import { lineParams } from '@/lib/docs/site'
 
@@ -37,5 +37,10 @@ async function releasePage(line: string, version: string) {
 
 export default async function ReleasePage({ params }: Params) {
   const { line, version } = await lineParams(params)
-  return (await releasePage(line, version)) ?? notFound()
+  const page = await releasePage(line, version)
+  if (page) return page
+  // Another line's release, as an old `latest` URL reaches this line once it is current, sent to that line's page,
+  // whose URL moves to `latest` when the line becomes current
+  const owner = versionElsewhere(line, version, VERSIONS)
+  return owner ? redirect(docsHref({ kind: 'changelog', line: owner, version }, VERSIONS)) : notFound()
 }

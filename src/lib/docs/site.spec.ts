@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { renderGuide } from '@/lib/docs/render'
-import { guidePage, linePageWithId, lines, pageParams, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
+import { VERSIONS } from '@/config/versions'
+import {
+  elsewhereHref,
+  guidePage,
+  linePageWithId,
+  lines,
+  pageParams,
+  readmeVersion,
+  sidebar,
+  versionChoices,
+} from '@/lib/docs/site'
+import { docsHref } from '@/lib/urls'
 
 // These read the repository's real versions.json and pages: 4.0 is current, 4.1 in prerelease.
 describe('the docs site data', () => {
@@ -85,5 +96,18 @@ describe('the docs site data', () => {
   it('renders a guide, and nothing for a missing page', () => {
     expect(renderGuide('4.0', 'testing')).toBeDefined()
     expect(renderGuide('4.0', 'no-such-page')).toBeUndefined()
+  })
+})
+
+describe('elsewhereHref', () => {
+  // 4.1 lacks these 4.0 paths, which latest URLs reached while 4.0 was current
+  it("sends another line's path to this line's page on its topic", () => {
+    expect(elsewhereHref('4.1', 'features')).toBe(docsHref({ kind: 'guide', line: '4.1', slug: 'overview' }, VERSIONS))
+    expect(elsewhereHref('4.1', 'cli-reference')).toBe(docsHref({ kind: 'guide', line: '4.1', slug: 'cli' }, VERSIONS))
+  })
+
+  it('leaves a path no other line has a page at', () => {
+    expect(elsewhereHref('4.1', 'no-such-page')).toBeUndefined()
+    expect(elsewhereHref('4.0', 'no-such-page')).toBeUndefined()
   })
 })

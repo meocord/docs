@@ -1,5 +1,6 @@
 import manifest from '../../versions.json'
 import { aliases } from '../../scripts/lib/line-aliases'
+import type { LineStatus, VersionsManifest } from '@/lib/urls'
 
 /** Where `latest` and `next` point: the current line, and the line in prerelease while there is one. */
 export interface DocAliases {
@@ -22,3 +23,8 @@ export function docAliases(config: { lines: readonly { line: string; status: str
 
 /** The aliases versions.json gives, so a release that changes a line's standing moves them with it. */
 export const DOC_ALIASES = docAliases(manifest)
+
+/** Each line's standing, as versions.json gives it, which decides the one URL each page answers at. */
+export const DOC_LINES: VersionsManifest = {
+  lines: manifest.lines.map(({ line, status }) => ({ line, status: status as LineStatus })),
+}

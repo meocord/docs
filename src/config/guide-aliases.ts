@@ -40,8 +40,9 @@ export function guideAliasRedirects(
       const { path, id } = topic
       if (pages.some(page => page.slug === path)) return []
       const own = counterpartIn(pages, line, topic, guideLine)
+      // The current line's page at the URL the site uses for it; a missing page is bound to its line
       const destination = own
-        ? `/docs/${line}/${own.page.slug}${own.anchor ? `#${own.anchor}` : ''}`
+        ? `/docs/${line === latest ? 'latest' : line}/${own.page.slug}${own.anchor ? `#${own.anchor}` : ''}`
         : `/docs/${line}/missing/${id}`
       const sources = [`/docs/${line}/${path}`, ...(line === latest ? [`/docs/latest/${path}`] : [])]
       return sources.map(source => ({ source, destination, permanent: false as const }))
