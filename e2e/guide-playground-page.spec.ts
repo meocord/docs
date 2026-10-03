@@ -2,6 +2,7 @@ import { deflateRawSync } from 'node:zlib'
 import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 import { axe } from './axe'
+import { docs41, literal } from './lines'
 
 const PAGE = '/docs/4.1/playground'
 
@@ -35,7 +36,7 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   })
   await page.goto('/docs/4.1/components')
   await page.getByRole('link', { name: 'Playground', exact: true }).first().click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/playground$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/playground$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Playground' })).toBeVisible()
   await expect(page.locator('[aria-current="page"]', { hasText: 'Playground' }).first()).toBeVisible()
   // A page of the Guide: the Guide tab is the section read, and the sidebar's Playground link is the page
@@ -135,7 +136,7 @@ test('copies a link that carries the code and inputs, and opens from it', async 
   await inputs(page).fill('/hello name:ada')
   await share(page).click()
   await expect(status(page)).toHaveText('Link copied.')
-  await expect(page).toHaveURL(/\/docs\/4\.1\/playground#v1\.[\w-]+$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/playground#v1\\.[\\w-]+$`))
   const link = await page.evaluate(() => navigator.clipboard.readText())
   expect(link).toBe(page.url())
   expect(new URL(link).hash.length).toBeLessThan(1_800)
@@ -175,7 +176,7 @@ test("opens a Guide page's playground with its code and inputs", async ({ page }
     .locator('[data-playground-embed]', { hasText: 'button counter/41' })
     .getByRole('link', { name: 'Open in playground' })
     .click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/playground#v1\./)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/playground#v1\\.`))
   await expect(code(page)).toHaveValue(/export class CounterButtonController/)
   await expect(inputs(page)).toHaveValue('button counter/41')
 })
@@ -193,7 +194,7 @@ test('shows the example and no buttons without script', async ({ browser, baseUR
 test('answers at the line and the next alias only, not for an exact version or another line', async ({ request }) => {
   const next = await request.get('/docs/next/playground', { maxRedirects: 0 })
   expect(next.status()).toBe(307)
-  expect(next.headers().location).toMatch(/\/docs\/4\.1\/playground$/)
+  expect(next.headers().location).toMatch(new RegExp(`${literal(docs41)}/playground$`))
   expect((await request.get('/docs/4.1/4.1.0-beta.7/playground')).status()).toBe(404)
   expect((await request.get('/docs/4.0/playground')).status()).toBe(404)
 })
