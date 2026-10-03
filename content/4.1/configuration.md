@@ -119,7 +119,8 @@ Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config b
 files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
 reads the files Bun reads for its mode: the production files in a production build and the development files in a
 development build, however the bot is started, and `.env.test` where it runs from source under `NODE_ENV=test`. On Bun,
-a production build started with `NODE_ENV` unset also gets the values of `.env.development`, which Bun loads first: set
+a production build you start yourself, with `NODE_ENV` unset, also gets the values of `.env.development` and
+`.env.development.local`, which Bun loads first; `meocord start --prod` sets `NODE_ENV` for you, and elsewhere set
 `NODE_ENV=production`, as [Deployment](guide:deployment#how-it-works) explains. For an environment of your own, pick the
 files with a variable of your own, as below:
 
