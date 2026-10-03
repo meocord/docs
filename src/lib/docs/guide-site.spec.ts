@@ -2,6 +2,11 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
 
 // A Guide of four pages in a scratch root: two chapters in reading order, and a recipe apart.
 const root = mkdtempSync(path.join(tmpdir(), 'guide-site-'))
@@ -80,22 +85,22 @@ describe('the Guide', () => {
   })
 
   it('finds the Guide pages that teach an API entry, one of its members included, and none where it is not rendered', () => {
-    expect(guidePagesTeaching('4.1', 'decorators', 'UseGuard')).toEqual([{ title: 'Guards', href: '/docs/4.1/guards' }])
-    expect(guidePagesTeaching('4.1', 'decorators', 'Cooldown')).toEqual([{ title: 'Guards', href: '/docs/4.1/guards' }])
+    expect(guidePagesTeaching('4.1', 'decorators', 'UseGuard')).toEqual([{ title: 'Guards', href: `${docs41}/guards` }])
+    expect(guidePagesTeaching('4.1', 'decorators', 'Cooldown')).toEqual([{ title: 'Guards', href: `${docs41}/guards` }])
     expect(guidePagesTeaching('4.1', 'decorators', 'UseGuards')).toEqual([])
     expect(guidePagesTeaching('4.0', 'decorators', 'UseGuard')).toEqual([])
   })
 
   it('resolves guide: and api: links, the reference pages and planned pages included', () => {
-    expect(resolveGuideLink('4.1', 'guide:services#providers')).toBe('/docs/4.1/services#providers')
-    expect(resolveGuideLink('4.1', 'guide:recipes/tickets')).toBe('/docs/4.1/recipes/tickets')
-    expect(resolveGuideLink('4.1', 'guide:slash-commands')).toBe('/docs/4.1/slash-commands')
-    expect(resolveGuideLink('4.1', 'guide:migrating#start')).toBe('/docs/4.1/migrating#start')
-    expect(resolveGuideLink('4.1', 'guide:changelog')).toBe('/docs/4.1/changelog')
-    expect(resolveGuideLink('4.1', 'api:decorators/UseGuard')).toBe('/docs/4.1/api/decorators/UseGuard')
+    expect(resolveGuideLink('4.1', 'guide:services#providers')).toBe(`${docs41}/services#providers`)
+    expect(resolveGuideLink('4.1', 'guide:recipes/tickets')).toBe(`${docs41}/recipes/tickets`)
+    expect(resolveGuideLink('4.1', 'guide:slash-commands')).toBe(`${docs41}/slash-commands`)
+    expect(resolveGuideLink('4.1', 'guide:migrating#start')).toBe(`${docs41}/migrating#start`)
+    expect(resolveGuideLink('4.1', 'guide:changelog')).toBe(`${docs41}/changelog`)
+    expect(resolveGuideLink('4.1', 'api:decorators/UseGuard')).toBe(`${docs41}/api/decorators/UseGuard`)
     // A CLI command, and a subcommand at its anchor on the command's page
-    expect(resolveGuideLink('4.1', 'api:cli/build')).toBe('/docs/4.1/api/cli/build')
-    expect(resolveGuideLink('4.1', 'api:cli/generate#controller')).toBe('/docs/4.1/api/cli/generate#controller')
+    expect(resolveGuideLink('4.1', 'api:cli/build')).toBe(`${docs41}/api/cli/build`)
+    expect(resolveGuideLink('4.1', 'api:cli/generate#controller')).toBe(`${docs41}/api/cli/generate#controller`)
     expect(resolveGuideLink('4.1', 'https://discord.com')).toBe('https://discord.com')
   })
 
@@ -125,7 +130,7 @@ describe('the Guide', () => {
       ['Playground', true],
     ])
     expect(outline('recipes/tickets').at(-1)).toEqual(['Recipes', [['A ticket system', true]]])
-    expect(guideSidebar('4.1', 'guards')[0].items.at(-1)?.href).toBe('/docs/4.1/playground')
+    expect(guideSidebar('4.1', 'guards')[0].items.at(-1)?.href).toBe(`${docs41}/playground`)
     // A line with no playground runtime has no Playground page to list
     delete frames['4.1']
     expect(outline('guards')[0]).toEqual(['Structuring your app', [['Services', false]]])
@@ -134,15 +139,15 @@ describe('the Guide', () => {
 
   it('places a page in reading order, with what it requires, and keeps the appendix apart', () => {
     const view = guideView('4.1', 'guards')!
-    expect(view.previous).toEqual({ title: 'How a call runs', href: '/docs/4.1/how-a-call-runs' })
+    expect(view.previous).toEqual({ title: 'How a call runs', href: `${docs41}/how-a-call-runs` })
     expect(view.next).toBeUndefined()
     expect(view.progress).toEqual({ index: 3, total: 3 })
-    expect(view.requires).toEqual([{ title: 'Services', href: '/docs/4.1/services' }])
+    expect(view.requires).toEqual([{ title: 'Services', href: `${docs41}/services` }])
     expect(view.crumbs.map(crumb => crumb.title)).toEqual(['4.1', 'The request pipeline', 'Guards'])
 
     const recipe = guideView('4.1', 'recipes/tickets')!
     expect([recipe.previous, recipe.next, recipe.progress]).toEqual([undefined, undefined, undefined])
-    expect(recipe.canonical).toBe('/docs/4.1/recipes/tickets')
+    expect(recipe.canonical).toBe(`${docs41}/recipes/tickets`)
     expect(guideView('4.1', 'tickets')).toBeUndefined()
   })
 
@@ -151,9 +156,9 @@ describe('the Guide', () => {
     expect(html).toContain('<p data-summary="true">Guard calls.</p>')
     expect(html).toContain('You&#x27;ll learn')
     expect(html).toContain('Before this')
-    expect(html).toContain('<a href="/docs/4.1/services">Services</a>')
-    expect(html).toContain('<a href="/docs/4.1/api/decorators/UseGuard">UseGuard</a>')
-    expect(html).toContain('<a href="/docs/4.1/how-a-call-runs" rel="prev">')
+    expect(html).toContain(`<a href="${docs41}/services">Services</a>`)
+    expect(html).toContain(`<a href="${docs41}/api/decorators/UseGuard">UseGuard</a>`)
+    expect(html).toContain(`<a href="${docs41}/how-a-call-runs" rel="prev">`)
     expect(html).toContain('The request pipeline · page 3 of 3')
   })
 
@@ -180,9 +185,9 @@ describe('the Guide', () => {
   it("offers the Guide and the API as the sidebar's tabs, marking the one read", () => {
     // The playground is a page of the Guide, not a tab of its own
     expect(guideTabs('4.1', 'guide')).toEqual([
-      { title: 'Guide', href: '/docs/4.1/services', current: true },
+      { title: 'Guide', href: `${docs41}/services`, current: true },
       // The API opens on its index, where it is arranged by kind
-      { title: 'API', href: '/docs/4.1/api', current: false },
+      { title: 'API', href: `${docs41}/api`, current: false },
     ])
     expect(guideTabs('4.1', 'api').map(tab => tab.current)).toEqual([false, true])
   })
