@@ -75,7 +75,7 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'cooldown-check',
         name: 'Cooldown check',
-        what: 'Check the cooldowns without counting the call, when the params name members, users, roles or channels Discord must fetch.',
+        what: 'Check the cooldowns without counting the call, when the params name anything Discord must fetch.',
         kinds: ['message'],
         guide: 'guide:cooldowns',
         api: 'decorators/Cooldown',
@@ -83,7 +83,7 @@ export const PIPELINE: readonly PipelineStage[] = [
       {
         id: 'fetch',
         name: 'Fetch',
-        what: 'Get the members, users, roles or channels the params name that Discord must fetch.',
+        what: 'Get what the params name that Discord must fetch: members, users, roles, channels, or an app type’s ref.',
         kinds: ['message'],
         guide: 'guide:message-params',
       },

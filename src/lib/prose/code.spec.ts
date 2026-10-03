@@ -17,6 +17,17 @@ describe('packageManagerVariants', () => {
     expect(packageManagerVariants('# comment only\nnpm i discord.js')?.bun).toBe('# comment only\nbun add discord.js')
   })
 
+  it("runs a project's own command with its local install, and only a versioned package or create as a one-off", () => {
+    expect(packageManagerVariants('npx meocord start --dev')).toEqual({
+      npm: 'npx meocord start --dev',
+      bun: 'bunx meocord start --dev',
+      pnpm: 'pnpm exec meocord start --dev',
+      yarn: 'yarn meocord start --dev',
+    })
+    expect(packageManagerVariants('npx meocord@beta create my-bot')?.pnpm).toBe('pnpm dlx meocord@beta create my-bot')
+    expect(packageManagerVariants('npx meocord create my-bot')?.yarn).toBe('yarn dlx meocord create my-bot')
+  })
+
   it('leaves a block alone when any command has no equivalent', () => {
     expect(packageManagerVariants('npx meocord build\ndocker build .')).toBeUndefined()
     expect(packageManagerVariants('yarn install --production')).toBeUndefined()
