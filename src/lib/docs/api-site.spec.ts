@@ -13,6 +13,12 @@ import {
   olderApiHref,
   resolveSiteHref,
 } from '@/lib/docs/api-site'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
+const docs40 = `/docs/${lineSegment('4.0', VERSIONS)}`
 
 describe('newestFirst', () => {
   it('orders releases ahead of their prereleases, and prereleases numerically', () => {
@@ -40,7 +46,7 @@ describe('the site API', () => {
   })
 
   it('opens a line by entry point where every app starts, MeoCordFactory, and has none for an unknown line', () => {
-    expect(apiLandingHref('4.0')).toBe('/docs/latest/api/core/MeoCordFactory')
+    expect(apiLandingHref('4.0')).toBe(`${docs40}/api/core/MeoCordFactory`)
     expect(apiLandingHref('9.9')).toBeUndefined()
   })
 
@@ -71,8 +77,8 @@ describe('the site API by kind', () => {
   it('arranges a line with a Guide by kind, and opens it on its index; 4.0 stays by entry point', () => {
     expect(apiArrangement('4.1')).toBe('kind')
     expect(apiArrangement('4.0')).toBe('entry')
-    expect(apiLandingHref('4.1')).toBe('/docs/4.1/api')
-    expect(apiLandingHref('4.0')).toBe('/docs/latest/api/core/MeoCordFactory')
+    expect(apiLandingHref('4.1')).toBe(`${docs41}/api`)
+    expect(apiLandingHref('4.0')).toBe(`${docs40}/api/core/MeoCordFactory`)
   })
 
   it('files every symbol of every 4.1 release under a kind, older releases by the newest one', () => {
@@ -86,14 +92,14 @@ describe('the site API by kind', () => {
 
   it('sends a stored link by entry point to the page by kind, a member and an exact version included', () => {
     expect(resolveSiteHref('/docs/4.1/api/decorator/Cooldown#options')).toBe(
-      '/docs/4.1/api/decorators/Cooldown#options',
+      `${docs41}/api/decorators/Cooldown#options`,
     )
     expect(resolveSiteHref('/docs/4.1/api/4.1.0-beta.0/decorator/Cooldown')).toBe(
       '/docs/4.1/api/4.1.0-beta.0/decorators/Cooldown',
     )
     // A line by entry point, and a link that is not to the API, resolve as stored links do
-    expect(resolveSiteHref('/docs/4.0/api/core/MeoCordFactory')).toBe('/docs/latest/api/core/MeoCordFactory')
-    expect(resolveSiteHref('/docs/4.1/guards#testing')).toBe('/docs/4.1/guards#testing')
+    expect(resolveSiteHref('/docs/4.0/api/core/MeoCordFactory')).toBe(`${docs40}/api/core/MeoCordFactory`)
+    expect(resolveSiteHref('/docs/4.1/guards#testing')).toBe(`${docs41}/guards#testing`)
   })
 })
 

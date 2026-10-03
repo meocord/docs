@@ -16,6 +16,11 @@ import {
 import { apiModel, apiSections } from '@/lib/docs/api-site'
 import { glanceTopic } from '@/lib/docs/glance'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
 
 // A fixed release, so the layouts are checked against signatures that do not change with each sync.
 const model = apiModel('4.1', '4.1.0-beta.4')!
@@ -36,14 +41,14 @@ describe('apiArticle', () => {
 
   it('lists the Guide pages that teach it, after its reference, at an id of its own', () => {
     const symbol = symbolOf('decorator', 'Cooldown')
-    const guide = [{ title: 'Cooldowns', href: '/docs/4.1/cooldowns' }]
+    const guide = [{ title: 'Cooldowns', href: `${docs41}/cooldowns` }]
     const { nodes, toc } = apiArticle(symbol, {}, guide)
     const markup = renderToStaticMarkup(Div({ children: nodes }).render())
     expect(toc.at(-1)).toEqual({ id: 'in-the-guide', title: 'In the Guide', depth: 2 })
     expect(apiArticle(symbol).toc.some(entry => entry.id === 'in-the-guide')).toBe(false)
     expect(markup).toContain('<aside data-guide-api="true" aria-labelledby="in-the-guide">')
     expect(markup).toContain('<h2 id="in-the-guide">In the Guide</h2>')
-    expect(markup).toContain('<a href="/docs/4.1/cooldowns">Cooldowns</a>')
+    expect(markup).toContain(`<a href="${docs41}/cooldowns">Cooldowns</a>`)
     expect(renderToStaticMarkup(Div({ children: apiArticle(symbol).nodes }).render())).not.toContain('In the Guide')
   })
 
@@ -188,8 +193,12 @@ describe('the API by kind', () => {
     )
     expect(headings).toEqual([...new Set(decorators.items.map(item => item.category))])
     // Each category a list of its own, named by it for a screen reader, which the visible label is hidden from
-    expect(nav).toMatch(/<ul aria-label="Pipeline stages"><li><a href="\/docs\/4\.1\/api\/decorators\/[A-Za-z]+"/)
-    expect(nav).toContain('<a href="/docs/4.1/api/decorators/Cooldown"')
+    expect(nav).toMatch(
+      new RegExp(
+        `<ul aria-label="Pipeline stages"><li><a href="${docs41.replaceAll('.', '\\.')}/api/decorators/[A-Za-z]+"`,
+      ),
+    )
+    expect(nav).toContain(`<a href="${docs41}/api/decorators/Cooldown"`)
     expect(nav.match(/<ul aria-label="Pipeline stages">[\s\S]*?<\/ul>/)![0]).toContain('/decorators/Cooldown"')
   })
 
@@ -199,24 +208,24 @@ describe('the API by kind', () => {
     const decorators = sheet('decorators')
     expect(decorators).toContain('<h1>Decorators at a glance</h1>')
     expect(decorators).toContain('<h2 id="pipeline-stages">Pipeline stages</h2>')
-    expect(decorators).toContain('<a href="/docs/4.1/api/decorators/Cooldown"><code>@Cooldown(options)</code></a>')
+    expect(decorators).toContain(`<a href="${docs41}/api/decorators/Cooldown"><code>@Cooldown(options)</code></a>`)
     expect(decorators).toContain('<code>@UseGuard(...entries)</code>')
     const respond = sheet('respond')
     expect(respond).toContain('<code>respond(interaction)</code>')
     expect(respond).toContain(
-      '<a href="/docs/4.1/api/responses/ResponseState#send"><code>send(payload, options?)</code></a>',
+      `<a href="${docs41}/api/responses/ResponseState#send"><code>send(payload, options?)</code></a>`,
     )
     expect(respond).toContain('<h2 id="properties">Properties</h2>')
     const testing = sheet('testing')
     expect(testing).toContain('<code>createMockMessage(overrides?)</code>')
     // A helper declared as a variable, with no signature of its own, is named
-    expect(testing).toContain('<a href="/docs/4.1/api/testing/createMockUser"><code>createMockUser</code></a>')
+    expect(testing).toContain(`<a href="${docs41}/api/testing/createMockUser"><code>createMockUser</code></a>`)
     // Helpers only: an interface of the testing kind isn't one
     expect(testing).not.toContain('MockMessageOverrides')
     const cli = sheet('cli')
-    expect(cli).toContain('data-example="npx meocord@beta create my-bot"')
+    expect(cli).toContain('data-example="npx meocord create my-bot"')
     expect(cli).toContain(
-      '<a href="/docs/4.1/api/cli/generate#controller"><code>meocord generate controller</code></a>',
+      `<a href="${docs41}/api/cli/generate#controller"><code>meocord generate controller</code></a>`,
     )
     // An exact version's API has no cheat sheets
     expect(apiSections(apiModel('4.1', '4.1.0-beta.7')!).some(section => section.slug === 'glance')).toBe(false)
@@ -226,9 +235,9 @@ describe('the API by kind', () => {
     const model = apiModel('4.1')!
     const index = html(apiIndexArticle('4.1', model).nodes)
     expect(index).toContain(
-      '<h2 id="decorators" data-kind-heading="true"><a href="/docs/4.1/api/decorators">Decorators</a></h2>',
+      `<h2 id="decorators" data-kind-heading="true"><a href="${docs41}/api/decorators">Decorators</a></h2>`,
     )
-    expect(index).toContain('<a href="/docs/4.1/api/decorators/Cooldown"><code>Cooldown</code></a>')
+    expect(index).toContain(`<a href="${docs41}/api/decorators/Cooldown"><code>Cooldown</code></a>`)
     const kind = apiKindArticle(model, 'decorators')!
     expect(html(kind.nodes)).toContain('<h2 id="decorators-pipeline-stages">Pipeline stages</h2>')
     expect(kind.toc.map(entry => entry.title)).toContain('Pipeline stages')
@@ -246,14 +255,14 @@ describe('the API by kind', () => {
     const defer = model.symbol('decorators', 'Defer')!
     const stages = runsAt('4.1', defer)
     expect(stages.map(stage => stage.href)).toEqual([
-      '/docs/4.1/how-a-call-runs#stage-defer',
-      '/docs/4.1/how-a-call-runs#stage-defer-lock',
+      `${docs41}/how-a-call-runs#stage-defer`,
+      `${docs41}/how-a-call-runs#stage-defer-lock`,
     ])
     const { nodes, toc } = apiArticle(defer, {}, [], stages)
     expect(toc[0]).toEqual({ id: 'where-it-runs', title: 'Where it runs', depth: 2 })
     const markup = html(nodes)
     expect(markup).toContain('<h2 id="where-it-runs">Where it runs</h2>')
-    expect(markup).toContain('<a href="/docs/4.1/how-a-call-runs#stage-defer-lock">@Defer: lock</a> — ')
+    expect(markup).toContain(`<a href="${docs41}/how-a-call-runs#stage-defer-lock">@Defer: lock</a> — `)
     expect(markup.indexOf('where-it-runs')).toBeLessThan(markup.indexOf('id="parameters"'))
     // A tag's older stage name stands for each stage it covers
     expect(runsAt('4.1', model.symbol('decorators', 'Observer')!).map(stage => stage.name)).toEqual([
@@ -280,9 +289,9 @@ describe('the API by kind', () => {
     const app = model.symbol('controllers', 'MeoCordApplication')!
     expect(html(apiArticle(app).nodes)).toContain('<code>meocord/core</code> and <code>meocord/interface</code>')
     expect(apiCrumbs('4.1', model, 'controllers')).toEqual([
-      { title: '4.1', href: '/docs/4.1' },
-      { title: 'API', href: '/docs/4.1/api' },
-      { title: 'Controllers', href: '/docs/4.1/api/controllers' },
+      { title: '4.1', href: `${docs41}` },
+      { title: 'API', href: `${docs41}/api` },
+      { title: 'Controllers', href: `${docs41}/api/controllers` },
     ])
   })
 })

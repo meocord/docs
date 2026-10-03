@@ -1,6 +1,8 @@
 import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 import { axe } from './axe'
+import { CURRENT_LINE } from '../src/config/versions'
+import { docs41, literal } from './lines'
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Search the documentation' })
 const field = (page: Page) => dialog(page).getByRole('combobox')
@@ -93,7 +95,7 @@ test('a search groups results, and Enter opens the one the arrows reach', async 
   await page.keyboard.press('ArrowDown')
   await expect(field(page)).toHaveAttribute('aria-activedescendant', 'search-option-1')
   await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/\/docs\/4\.1\/cooldowns$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/cooldowns$`))
   await expect(dialog(page)).toBeHidden()
   expect(problems).toEqual([])
 })
@@ -188,7 +190,7 @@ test('its memoized parts still follow what they read: the active row, new result
 test('the current line is the scope, latest as the current line', async ({ page }) => {
   await page.goto('/docs/latest/guards')
   await page.keyboard.press('ControlOrMeta+k')
-  await expect(field(page)).toHaveAttribute('aria-label', 'Search MeoCord 4.0')
+  await expect(field(page)).toHaveAttribute('aria-label', `Search MeoCord ${CURRENT_LINE}`)
 })
 
 test('keys typed while the palette first loads reach its field', async ({ page }) => {

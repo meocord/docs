@@ -1,15 +1,17 @@
 import { expect, test } from '@playwright/test'
 import manifest from '../versions.json'
-import { docs40 } from './lines'
+import { docs40, docs41, literal } from './lines'
 
 // The 4.1 line's releases, newest last, so the changelog's checks follow each sync.
 const releases = manifest.lines.find(entry => entry.line === '4.1')?.versions ?? []
 const [previous, newest] = releases.slice(-2)
+// The current line's first release, which it also reaches through latest
+const currentRelease = manifest.lines.find(entry => entry.status === 'current')!.versions[0]
 
 test('the changelog sums up the newest release and links every release to its notes, marking itself in the sidebar', async ({
   page,
 }) => {
-  const response = await page.goto('/docs/4.1/changelog')
+  const response = await page.goto(`${docs41}/changelog`)
   expect(response?.status()).toBe(200)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Changelog for 4.1')
   await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText(newest)
@@ -27,13 +29,13 @@ test('the changelog sums up the newest release and links every release to its no
 
   // An earlier release opens on its own page, its groups at their anchors, under the changelog in the crumbs.
   await page.getByRole('link', { name: '4.1.0-beta.0', exact: true }).click()
-  await expect(page).toHaveURL(/\/docs\/4\.1\/changelog\/4\.1\.0-beta\.0$/)
+  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/changelog/4\\.1\\.0-beta\\.0$`))
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('4.1.0-beta.0 changelog')
   await expect(page.locator('h2#minor-changes')).toBeVisible()
   await expect(page.locator('time[datetime="2026-09-24"]')).toHaveText('24 September 2026')
   await expect(
     page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Changelog' }),
-  ).toHaveAttribute('href', '/docs/4.1/changelog')
+  ).toHaveAttribute('href', `${docs41}/changelog`)
 })
 
 test('a release no line has answers 404, and a line reaches its releases through latest too', async ({ request }) => {
@@ -42,18 +44,19 @@ test('a release no line has answers 404, and a line reaches its releases through
   const elsewhere = await request.get('/docs/4.1/changelog/4.0.0')
   expect([elsewhere.status(), new URL(elsewhere.url()).pathname]).toEqual([200, `${docs40}/changelog/4.0.0`])
   expect((await request.get('/docs/latest/changelog/4.0.0')).status()).toBe(200)
+  expect((await request.get(`/docs/latest/changelog/${currentRelease}`)).status()).toBe(200)
 })
 
 test("a line's API reference opens on its index by kind, or on MeoCordFactory by entry point", async ({ request }) => {
   // 4.1 is arranged by kind: its API opens on the index of the kinds
-  const index = await request.get('/docs/4.1/api', { maxRedirects: 0 })
+  const index = await request.get(`${docs41}/api`, { maxRedirects: 0 })
   expect(index.status()).toBe(200)
   const html = await index.text()
   expect(html).toContain('<h1>API</h1>')
   // Each kind heads its section, linking its page, over the symbols it files, each linking its own
-  expect(html).toContain('<a href="/docs/4.1/api/decorators">Decorators</a>')
-  expect(html).toContain('<a href="/docs/4.1/api/decorators/Command">')
-  expect(html).toContain('<a href="/docs/4.1/api/controllers/ShardContext">')
+  expect(html).toContain(`<a href="${docs41}/api/decorators">Decorators</a>`)
+  expect(html).toContain(`<a href="${docs41}/api/decorators/Command">`)
+  expect(html).toContain(`<a href="${docs41}/api/controllers/ShardContext">`)
   // 4.0 is arranged by entry point, and opens where every app starts
   for (const path of new Set(['/docs/4.0/api', `${docs40}/api`])) {
     const response = await request.get(path)
@@ -80,7 +83,7 @@ test('switching to a line without the page lands on a page saying so', async ({ 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Not in 4.0')
   await expect(page.getByRole('link', { name: 'Interceptors in 4.1' })).toHaveAttribute(
     'href',
-    '/docs/4.1/interceptors',
+    `${docs41}/interceptors`,
   )
 })
 
@@ -91,6 +94,7 @@ test('a missing page is noindexed, and one for a page no line has is a 404', asy
   expect((await request.get('/docs/4.0/missing/no-such-page')).status()).toBe(404)
   // A line that has the page sends the reader to it, rather than saying it lacks it
   const present = await request.get('/docs/4.1/missing/interceptors', { maxRedirects: 0 })
-  expect(present.status()).toBe(308)
-  expect(present.headers().location).toBe('/docs/4.1/interceptors')
+  // Permanent only from a line that isn't current, whose move can never change
+  expect(present.status()).toBe(docs41 === '/docs/latest' ? 307 : 308)
+  expect(present.headers().location).toBe(`${docs41}/interceptors`)
 })

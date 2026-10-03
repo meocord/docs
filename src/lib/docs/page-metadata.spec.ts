@@ -10,6 +10,12 @@ import * as home from '@/app/page'
 import * as notFound from '@/app/not-found'
 import { describe as summarize, DESCRIPTION_LENGTH, firstParagraph, plainText } from '@/lib/docs/page-metadata'
 import { ogImage } from '@/lib/og/cards'
+import { VERSIONS } from '@/config/versions'
+import { lineSegment } from '@/lib/urls'
+
+// Each line's path segment as versions.json gives it: `latest` for the current line
+const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
+const docs40 = `/docs/${lineSegment('4.0', VERSIONS)}`
 
 const params = <T>(value: T) => ({ params: Promise.resolve(value) }) as never
 const card = ogImage('site', 'home')
@@ -48,21 +54,21 @@ describe('page metadata', () => {
     )
   })
 
-  it('a Guide page on a prerelease line: its summary, canonical at its line', async () => {
+  it("a Guide page: its summary, canonical at its line's path", async () => {
     expect(await guide.generateMetadata(params({ line: '4.1', slug: ['guards'] }))).toEqual(
       expected(
         'Guards · MeoCord 4.1',
         'Decide whether a call may run, before the handler or anything costly sees it, and tell the user why when it may not.',
-        '/docs/4.1/guards',
+        `${docs41}/guards`,
       ),
     )
   })
 
-  it('a guide on the current line: canonical at latest', async () => {
+  it("a Guide page on another line: that line's title, canonical at its path", async () => {
     const meta = await guide.generateMetadata(params({ line: '4.0', slug: ['guards'] }))
     expect(meta.title).toEqual({ absolute: 'Guards · MeoCord 4.0' })
-    expect(meta.alternates).toEqual({ canonical: '/docs/latest/guards' })
-    expect(meta.openGraph).toMatchObject({ url: '/docs/latest/guards' })
+    expect(meta.alternates).toEqual({ canonical: `${docs40}/guards` })
+    expect(meta.openGraph).toMatchObject({ url: `${docs40}/guards` })
   })
 
   it("an appendix page, and a recipe at its group's path", async () => {
@@ -70,14 +76,14 @@ describe('page metadata', () => {
       expected(
         'What you can build · MeoCord 4.1',
         'Every kind of handler MeoCord runs, from slash commands to gateway events, each with a small working example.',
-        '/docs/4.1/what-can-i-build',
+        `${docs41}/what-can-i-build`,
       ),
     )
     expect(await guide.generateMetadata(params({ line: '4.1', slug: ['recipes', 'cooldown-stores'] }))).toEqual(
       expected(
         'Cooldown stores · MeoCord 4.1',
         'Keep cooldown counts in Redis, across shards, or in PostgreSQL, SQLite or MongoDB, and check a store of your own.',
-        '/docs/4.1/recipes/cooldown-stores',
+        `${docs41}/recipes/cooldown-stores`,
       ),
     )
   })
@@ -87,7 +93,7 @@ describe('page metadata', () => {
       expected(
         'Overview · MeoCord 4.1',
         'What MeoCord is, what a bot built with it is made of, and how its parts run from build to shutdown.',
-        '/docs/4.1/overview',
+        `${docs41}/overview`,
       ),
     )
   })
@@ -97,7 +103,7 @@ describe('page metadata', () => {
       expected(
         'Command · meocord/decorator · MeoCord 4.1',
         'Routes a command, a component or a modal submission to the method it decorates.',
-        '/docs/4.1/api/decorators/Command',
+        `${docs41}/api/decorators/Command`,
       ),
     )
   })
@@ -108,7 +114,7 @@ describe('page metadata', () => {
       ...expected(
         'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
         'Decorator to register command methods in a controller.',
-        '/docs/4.1/api/decorators/Command',
+        `${docs41}/api/decorators/Command`,
       ),
     })
   })
@@ -118,14 +124,14 @@ describe('page metadata', () => {
       expected(
         'Changelog · MeoCord 4.1',
         'Every MeoCord 4.1 release, newest first, with its day and what it holds, and the newest in summary.',
-        '/docs/4.1/changelog',
+        `${docs41}/changelog`,
       ),
     )
     expect(await release.generateMetadata(params({ line: '4.1', version: '4.1.0-beta.1' }))).toEqual(
       expected(
         '4.1.0-beta.1 changelog · MeoCord 4.1',
         'What changed in MeoCord 4.1.0-beta.1: 1 minor change and 2 patch changes.',
-        '/docs/4.1/changelog/4.1.0-beta.1',
+        `${docs41}/changelog/4.1.0-beta.1`,
       ),
     )
     expect(await release.generateMetadata(params({ line: '4.1', version: '4.0.0' }))).toEqual({})
@@ -133,7 +139,7 @@ describe('page metadata', () => {
       expected(
         'Migrating · MeoCord 4.1',
         'Upgrading a bot to MeoCord 4.1: what changed, and what to do about it.',
-        '/docs/4.1/migrating',
+        `${docs41}/migrating`,
       ),
     )
   })
