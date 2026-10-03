@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SITE_INDEXABLE } from '@/config/site'
+import { lineIndexed } from '@/config/versions'
 import { ogImage } from '@/lib/og/cards'
 
 /** How long a description may run, in characters, before it is cut at a word. */
@@ -46,7 +47,7 @@ export interface PageMetadataInput {
   description: string
   /** The page's canonical path, also its og:url; none for a page that is not indexed. */
   canonical?: string
-  /** Whether search engines may index it, when the site may be indexed at all. */
+  /** Whether search engines may index it, when the site and its line may be indexed at all. */
   index?: boolean
 }
 
@@ -62,7 +63,7 @@ export function pageMetadata({ title, line, description, canonical, index = true
     title: { absolute: fullTitle },
     description: text,
     ...(canonical ? { alternates: { canonical } } : {}),
-    robots: robots(index),
+    robots: robots(index && (line === undefined || lineIndexed(line))),
     openGraph: {
       siteName: 'MeoCord',
       type: title ? 'article' : 'website',

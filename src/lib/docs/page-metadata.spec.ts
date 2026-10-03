@@ -11,7 +11,7 @@ import * as notFound from '@/app/not-found'
 import { describe as summarize, DESCRIPTION_LENGTH, firstParagraph, plainText } from '@/lib/docs/page-metadata'
 import { ogImage } from '@/lib/og/cards'
 import { VERSIONS } from '@/config/versions'
-import { lineSegment } from '@/lib/urls'
+import { docsHref, lineSegment } from '@/lib/urls'
 
 // Each line's path segment as versions.json gives it: `latest` for the current line
 const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
@@ -98,6 +98,20 @@ describe('page metadata', () => {
     )
   })
 
+  it('the API’s cheat sheets and CLI indexes: canonical at their section, naming what they list', async () => {
+    for (const [section, title, description] of [
+      ['glance', 'At a glance · API · MeoCord 4.1', /^MeoCord 4\.1 at a glance, a cheat sheet per task: /],
+      ['cli', 'CLI · API · MeoCord 4.1', /^The meocord command line of MeoCord 4\.1: .*\bcreate\b/],
+    ] as const) {
+      const meta = await api.generateMetadata(params({ line: '4.1', path: [section] }))
+      expect(meta.title, section).toEqual({ absolute: title })
+      expect(meta.description, section).toMatch(description)
+      expect(meta.alternates, section).toEqual({
+        canonical: docsHref({ kind: 'api-index', line: '4.1', section }, VERSIONS),
+      })
+    }
+  })
+
   it('an API symbol: its doc comment’s summary', async () => {
     expect(await api.generateMetadata(params({ line: '4.1', path: ['decorators', 'Command'] }))).toEqual(
       expected(
@@ -173,18 +187,34 @@ describe('once the site is indexable', () => {
     vi.resetModules()
   })
 
-  it('indexes a page unless it asks not to be, and follows its links either way', async () => {
+  it('indexes a page of the current line, or of no line, unless it asks not to be, and follows its links either way', async () => {
     vi.stubEnv('SITE_INDEXABLE', 'true')
     vi.resetModules()
     const { pageMetadata } = await import('@/lib/docs/page-metadata')
-    expect(pageMetadata({ title: 'Guards', line: '4.1', description: 'x' }).robots).toEqual({
+    const { CURRENT_LINE } = await import('@/config/versions')
+    expect(pageMetadata({ title: 'Guards', line: CURRENT_LINE, description: 'x' }).robots).toEqual({
       index: true,
       follow: true,
     })
-    expect(pageMetadata({ title: 'Old', line: '4.1', description: 'x', index: false }).robots).toEqual({
+    expect(pageMetadata({ description: 'x' }).robots).toEqual({ index: true, follow: true })
+    expect(pageMetadata({ title: 'Old', line: CURRENT_LINE, description: 'x', index: false }).robots).toEqual({
       index: false,
       follow: true,
     })
+  })
+
+  it('keeps every other line out of search indexes, following its links', async () => {
+    vi.stubEnv('SITE_INDEXABLE', 'true')
+    vi.resetModules()
+    const { pageMetadata } = await import('@/lib/docs/page-metadata')
+    const { CURRENT_LINE, VERSIONS } = await import('@/config/versions')
+    const others = VERSIONS.lines.filter(({ line }) => line !== CURRENT_LINE)
+    expect(others.length).toBeGreaterThan(0)
+    for (const { line } of others)
+      expect(pageMetadata({ title: 'Guards', line, description: 'x' }).robots, line).toEqual({
+        index: false,
+        follow: true,
+      })
   })
 })
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GET as robots } from '@/app/robots.txt/route'
 import { GET as sitemap } from '@/app/sitemap.xml/route'
 import { GET as og } from '@/app/og/[line]/[file]/route'
+import nextConfig from '../next.config'
 
 const card = (line: string, file: string) =>
   og(new Request('https://docs.test'), { params: Promise.resolve({ line, file }) })
@@ -32,5 +33,15 @@ describe('og route', () => {
       expect(response.status, `${line}/${file}`).toBe(404)
       expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow')
     }
+  })
+})
+
+describe('redirects', () => {
+  it('/docs opens the current line, permanently: latest always stands for it', async () => {
+    expect(await nextConfig.redirects!()).toContainEqual({
+      source: '/docs',
+      destination: '/docs/latest',
+      permanent: true,
+    })
   })
 })
