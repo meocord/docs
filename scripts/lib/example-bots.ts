@@ -86,7 +86,7 @@ export function botsIllustrating(bots: ExampleBots | undefined, pagePath: string
       .filter(feature => feature.guide.some(ref => ref.split('#')[0] === pagePath))
       .map(feature => {
         const where = `[${bot.title}](guide:${EXAMPLE_BOTS_PAGE}#${bot.id})`
-        return `- ${where}: ${feature.what}, in ${fileLinks(bots!, bot, feature.files)}`
+        return `- ${where}: ${feature.what}, in ${fileLinks(bots!, bot, feature.files)}.`
       }),
   )
   return items.length > 0 ? items.join('\n') : undefined
