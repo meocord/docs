@@ -30,7 +30,8 @@ mocks every one of them. A mock keeps its class's prototype chain, so `instanceo
 go straight to code that expects the real class.
 
 Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. Under Node's test runner
-and bun test, assert through `.mock.calls` itself.
+and bun test, assert through `.mock.calls` itself: each call is recorded as an array of its arguments,
+`mock.calls[0][0]`, not node:test's `{ arguments }` record.
 
 ## When to use it
 
