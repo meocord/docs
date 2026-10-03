@@ -53,7 +53,8 @@ export interface PipelineDemo {
 
 const NARRATION: Record<StageId, string> = {
   defer: 'Acknowledged at once, so a slow handler never runs out Discord’s three seconds.',
-  guard: 'Guards run first. One that throws GuardDeniedError is answered privately, with its reason.',
+  guard:
+    'Guards run next, before anything else of the handler’s. One that throws GuardDeniedError is answered privately, with its reason.',
   'interceptor:before': 'Interceptors wrap everything after the guards, on the way in.',
   pipe: 'Pipes shape each option before the handler sees it.',
   handler: 'The handler runs with input that has been checked and shaped.',
@@ -150,7 +151,7 @@ export const CLAIMS: readonly { title: string; body: string; guide: string }[] =
   },
   {
     title: 'One pipeline, every call.',
-    body: 'Guards, interceptors, validation, cooldowns and exception filters run in a fixed order around every handler.',
+    body: 'Guards, interceptors, validation, cooldowns and exception filters run in a fixed order around each handler they apply to.',
     guide: 'guide:how-a-call-runs',
   },
   {

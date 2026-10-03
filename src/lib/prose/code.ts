@@ -22,7 +22,10 @@ export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const
 export type PackageManager = (typeof PACKAGE_MANAGERS)[number]
 
 const COMMANDS: { npm: RegExp; to: Record<Exclude<PackageManager, 'npm'>, string> }[] = [
-  { npm: /^npx /, to: { bun: 'bunx ', pnpm: 'pnpm dlx ', yarn: 'yarn dlx ' } },
+  // A one-off run, outside any project: a package named with its version, or `create`, which makes the project
+  { npm: /^npx (?=\S+@\S|\S+ create\b)/, to: { bun: 'bunx ', pnpm: 'pnpm dlx ', yarn: 'yarn dlx ' } },
+  // Anything else runs the project's own install, as npx does, rather than fetching the latest release
+  { npm: /^npx /, to: { bun: 'bunx ', pnpm: 'pnpm exec ', yarn: 'yarn ' } },
   {
     npm: /^npm (?:install|i) (?:-D|--save-dev) /,
     to: { bun: 'bun add -d ', pnpm: 'pnpm add -D ', yarn: 'yarn add -D ' },
