@@ -105,7 +105,8 @@ npx meocord register --dev            # to commands.developmentGuild
 npx meocord register --guild 1234567  # every command to one server
 ```
 
-It exits with a non-zero code when Discord rejects the token or the commands, so a deploy step can stop on it.
+It exits with a non-zero code when it can't register every command, as when Discord rejects the token or the commands,
+so a deploy step can stop on it.
 
 ## Entry point commands
 
@@ -129,7 +130,8 @@ nothing.
   changed since the last start isn't sent again, so one deleted through the API or another tool isn't restored. Start
   with `--force-register` to send the set again.
 - **A handler without a matching command never runs.** The name in `@Command` is the name the builder receives, so
-  build it with `setName(commandName)` rather than a second copy of the name.
+  build it with `setName(commandName)` rather than a second copy of the name. The bot warns at startup about such a
+  handler, naming the name its builder registers, and in the next major version (5.0) it refuses to start.
 
 ## Build it
 

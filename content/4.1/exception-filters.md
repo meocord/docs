@@ -25,7 +25,8 @@ Errors in a call come in two kinds. Some are the user's own mistake, such as too
 told what to change. Others are faults in the bot, which the user can do nothing about.
 
 For the first kind, throw [`UserError`](api:responses/UserError): MeoCord shows its message to the user who made the
-call, privately for an interaction and as a reply to a message; from a reaction or another event it is only logged. For
+call, privately for an interaction and as a reply to a message, including the message an event such as `messageCreate`
+carries; from a reaction or an event without a message it is only logged. For
 anything else, the built-in fallback answers with a generic message and logs the error. When you want another answer, an
 exception filter catches the error first and answers it your own way.
 
@@ -134,8 +135,8 @@ An error anywhere in a call is caught, so a handler or a stage that throws or re
 - **Inside a handler's call,** the filters and then the built-in fallback receive it, as above.
 - **Before a handler is reached,** such as for an interaction no handler matches, or one that fails while its handler
   is looked up, the global filters receive it, and the fallback still answers the user.
-- **In an event handler,** each call is isolated: its error is logged with the event and the handler, and the next
-  listener still runs.
+- **In an event handler,** each call is isolated: its error goes to the filters, one none handles is logged with the
+  event and the handler, and the next listener still runs.
 - **In MeoCord's own Discord listeners,** such as the one for `clientReady`, a rejection is logged against the event
   rather than left as an unhandled rejection, which would end the process.
 
@@ -157,7 +158,8 @@ Generate a filter with `npx meocord g f <name>`.
 
 ## Gotchas
 
-- **A filter without `@Catch` stops the bot at startup.** `@Catch()` with no types handles every error.
+- **A filter without `@Catch` stops the bot at startup,** naming the decorator to add. `@Catch()` with no types
+  handles every error.
 - **An entry of `@Catch` that isn't a class matches no error.** An `undefined`, often from two files that import each
   other, logs a warning naming the filter as it loads, and the filter still handles the other types it lists. In the
   next major version (5.0) it stops the bot. Import the class where it's defined.

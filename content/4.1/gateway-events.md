@@ -65,7 +65,8 @@ Most events need an intent: `guildMemberAdd` needs `GuildMembers`, which is priv
 once for each intent or partial a handler needs that `clientOptions` lacks.
 
 A privileged intent is also enabled in the Discord developer portal, under Bot, then Privileged Gateway
-Intents. If Discord refuses one at login, the bot says which, and `app.start()` rejects with an error
+Intents. If Discord refuses one at login, the bot names the privileged intents it
+requests and where to enable them, and `app.start()` rejects with an error
 `isExplainedError(error)` recognises, so the generated `main.ts` doesn't log it twice.
 
 ## Testing

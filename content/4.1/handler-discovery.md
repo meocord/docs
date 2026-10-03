@@ -80,7 +80,8 @@ string or symbol key still works, and is deprecated as it is on `ExecutionContex
 
 ## Testing
 
-A testing module binds a registry of the controllers it's given, so a test lists exactly those:
+A testing module binds a registry of the controllers, services and providers it's given, so a test lists exactly their
+handlers:
 
 ::example{file="services/help.service.spec.ts" region="spec"}
 

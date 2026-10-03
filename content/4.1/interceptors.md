@@ -105,6 +105,8 @@ Generate an interceptor with `npx meocord g i <name>`.
 
 ## Gotchas
 
+- **An interceptor that injects needs `@Interceptor()`.** Without it, the bot refuses to start, naming the decorator
+  to add.
 - **A controller method called directly runs no interceptors.** Only the testing module and the bot's dispatch run
   them.
 - **`next.handle()` called twice runs the handler twice,** with its side effects. Keep its promise if you need the
