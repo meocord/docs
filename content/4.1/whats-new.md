@@ -59,10 +59,11 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
   [Exception filters and UserError](guide:exception-filters).
 - **Validation and pipes** check a handler's input against any Standard Schema and turn it into what the handler
   wants. See [Validation and pipes](guide:validation).
-- **`@Cooldown`** limits how often a handler runs, per user, channel, server, everyone, or a value of the call with
-  `by`. Counts can live in the shard manager, Redis or a database of your own, and `cooldownStoreFailure` decides
-  whether a call is refused or allowed while the store is down. See [Cooldowns](guide:cooldowns),
-  [When the store fails](guide:cooldowns#when-the-store-fails) and [Cooldown stores](guide:recipes/cooldown-stores).
+- **`@Cooldown`** limits how often a handler runs, per user, channel, server or everyone, and optionally apart for each
+  value of the call with `by`. Counts can live in the shard manager, Redis or a database of your own, and
+  `cooldownStoreFailure` decides whether a call is refused or allowed while the store is down. See
+  [Cooldowns](guide:cooldowns), [When the store fails](guide:cooldowns#when-the-store-fails) and [Cooldown
+  stores](guide:recipes/cooldown-stores).
 - **Observers** are told as each call starts and once it settles, with how it ended and how long it took, for metrics,
   audit logs and tracing. See [Observers](guide:observers).
 - **Custom decorators**: `createMetadata` makes a typed fact about a handler that guards read through
@@ -108,11 +109,11 @@ Every handler runs through one pipeline, in a fixed order. See [How a call runs]
 - **`logLevel`** in `meocord.config.ts`, or `MEOCORD_LOG_LEVEL` for one run, sets which lines the logger prints. See
   [Logging](guide:configuration#logging).
 - **Mistakes MeoCord refuses as the bot loads**, such as an invalid pattern or two handlers for one command, are
-  reported as one line that names the class, and the method where there is one, and the bot exits 1. Among them are
-  two handlers of one command, two component handlers with the same pattern, a method-only decorator such as `@Defer`
-  on a class, and a class whose constructor injects but has no decorator; see
-  [the upgrade notes](guide:migrating#two-handlers-of-one-command-stop-the-bot) and
-  [the other](guide:migrating#two-component-handlers-with-the-same-customid-pattern-stop-the-bot).
+  reported as one message that names the class, and the method where there is one, with the source file in a built app,
+  and the bot exits 1. Among them are two handlers of one command, two component handlers with the same pattern, a
+  method-only decorator such as `@Defer` on a class, and a class whose constructor injects but has no decorator; see
+  [the upgrade notes](guide:migrating#two-handlers-of-one-command-stop-the-bot) and [the
+  other](guide:migrating#two-component-handlers-with-the-same-customid-pattern-stop-the-bot).
 - **`start --dev`** rebuilds and restarts on changes to the source, `meocord.config.ts` and `tsconfig.json`, and
   restarts on a change to a development `.env` file, one bot at a time. See [The
   CLI](guide:cli#development-and-production).
