@@ -17,6 +17,14 @@ export const VERSIONS: VersionsManifest = {
 export const CURRENT_LINE = VERSIONS.lines.find(entry => entry.status === 'current')?.line ?? VERSIONS.lines[0].line
 
 /**
+ * Whether search engines may index a line's pages: only the current line's, at `latest`. Other lines stay
+ * readable and followed, but out of results, so a page of 4.0 never competes with its 4.1 counterpart.
+ */
+export function lineIndexed(line: string, manifest: VersionsManifest = VERSIONS): boolean {
+  return manifest.lines.some(entry => entry.line === line && entry.status === 'current')
+}
+
+/**
  * The package spec a reader runs to install a line's newest version, `meocord@beta` for a line in beta;
  * with `version`, that version's.
  */
