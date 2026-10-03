@@ -18,7 +18,14 @@ formerly: [tutorial-testing]
 Discord connection and no token. `MeoCordTestingModule` builds a container from the classes you list, as the bot
 builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses.
 
-The mocks it comes with behave like discord.js, and work with Vitest or Jest.
+The mocks it comes with behave like discord.js, and work under Vitest, Jest, Node's test runner and bun test:
+
+- **Vitest** runs a generated app's tests as they come.
+- **Jest** needs Node's VM modules: meocord's CommonJS build loads packages that ship only as ES modules, which Jest
+  reads only with them. Run it as `NODE_OPTIONS=--experimental-vm-modules jest`.
+- **Node's test runner** asserts through a mock's `.mock.calls`.
+- **bun test** asserts through `.mock.calls` too: Bun's matchers, such as `toHaveBeenCalledWith`, accept only Bun's own
+  mocks.
 
 ## When to use it
 
