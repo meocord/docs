@@ -76,10 +76,11 @@ online, with a message naming both.
 
 ## Externals
 
-`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings
-are copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
-`optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. See
-[the options](guide:configuration#options).
+`externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings are
+copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
+`optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. Without
+it, a self-contained build warns, naming the dependency and `optionalExternals`. Don't list a name in `externals` as
+well; the build warns about that too. See [the options](guide:configuration#options).
 
 discord.js's optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated that way.
 

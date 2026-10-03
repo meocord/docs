@@ -19,8 +19,8 @@ included, with type information from the project's tsconfig files. A new project
 
 ## When to use it
 
-Keep it on in every MeoCord project, and run `npm run lint` in CI. Replace it only to lint the project with a config
-you maintain yourself; you then lose the import-cycle warning below unless you add it.
+Keep it on in every MeoCord project, and run `npm run lint` in CI. Replace it only to lint the project with a config you
+maintain yourself; you then lose the import-cycle warning and the floating-promise check below unless you add them.
 
 ## Example
 

@@ -82,8 +82,8 @@ files to that repository.
 `start --dev` builds the bot as it starts, then watches the project: a change rebuilds it and restarts the bot, and
 `meocord.config.ts` and `tsconfig.json` are watched too. A change to `.env`, `.env.local`, `.env.development` or
 `.env.development.local` restarts the bot without a rebuild, since the bot reads them as it starts, as development
-whatever `NODE_ENV` the shell holds. It registers the commands to `commands.developmentGuild`, or globally without one,
-and only when they changed since the last development start; `--force-register` sends them anyway.
+whatever `NODE_ENV` the shell holds. It registers the commands to `commands.developmentGuild`, or where production would
+without one, and only when they changed since the last development start; `--force-register` sends them anyway.
 
 A restart stops the running bot as Ctrl+C does, so its [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) run
 before the new one starts, on every platform, Windows included. One save makes one restart, even when it makes two

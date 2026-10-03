@@ -30,9 +30,10 @@ You need:
   [Discord Developer Portal](https://discord.com/developers/applications).
 - **A server to test in,** where you can add the bot.
 
-`discord.js` 14 and `dotenv` 18 are peer dependencies, which the `create` command installs. TypeScript comes with the
-project, and 5.0 or newer works. Keep `skipLibCheck` on, as generated projects have it: discord.js's own dependencies
-don't typecheck without it.
+`discord.js` 14.27 or a later 14.x and `dotenv` 18.0.5 or a later 18.x are peer dependencies, which the `create` command
+installs; a bot on an older discord.js 14 or dotenv 18 upgrades them with MeoCord. TypeScript comes with the project,
+and 5.0 or newer works. Keep `skipLibCheck` on, as generated projects have it: discord.js's own dependencies don't
+typecheck without it.
 
 ## Example
 
@@ -44,9 +45,9 @@ npx meocord start --dev      # development, rebuilding and restarting on every c
 ```
 
 The CLI asks which package manager to use, or takes it as a flag: `--use-npm`, `--use-yarn`, `--use-pnpm` or
-`--use-bun`. The project is named after the argument, and depends on the MeoCord version that created it, as a `^`
-range. `create` runs before there is a project, so it names the package to install, `{{meocord}}`. Inside the project,
-`npx meocord` runs the version the project installed.
+`--use-bun`. The project's folder and package are named after the argument, in kebab case, and depend on the MeoCord
+version that created it, as a `^` range. `create` runs before there is a project, so it names the package to install,
+`{{meocord}}`. Inside the project, `npx meocord` runs the version the project installed.
 
 ## How it works
 

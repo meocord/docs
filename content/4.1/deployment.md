@@ -34,8 +34,8 @@ npm ci --omit=dev
 npx meocord start --prod
 ```
 
-With yarn, the second line is `yarn install --production`; with pnpm, `pnpm install --prod`; with bun,
-`bun install --production`.
+With Yarn 1, the second line is `yarn install --production`, and with Yarn 2 or later
+`yarn workspaces focus --all --production`; with pnpm, `pnpm install --prod`; with bun, `bun install --production`.
 
 ## How it works
 
@@ -64,9 +64,10 @@ already set alone, so the environment wins over the file. A production build rea
 `.env.local`, `.env.production` and `.env`, the first file to set a variable winning, and never the development files.
 
 On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, or set
-to anything but `production`, Bun loads that mode's files before any code runs: `.env.test` under `test`, else
-`.env.development`, for `staging` too. Their values win over `.env.production`. The bot warns, naming `NODE_ENV`, the
-files, and each variable that has another mode's value where the production files give another:
+to anything but `production`, Bun loads that mode's files before any code runs: `.env.test` and `.env.test.local` under
+`test`, else `.env.development` and `.env.development.local`, for `staging` too. Their values win over the production
+files. The bot warns, naming `NODE_ENV`, the files, and each variable that has another mode's value where the production
+files give another:
 
 ```text
 Bun loaded .env.development because NODE_ENV is unset, and this is a production build, so DATABASE_URL has its development value; set NODE_ENV=production, or start with `bun --no-env-file`.
@@ -165,7 +166,7 @@ one, however pm2 starts it. pm2 waits 1.6 seconds for a process to stop by defau
 A production start registers every command, and Discord applies an unchanged set without harm, so most deploys need
 nothing more. With several replicas, or to keep registering out of startup, set `commands.register` to `false`, and run
 `npx meocord register --build` once per deploy, from CI for instance. [The CLI](guide:cli#registering-commands) covers
-the scopes.
+its options, and [Registering commands](guide:slash-commands#registering-commands) the scopes.
 
 ## Updating and stopping
 

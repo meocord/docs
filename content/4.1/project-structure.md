@@ -13,8 +13,9 @@ api: [decorators/MeoCord, configuration/MeoCordConfig]
 ---
 
 The `create` command writes a project laid out by kind: controllers in one folder, services in another. Nothing in it is
-required by MeoCord except `meocord.config.ts` and `tsconfig.json` at the root and the entry point, `src/main.ts`; the
-folders are a convention `meocord generate` follows, and you can lay a bot out by feature instead.
+required by MeoCord except, at the root, `meocord.config.ts`, `tsconfig.json` and a `package.json` that lists `meocord`
+under `dependencies`, and the entry point, `src/main.ts`; the folders are a convention `meocord generate` follows, and
+you can lay a bot out by feature instead.
 
 ## When to use it
 
@@ -131,10 +132,12 @@ app.
 dist/
 ├── main.js                 # the bot, bundled
 ├── main.js.map             # its source map, so stack traces point at src
+├── main.js.LICENSE.txt     # licence comments from the bundle, in a production build
 ├── meocord.config.mjs      # the config, compiled, which the bot loads at startup
 ├── assets/                 # the files your code imports: images, fonts, media and the rest
+├── package.json            # marks dist as an ES module, with bundleDependencies only
 ├── meocord.platform.json   # the platform native addons were built for, when a self-contained build packs one
-└── node_modules/           # native addons, with bundleDependencies only
+└── node_modules/           # with bundleDependencies only: native addons, externals and installed optional externals
 ```
 
 The bot reads its config from `dist`, beside `main.js`, not from `meocord.config.ts`, so a change to the config takes
