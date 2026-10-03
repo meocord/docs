@@ -1,4 +1,4 @@
-import { A, Div, Footer, Grid, Node, Row } from '@meonode/ui'
+import { A, createNode, Div, Footer, Grid, Node, Row } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { safe } from '@/lib/design/css'
@@ -28,7 +28,15 @@ export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   children: Children
 }
 
-/** The foot of every page: the credit for the site's images. */
+/** A credit in the footer: a link in the footer's colour, underlined. */
+const CreditLink = createNode('a', {
+  color: 'inherit',
+  textDecoration: 'underline',
+  textUnderlineOffset: '0.18em',
+  css: { '&:hover': { color: 'theme.ink.primary' } },
+})
+
+/** The foot of every page: the credits for what the site is built and drawn with. */
 function SiteFooter({ wide }: { wide?: boolean } = {}) {
   return Footer({
     key: 'footer',
@@ -46,16 +54,10 @@ function SiteFooter({ wide }: { wide?: boolean } = {}) {
       },
     },
     children: [
-      'Images drawn with ',
-      A({
-        key: 'meo-canvas',
-        href: 'https://github.com/l7aromeo/meo-canvas',
-        color: 'inherit',
-        textDecoration: 'underline',
-        textUnderlineOffset: '0.18em',
-        css: { '&:hover': { color: 'theme.ink.primary' } },
-        children: 'meo-canvas',
-      }),
+      'Built with ',
+      CreditLink({ key: 'meonode-ui', href: 'https://ui.meonode.com/', children: '@meonode/ui' }),
+      '. Images drawn with ',
+      CreditLink({ key: 'meo-canvas', href: 'https://github.com/l7aromeo/meo-canvas', children: 'meo-canvas' }),
       '.',
     ],
   })
