@@ -112,6 +112,29 @@ describe('changelog', () => {
     expect(changelogSummary({ version: '4.1.0', sections: [] })).toBe('No changes recorded.')
   })
 
+  it("counts entries under a release's own headings together as changes, not as plurals of the headings", () => {
+    const entry = (breaking = false) => ({ markdown: 'x', breaking })
+    expect(
+      changelogSummary({
+        version: '4.1.0',
+        sections: [
+          { title: 'Highlights', entries: [entry(), entry()] },
+          { title: 'Upgrading from 4.0', entries: [entry(true)] },
+          { title: 'Theming', entries: [entry()] },
+        ],
+      }),
+    ).toBe('4 changes, 1 breaking')
+    expect(
+      changelogSummary({
+        version: '4.1.0',
+        sections: [
+          { title: 'Highlights', entries: [entry()] },
+          { title: 'Patch Changes', entries: [entry(), entry()] },
+        ],
+      }),
+    ).toBe('2 patch changes and 1 other change')
+  })
+
   it('has no page for a line without changelogs', () => {
     expect(changelogArticle('9.9')).toBeUndefined()
     expect(renderChangelog('9.9')).toBeUndefined()
