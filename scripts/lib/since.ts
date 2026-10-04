@@ -49,3 +49,21 @@ export function computeSince(keysByVersion: Record<string, Set<string>>): Record
   }
   return Object.fromEntries(Object.entries(since).sort(([a], [b]) => a.localeCompare(b)))
 }
+
+/** Every documented release, prereleases left out: the versions a prerelease's `since` can be shown as. */
+export function releasesOf(config: { lines: readonly { versions: readonly string[] }[] }): ReadonlySet<string> {
+  return new Set(config.lines.flatMap(line => line.versions).filter(version => !semver.prerelease(version)))
+}
+
+/**
+ * The first version a reader of `version` is shown for a key: a prerelease as its release once that release is
+ * documented, so a symbol from 4.1.0-beta.5 reads as since 4.1.0, except on a page of a version older than the
+ * release, which keeps the prerelease it came in. Without `version`, the page is its line's newest.
+ */
+export function shownSince(since: string, releases: ReadonlySet<string>, version?: string): string {
+  const parsed = semver.parse(since)
+  if (!parsed || parsed.prerelease.length === 0) return since
+  const release = `${parsed.major}.${parsed.minor}.${parsed.patch}`
+  if (!releases.has(release)) return since
+  return version && semver.lt(version, release) ? since : release
+}

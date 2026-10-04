@@ -8,6 +8,7 @@ import { type AnchorOptions, pageAnchorSet } from '../../src/lib/prose/anchors'
 import { parse as parseYaml } from 'yaml'
 import type { ChangelogDocument } from './changelog'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
+import { releasesOf } from './since'
 import { isKnownLanguage } from '../../src/lib/prose/languages'
 import { markdownLinkNodes } from './markdown-links'
 import type { Nodes } from 'mdast'
@@ -238,7 +239,10 @@ export function checkSite(snapshot: SiteSnapshot): string[] {
     if (line.guides !== 'authored' || !doc) continue
     if (authored[line.line]?.[CONFIG_REFERENCE_SLUG] !== undefined)
       problems.push(`content/${line.line}/${CONFIG_REFERENCE_SLUG}.md: the configuration reference is generated`)
-    authored[line.line] = { ...authored[line.line], [CONFIG_REFERENCE_SLUG]: configReferencePage(line.line, doc) }
+    authored[line.line] = {
+      ...authored[line.line],
+      [CONFIG_REFERENCE_SLUG]: configReferencePage(line.line, doc, releasesOf(snapshot.config)),
+    }
   }
   const site = { ...snapshot, authored }
 
