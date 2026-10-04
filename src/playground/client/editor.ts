@@ -59,14 +59,6 @@ const typescript = new LanguageSupport(
   }),
 )
 
-// The frame, padding and fonts are prose.ts's, as for the playground's other fields; these are the parts it can't reach
-const frame = EditorView.theme({
-  '.cm-gutters': { backgroundColor: 'transparent', border: 'none', color: 'var(--mc-ink-secondary)' },
-  '.cm-cursor': { borderLeftColor: 'var(--mc-ink-primary)' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--mc-accent-tint)' },
-  '&.cm-focused': { outline: 'none' },
-})
-
 export interface Editor {
   /** Replaces the code, as picking an example or opening a share link does. */
   set(text: string): void
@@ -93,7 +85,6 @@ export function mountEditor(textarea: HTMLTextAreaElement, onRun: () => void): E
       closeBrackets(),
       typescript,
       syntaxHighlighting(highlightStyle),
-      frame,
       keymap.of([
         { key: 'Mod-Enter', run: () => (onRun(), true) },
         ...closeBracketsKeymap,
