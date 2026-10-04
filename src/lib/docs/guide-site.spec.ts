@@ -169,7 +169,7 @@ describe('the Guide', () => {
     expect(drawn).toContain(
       '<a href="https://github.com/meocord/examples/tree/main/demo"><code>demo/</code> on GitHub</a>',
     )
-    expect(drawn).toContain('. See <a href="/docs/4.1/guards#how-it-works">How it works</a>.')
+    expect(drawn).toContain(`. See <a href="${docs41}/guards#how-it-works">How it works</a>.`)
     expect(drawn).toContain(
       '<a href="https://github.com/meocord/examples/blob/main/demo/src/a.guard.ts"><code>a.guard.ts</code></a>',
     )
@@ -178,7 +178,7 @@ describe('the Guide', () => {
     expect(guards).toContain(
       '<aside data-guide-bots="true" aria-labelledby="guide-bots"><h2 id="guide-bots">Example bots</h2>',
     )
-    expect(guards).toContain('<a href="/docs/4.1/example-bots#demo">Demo</a>: A <code>guard</code>, in ')
+    expect(guards).toContain(`<a href="${docs41}/example-bots#demo">Demo</a>: A <code>guard</code>, in `)
     expect(render('services')).not.toContain('data-guide-bots')
   })
 
