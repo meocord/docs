@@ -74,7 +74,7 @@ export const HomeRows = createNode('div', {
     '& [data-door]:first-of-type': { gridColumn: '1 / -1' },
     '& [data-door] h3': { margin: '0 0 theme.space.2' },
     '& [data-door] > p': { margin: '0 0 theme.space.4', color: 'theme.ink.secondary' },
-    '& [data-door] > ul': { margin: 0, paddingLeft: 'theme.space.5' },
+    '& [data-door] > ul': { margin: 0, paddingLeft: 'theme.space.6' },
     '& [data-door] > ul > li': { margin: '0 0 theme.space.1' },
     '@media (width < 900px)': {
       '& [data-doors]': { gridTemplateColumns: 'minmax(0, 1fr)' },

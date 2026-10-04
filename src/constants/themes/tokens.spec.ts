@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { themeTokens } from '@/constants/themes/tokens'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
@@ -116,5 +116,35 @@ describe('palettes', () => {
           expect(contrast(token, background), surface).toBeGreaterThanOrEqual(4.5)
       },
     )
+  })
+})
+
+describe('theme paths', () => {
+  // Every `theme.…` path a style names in a string, from each source file outside the specs
+  const sources = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+      const file = path.join(dir, entry.name)
+      if (entry.isDirectory()) return sources(file)
+      return /\.tsx?$/.test(entry.name) && !/\.(spec|test-d)\.tsx?$/.test(entry.name) ? [file] : []
+    })
+  const named = sources(path.join(process.cwd(), 'src')).flatMap(file =>
+    [...readFileSync(file, 'utf8').matchAll(/(['"`])((?:(?!\1)[^\\\n]|\\.)*)\1/g)].flatMap(([, , text]) =>
+      [...text.matchAll(/\btheme\.([a-zA-Z]+(?:\.[a-zA-Z0-9]+)+)/g)].map(([, at]) => ({ file, at })),
+    ),
+  )
+
+  it('are found in the sources', () => {
+    expect(named.length).toBeGreaterThan(50)
+  })
+
+  it('each name a token, so no style falls back to nothing', () => {
+    const missing = named
+      .filter(
+        ({ at }) =>
+          at.split('.').reduce<unknown>((node, key) => (node as Record<string, unknown>)?.[key], themeTokens) ===
+          undefined,
+      )
+      .map(({ file, at }) => `${path.relative(process.cwd(), file)}: theme.${at}`)
+    expect([...new Set(missing)]).toEqual([])
   })
 })
