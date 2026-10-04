@@ -84,5 +84,10 @@ describe('once the site is indexable', () => {
     )
     expect(new Set(listed).size, 'a URL listed twice').toBe(listed.length)
     expect(listed.sort()).toEqual([...indexable].sort())
+
+    // Each listed URL is the one its page answers at, so the proxy redirects none of them
+    const { canonicalDocsPath } = await import('@/lib/urls')
+    const { VERSIONS } = await import('@/config/versions')
+    for (const url of listed) expect(canonicalDocsPath(url, VERSIONS), url).toBe(url)
   })
 })
