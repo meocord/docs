@@ -45,6 +45,11 @@ describe('the site API', () => {
     expect(apiModel('4.0')).toBe(apiModel('4.0'))
   })
 
+  it('shows a symbol first seen in a prerelease as since its release, except on a page older than the release', () => {
+    expect(apiModel('4.0')?.symbol('core', 'MeoCordFactory')?.since).toBe('4.0.0')
+    expect(apiModel('4.0', '4.0.0-beta.2')?.symbol('core', 'MeoCordFactory')?.since).toBe('4.0.0-beta.0')
+  })
+
   it('opens a line by entry point where every app starts, MeoCordFactory, and has none for an unknown line', () => {
     expect(apiLandingHref('4.0')).toBe(`${docs40}/api/core/MeoCordFactory`)
     expect(apiLandingHref('9.9')).toBeUndefined()

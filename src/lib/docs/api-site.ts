@@ -3,6 +3,7 @@ import path from 'node:path'
 import type { JSONOutput } from 'typedoc'
 import manifest from '../../../versions.json'
 import { guideRendered } from '../../../scripts/lib/guide'
+import { releasesOf, shownSince } from '../../../scripts/lib/since'
 import { VERSIONS } from '@/config/versions'
 import type { Layouts } from '@/lib/docs/api-layout'
 import { API_KINDS, ApiModel, type ApiScheme, type ApiSection, type SinceData } from '@/lib/docs/api-model'
@@ -41,6 +42,17 @@ function sinceData(): Record<string, SinceData> {
     since = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, SinceData>) : {}
   }
   return since
+}
+
+/** since.json as a page of `version` shows it, each prerelease a released version came out of read as that release. */
+function sinceShownAt(version: string): Record<string, SinceData> {
+  const releases = releasesOf(manifest)
+  return Object.fromEntries(
+    Object.entries(sinceData()).map(([key, entry]) => [
+      key,
+      { ...entry, since: shownSince(entry.since, releases, version) },
+    ]),
+  )
 }
 
 /** How a line's API is arranged: by kind where its Guide is rendered, otherwise by entry point. */
@@ -89,7 +101,7 @@ export function apiModel(line: string, version?: string, by = apiArrangement(lin
       by === 'entry'
         ? { by }
         : { by, groupOf: version ? name => newestGroups(line).get(name) ?? REMOVED_KINDS[name] : undefined }
-    models.set(key, project && new ApiModel(line, project, VERSIONS, sinceData(), version, scheme))
+    models.set(key, project && new ApiModel(line, project, VERSIONS, sinceShownAt(source), version, scheme))
   }
   return models.get(key)
 }

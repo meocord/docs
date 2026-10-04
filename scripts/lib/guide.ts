@@ -8,6 +8,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
 import { CONFIG_REFERENCE_SLUG, configReferencePage, type ConfigDocument } from './config-reference'
+import { releasesOf } from './since'
 import { EXAMPLE_SOURCE, fenceLanguages, hasRegion, markdownLinks, pageAnchors, withoutCode } from './content'
 import { exampleBotProblems, readExampleBots, withExampleBots, type ExampleBots } from './example-bots'
 import { withPackageSpec } from './package-spec'
@@ -277,7 +278,7 @@ export function configReferenceText(line: string, config: VersionsConfig, root?:
   if (!entry || entry.versions.length === 0) return undefined
   const file = path.join(docsRoot(root), 'generated', 'config', `${newestIn(entry)}.json`)
   return existsSync(file)
-    ? configReferencePage(line, JSON.parse(readFileSync(file, 'utf8')) as ConfigDocument)
+    ? configReferencePage(line, JSON.parse(readFileSync(file, 'utf8')) as ConfigDocument, releasesOf(config))
     : undefined
 }
 

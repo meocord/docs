@@ -6,7 +6,7 @@
 
 import { pageSlugger } from '../../src/lib/page-ids'
 import type { JSONOutput } from 'typedoc'
-import type { SinceEntry } from './since'
+import { shownSince, type SinceEntry } from './since'
 import { lineOf } from './versions'
 
 const ENTRY = 'meocord/interface'
@@ -185,9 +185,13 @@ const cell = (text: string) =>
 /**
  * The page the site shows for a line's configuration reference, as a Markdown file with front
  * matter: one section per option, with its type, default and first version, and the options an
- * option nests in sections below it.
+ * option nests in sections below it. With `releases`, an option first seen in a prerelease reads as its release.
  */
-export function configReferencePage(line: string, doc: ConfigDocument): string {
+export function configReferencePage(
+  line: string,
+  doc: ConfigDocument,
+  releases: ReadonlySet<string> = new Set(),
+): string {
   const out = [
     '---',
     `id: ${CONFIG_REFERENCE_SLUG}`,
@@ -206,7 +210,9 @@ export function configReferencePage(line: string, doc: ConfigDocument): string {
     out.push('', `${'#'.repeat(depth)} ${option.name}`, '')
     out.push('| Type | Default | Since |', '| --- | --- | --- |')
     const defaultText = option.required ? 'Required' : option.default ? cell(option.default) : 'None'
-    out.push(`| \`${cell(option.type)}\` | ${defaultText} | ${option.since ?? 'Unknown'} |`)
+    out.push(
+      `| \`${cell(option.type)}\` | ${defaultText} | ${option.since ? shownSince(option.since, releases, doc.version) : 'Unknown'} |`,
+    )
     if (option.summary) out.push('', option.summary)
     for (const example of option.examples) out.push('', example)
   }
