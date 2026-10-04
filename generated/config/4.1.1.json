@@ -1,0 +1,186 @@
+{
+  "version": "4.1.1",
+  "groups": [
+    {
+      "interface": "MeoCordConfig",
+      "summary": "The configuration `meocord.config.ts` exports: the bot's token, how it is built, and how it registers and shards.\n\nIt holds what the CLI and the process need before the app class is read. What the app itself does, its\ncontrollers, intents and message options, belongs in `@MeoCord` instead. A new app's config file loads its `.env`\nfiles with dotenv first, so `process.env` holds their values.",
+      "options": [
+        {
+          "name": "appName",
+          "type": "string",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Shown as a prefix on every log line. Omitted when unset.",
+          "examples": []
+        },
+        {
+          "name": "discordToken",
+          "type": "string",
+          "required": true,
+          "since": "4.0.0-beta.0",
+          "summary": "The Discord bot token. Read it from the environment rather than committing it.",
+          "examples": []
+        },
+        {
+          "name": "bundleDependencies",
+          "type": "boolean",
+          "required": false,
+          "default": "`false`",
+          "since": "4.0.0-beta.0",
+          "summary": "Bundles everything the bot needs into `dist`, so it runs without `node_modules`.\n\nNative addons such as `sharp` are copied with their platform binary into `dist/node_modules`.\nA build with native addons only starts on the platform it was built on.",
+          "examples": []
+        },
+        {
+          "name": "externals",
+          "type": "(string | RegExp)[]",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Modules to keep out of the bundle. With [`bundleDependencies`](#bundledependencies), listed package names are\ncopied into `dist/node_modules`; native addons are found without being listed.",
+          "examples": [
+            "```ts\nexternals: ['@opentelemetry/api']\n```"
+          ]
+        },
+        {
+          "name": "optionalExternals",
+          "type": "string[]",
+          "required": false,
+          "since": "4.1.0-beta.0",
+          "summary": "Packages a dependency tries to load and runs without, such as `supports-color`, which `debug`\nprobes for inside a `try`. Each stays a `require` where the dependency calls it, inside the\ndependency's own `try`, so a missing package is caught there rather than failing the bot at\nstartup. With [`bundleDependencies`](#bundledependencies), an installed one is copied into `dist/node_modules`.\n\nPackage names only. Do not also list a name in [`externals`](#externals), which would turn it into an\nimport that runs, and fails, before the bot's code.",
+          "examples": [
+            "```ts\noptionalExternals: ['supports-color', '@node-rs/xxhash']\n```"
+          ]
+        },
+        {
+          "name": "rsbuild",
+          "type": "(config: RsbuildConfig) => RsbuildConfig | undefined",
+          "required": false,
+          "since": "4.0.0-beta.0",
+          "summary": "Customises the Rsbuild configuration the bot is built with.\n\nImages, fonts, svg and media need no rules. Raw bundler rules go through `tools.rspack`.",
+          "examples": []
+        },
+        {
+          "name": "sourceMappedStacks",
+          "type": "boolean",
+          "required": false,
+          "default": "`true`",
+          "since": "4.1.0-beta.5",
+          "summary": "Makes stack traces name your source files, lines and columns, from the source map the build writes\nbeside `dist/main.js`. Under Node, `meocord start` passes `--enable-source-maps`; under Bun, or Node\nstarted without the flag, the bundle maps each stack through `Error.prepareStackTrace` itself.\n\nSet `false` for an error tracker that applies uploaded source maps to the bundle's positions, or a\nsource mapper of your own.",
+          "examples": []
+        },
+        {
+          "name": "shutdownTimeout",
+          "type": "number",
+          "required": false,
+          "default": "`10_000`",
+          "since": "4.1.0-beta.0",
+          "summary": "How long, in milliseconds, shutdown waits for the `onShutdown` hooks before destroying the client\nanyway: from 0 to 2147478647, the longest a timer keeps less the margin the shard manager waits on top. The limit covers the whole sequence, not each hook,\nincluding the calls under way that the cooldown store's shutdown waits for.",
+          "examples": []
+        },
+        {
+          "name": "logLevel",
+          "type": "'debug' | 'log' | 'warn' | 'error' | 'silent'",
+          "required": false,
+          "default": "`'debug'` while `NODE_ENV` is `development`, as under `meocord start --dev`, and\n  `'log'` otherwise",
+          "since": "4.1.0-beta.5",
+          "summary": "The least severe log line `Logger` prints: `'debug'` prints everything, `'log'` hides `[DEBUG]`,\n`'warn'` prints warnings and errors, `'error'` only errors, and `'silent'` nothing. The\n`MEOCORD_LOG_LEVEL` environment variable overrides it for one run, without a rebuild.",
+          "examples": [
+            "```ts\nlogLevel: 'warn',\n```"
+          ]
+        },
+        {
+          "name": "commands",
+          "type": "CommandRegistrationConfig",
+          "required": false,
+          "default": "```ts\nEvery command registered globally, each time the bot starts.\n```",
+          "since": "4.1.0-beta.0",
+          "summary": "Where the bot registers its application commands, and whether it does so at startup.",
+          "examples": []
+        },
+        {
+          "name": "sharding",
+          "type": "ShardingConfig",
+          "required": false,
+          "default": "One connection, or whatever `clientOptions.shards` says.",
+          "since": "4.1.0-beta.0",
+          "summary": "Splits the bot's gateway connection into shards, which Discord requires from about 2,500 servers.",
+          "examples": []
+        }
+      ]
+    },
+    {
+      "option": "commands",
+      "interface": "CommandRegistrationConfig",
+      "summary": "Where and whether MeoCord registers the application's commands with Discord, set as `meocord.config.ts`'s `commands`.\n\nGlobal commands can take a while to show up in clients; guild commands appear at once, which is what a\ndevelopment guild is for. Set `register: false` to register only with `meocord register`, from CI for instance.",
+      "options": [
+        {
+          "name": "commands.guilds",
+          "type": "(string | undefined)[]",
+          "required": false,
+          "since": "4.1.0-beta.0",
+          "summary": "Guilds to register every command to instead of globally. Unset or empty registers globally.\nBlank ids are dropped; a list with none left, as `[process.env.GUILD_ID]` leaves it with the\nvariable unset, registers those commands nowhere, with a warning, rather than globally.\nA builder's own `guilds` option takes precedence for its command.",
+          "examples": []
+        },
+        {
+          "name": "commands.developmentGuild",
+          "type": "string",
+          "required": false,
+          "since": "4.1.0-beta.0",
+          "summary": "A guild that receives every command, and nothing else does, while `NODE_ENV` is `development` —\nas under `meocord start --dev`. Ignored in production.",
+          "examples": []
+        },
+        {
+          "name": "commands.register",
+          "type": "boolean",
+          "required": false,
+          "default": "`true`",
+          "since": "4.1.0-beta.0",
+          "summary": "Whether the bot registers its commands when it starts. Set `false` to register only with\n`meocord register`, from CI for instance.",
+          "examples": []
+        },
+        {
+          "name": "commands.clearOther",
+          "type": "boolean",
+          "required": false,
+          "default": "`false`",
+          "since": "4.1.0-beta.0",
+          "summary": "Whether to remove this application's commands from the scopes this configuration names but is\nnot registering to, such as the global commands left behind after moving to `guilds`. Without it,\nsuch leftovers are reported as a warning. While `developmentGuild` receives every command, as\nunder `start --dev`, leftovers are only warned about, since a production bot sharing the\napplication may own them; production starts and `meocord register` without `--dev` remove them.",
+          "examples": []
+        }
+      ]
+    },
+    {
+      "option": "sharding",
+      "interface": "ShardingConfig",
+      "summary": "How the bot splits its gateway connection into shards, set as `meocord.config.ts`'s `sharding`.\n\nDiscord requires sharding from about 2,500 servers. Keep the default mode, every shard in one process, until\nthe bot needs more than one CPU core.",
+      "options": [
+        {
+          "name": "sharding.shards",
+          "type": "number | 'auto'",
+          "required": false,
+          "default": "`'auto'`",
+          "since": "4.1.0-beta.0",
+          "summary": "How many shards to run: a number, or `'auto'` for the count Discord recommends.",
+          "examples": []
+        },
+        {
+          "name": "sharding.mode",
+          "type": "'internal' | 'process'",
+          "required": false,
+          "default": "`'internal'`",
+          "since": "4.1.0-beta.0",
+          "summary": "`'internal'` runs every shard in one process; `'process'` runs each shard in a process of its own.",
+          "examples": []
+        },
+        {
+          "name": "sharding.development",
+          "type": "boolean",
+          "required": false,
+          "default": "`false`",
+          "since": "4.1.0-beta.0",
+          "summary": "Whether `mode: 'process'` also applies under `meocord start --dev`. Off by default, so the\ndevelopment watcher restarts one process and never leaves shards behind.",
+          "examples": []
+        }
+      ]
+    }
+  ]
+}
