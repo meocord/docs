@@ -1,10 +1,13 @@
 import { NOINDEX, SITE_INDEXABLE, SITE_URL } from '@/config/site'
+import { indexedPaths } from '@/lib/docs/sitemap'
 
 /** The pages to index: none until the site is indexable. */
-const PATHS = ['/']
-
 export function GET() {
-  const urls = SITE_INDEXABLE ? PATHS.map(path => `  <url><loc>${SITE_URL}${path}</loc></url>`).join('\n') : ''
+  const urls = SITE_INDEXABLE
+    ? indexedPaths()
+        .map(path => `  <url><loc>${SITE_URL}${path}</loc></url>`)
+        .join('\n')
+    : ''
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}${urls ? '\n' : ''}</urlset>\n`
   return new Response(body, {
     headers: {

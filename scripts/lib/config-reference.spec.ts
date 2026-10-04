@@ -199,4 +199,10 @@ describe('configReferencePage', () => {
     expect(page).toContain('| `(string \\| RegExp)[]` | None | Unknown |')
     expect(page).toContain('| `ShardingConfig` | One \\| connection | 4.1.0-beta.0 |')
   })
+
+  it('reads an option first seen in a prerelease as since its release, once that release is documented', () => {
+    const released = configReferencePage('4.1', configReference('4.1.0', project, since)!, new Set(['4.0.0', '4.1.0']))
+    expect(released).toContain('| `string` | Required | 4.0.0 |')
+    expect(released).toContain('| `ShardingConfig` | One \\| connection | 4.1.0 |')
+  })
 })

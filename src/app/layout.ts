@@ -8,8 +8,9 @@ import { SearchIsland } from '@/components/search/SearchIsland'
 import { SearchStandIn } from '@/components/search/SearchStandIn'
 import { readSearchManifest } from '@/lib/search-manifest'
 import { themeModes } from '@/constants/themes/modes'
-import { SITE_INDEXABLE, SITE_URL } from '@/config/site'
+import { SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
+import { robots } from '@/lib/docs/page-metadata'
 import { mono, sans } from '@/app/fonts'
 import { SHEET_KEYS_SCRIPT } from '@/components/shell/sheet-keys'
 import { SEARCH_KEYS_SCRIPT } from '@/components/search/search-keys'
@@ -48,7 +49,8 @@ export const metadata: Metadata = {
     images: [ogImage('site', 'home')],
   },
   twitter: { card: 'summary_large_image' },
-  robots: SITE_INDEXABLE ? { index: true, follow: true } : { index: false, follow: false },
+  // A page is indexed only when its own metadata says so, through pageMetadata; one that declares nothing is not
+  robots: robots(false),
 }
 
 // Stamps the reader's package manager before paint, so install blocks show it from the first frame.

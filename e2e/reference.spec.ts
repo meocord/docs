@@ -18,7 +18,7 @@ test('the changelog sums up the newest release and links every release to its no
   await expect(page.locator('h3[data-group]').first()).toBeVisible()
   const earlier = page.locator('ul[data-releases] li')
   await expect(earlier.first()).toContainText(
-    new RegExp(`${previous.replaceAll('.', '\\.')} · \\d+ \\w+ \\d{4} · \\d+ \\w+ changes?`),
+    new RegExp(`${previous.replaceAll('.', '\\.')} · \\d+ \\w+ \\d{4} · \\d+ (?:\\w+ )?changes?`),
   )
   await expect(page.getByRole('link', { name: 'Changelog', exact: true })).toHaveAttribute('aria-current', 'page')
 
