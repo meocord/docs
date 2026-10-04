@@ -2,12 +2,16 @@ import { deflateRawSync } from 'node:zlib'
 import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 import { axe } from './axe'
+import { CODE_PALETTES } from '../src/lib/prose/code-palettes'
 import { docs41, literal } from './lines'
 
 const PAGE = '/docs/4.1/playground'
 
 // By role, which leaves out a page Next keeps hidden after navigating away from it
 const code = (page: Page) => page.getByRole('textbox', { name: 'Code', exact: true })
+// The code field the editor writes through to, hidden once the editor shows the code, in the page on view
+const source = (page: Page) =>
+  page.locator('[data-playground-page]').filter({ visible: true }).locator('#playground-code')
 const inputs = (page: Page) => page.getByRole('textbox', { name: 'Inputs', exact: true })
 const run = (page: Page) => page.getByRole('button', { name: 'Run', exact: true })
 const share = (page: Page) => page.getByRole('button', { name: 'Copy link' })
@@ -44,7 +48,7 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   await expect(page.locator('[data-sidebar-body]:visible nav a[aria-current="page"]')).toHaveText('Playground')
 
   // It starts from the Guide's first playground, the overview's
-  await expect(code(page)).toHaveValue(/export class VisitButtonController/)
+  await expect(source(page)).toHaveValue(/export class VisitButtonController/)
   await expect(inputs(page)).toHaveValue('button visit; button visit')
   await expect(run(page)).toBeVisible()
   await page.waitForLoadState('networkidle')
@@ -54,6 +58,35 @@ test('sits beside the Guide and the API, and loads nothing of the playground unt
   await expect(output(page)).toContainText('Visit number 2', { timeout: 30_000 })
   expect(seen.filter(path => path.startsWith('/playground/')).length).toBeGreaterThanOrEqual(4)
 })
+
+const rgb = (hex: string) => `rgb(${[1, 3, 5].map(at => parseInt(hex.slice(at, at + 2), 16)).join(', ')})`
+
+for (const scheme of ['dark', 'light'] as const) {
+  test(`highlights the code in the site's ${scheme} palette, and writes what is typed through to the field`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme })
+    await page.goto(PAGE)
+    const editor = page.locator('[data-playground-editor]')
+    await expect(editor).toBeVisible()
+    await expect(source(page)).toBeHidden()
+    const palette = CODE_PALETTES[scheme]
+    const colourOf = (text: string, line = text) =>
+      editor
+        .locator('.cm-line')
+        .filter({ hasText: line })
+        .locator('span')
+        .filter({ hasText: new RegExp(`^${text}$`) })
+        .first()
+        .evaluate(span => getComputedStyle(span).color)
+    expect(await colourOf('export')).toBe(rgb(palette.keyword))
+    expect(await colourOf('Controller', '@Controller')).toBe(rgb(palette.decorator))
+
+    await code(page).fill(LOUD)
+    await expect(source(page)).toHaveValue(LOUD)
+    expect(await colourOf("'hello'")).toBe(rgb(palette.string))
+  })
+}
 
 test('runs what the reader writes, from the keyboard, and says what is wrong with the inputs', async ({ page }) => {
   await page.goto(PAGE)
@@ -87,7 +120,7 @@ test("keeps what a reader typed before the page's script ran, and a link's code 
   release()
   await expect(run(page)).toBeVisible()
   await page.waitForLoadState('networkidle')
-  await expect(code(page)).toHaveValue(LOUD)
+  await expect(source(page)).toHaveValue(LOUD)
   await expect(inputs(page)).toHaveValue('/hello name:ada')
 
   // Opened from a link, the editor holds the link's code alone, not the example with it
@@ -96,7 +129,7 @@ test("keeps what a reader typed before the page's script ran, and a link's code 
   const opened = await context.newPage()
   await opened.goto(page.url())
   await expect(run(opened)).toBeVisible()
-  await expect(code(opened)).toHaveValue(LOUD)
+  await expect(source(opened)).toHaveValue(LOUD)
 })
 
 test("keeps what a reader typed over a shared link's code, and says the link's code wasn't loaded", async ({
@@ -126,7 +159,7 @@ test("keeps what a reader typed over a shared link's code, and says the link's c
   await expect(status(opened)).toHaveText(
     "This link's code wasn't loaded, so your edits stay. Reload the page to open it.",
   )
-  await expect(code(opened)).toHaveValue('// my own edit')
+  await expect(source(opened)).toHaveValue('// my own edit')
 })
 
 test('copies a link that carries the code and inputs, and opens from it', async ({ page, context, baseURL }) => {
@@ -143,7 +176,7 @@ test('copies a link that carries the code and inputs, and opens from it', async 
 
   const opened = await context.newPage()
   await opened.goto(link)
-  await expect(code(opened)).toHaveValue(LOUD)
+  await expect(source(opened)).toHaveValue(LOUD)
   await expect(inputs(opened)).toHaveValue('/hello name:ada')
   await run(opened).click()
   await expect(output(opened)).toContainText('Hello, ada', { timeout: 30_000 })
@@ -166,7 +199,7 @@ test('starts from an example when a link is damaged or carries more than a run t
     await expect(status(page)).toHaveText(
       "This link's code couldn't be read, so the playground starts from an example.",
     )
-    await expect(code(page)).toHaveValue(/export class VisitButtonController/)
+    await expect(source(page)).toHaveValue(/export class VisitButtonController/)
   }
 })
 
@@ -177,7 +210,7 @@ test("opens a Guide page's playground with its code and inputs", async ({ page }
     .getByRole('link', { name: 'Open in playground' })
     .click()
   await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/playground#v1\\.`))
-  await expect(code(page)).toHaveValue(/export class CounterButtonController/)
+  await expect(source(page)).toHaveValue(/export class CounterButtonController/)
   await expect(inputs(page)).toHaveValue('button counter/41')
 })
 
@@ -185,7 +218,7 @@ test('shows the example and no buttons without script', async ({ browser, baseUR
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL })
   const page = await context.newPage()
   await page.goto(PAGE)
-  await expect(code(page)).toHaveValue(/export class VisitButtonController/)
+  await expect(source(page)).toHaveValue(/export class VisitButtonController/)
   await expect(page.locator('[data-playground-run]')).toBeHidden()
   await expect(page.locator('[data-playground-share]')).toBeHidden()
   await context.close()

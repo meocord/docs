@@ -234,6 +234,25 @@ export const Prose = createNode('article', {
       lineHeight: 'theme.type.code.line',
     },
     '& [data-playground-field] textarea': { minHeight: 320, resize: 'vertical', overflowX: 'auto', whiteSpace: 'pre' },
+    // The code editor, once loaded, in the textarea's frame: its lines carry the padding, the gutter the left edge
+    '& [data-playground-field] .cm-editor': {
+      border: 'theme.line.width solid theme.line.strong',
+      borderRadius: 'theme.radius.control',
+      backgroundColor: 'theme.surface.canvas',
+      color: 'theme.ink.primary',
+      fontSize: 'theme.type.code.size',
+    },
+    '& [data-playground-field] .cm-scroller': {
+      minHeight: 320,
+      maxHeight: '70vh',
+      fontFamily: 'theme.font.mono',
+      lineHeight: 'theme.type.code.line',
+    },
+    '& [data-playground-field] .cm-content': { padding: 'theme.space.2 0' },
+    '& [data-playground-field] .cm-editor.cm-focused': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: 'theme.focus.offset',
+    },
     '& [data-playground-field] select': { fontFamily: 'inherit', fontSize: 'theme.type.body.size' },
     '& [data-playground-field] :is(textarea, input, select):focus-visible': {
       outline: 'theme.focus.width solid theme.accent.default',

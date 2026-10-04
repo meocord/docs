@@ -161,14 +161,16 @@ body {
  */
 [data-code] code span,
 [data-signature] code span,
-code[data-type] span {
+code[data-type] span,
+[data-playground-editor] .cm-line span {
   color: var(--code-dark);
   font-style: var(--code-dark-font-style, normal);
 }
 
 :root[data-theme='light'] [data-code] code span,
 :root[data-theme='light'] [data-signature] code span,
-:root[data-theme='light'] code[data-type] span {
+:root[data-theme='light'] code[data-type] span,
+:root[data-theme='light'] [data-playground-editor] .cm-line span {
   color: var(--code-light);
   font-style: var(--code-light-font-style, normal);
 }
