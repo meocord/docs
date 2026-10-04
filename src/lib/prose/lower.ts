@@ -1,4 +1,4 @@
-import type { Image, Nodes, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
+import type { Image, Nodes, Paragraph, Parents, PhrasingContent, RootContent, Table as MdTable } from 'mdast'
 import {
   A,
   Aside,
@@ -54,7 +54,7 @@ const EXAMPLE = /^::example\{([^}]*)\}$/
 const FIGURE = /^::figure\{name="([\w-]+)"\}$/
 const PLAYGROUND = /^::playground\{([^}]*)\}$/
 
-const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
+export const ALERT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/
 
 /** Whether a page may load an image from `url` under its policy, `img-src 'self' data:`: a path on the site or a data URL. */
 const loadable = (url: string) => /^data:/i.test(url) || !(/^[a-z][a-z\d+.-]*:/i.test(url) || url.startsWith('//'))
@@ -74,7 +74,8 @@ const isBadgeRow = (children: PhrasingContent[]) =>
       ? !loadable(child.url)
       : child.type === 'link' && child.children.some(image => image.type === 'image' && !loadable(image.url)),
   )
-const ALERTS = {
+/** GitHub's alerts, `> [!NOTE]` and its kin: the callout each draws as, and its label. */
+export const ALERTS = {
   NOTE: { callout: 'note', label: 'Note' },
   TIP: { callout: 'tip', label: 'Tip' },
   IMPORTANT: { callout: 'note', label: 'Important' },
@@ -91,6 +92,25 @@ type Child = NodeInstance | string
 
 const attributesOf = (written: string): Record<string, string> =>
   Object.fromEntries([...written.matchAll(/(\w+)="([^"]*)"/g)].map(([, name, value]) => [name, value]))
+
+/** A directive a paragraph holds alone, with its attributes as written. */
+export type Directive =
+  | { kind: 'example'; file?: string; region?: string; from?: string }
+  | { kind: 'playground'; file?: string; region?: string; dispatch?: string }
+  | { kind: 'figure'; name: string }
+
+/** The directive a paragraph is, `::example{…}`, `::playground{…}` or `::figure{…}` alone; undefined for prose. */
+export function directiveOf(node: Paragraph): Directive | undefined {
+  const [only] = node.children
+  if (node.children.length !== 1 || only.type !== 'text') return undefined
+  const text = only.value.trim()
+  const example = EXAMPLE.exec(text)
+  if (example) return { kind: 'example', ...attributesOf(example[1]) }
+  const playground = PLAYGROUND.exec(text)
+  if (playground) return { kind: 'playground', ...attributesOf(playground[1]) }
+  const figure = FIGURE.exec(text)
+  return figure ? { kind: 'figure', name: figure[1] } : undefined
+}
 
 /**
  * Markdown as meonode nodes: intrinsic elements with no style props, so none of them goes through
@@ -111,21 +131,10 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
       case 'text':
         return node.value
       case 'paragraph': {
-        const directive =
-          node.children.length === 1 && node.children[0].type === 'text'
-            ? EXAMPLE.exec(node.children[0].value.trim())
-            : null
-        if (directive) return lowerExample(attributesOf(directive[1]), key)
-        const playground =
-          node.children.length === 1 && node.children[0].type === 'text'
-            ? PLAYGROUND.exec(node.children[0].value.trim())
-            : null
-        if (playground) return lowerPlayground(playground[1], key)
-        const figure =
-          node.children.length === 1 && node.children[0].type === 'text'
-            ? FIGURE.exec(node.children[0].value.trim())
-            : null
-        if (figure) return options.figure?.(figure[1], key) ?? ''
+        const directive = directiveOf(node)
+        if (directive?.kind === 'example') return lowerExample(directive, key)
+        if (directive?.kind === 'playground') return lowerPlayground(directive, key)
+        if (directive?.kind === 'figure') return options.figure?.(directive.name, key) ?? ''
         if (isBadgeRow(node.children)) return ''
         const term = ids.get(node)
         return P(children(node), { key, ...(term && { id: term, 'data-term': true }) })
@@ -213,18 +222,17 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
     return /^https?:\/\//i.test(node.url) ? A({ key, href: node.url, children: text }) : text
   }
 
-  function lowerExample(values: Record<string, string>, key: number) {
+  function lowerExample(values: { file?: string; region?: string; from?: string }, key: number) {
     if (!values.file || !options.example) return ''
     return codeFrame(options.example(values.file, values.region, values.from), 'ts', { key, file: values.file })
   }
 
-  function lowerPlayground(written: string, key: number) {
-    const values = attributesOf(written)
+  function lowerPlayground(values: Extract<Directive, { kind: 'playground' }>, key: number) {
     const drawn =
       values.file && values.dispatch !== undefined
         ? options.playground?.({ file: values.file, region: values.region, dispatch: values.dispatch }, key)
         : undefined
-    return drawn ?? lowerExample({ file: values.file, ...(values.region && { region: values.region }) }, key)
+    return drawn ?? lowerExample({ file: values.file, region: values.region }, key)
   }
 
   function lowerTable(table: MdTable, key: number) {

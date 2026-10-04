@@ -17,6 +17,7 @@
         "@meonode/ui": "^3.1.3",
         "mdast-util-from-markdown": "^2.0.3",
         "mdast-util-gfm": "^3.1.0",
+        "mdast-util-to-markdown": "^2",
         "meo-canvas": "^10.0.4",
         "micromark-extension-gfm": "^3.0.0",
         "next": "^16.3.6",
