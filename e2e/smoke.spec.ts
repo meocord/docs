@@ -25,6 +25,8 @@ test('every surface is noindexed while the site is not indexable', async ({ page
     new URL(og!).pathname,
     '/robots.txt',
     '/sitemap.xml',
+    '/llms.txt',
+    '/llms-full.txt',
     '/api/health',
     '/icon-32.png',
   ]) {
@@ -144,4 +146,18 @@ test('the palette follows the stamped mode', async ({ page }) => {
   expect(await background()).toBe('rgb(22, 22, 24)')
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
   expect(await background()).toBe('rgb(242, 242, 244)')
+})
+
+test('llms.txt links the Guide, and llms-full.txt holds it with its examples, as plain text', async ({ request }) => {
+  const index = await request.get('/llms.txt')
+  expect(index.status()).toBe(200)
+  expect(index.headers()['content-type']).toBe('text/plain; charset=utf-8')
+  const text = await index.text()
+  expect(text).toMatch(/^# MeoCord\n\n> /)
+  expect(text).toMatch(/^- \[Guards\]\(https:\/\/\S+\/docs\/latest\/guards\): /m)
+
+  const full = await (await request.get('/llms-full.txt')).text()
+  expect(full).toContain('\n# Guards\n')
+  expect(full).toMatch(/^```ts title="controllers\/slash\/search\.slash\.controller\.ts"$/m)
+  expect(full).not.toMatch(/\]\((guide|api):/)
 })

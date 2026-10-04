@@ -69,8 +69,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      // Route handlers, the build's own output, the OG cards, robots.txt and the sitemap set their own headers.
-      source: '/((?!api(?:/|$)|_next/|og(?:/|$)|robots\\.txt$|sitemap\\.xml$).*)',
+      // Route handlers, the build's own output, the OG cards, robots.txt, the sitemap and llms.txt set their own headers.
+      source: '/((?!api(?:/|$)|_next/|og(?:/|$)|robots\\.txt$|sitemap\\.xml$|llms(?:-full)?\\.txt$).*)',
     },
   ],
 }

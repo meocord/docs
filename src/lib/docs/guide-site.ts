@@ -163,7 +163,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
     terms: page.terms,
     href: url => resolveGuideLink(line, url),
     example: (file, region, from) => resolveExample(from ?? line, file, region, { page: pagePath }),
-    figure: (name, key) => FIGURES[name]?.(url => resolveGuideLink(line, url), key),
+    figure: (name, key) => FIGURES[name]?.draw(url => resolveGuideLink(line, url), key),
     playground: (directive, key) => {
       playgrounds += 1
       return playgroundEmbed(line, directive, key, { page: pagePath })

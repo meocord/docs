@@ -8,6 +8,7 @@ import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { HOME_LINE } from '@/config/home'
+import { SITE_DESCRIPTION, SITE_TAGLINE } from '@/config/site'
 import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { guideTabs } from '@/lib/docs/guide-site'
@@ -16,12 +17,9 @@ import { buildKinds, claims, doors, pipelineDemo } from '@/lib/home/data'
 import { framework, website } from '@/lib/seo/structured-data'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
-const DESCRIPTION =
-  'Decorator-based Discord bots, with the pipeline you’d build yourself: guards, interceptors, pipes and a testing module, for discord.js 14.'
-
 export const metadata: Metadata = pageMetadata({
-  tagline: 'Decorator-based Discord bot framework',
-  description: DESCRIPTION,
+  tagline: SITE_TAGLINE,
+  description: SITE_DESCRIPTION,
   canonical: '/',
 })
 
@@ -34,7 +32,7 @@ async function home() {
 
   return Window({
     crumbs: [{ title: 'Overview' }],
-    structuredData: [website(DESCRIPTION), framework(DESCRIPTION, REPOSITORY)],
+    structuredData: [website(SITE_DESCRIPTION), framework(SITE_DESCRIPTION, REPOSITORY)],
     // The home page is the line's overview, so the sidebar marks it.
     groups: sidebar(HOME_LINE, 'overview'),
     // The home is the Guide's first page, under the same tabs

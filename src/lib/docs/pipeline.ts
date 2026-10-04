@@ -231,6 +231,26 @@ function stageItem(stage: PipelineStage, href: (url: string) => string): NodeIns
 }
 
 /**
+ * The pipeline as Markdown, for a reader without the figure: an ordered list of the stages, each linked to its Guide
+ * page and API entry, with what it does and, where not every handler runs it, the handlers that do. A stage that
+ * wraps others holds them as a nested list.
+ */
+export function pipelineMarkdown(href: (url: string) => string): string {
+  const labels = (kinds: readonly HandlerKind[]) =>
+    kinds.map(kind => HANDLER_KINDS.find(candidate => candidate.id === kind)!.label).join('; ')
+  const item = (stage: PipelineStage, depth: number): string[] => {
+    const api = stage.api ? ` ([\`@${stage.api.split('/')[1]}\`](${href(`api:${stage.api}`)}))` : ''
+    const runs = stage.kinds.length === EVERY.length ? '' : ` Runs for: ${labels(stage.kinds)}.`
+    const byKind = (stage.byKind ?? []).map(({ kinds, what }) => ` For ${labels(kinds)}: ${what}`).join('')
+    return [
+      `${'   '.repeat(depth)}1. [${stage.name}](${href(stage.guide)})${api}: ${stage.what}${runs}${byKind}`,
+      ...(stage.around ?? []).flatMap(inner => item(inner, depth + 1)),
+    ]
+  }
+  return PIPELINE.flatMap(stage => item(stage, 0)).join('\n')
+}
+
+/**
  * The pipeline as a figure: every stage in order, each linked to its Guide page and API entry, the ones
  * that wrap others drawn around them. Picking a kind of handler shows only the stages it runs, in CSS,
  * so the figure needs no script and reads whole without one.
