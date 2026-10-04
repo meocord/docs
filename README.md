@@ -73,7 +73,7 @@ Every page is rendered once and served byte-identical to every reader, so it can
   policy and runs nothing.
 - Until launch, `SITE_INDEXABLE` is off: every response carries `X-Robots-Tag: noindex, nofollow`, robots.txt
   disallows everything and the sitemap is empty. It is read at build time; set `SITE_INDEXABLE=true` to build the
-  indexable site.
+  indexable site. The published image takes it from the repository's `SITE_INDEXABLE` Actions variable.
 
 Pushes to `main` publish a container image to `ghcr.io/meocord/docs`, with an SBOM and a build provenance
 attestation.
