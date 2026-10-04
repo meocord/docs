@@ -43,10 +43,10 @@ function expected(title: string, description: string, canonical?: string, type =
 }
 
 describe('page metadata', () => {
-  it('the home page: the brand alone, canonical at the root', () => {
+  it('the home page: the brand and what MeoCord is, canonical at the root', () => {
     expect(home.metadata).toEqual(
       expected(
-        'MeoCord',
+        'MeoCord · Decorator-based Discord bot framework',
         'Decorator-based Discord bots, with the pipeline you’d build yourself: guards, interceptors, pipes and a testing module, for discord.js 14.',
         '/',
         'website',

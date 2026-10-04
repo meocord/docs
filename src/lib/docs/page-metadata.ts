@@ -42,6 +42,8 @@ export function robots(index: boolean): Metadata['robots'] {
 export interface PageMetadataInput {
   /** What the page is about, such as "Guards"; the brand and line follow it. The home page has none. */
   title?: string
+  /** For a page without a title, what follows the brand in its title, so the home page names what MeoCord is. */
+  tagline?: string
   /** The docs line the page belongs to, named in the title. */
   line?: string
   description: string
@@ -55,9 +57,16 @@ export interface PageMetadataInput {
  * A page's metadata, the same shape for every page type: "<title> · MeoCord <line>", a description
  * cut to fit a result, the canonical URL, the share card and robots.
  */
-export function pageMetadata({ title, line, description, canonical, index = true }: PageMetadataInput): Metadata {
+export function pageMetadata({
+  title,
+  tagline,
+  line,
+  description,
+  canonical,
+  index = true,
+}: PageMetadataInput): Metadata {
   const brand = `MeoCord${line ? ` ${line}` : ''}`
-  const fullTitle = title ? `${title} · ${brand}` : brand
+  const fullTitle = title ? `${title} · ${brand}` : tagline ? `${brand} · ${tagline}` : brand
   const text = describe(description)
   return {
     title: { absolute: fullTitle },
