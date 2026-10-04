@@ -16,6 +16,7 @@ import { buildKinds, claims, doors, pipelineDemo } from '@/lib/home/data'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
 export const metadata: Metadata = pageMetadata({
+  tagline: 'Decorator-based Discord bot framework',
   description:
     'Decorator-based Discord bots, with the pipeline you’d build yourself: guards, interceptors, pipes and a testing module, for discord.js 14.',
   canonical: '/',
