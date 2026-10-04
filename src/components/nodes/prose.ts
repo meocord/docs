@@ -220,6 +220,7 @@ export const Prose = createNode('article', {
     '& [data-playground-step][data-ran="false"] [data-playground-input]': { color: 'theme.ink.secondary' },
     // The playground page: an editor for the code and the inputs, then the bar and the result.
     '& [data-playground-page]': { display: 'grid', gap: 'theme.space.4', margin: '0 0 theme.space.6' },
+    '& [data-playground-fields]': { display: 'grid', gap: 'theme.space.4' },
     '& [data-playground-field]': { display: 'grid', gap: 'theme.space.1' },
     '& [data-playground-field] label': { fontWeight: 'theme.font.weight.semibold' },
     '& [data-playground-field] :is(textarea, input, select)': {
@@ -252,6 +253,13 @@ export const Prose = createNode('article', {
     '& [data-playground-field] .cm-editor.cm-focused': {
       outline: 'theme.focus.width solid theme.accent.default',
       outlineOffset: 'theme.focus.offset',
+    },
+    // Over CodeMirror's own theme, which draws for a light page: a black caret and a grey gutter
+    '& [data-playground-field] .cm-editor .cm-content': { caretColor: 'theme.ink.primary' },
+    '& [data-playground-field] .cm-editor .cm-gutters': {
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: 'theme.ink.secondary',
     },
     '& [data-playground-field] select': { fontFamily: 'inherit', fontSize: 'theme.type.body.size' },
     '& [data-playground-field] :is(textarea, input, select):focus-visible': {

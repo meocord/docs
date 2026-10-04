@@ -85,6 +85,16 @@ for (const scheme of ['dark', 'light'] as const) {
     await code(page).fill(LOUD)
     await expect(source(page)).toHaveValue(LOUD)
     expect(await colourOf("'hello'")).toBe(rgb(palette.string))
+
+    // The caret is drawn in the editor's ink, not CodeMirror's own black, and the fields keep apart
+    const ink = await editor.evaluate(node => getComputedStyle(node).color)
+    await expect(editor.locator('.cm-content')).toHaveCSS('caret-color', ink)
+    const field = await editor.boundingBox()
+    const next = await page
+      .locator('[data-playground-field]')
+      .filter({ has: inputs(page) })
+      .boundingBox()
+    expect(next!.y - (field!.y + field!.height)).toBeGreaterThanOrEqual(16)
   })
 }
 
