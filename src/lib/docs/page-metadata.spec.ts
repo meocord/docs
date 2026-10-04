@@ -112,11 +112,12 @@ describe('page metadata', () => {
     }
   })
 
-  it('an API symbol: its doc comment’s summary', async () => {
+  it('an API symbol: what it is, its doc comment’s summary, and what the page holds', async () => {
     expect(await api.generateMetadata(params({ line: '4.1', path: ['decorators', 'Command'] }))).toEqual(
       expected(
         'Command · meocord/decorator · MeoCord 4.1',
-        'Routes a command, a component or a modal submission to the method it decorates.',
+        // Long enough that what the page holds would be cut, so the summary ends the description
+        'Command (function in meocord/decorator): Routes a command, a component or a modal submission to the method it decorates.',
         `${docs41}/api/decorators/Command`,
       ),
     )
@@ -127,10 +128,17 @@ describe('page metadata', () => {
     expect(meta).toEqual({
       ...expected(
         'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
-        'Decorator to register command methods in a controller.',
+        'Command (function in meocord/decorator): Decorator to register command methods in a controller. Types and examples for MeoCord 4.1.',
         `${docs41}/api/decorators/Command`,
       ),
     })
+  })
+
+  it('a CLI command: what it is, its one-line summary as a sentence, and what the page holds', async () => {
+    const meta = await api.generateMetadata(params({ line: '4.1', path: ['cli', 'generate'] }))
+    expect(meta.description).toBe(
+      'meocord generate (CLI command): Generate components. Usage, options and examples for MeoCord 4.1.',
+    )
   })
 
   it("a changelog, a release's page and a migration guide", async () => {
