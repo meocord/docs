@@ -82,3 +82,12 @@ test('an inline script the page did not send is refused and reported', async ({ 
   expect(ran).toBe(false)
   expect(await violations()).toContain('script-src-elem')
 })
+
+test('pages, their redirects and route handlers ask to be reached over HTTPS alone', async ({ request }) => {
+  // Not next.config's own redirects, which take no headers; a browser keeps the policy from any response, and the
+  // page such a redirect sends to carries it
+  for (const path of ['/', '/docs/latest/guards', '/docs/4.1/guards', '/sitemap.xml', '/robots.txt']) {
+    const response = await request.get(path, { maxRedirects: 0 })
+    expect(response.headers()['strict-transport-security'], path).toBe('max-age=31536000')
+  }
+})

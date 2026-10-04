@@ -59,11 +59,15 @@ const nextConfig: NextConfig = {
       { source: '/docs/latest/:path*', destination: `/docs/${DOC_ALIASES.latest}/:path*` },
     ]
   },
-  // Paths outside the proxy: the build's own output is noindexed here while the site is not indexable.
+  // Every response, redirects and route handlers included: a year of HTTPS only, for this host alone. Paths
+  // outside the proxy, the build's own output, are noindexed here while the site is not indexable.
   async headers() {
-    return SITE_INDEXABLE === 'true'
-      ? []
-      : [{ source: '/_next/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+    return [
+      { source: '/:path*', headers: [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }] },
+      ...(SITE_INDEXABLE === 'true'
+        ? []
+        : [{ source: '/_next/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]),
+    ]
   },
   experimental: {
     swcPlugins: [
