@@ -3,17 +3,18 @@ import lighthouse from 'lighthouse'
 import desktop from 'lighthouse/core/config/desktop-config.js'
 import { calculatorSlowdown, cpuSlowdownFor } from '../scripts/lib/cpu-slowdown'
 import { type EdgeHop, edgeHop } from './edge-hop'
+import { docs41 } from './lines'
 import { e2ePort } from './port'
 
 // The longest guide, one with code near its top, an API page, the changelog and its heaviest release as
 // well as home.
 const PAGES = [
   '/',
-  '/docs/4.1/defer',
-  '/docs/4.1/testing',
-  '/docs/4.1/api/controllers/ShardContext',
-  '/docs/4.1/changelog',
-  '/docs/4.1/changelog/4.1.0-beta.0',
+  `${docs41}/defer`,
+  `${docs41}/testing`,
+  `${docs41}/api/controllers/ShardContext`,
+  `${docs41}/changelog`,
+  `${docs41}/changelog/4.1.0-beta.0`,
 ]
 /**
  * The pages this run measures: all of them, or with `PERF_SHARD=k/n` every n-th starting at the k-th,
