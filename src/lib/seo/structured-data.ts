@@ -1,8 +1,9 @@
+import type { BreadcrumbList, SoftwareSourceCode, TechArticle, Thing, WebSite, WithContext } from 'schema-dts'
 import { SITE_URL } from '@/config/site'
 import type { Crumb } from '@/components/shell/types'
 
 /** A schema.org node as JSON-LD, which search engines read for rich results. */
-export type StructuredData = Record<string, unknown>
+export type StructuredData = WithContext<Thing>
 
 const absolute = (href: string) => new URL(href, SITE_URL).toString()
 
@@ -10,7 +11,7 @@ const absolute = (href: string) => new URL(href, SITE_URL).toString()
  * The trail of crumbs as a BreadcrumbList: the linked ones and the page itself, last, since search engines need a URL
  * for every item but the last. Undefined with fewer than two, where there is no trail to show.
  */
-export function breadcrumbList(crumbs: readonly Crumb[]): StructuredData | undefined {
+export function breadcrumbList(crumbs: readonly Crumb[]): WithContext<BreadcrumbList> | undefined {
   const trail = crumbs.filter((crumb, index) => crumb.href || index === crumbs.length - 1)
   if (trail.length < 2) return undefined
   return {
@@ -27,12 +28,12 @@ export function breadcrumbList(crumbs: readonly Crumb[]): StructuredData | undef
 }
 
 /** The site, for the home page. */
-export function website(description: string): StructuredData {
+export function website(description: string): WithContext<WebSite> {
   return { '@context': 'https://schema.org', '@type': 'WebSite', name: 'MeoCord', url: absolute('/'), description }
 }
 
 /** MeoCord itself, the framework the site documents, for the home page. */
-export function framework(description: string, repository: string): StructuredData {
+export function framework(description: string, repository: string): WithContext<SoftwareSourceCode> {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareSourceCode',
@@ -47,7 +48,7 @@ export function framework(description: string, repository: string): StructuredDa
 }
 
 /** A Guide page as an article of the site. */
-export function techArticle(page: { title: string; description: string; canonical: string }): StructuredData {
+export function techArticle(page: { title: string; description: string; canonical: string }): WithContext<TechArticle> {
   return {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',

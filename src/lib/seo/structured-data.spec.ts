@@ -18,10 +18,10 @@ describe('structured data', () => {
       { title: '4.1', href: '/docs/latest' },
       { title: 'The request pipeline' },
       { title: 'Guards' },
-    ]) as { itemListElement: { position: number; name: string }[] }
-    expect(list.itemListElement.map(item => [item.position, item.name])).toEqual([
-      [1, '4.1'],
-      [2, 'Guards'],
+    ])
+    expect(list?.itemListElement).toEqual([
+      expect.objectContaining({ position: 1, name: '4.1' }),
+      { '@type': 'ListItem', position: 2, name: 'Guards' },
     ])
   })
 
