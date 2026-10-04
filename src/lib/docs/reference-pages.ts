@@ -88,15 +88,16 @@ const KINDS: Record<string, string> = { 'Major Changes': 'major', 'Minor Changes
 
 /**
  * A release in one line, from its sections: `2 minor changes and 3 patch changes, 1 breaking`, or
- * `No changes recorded.` for a release with none.
+ * `No changes recorded.` for a release with none. Entries under the release's own headings, such as
+ * a release's Highlights, count together as changes, or as other changes beside major, minor and patch ones.
  */
 export function changelogSummary(changelog: Changelog): string {
-  const counts = changelog.sections.map(section => {
-    const count = section.entries.length
-    const kind = KINDS[section.title]
-    const noun = kind ? `${kind} change` : section.title.toLowerCase().replace(/s$/, '')
-    return `${count} ${noun}${count === 1 ? '' : 's'}`
-  })
+  const changes = (count: number, kind?: string) => `${count} ${kind ? `${kind} ` : ''}change${count === 1 ? '' : 's'}`
+  const counts = changelog.sections
+    .filter(section => KINDS[section.title])
+    .map(section => changes(section.entries.length, KINDS[section.title]))
+  const others = changelog.sections.filter(section => !KINDS[section.title]).flatMap(section => section.entries)
+  if (others.length > 0) counts.push(changes(others.length, counts.length > 0 ? 'other' : undefined))
   if (counts.length === 0) return 'No changes recorded.'
   const listed = counts.length === 1 ? counts[0] : `${counts.slice(0, -1).join(', ')} and ${counts.at(-1)}`
   const breaking = changelog.sections.flatMap(section => section.entries).filter(entry => entry.breaking).length
