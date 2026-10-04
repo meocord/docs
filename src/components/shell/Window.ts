@@ -1,4 +1,4 @@
-import { A, Div, Footer, Grid, Node, Row } from '@meonode/ui'
+import { A, Div, Footer, Grid, Node, Row, Script } from '@meonode/ui'
 import type { Children } from '@meonode/ui'
 import { BrandLink } from '@/components/shell/brand'
 import { safe } from '@/lib/design/css'
@@ -11,6 +11,7 @@ import { SidebarScroll } from '@/components/shell/SidebarScroll'
 import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import { SHELL_IDS } from '@/lib/page-ids'
+import { breadcrumbList, jsonLd, type StructuredData } from '@/lib/seo/structured-data'
 
 export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   /**
@@ -25,6 +26,8 @@ export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   inspector?: Children
   /** A page wider than the prose measure, such as the home page, with no contents column. */
   wide?: boolean
+  /** What search engines read about the page beside its crumbs' trail, such as a Guide page as an article. */
+  structuredData?: StructuredData[]
   children: Children
 }
 
@@ -98,8 +101,10 @@ export function Window({
   toc = [],
   inspector,
   wide,
+  structuredData = [],
   children,
 }: WindowProps) {
+  const described = [breadcrumbList(crumbs), ...structuredData].filter((data): data is StructuredData => !!data)
   // A window without a sidebar has no inspector either, so its one column sits in the middle of the sheet
   const inspected = !wide && Boolean(groups)
   return Row({
@@ -125,6 +130,12 @@ export function Window({
     },
     children: [
       SkipLink(),
+      described.length > 0 &&
+        Script({
+          key: 'structured-data',
+          type: 'application/ld+json',
+          dangerouslySetInnerHTML: { __html: jsonLd(described) },
+        }),
       groups &&
         SidebarPane({
           flexShrink: 0,

@@ -5,7 +5,15 @@ import { Prose } from '@/components/nodes'
 import { PlaygroundIsland } from '@/components/prose/PlaygroundIsland'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
-import { guideEnabled, guideTabs, guideView, resolveGuideLink, type GuideView } from '@/lib/docs/guide-site'
+import {
+  guideEnabled,
+  guidePageHref,
+  guideTabs,
+  guideView,
+  resolveGuideLink,
+  type GuideView,
+} from '@/lib/docs/guide-site'
+import { techArticle } from '@/lib/seo/structured-data'
 import { guidePage, readmeVersion, sidebar, versionChoices } from '@/lib/docs/site'
 import { CHAPTERS, guidePath } from '../../../scripts/lib/guide'
 
@@ -157,6 +165,13 @@ export function renderGuidePage(line: string, pagePath: string) {
   if (!view) return undefined
   return Window({
     crumbs: view.crumbs,
+    structuredData: [
+      techArticle({
+        title: view.page.title,
+        description: view.page.summary,
+        canonical: guidePageHref(line, view.page),
+      }),
+    ],
     groups: sidebar(line, guidePath(view.page)),
     tabs: guideTabs(line, 'guide'),
     version: versionChoices(line, { page: view.page, line }),
