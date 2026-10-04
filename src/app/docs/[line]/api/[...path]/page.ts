@@ -20,7 +20,7 @@ import { renderApiKind, renderApiPage, renderCliPage, renderGlancePage } from '@
 import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
 import { GLANCE_SECTION, glanceTopic } from '@/lib/docs/glance'
 import { docsHref, versionElsewhere } from '@/lib/urls'
-import { firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
+import { DESCRIPTION_LENGTH, firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
 import { lineParams } from '@/lib/docs/site'
 
 type Params = { params: Promise<{ line: string; path: string[] }> }
@@ -53,6 +53,17 @@ export function generateStaticParams() {
       path: version ? [version, CLI_SECTION, command] : [CLI_SECTION, command],
     })),
   ]
+}
+
+const KIND_NAMES: Record<string, string> = { 'type-alias': 'type', variable: 'constant' }
+
+/**
+ * A reference page's description: what the page is and its summary as a sentence, so a one-line summary such as
+ * "Generate components" still makes a result that names the page; then what the page holds, where it fits whole.
+ */
+function reference(name: string, what: string, summary: string, holds: string): string {
+  const lead = `${name} (${what}):${summary.trim() ? ` ${summary.trim().replace(/([^.!?])$/, '$1.')}` : ''}`
+  return `${lead} ${holds}`.length <= DESCRIPTION_LENGTH ? `${lead} ${holds}` : lead
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -95,7 +106,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return pageMetadata({
       title: `meocord ${command.name} · CLI${target.version ? ` ${target.version}` : ''}`,
       line,
-      description: commandSummary(command) || `The meocord ${command.name} command.`,
+      description: reference(
+        `meocord ${command.name}`,
+        'CLI command',
+        commandSummary(command),
+        `Usage, options and examples for MeoCord ${line}.`,
+      ),
       canonical: docsHref({ kind: 'api', line, section: CLI_SECTION, symbol: command.name }, VERSIONS),
       index: !target.version,
     })
@@ -109,8 +125,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return pageMetadata({
     title: target.version ? `${symbol.name} · ${symbol.entry} ${target.version}` : `${symbol.name} · ${symbol.entry}`,
     line,
-    // The doc comment's summary, or what the symbol is when it has none.
-    description: firstParagraph(symbol.description) || `${symbol.kind} ${symbol.name} in ${symbol.entry}.`,
+    description: reference(
+      symbol.name,
+      `${KIND_NAMES[symbol.kind] ?? symbol.kind} in ${symbol.entry}`,
+      firstParagraph(symbol.description),
+      `Types and examples for MeoCord ${line}.`,
+    ),
     canonical,
     // An exact version's page points at the line's; only the line's is indexed.
     index: !target.version,
