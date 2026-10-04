@@ -17,7 +17,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # Each workspace's node_modules links into the store above
 COPY --from=deps /app/examples ./examples
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+# Read at build, so the site is indexable only when the build that publishes it says so
+ARG SITE_INDEXABLE=false
+ENV NEXT_TELEMETRY_DISABLED=1 SITE_INDEXABLE=${SITE_INDEXABLE}
 RUN bun run build
 
 FROM ${BUN_SLIM_IMAGE} AS runner
