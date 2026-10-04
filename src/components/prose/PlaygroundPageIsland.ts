@@ -2,12 +2,14 @@
 
 import { useEffect } from 'react'
 import { parseDispatchList } from '@/playground/dispatch-list'
+import type { Editor } from '@/playground/client/editor'
 import { decodeShared, encodeShared, tooLongToShare } from '@/playground/share'
 
 /**
  * The playground page's client side. It fills the editor from a share link's fragment, or from the example
  * picked to start from, shows the buttons the server rendered hidden, and on Run loads the runner. Copy link
- * writes the code and inputs into the address, within the length a link carries, and copies it.
+ * writes the code and inputs into the address, within the length a link carries, and copies it. Once the page
+ * is up, a highlighting editor takes the code field's place; the field stays the code's source of truth.
  */
 export function PlaygroundPageIsland() {
   useEffect(() => {
@@ -24,6 +26,12 @@ export function PlaygroundPageIsland() {
     run.hidden = false
     share.hidden = false
     const say = (text: string) => (status.textContent = text)
+    let editor: Editor | undefined
+    let gone = false
+    const setCode = (text: string) => {
+      code.value = text
+      editor?.set(text)
+    }
 
     if (location.hash)
       void decodeShared(location.hash).then(shared => {
@@ -31,14 +39,14 @@ export function PlaygroundPageIsland() {
         // Only over the page as served: a reader who began editing before this ran keeps their text
         if (code.value !== code.defaultValue || inputs.value !== inputs.defaultValue)
           return say("This link's code wasn't loaded, so your edits stay. Reload the page to open it.")
-        code.value = shared.source
+        setCode(shared.source)
         inputs.value = shared.dispatch
       })
 
     const onPick = () => {
       const option = example?.selectedOptions[0]
       if (!option) return
-      code.value = option.dataset.source ?? ''
+      setCode(option.dataset.source ?? '')
       inputs.value = option.dataset.dispatch ?? ''
       output.replaceChildren()
       say('')
@@ -75,12 +83,18 @@ export function PlaygroundPageIsland() {
       }
     }
 
+    void import('@/playground/client/editor').then(({ mountEditor }) => {
+      if (!gone) editor = mountEditor(code, onRun)
+    })
+
     example?.addEventListener('change', onPick)
     run.addEventListener('click', onRun)
     share.addEventListener('click', onShare)
     code.addEventListener('keydown', onKey)
     inputs.addEventListener('keydown', onKey)
     return () => {
+      gone = true
+      editor?.destroy()
       example?.removeEventListener('change', onPick)
       run.removeEventListener('click', onRun)
       share.removeEventListener('click', onShare)
