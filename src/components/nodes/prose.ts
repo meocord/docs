@@ -441,6 +441,17 @@ export const Prose = createNode('article', {
       outlineOffset: 'theme.focus.offset',
     },
 
+    // What the page's subject is, inside its heading but drawn as the line under the title, as the home page's is
+    '& h1 [data-headline]': {
+      display: 'block',
+      marginTop: 'theme.space.2',
+      fontSize: 'theme.type.body.size',
+      lineHeight: 'theme.type.body.line',
+      fontWeight: 'theme.font.weight.regular',
+      letterSpacing: 'theme.type.body.track',
+      color: 'theme.ink.primary',
+    },
+
     // The page's context, muted under its title.
     '& [data-subtitle]': {
       margin: '-12px 0 theme.space.8',

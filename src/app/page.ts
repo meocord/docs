@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { Div, H1, Node } from '@meonode/ui'
+import { Div, H1, Node, Span } from '@meonode/ui'
 import { BuildSection, DoorsSection, WhySection } from '@/components/home/HomeSections'
 import { HomeRows, Prose } from '@/components/nodes'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
@@ -8,7 +8,7 @@ import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
 import { Window } from '@/components/shell/Window'
 import { HOME_LINE } from '@/config/home'
-import { SITE_DESCRIPTION, SITE_TAGLINE } from '@/config/site'
+import { SITE_DESCRIPTION, SITE_HEADLINE, SITE_TAGLINE } from '@/config/site'
 import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { guideTabs } from '@/lib/docs/guide-site'
@@ -43,12 +43,13 @@ async function home() {
     children: Prose({
       maxWidth: 'none',
       children: [
-        H1('MeoCord', { key: 'title' }),
+        // The brand, then what it is: one heading, so search engines read both, drawn as the title and its subtitle
+        H1(['MeoCord', ' ', Span(SITE_HEADLINE, { key: 'headline', 'data-headline': true })], { key: 'title' }),
         Div({
           key: 'subtitle',
           'data-subtitle': true,
           children: [
-            'Decorator-based Discord bots, with the pipeline you’d build yourself',
+            'With the pipeline you’d build yourself',
             `${HOME_LINE}${status === 'prerelease' ? ' beta' : ''}`,
             'for discord.js 14',
           ].join(' · '),

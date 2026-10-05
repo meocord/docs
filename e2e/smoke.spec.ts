@@ -55,7 +55,9 @@ test('the home page runs under its CSP with no violation', async ({ page }) => {
   const meta = page.locator('head > meta[http-equiv="Content-Security-Policy"]')
   await expect(meta).toHaveAttribute('content', /^script-src 'self'.*( 'sha256-[^']+')+$/)
   await expect(page.locator('html')).toHaveAttribute('data-theme', /^(light|dark)$/)
-  await expect(page.getByRole('heading', { name: 'MeoCord', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'MeoCord Decorator-based Discord bot framework for TypeScript',
+  )
   expect(violations).toEqual([])
 })
 
