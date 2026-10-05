@@ -441,6 +441,19 @@ export const Prose = createNode('article', {
       outlineOffset: 'theme.focus.offset',
     },
 
+    // Text read aloud and indexed but not drawn, such as punctuation a line break stands in for on screen
+    '& [data-visually-hidden]': {
+      position: 'absolute',
+      width: 1,
+      height: 1,
+      margin: -1,
+      padding: 0,
+      overflow: 'hidden',
+      clip: 'rect(0 0 0 0)',
+      whiteSpace: 'nowrap',
+      border: 0,
+    },
+
     // What the page's subject is, inside its heading but drawn as the line under the title, as the home page's is
     '& h1 [data-headline]': {
       display: 'block',

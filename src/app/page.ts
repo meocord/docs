@@ -43,8 +43,15 @@ async function home() {
     children: Prose({
       maxWidth: 'none',
       children: [
-        // The brand, then what it is: one heading, so search engines read both, drawn as the title and its subtitle
-        H1(['MeoCord', ' ', Span(SITE_HEADLINE, { key: 'headline', 'data-headline': true })], { key: 'title' }),
+        // The brand, then what it is: one heading, read as "MeoCord: …" and drawn as the title and the line under it
+        H1(
+          [
+            'MeoCord',
+            Span(': ', { key: 'separator', 'data-visually-hidden': true }),
+            Span(SITE_HEADLINE, { key: 'headline', 'data-headline': true }),
+          ],
+          { key: 'title' },
+        ),
         Div({
           key: 'subtitle',
           'data-subtitle': true,
