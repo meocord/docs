@@ -13,6 +13,12 @@ export const SITE_URL = process.env.SITE_URL ?? 'https://meocord.dev'
 /** What MeoCord is, in a few words: the home page's title after the brand. */
 export const SITE_TAGLINE = 'Decorator-based Discord bot framework'
 
-/** What MeoCord is, in a sentence: the home page's description, its structured data and llms.txt's summary. */
+/** What MeoCord is, as the home page's heading reads under the brand: the phrase people search for, and its language. */
+export const SITE_HEADLINE = 'Decorator-based Discord bot framework for TypeScript'
+
+/**
+ * What MeoCord is, in a sentence: the home page's description, its structured data and llms.txt's summary. Under
+ * 160 characters, so a search result shows it whole.
+ */
 export const SITE_DESCRIPTION =
-  'Decorator-based Discord bots, with the pipeline you’d build yourself: guards, interceptors, pipes and a testing module, for discord.js 14.'
+  'MeoCord is a TypeScript framework for Discord bots on discord.js 14: decorators, dependency injection, guards, interceptors, pipes, cooldowns and tests.'

@@ -23,7 +23,7 @@ const CARDS: Record<string, Record<string, OgCard>> = {
   site: {
     home: {
       eyebrow: 'Documentation',
-      title: 'Decorator-based Discord bots, with the pipeline you’d build yourself.',
+      title: 'The decorator-based Discord bot framework for TypeScript.',
       code: `npx ${specFor(HOME_LINE)} create my-bot`,
     },
   },
