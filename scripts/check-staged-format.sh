@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks the formatting of the staged files Prettier formats, as CI's format:check does, before they are committed.
 # What is checked is each file as staged, not as it stands in the working tree, with the repository's own Prettier.
-# `bun install` points git at this folder. Skip it for one commit with `git commit --no-verify`.
+# The pre-commit hook in .husky/ runs it.
 set -o pipefail
 prettier=./node_modules/.bin/prettier
 if [ ! -x "$prettier" ]; then

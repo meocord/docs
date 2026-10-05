@@ -7,7 +7,7 @@
     "examples/*"
   ],
   "scripts": {
-    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath .githooks || true",
+    "prepare": "husky",
     "start:dev": "rm -rf .next && bun run api:layout && bun run home:trace && mkdir -p .next/dev/node_modules && PORT=${PORT:-3000} UPSTREAM_PORT=${UPSTREAM_PORT:-3001} CSP_PROXY_CHILD='bun --bun next dev' bun scripts/csp-hash-proxy.mjs",
     "build": "rm -rf .next && bun run playground:build && bun run search:build && bun run api:layout && bun run home:trace && bun --bun next build && bun run precompress && bun run commands:check && bun run resources:check",
     "precompress": "bun scripts/precompress.ts",
@@ -90,6 +90,7 @@
     "events": "^3.3.0",
     "github-slugger": "^2.0.0",
     "happy-dom": "^20.14.5",
+    "husky": "^9.1.7",
     "lighthouse": "^13.5.0",
     "pagefind": "^1.5.2",
     "path-browserify": "^1.0.1",

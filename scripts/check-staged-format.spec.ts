@@ -6,13 +6,13 @@ import { describe, expect, it } from 'vitest'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 
-/** A git repository with the pre-commit hook, the Prettier config and, unless left out, the installed Prettier. */
+/** A git repository with the staged-format check, the Prettier config and, unless left out, the installed Prettier. */
 function repository({ installed = true } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'docs-hook-'))
   const git = (...args: string[]) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' })
   git('init', '-q')
-  mkdirSync(path.join(dir, '.githooks'))
-  for (const file of ['.githooks/pre-commit', '.prettierrc.json', '.prettierignore'])
+  mkdirSync(path.join(dir, 'scripts'))
+  for (const file of ['scripts/check-staged-format.sh', '.prettierrc.json', '.prettierignore'])
     copyFileSync(path.join(ROOT, file), path.join(dir, file))
   if (installed) symlinkSync(path.join(ROOT, 'node_modules'), path.join(dir, 'node_modules'))
   const write = (file: string, text: string) => {
@@ -23,14 +23,14 @@ function repository({ installed = true } = {}) {
     write(file, text)
     git('add', file)
   }
-  const hook = () => spawnSync('bash', ['.githooks/pre-commit'], { cwd: dir, encoding: 'utf8' })
+  const hook = () => spawnSync('bash', ['scripts/check-staged-format.sh'], { cwd: dir, encoding: 'utf8' })
   return { write, stage, hook }
 }
 
 const FORMATTED = 'const x = 1\n'
 const UNFORMATTED = 'const  x = 1\n'
 
-describe('the pre-commit hook', () => {
+describe('the staged-format check', () => {
   it('refuses a file staged unformatted, even when the working tree has it formatted', () => {
     const repo = repository()
     repo.stage('a.ts', UNFORMATTED)
