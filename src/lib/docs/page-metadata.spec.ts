@@ -47,7 +47,7 @@ describe('page metadata', () => {
     expect(home.metadata).toEqual(
       expected(
         'MeoCord · Decorator-based Discord bot framework',
-        'MeoCord is a TypeScript framework for Discord bots on discord.js 14: decorators, dependency injection, guards, interceptors, pipes, cooldowns and tests.',
+        'MeoCord is a TypeScript framework for Discord bots, built on discord.js. Structure a bot with decorators and services, and test it the way it runs.',
         '/',
         'website',
       ),

@@ -18,7 +18,7 @@ export const SITE_HEADLINE = 'Decorator-based Discord bot framework for TypeScri
 
 /**
  * What MeoCord is, in a sentence: the home page's description, its structured data and llms.txt's summary. Under
- * 160 characters, so a search result shows it whole.
+ * 160 characters, so a search result shows it whole, and naming no version of anything, so it stays true.
  */
 export const SITE_DESCRIPTION =
-  'MeoCord is a TypeScript framework for Discord bots on discord.js 14: decorators, dependency injection, guards, interceptors, pipes, cooldowns and tests.'
+  'MeoCord is a TypeScript framework for Discord bots, built on discord.js. Structure a bot with decorators and services, and test it the way it runs.'

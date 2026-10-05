@@ -49,9 +49,8 @@ async function home() {
           key: 'subtitle',
           'data-subtitle': true,
           children: [
-            'With the pipeline you’d build yourself',
+            'Built on discord.js, with the pipeline you’d build yourself',
             `${HOME_LINE}${status === 'prerelease' ? ' beta' : ''}`,
-            'for discord.js 14',
           ].join(' · '),
         }),
         PipelinePanel(pipelineDemo()),
