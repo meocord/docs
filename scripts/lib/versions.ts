@@ -125,15 +125,16 @@ export interface AddResult {
   config: VersionsConfig
   /** The line created for this version, and the line its guides start from. */
   forked?: { line: string; from?: string }
-  /** Lines whose status changed, as `4.0: current -> maintained`. */
+  /** Lines whose status changed, as `4.0: current -> archived`. */
   statusChanges: string[]
 }
 
 /**
  * Adds a published version: to its line, or to a new line forked from the newest one. A stable
- * version makes its line current, the previous current line maintained, and a maintained line with
- * two newer lines that are current or maintained archived. A new prerelease line archives an older
- * one still in prerelease.
+ * version makes its line current and archives the previous current line, since security fixes land on
+ * the latest minor only (meocord's SECURITY.md). A line marked maintained by hand, for fixes backported
+ * to it, is archived once two newer lines are current or maintained. A new prerelease line archives an
+ * older one still in prerelease.
  */
 export function addVersion(config: VersionsConfig, version: string): AddResult {
   if (allVersions(config).includes(version)) return { config, statusChanges: [] }
@@ -161,7 +162,7 @@ export function addVersion(config: VersionsConfig, version: string): AddResult {
   line.versions = [...line.versions, version].sort(semver.compare)
 
   if (stable) {
-    for (const other of next.lines) if (other !== line && other.status === 'current') setStatus(other, 'maintained')
+    for (const other of next.lines) if (other !== line && other.status === 'current') setStatus(other, 'archived')
     setStatus(line, 'current')
   }
 
