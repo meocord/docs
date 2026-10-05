@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { CURRENT_LINE } from '../src/config/versions'
+import { CURRENT_LINE, VERSIONS } from '../src/config/versions'
 import { docs40, docs41, literal } from './lines'
 
 test('a guide renders in the window, at its canonical latest URL', async ({ page }) => {
@@ -61,4 +61,22 @@ test('the home page links into the guides of the line it shows', async ({ page }
   await page.locator('[data-door]').first().getByRole('link', { name: 'Your first command' }).click()
   await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/first-command$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Your first command' })).toBeVisible()
+})
+
+test('a page of an archived line says it is no longer supported, and links the supported line', async ({
+  page,
+  request,
+}) => {
+  const archived = VERSIONS.lines.find(entry => entry.status === 'archived')
+  test.skip(!archived, 'no line is archived')
+  await page.goto(`/docs/${archived!.line}/testing`)
+  const notice = page.getByRole('complementary', { name: `MeoCord ${archived!.line} is no longer supported` })
+  await expect(notice).toContainText('security fixes included')
+  for (const name of [`Read this page for ${CURRENT_LINE}`, 'upgrade guide']) {
+    const href = await notice.getByRole('link', { name }).getAttribute('href')
+    expect((await request.get(href!)).status(), name).toBe(200)
+  }
+
+  await page.goto('/docs/latest/testing')
+  await expect(page.locator('[data-archived-notice]')).toHaveCount(0)
 })

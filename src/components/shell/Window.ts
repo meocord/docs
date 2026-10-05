@@ -12,6 +12,9 @@ import { Toolbar, type ToolbarProps } from '@/components/shell/Toolbar'
 import type { NavGroup, NavTab, TocEntry } from '@/components/shell/types'
 import { SHELL_IDS } from '@/lib/page-ids'
 import { breadcrumbList, jsonLd, type StructuredData } from '@/lib/seo/structured-data'
+import { ArchivedNotice } from '@/components/shell/ArchivedNotice'
+import { CURRENT_LINE, VERSIONS } from '@/config/versions'
+import { docsHref } from '@/lib/urls'
 
 export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   /**
@@ -105,6 +108,16 @@ export function Window({
   children,
 }: WindowProps) {
   const described = [breadcrumbList(crumbs), ...structuredData].filter((data): data is StructuredData => !!data)
+  // A page of an archived line says so first, and where the supported one is
+  const latest = version?.options.find(option => option.status === 'latest')
+  const notice =
+    version?.current.status === 'archived' && latest
+      ? ArchivedNotice({
+          line: version.current.label,
+          latest,
+          upgrade: docsHref({ kind: 'migrating', line: CURRENT_LINE }, VERSIONS),
+        })
+      : null
   // A window without a sidebar has no inspector either, so its one column sits in the middle of the sheet
   const inspected = !wide && Boolean(groups)
   return Row({
@@ -177,7 +190,7 @@ export function Window({
                       }),
                 },
                 children: [
-                  SheetPane({ tabIndex: -1, children: [children, SiteFooter({ wide })] }),
+                  SheetPane({ tabIndex: -1, children: [notice, children, SiteFooter({ wide })] }),
                   inspected ? Inspector({ toc, children: inspector }) : null,
                 ],
               }),

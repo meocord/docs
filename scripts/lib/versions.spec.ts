@@ -98,13 +98,13 @@ describe('addVersion', () => {
     expect(stable.statusChanges).toEqual(['4.0: prerelease -> current'])
   })
 
-  it('forks a new line from the newest one, and moves the old current line to maintained on stable', () => {
+  it('forks a new line from the newest one, and archives the old current line on stable', () => {
     const config = add(empty(), '4.0.0', '4.1.0-beta.0')
 
     expect(aliases(config)).toEqual({ latest: '4.0', next: '4.1' })
     const released = addVersion(config, '4.1.0')
     expect(aliases(released.config)).toEqual({ latest: '4.1', next: undefined })
-    expect(released.statusChanges).toEqual(['4.0: current -> maintained', '4.1: prerelease -> current'])
+    expect(released.statusChanges).toEqual(['4.0: current -> archived', '4.1: prerelease -> current'])
     expect(addVersion(released.config, '4.2.0-beta.0').forked).toEqual({ line: '4.2', from: '4.1' })
   })
 
@@ -115,14 +115,26 @@ describe('addVersion', () => {
     expect(aliases(superseded.config)).toEqual({ latest: '4.0', next: '4.2' })
   })
 
-  it('archives a maintained line once two newer lines are supported', () => {
-    const config = add(empty(), '4.0.0', '4.1.0', '4.2.0')
+  it('keeps a line marked maintained by hand, archiving only the current line a release replaces', () => {
+    const config = add(empty(), '4.0.0', '4.1.0')
+    config.lines.find(line => line.line === '4.0')!.status = 'maintained'
 
-    expect(config.lines.map(line => `${line.line}:${line.status}`)).toEqual([
+    const released = addVersion(config, '4.2.0')
+    expect(released.statusChanges).toEqual(['4.2: new, current', '4.1: current -> archived'])
+    expect(released.config.lines.map(line => `${line.line}:${line.status}`)).toEqual([
       '4.2:current',
-      '4.1:maintained',
-      '4.0:archived',
+      '4.1:archived',
+      '4.0:maintained',
     ])
+  })
+
+  it('archives a line marked maintained by hand once two newer lines are supported', () => {
+    const config = add(empty(), '4.0.0', '4.1.0')
+    for (const line of config.lines) if (line.line === '4.0') line.status = 'maintained'
+    const kept = addVersion(config, '4.2.0')
+    kept.config.lines.find(line => line.line === '4.1')!.status = 'maintained'
+
+    expect(addVersion(kept.config, '4.2.1').statusChanges).toEqual(['4.0: maintained -> archived'])
   })
 
   it('keeps versions in order and ignores one already listed', () => {
