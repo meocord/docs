@@ -19,8 +19,8 @@ bun run build          # production build
 bun run serve          # the production build, run as the image runs it
 ```
 
-`bun install` also points git at `.githooks/`, whose pre-commit hook checks the formatting of the staged files,
-as CI's `format:check` does.
+`bun install` also sets up the pre-commit hook in `.husky/`, which runs what CI's Lint job runs: the formatting of the
+staged files as staged, ESLint and `tsc`. Skip it for one commit with `git commit --no-verify`.
 
 | Command                 | Use it to                                                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
