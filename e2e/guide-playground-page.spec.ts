@@ -3,12 +3,15 @@ import { type Page } from '@playwright/test'
 import { expect, test } from './test'
 import { axe } from './axe'
 import { CODE_PALETTES } from '../src/lib/prose/code-palettes'
-import { docs41, literal } from './lines'
+import { docs41, docsCurrent, literal } from './lines'
 
 const PAGE = '/docs/4.1/playground'
 
-// By role, which leaves out a page Next keeps hidden after navigating away from it
-const code = (page: Page) => page.getByRole('textbox', { name: 'Code', exact: true })
+// By role, which leaves out a page Next keeps hidden after navigating away from it. The code field, as a reader meets
+// it before the page's script runs
+const field = (page: Page) => page.getByRole('textbox', { name: 'Code', exact: true })
+// The editor that takes the field's place: an action that found the field just before it would wait on it hidden
+const code = (page: Page) => field(page).and(page.locator('[contenteditable="true"]'))
 // The code field the editor writes through to, hidden once the editor shows the code, in the page on view
 const source = (page: Page) =>
   page.locator('[data-playground-page]').filter({ visible: true }).locator('#playground-code')
@@ -125,7 +128,7 @@ test("keeps what a reader typed before the page's script ran, and a link's code 
     await route.continue()
   })
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
-  await code(page).fill(LOUD)
+  await field(page).fill(LOUD)
   await inputs(page).fill('/hello name:ada')
   release()
   await expect(run(page)).toBeVisible()
@@ -163,7 +166,7 @@ test("keeps what a reader typed over a shared link's code, and says the link's c
     await route.continue()
   })
   await opened.goto(page.url(), { waitUntil: 'domcontentloaded' })
-  await code(opened).fill('// my own edit')
+  await field(opened).fill('// my own edit')
   release()
   await expect(run(opened)).toBeVisible()
   await expect(status(opened)).toHaveText(
@@ -237,7 +240,7 @@ test('shows the example and no buttons without script', async ({ browser, baseUR
 test('answers at the line and the next alias only, not for an exact version or another line', async ({ request }) => {
   const next = await request.get('/docs/next/playground', { maxRedirects: 0 })
   expect(next.status()).toBe(307)
-  expect(next.headers().location).toMatch(new RegExp(`${literal(docs41)}/playground$`))
+  expect(next.headers().location).toMatch(new RegExp(`${literal(docsCurrent)}/playground$`))
   expect((await request.get('/docs/4.1/4.1.0-beta.7/playground')).status()).toBe(404)
   expect((await request.get('/docs/4.0/playground')).status()).toBe(404)
 })

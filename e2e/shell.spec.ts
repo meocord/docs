@@ -28,16 +28,18 @@ test('the version menu opens on the current line, moves by arrow keys and hands 
   const menu = page.getByRole('menu', { name: 'Documentation version' })
   await expect(menu).toBeVisible()
   const items = menu.getByRole('menuitem')
-  await expect(items).toHaveCount(2)
+  // Every line, newest first
+  const last = VERSIONS.lines.length - 1
+  await expect(items).toHaveCount(VERSIONS.lines.length)
   await expect(items.first()).toBeFocused()
   await expect(items.first()).toHaveAttribute('aria-current', 'page')
 
   await page.keyboard.press('ArrowDown')
   await expect(items.nth(1)).toBeFocused()
+  await page.keyboard.press('End')
+  await expect(items.nth(last)).toBeFocused()
   await page.keyboard.press('ArrowDown')
   await expect(items.first()).toBeFocused()
-  await page.keyboard.press('End')
-  await expect(items.nth(1)).toBeFocused()
   // Each line links to the same page on it, the current line at its alias.
   await expect(items.first()).toHaveAttribute('href', '/docs/latest/overview')
   await expect(items.nth(1)).toHaveAttribute('href', `/docs/${other}/overview`)

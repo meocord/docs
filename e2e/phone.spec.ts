@@ -4,8 +4,11 @@ import { expect, type Page, test } from '@playwright/test'
 const smallTargets = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('a, button, summary, input, [role="option"], [role="menuitem"]')]
-      // Links inside running text or code, such as a signature's type names, are sized by the text.
-      .filter(el => el.checkVisibility() && !el.closest('main p, main li, main td, main pre, footer'))
+      // Links inside running text or code, such as a signature's type names or the archived notice's sentence, are
+      // sized by the text.
+      .filter(
+        el => el.checkVisibility() && !el.closest('main p, main li, main td, main pre, footer, [data-archived-notice]'),
+      )
       .map(el => {
         const box = el.getBoundingClientRect()
         const after = getComputedStyle(el, '::after')

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { CURRENT_LINE, VERSIONS } from '../src/config/versions'
-import { docs40, docs41, literal } from './lines'
+import { docs40, docs41, docsHome, literal } from './lines'
 
 test('a guide renders in the window, at its canonical latest URL', async ({ page }) => {
   const response = await page.goto('/docs/latest/testing')
@@ -59,7 +59,7 @@ test('the home page links into the guides of the line it shows', async ({ page }
   await page.goto('/')
   // The Learn door opens the Guide where a reader starts, the first command after the setup
   await page.locator('[data-door]').first().getByRole('link', { name: 'Your first command' }).click()
-  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/first-command$`))
+  await expect(page).toHaveURL(new RegExp(`${literal(docsHome)}/first-command$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Your first command' })).toBeVisible()
 })
 

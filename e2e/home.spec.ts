@@ -1,6 +1,6 @@
 import { expect, test } from './test'
 import { cutServer, recordShifts } from './partial-paint'
-import { docs41, literal } from './lines'
+import { docsHome, literal } from './lines'
 
 test('the panel paints the finished run without any script', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false })
@@ -162,17 +162,20 @@ test('each kind of handler opens its section of What you can build, and each doo
   const tiles = page.locator('[data-tile]')
   await expect(tiles).toHaveCount(10)
   await tiles.first().click()
-  await expect(page).toHaveURL(new RegExp(`${literal(docs41)}/what-can-i-build#slash-commands$`))
+  await expect(page).toHaveURL(new RegExp(`${literal(docsHome)}/what-can-i-build#slash-commands$`))
   await expect(page.getByRole('heading', { level: 2, name: 'Slash commands' })).toBeInViewport()
   await page.goBack()
   const doors = page.locator('[data-door]')
   await expect(doors.locator('h3')).toHaveText(['Learn', 'Look up', 'Migrate or compare'])
-  await expect(doors.first().getByRole('link', { name: 'Playground' })).toHaveAttribute('href', `${docs41}/playground`)
+  await expect(doors.first().getByRole('link', { name: 'Playground' })).toHaveAttribute(
+    'href',
+    `${docsHome}/playground`,
+  )
   // The home is the Guide's first page, under the same tabs as the rest of the Guide
   await page.setViewportSize({ width: 1440, height: 900 })
   await expect(page.locator('[data-nav-tabs]:visible > a')).toHaveText(['Guide', 'API'])
   await expect(page.locator('[data-nav-tabs]:visible > a[aria-current="true"]')).toHaveText('Guide')
-  await expect(doors.nth(1).getByRole('link', { name: 'API reference' })).toHaveAttribute('href', `${docs41}/api`)
+  await expect(doors.nth(1).getByRole('link', { name: 'API reference' })).toHaveAttribute('href', `${docsHome}/api`)
 })
 
 const VIEWPORTS = [
