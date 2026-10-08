@@ -17,6 +17,7 @@ api:
     testing/createMockMessage,
     testing/createMockGuild,
     testing/createMockMember,
+    testing/createMockRawMember,
     testing/createMockChannel,
     testing/createMockClient,
     testing/createDiscordError,
@@ -190,6 +191,23 @@ A member made without a server joins the one whose `members` it's given to. An i
 server's, and a manager's `fetch(id)` finds what the server caches:
 
 ::example{file="testing/mock-member.spec.ts" region="channel"}
+
+### A server the bot isn't in
+
+A user-installed command can run in a server the bot isn't in. discord.js then has no server to cache the member in,
+so `interaction.member` is the member Discord sent: plain data, with `roles` as role ids and `permissions` as a
+string. [`createMockRawMember()`](api:testing/createMockRawMember) builds it. Give it as the interaction's `member`,
+with the server's `guildId` and no `guild`:
+
+- `inRawGuild()` is true and `inCachedGuild()` false, and `guild` is `null`;
+- `user` is the member's user, and `memberPermissions` are the member's;
+- a user option's member is the member Discord resolves, with `roles` and `permissions` but no `user`;
+- the interaction is typed as discord.js types one from such a server, so the compiler sees `member` as raw data.
+
+It takes the roles, permissions and user to give it, such as
+`createMockRawMember({ roles: [moderatorId], permissions: [PermissionFlagsBits.KickMembers] })`. A guard that reads
+`member.roles.cache` throws there, as it does in Discord, so a test of such a command finds the branch a handler needs:
+`interaction.inCachedGuild()` before reading the cache, or `member.roles` as ids.
 
 ## What methods return
 
