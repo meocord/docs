@@ -120,15 +120,18 @@ values: words to choose from, then `bool`, `int`, `number`, and text last. So be
 `page/5` and leaves `page/last` to the other, in whatever order they're declared.
 
 Between two equally specific patterns, such as `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`, the one whose
-controller is listed first in `@MeoCord({ controllers })` runs, or, within one controller, the one declared first. In
-the next major version (5.0), the pattern that spells out the first segment where the two differ runs instead:
-`a/b/{y}` here.
+controller is listed first in `@MeoCord({ controllers })` runs, or, within one controller, the one declared first.
+`@MeoCord({ routeTies: 'literalFirst' })` runs instead the pattern that spells out as literal text the first segment
+where the two differ, `a/b/{y}` here, whatever the listing; the next major version (5.0) ranks that way by default.
+What that leaves tied, two patterns literal in the same places, keeps the listing order.
 
 MeoCord warns once at startup about every pair of patterns of one component type that can both take an id: the two
 profile patterns above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`. For each pair it names the
-handler that runs and why, and where 5.0 would run the other one, what to do. The bot still starts, and the ranking
-decides which handler runs; `MeoCordTestingModule.compile()` gives the same warning, and
-[`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs. Patterns with different literals in the same
+handler that runs and why, and where 5.0 would run the other one, what to do. With `routeTies: 'literalFirst'`, only
+the pairs listing order still decides are named. The bot still starts, and the ranking decides which handler runs;
+`MeoCordTestingModule.compile()` gives the same warning, and [`findRouteConflicts`](api:testing/findRouteConflicts)
+lists the pairs, each with the pattern that `runs` and what it was `decidedBy`: `'specificity'`, `'literal'` or
+`'order'`. Patterns with different literals in the same
 place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
 Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
@@ -193,7 +196,8 @@ pattern, and the collector's callback answers it:
 An interaction no pattern takes raises `CommandNotFoundError`. The built-in fallback answers it with "Command not
 found!" and logs a warning naming the `customId`. When a button seems dead, that log line is the first place to look.
 
-To check which handler an id reaches without running it, use [`resolveRoute`](api:testing/resolveRoute):
+To check which handler an id reaches without running it, use [`resolveRoute`](api:testing/resolveRoute). Its
+`alsoMatches` lists the other patterns that take the id and lost to it:
 
 ::example{file="controllers/button/profile.button.controller.spec.ts"}
 
