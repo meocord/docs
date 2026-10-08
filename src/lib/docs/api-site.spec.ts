@@ -66,7 +66,7 @@ describe('the site API', () => {
     const exact = exactApiParams()
     expect(exact).toContainEqual({ line: '4.0', version: '4.0.0-beta.2', section: 'core', symbol: 'MeoCordFactory' })
     expect(new Set(exact.map(param => param.version))).toEqual(
-      new Set([...lineVersions('4.0'), ...lineVersions('4.1')]),
+      new Set(VERSIONS.lines.flatMap(({ line }) => lineVersions(line))),
     )
   })
 })

@@ -13,7 +13,7 @@ import {
   renderApiIndex,
   runsAt,
 } from '@/lib/docs/api-render'
-import { apiModel, apiSections } from '@/lib/docs/api-site'
+import { apiModel, apiSections, lineVersions } from '@/lib/docs/api-site'
 import { glanceTopic } from '@/lib/docs/glance'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
 import { VERSIONS } from '@/config/versions'
@@ -223,7 +223,9 @@ describe('the API by kind', () => {
     // Helpers only: an interface of the testing kind isn't one
     expect(testing).not.toContain('MockMessageOverrides')
     const cli = sheet('cli')
-    expect(cli).toContain('data-example="npx meocord create my-bot"')
+    // The current line's create runs the newest meocord; another line's names its own newest release
+    const create = lineSegment('4.1', VERSIONS) === 'latest' ? 'meocord' : `meocord@${lineVersions('4.1')[0]}`
+    expect(cli).toContain(`data-example="npx ${create} create my-bot"`)
     expect(cli).toContain(
       `<a href="${docs41}/api/cli/generate#controller"><code>meocord generate controller</code></a>`,
     )
