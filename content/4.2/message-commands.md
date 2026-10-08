@@ -143,8 +143,10 @@ without a pattern runs, whether or not a pattern matched.
 ### Running them side by side
 
 By default a message's handlers run in turn: the patterned handler, then each listener once the one before it has
-settled, so a slow command delays logging and auto-moderation for that message. A handler that takes 5 seconds or more
-with listeners waiting after it is named in a warning, once; `messages: { slowHandlerWarning: false }` turns it off.
+settled, so a slow command delays logging and auto-moderation for that message. A running bot names a handler that
+takes 5 seconds or more with listeners waiting after it in a warning, once; `messages: { slowHandlerWarning: false }`
+turns it off. A testing module warns only with `slowHandlerWarning: true`, since a test's fake clock can pass 5 seconds
+inside a handler.
 
 `@MeoCord({ messages: { handlers: 'concurrent' } })` starts the command and every listener together, and the call
 settles once all have.
