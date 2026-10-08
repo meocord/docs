@@ -171,8 +171,8 @@ refusing the connection, so the bot stopped before login with the cause. Fix wha
 
 ### Warnings that become errors in 5.0
 
-Some mistakes a 4.0 bot could start with only warn in 4.1, so the bot still starts, and stop it in the next major
-version (5.0). Each warning names the handler or the filter, and says what to write instead:
+Some mistakes a 4.0 bot could start with only warn in 4.1 and 4.2, so the bot still starts, and stop it in the next
+major version (5.0). Each warning names the handler or the filter, and says what to write instead:
 
 - **"Broken: @Catch's first entry, undefined, which matches no error, is deprecated; …"** An entry in a filter's
   `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
