@@ -76,6 +76,12 @@ test('a page of an archived line says it is no longer supported, and links the s
     const href = await notice.getByRole('link', { name }).getAttribute('href')
     expect((await request.get(href!)).status(), name).toBe(200)
   }
+  // The upgrade guide opens at the section that starts from this line
+  const upgrade = (await notice.getByRole('link', { name: 'upgrade guide' }).getAttribute('href'))!
+  const section = upgrade.split('#')[1]
+  expect(section).toBe(`upgrading-from-${archived!.line.replace('.', '')}-to-${CURRENT_LINE.replace('.', '')}`)
+  await page.goto(upgrade)
+  await expect(page.locator(`[id="${section}"]`)).toHaveCount(1)
 
   await page.goto('/docs/latest/testing')
   await expect(page.locator('[data-archived-notice]')).toHaveCount(0)

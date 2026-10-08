@@ -35,7 +35,7 @@ import { listPages, loadPage } from './lib/pages.js'
 import { literalCreates, PACKAGE_SPEC } from './lib/package-spec.js'
 import { pipelineStageProblems } from './lib/pipeline-tags.js'
 import { readVersions } from './lib/versions.js'
-import { memberAnchor } from '../src/lib/urls'
+import { memberAnchor, upgradeSection } from '../src/lib/urls'
 import { cliManifest, subcommandAnchor } from '../src/lib/docs/cli-site'
 import { apiModel } from '../src/lib/docs/api-site.js'
 
@@ -199,6 +199,16 @@ for (const line of config.lines) {
   })
   problems.push(...report.problems)
   plannedLinks += report.planned.length
+}
+// An archived line's notice links the current line's upgrade guide at the section that starts from it
+const current = config.lines.find(entry => entry.status === 'current')
+const currentGuide = current && site.migrating[current.line]
+for (const line of config.lines.filter(entry => entry.status === 'archived')) {
+  const section = upgradeSection(line.line, config)
+  if (section && currentGuide !== undefined && !markdownAnchors(currentGuide).includes(section))
+    problems.push(
+      `content/migrating/${current!.line}.md: no heading has the anchor #${section}, which ${line.line}'s archived notice links`,
+    )
 }
 // Every region of an examples folder is shown somewhere: by a Guide page, or by the site itself
 const guideBodies = (line: string) => readGuide(line).map(({ body }) => body)

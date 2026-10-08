@@ -76,6 +76,15 @@ export function olderLines(line: string, versions: VersionsManifest): string[] {
     .sort((a, b) => (before(a, b) ? 1 : -1))
 }
 
+/**
+ * The upgrade guide's section a reader of `line` starts from: upgrading from it to the next line versions.json lists,
+ * such as `upgrading-from-41-to-42`. Undefined for the newest line.
+ */
+export function upgradeSection(line: string, versions: VersionsManifest): string | undefined {
+  const next = versions.lines.find(entry => olderLines(entry.line, versions)[0] === line)?.line
+  return next && `upgrading-from-${line.replace('.', '')}-to-${next.replace('.', '')}`
+}
+
 /** The path segment for a line: `latest` for the current line, otherwise the line itself. */
 export function lineSegment(line: string, versions: VersionsManifest): string {
   const entry = versions.lines.find(candidate => candidate.line === line)
