@@ -22,6 +22,7 @@ api:
     testing/createDiscordError,
     testing/resetAllMocks,
     testing/useMockFn,
+    testing/useStrictMocks,
   ]
 since: 4.0.0
 ---
@@ -215,10 +216,10 @@ A method that returns a value at once returns what discord.js computes where the
 and `iconURL()`, `null` with no avatar or icon set. Any other returns `undefined`. A test still decides with
 `mockReturnValue`, `mockResolvedValue` and `mockRejectedValue`.
 
-## Values a mock can't compute
+## Values discord.js computes
 
-Some of what discord.js computes depends on Discord's state a mock doesn't hold, so the mock reads it as a truthy
-placeholder:
+Some of what discord.js computes depends on Discord's state: who sent a message, the bot's roles and permissions, a
+channel's overwrites. Unless told otherwise, a mock reads these as a truthy placeholder:
 
 - a message's `editable`, `deletable`, `pinnable`, `crosspostable`, `bulkDeletable` and `hasThread`;
 - a member's `manageable`, `kickable`, `bannable` and `moderatable`;
@@ -232,6 +233,21 @@ relies on, such as `message.editable = false` or `member.kickable = false`, and 
 `message.thread` is the thread the message's channel caches under the message's id. Cache one with
 `channel.threads.cache.set(message.id, thread)` for a message that started a thread. Without one, it is a placeholder
 thread, with a warning, since discord.js reads `null` there.
+
+### Strict mocks
+
+[`useStrictMocks()`](api:testing/useStrictMocks), called once in a test setup file before any mock is made, has the
+mocks compute each of these with discord.js's own code, and `message.thread` read `null` without a cached thread. No
+placeholder warning is logged. The mocks hold what those computations read, as Discord sends it:
+
+- the bot's member is in its server's member cache from the start;
+- @everyone has the permissions Discord gives it in a new server: the bot can view and send in a channel and join a
+  voice channel, but not manage, pin, kick or ban;
+- a channel or thread made without a server has one of its own, a thread with a text channel as its parent.
+
+So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member
+has a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`,
+and the values follow. A value the test sets on a mock still wins over the computed one.
 
 ## Collectors
 
