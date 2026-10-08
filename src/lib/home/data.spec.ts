@@ -6,16 +6,17 @@ import { Div } from '@meonode/ui'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { pageAnchors } from '../../../scripts/lib/content'
 import { guidePath, readGuide } from '../../../scripts/lib/guide'
+import { HOME_LINE } from '@/config/home'
 import { buildKinds, CLAIMS, claims, doors, pipelineDemo } from '@/lib/home/data'
 import { VERSIONS } from '@/config/versions'
 import { lineSegment } from '@/lib/urls'
 
-// Each line's path segment as versions.json gives it: `latest` for the current line
-const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
+// The home line's path segment as versions.json gives it: `latest` for the current line
+const docsHome = `/docs/${lineSegment(HOME_LINE, VERSIONS)}`
 
 // The example's `home` region, read here independently of the site's own example resolver.
 function regionFromFile(): string {
-  const file = path.join(process.cwd(), 'examples/4.1/src/home/pipeline.slash.controller.ts')
+  const file = path.join(process.cwd(), `examples/${HOME_LINE}/src/home/pipeline.slash.controller.ts`)
   const lines = readFileSync(file, 'utf8').split('\n')
   const start = lines.findIndex(line => line.trim() === '// #region home')
   const end = lines.findIndex(line => line.trim() === '// #endregion home')
@@ -74,7 +75,7 @@ describe('the pipeline panel', () => {
 
 describe('the sections below', () => {
   it('links each claim to a Guide page, at a heading it has where the link names one', () => {
-    const guide = readGuide('4.1')
+    const guide = readGuide(HOME_LINE)
     const missing = CLAIMS.filter(({ guide: link }) => {
       const [path, anchor] = link.slice('guide:'.length).split('#')
       const page = guide.find(entry => guidePath(entry.page) === path)
@@ -82,10 +83,10 @@ describe('the sections below', () => {
     })
     expect(missing).toEqual([])
     expect(claims().map(claim => claim.href)).toEqual([
-      `${docs41}/responses#how-it-works`,
-      `${docs41}/testing`,
-      `${docs41}/how-a-call-runs`,
-      `${docs41}/components#typed-params`,
+      `${docsHome}/responses#how-it-works`,
+      `${docsHome}/testing`,
+      `${docsHome}/how-a-call-runs`,
+      `${docsHome}/components#typed-params`,
     ])
   })
 
@@ -103,18 +104,18 @@ describe('the sections below', () => {
       'Reactions',
       'Gateway events',
     ])
-    expect(kinds[0].href).toBe(`${docs41}/what-can-i-build#slash-commands`)
+    expect(kinds[0].href).toBe(`${docsHome}/what-can-i-build#slash-commands`)
     const lead = renderToStaticMarkup(Div({ children: kinds[0].lead }).render()).replace(/^<div>|<\/div>$/g, '')
     expect(lead).toBe('<p>A member types <code>/echo</code> and picks its options.</p>')
   })
 
   it('opens three doors: the Guide, the reference, and moving from another version or framework', () => {
     const [learn, lookUp, migrate] = doors()
-    expect(learn.links[0]).toEqual({ title: 'Overview', href: `${docs41}/overview` })
+    expect(learn.links[0]).toEqual({ title: 'Overview', href: `${docsHome}/overview` })
     expect(lookUp.links).toEqual([
-      { title: 'API reference', href: `${docs41}/api` },
-      { title: 'CLI', href: `${docs41}/api/cli` },
+      { title: 'API reference', href: `${docsHome}/api` },
+      { title: 'CLI', href: `${docsHome}/api/cli` },
     ])
-    expect(migrate.links[0]).toEqual({ title: 'Migrating to 4.1', href: `${docs41}/migrating` })
+    expect(migrate.links[0]).toEqual({ title: `Migrating to ${HOME_LINE}`, href: `${docsHome}/migrating` })
   })
 })
