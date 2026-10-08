@@ -199,7 +199,7 @@ so `interaction.member` is the member Discord sent: plain data, with `roles` as 
 string. [`createMockRawMember()`](api:testing/createMockRawMember) builds it. Give it as the interaction's `member`,
 with the server's `guildId` and no `guild`:
 
-- `inRawGuild()` is true and `inCachedGuild()` false, and `guild` is `null`;
+- `inRawGuild()` is true and `inCachedGuild()` false, and `guild` and `channel` are `null`, with its `channelId` kept;
 - `user` is the member's user, and `memberPermissions` are the member's;
 - a user option's member is the member Discord resolves, with `roles` and `permissions` but no `user`;
 - the interaction is typed as discord.js types one from such a server, so the compiler sees `member` as raw data.
