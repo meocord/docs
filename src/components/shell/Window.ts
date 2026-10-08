@@ -14,7 +14,7 @@ import { SHELL_IDS } from '@/lib/page-ids'
 import { breadcrumbList, jsonLd, type StructuredData } from '@/lib/seo/structured-data'
 import { ArchivedNotice } from '@/components/shell/ArchivedNotice'
 import { CURRENT_LINE, VERSIONS } from '@/config/versions'
-import { docsHref } from '@/lib/urls'
+import { docsHref, upgradeSection } from '@/lib/urls'
 
 export interface WindowProps extends Omit<ToolbarProps, 'sidebar'> {
   /**
@@ -115,7 +115,10 @@ export function Window({
       ? ArchivedNotice({
           line: version.current.label,
           latest,
-          upgrade: docsHref({ kind: 'migrating', line: CURRENT_LINE }, VERSIONS),
+          upgrade: docsHref(
+            { kind: 'migrating', line: CURRENT_LINE, anchor: upgradeSection(version.current.label, VERSIONS) },
+            VERSIONS,
+          ),
         })
       : null
   // A window without a sidebar has no inspector either, so its one column sits in the middle of the sheet

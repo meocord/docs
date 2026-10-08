@@ -7,6 +7,7 @@ import {
   lineSegment,
   memberAnchor,
   olderLines,
+  upgradeSection,
   resolveStoredHref,
   versionElsewhere,
   type VersionsManifest,
@@ -172,6 +173,24 @@ describe('versionElsewhere', () => {
     expect(versionElsewhere('4.1', '4.1.0', STABLE)).toBeUndefined()
     expect(versionElsewhere('4.1', '3.9.0', STABLE)).toBeUndefined()
     expect(versionElsewhere('4.1', 'common', STABLE)).toBeUndefined()
+  })
+})
+
+describe('upgradeSection', () => {
+  it("names the upgrade guide's section from a line to the next, by number", () => {
+    expect(upgradeSection('4.0', STABLE)).toBe('upgrading-from-40-to-41')
+    expect(upgradeSection('3.9', BETA)).toBe('upgrading-from-39-to-40')
+    const tenth: VersionsManifest = {
+      lines: [
+        { line: '4.10', status: 'current' },
+        { line: '4.9', status: 'archived' },
+      ],
+    }
+    expect(upgradeSection('4.9', tenth)).toBe('upgrading-from-49-to-410')
+  })
+
+  it('has none for the newest line', () => {
+    expect(upgradeSection('4.1', STABLE)).toBeUndefined()
   })
 })
 
