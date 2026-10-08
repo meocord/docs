@@ -125,7 +125,9 @@ handler made it through `respond()` or with discord.js directly, such as `intera
 - `calls`: each answer, once, in the order made, with what it sent, and the `error` of one Discord refused.
 
 A call's `payload` is typed by its `method`: once a test checks `call.method === 'reply'`, the payload is what
-`reply()` takes, so its `content` and `embeds` read without a cast.
+`reply()` takes: a string, a `MessagePayload` or its options. Narrow it to the options before reading `content` or
+`embeds`: after `typeof call.payload === 'object' && !(call.payload instanceof MessagePayload)`, with `MessagePayload`
+from discord.js, `call.payload.content` compiles with no cast.
 
 A call a mock rejects, such as a reply refused with 10062 once the three seconds have passed, stays in `calls` with its
 `error`, and doesn't count as sent: the member saw nothing.
