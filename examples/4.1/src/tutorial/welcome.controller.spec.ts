@@ -1,4 +1,4 @@
-import { ActivityType, type Client, type Guild, Locale } from 'discord.js'
+import { ActivityType, type Guild, Locale } from 'discord.js'
 import { createMockClient, createMockGuild, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { ActivityService } from '@src/tutorial/activity.service'
@@ -17,7 +17,7 @@ describe('the feedback bot joining a server', () => {
   })
 
   it('says it is listening for /feedback once it is online', () => {
-    const client = createMockClient() as unknown as Client<true>
+    const client = createMockClient()
 
     new ActivityService().onReady(client)
 

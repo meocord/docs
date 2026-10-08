@@ -85,7 +85,7 @@ describe('the feedback bot in chat', () => {
     const filed = createMockMessage({
       guild: reviewed,
       client,
-      author: client.user!,
+      author: client.user,
       content: content ?? `Filed as feedback #${id}. Thank you!`,
     })
     const reaction = createMockInteraction(MessageReaction, { message: filed, emoji: { name: emoji } as never })
