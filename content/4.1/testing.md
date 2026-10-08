@@ -9,7 +9,14 @@ learn:
   - Swap a dependency, a guard or an interceptor for a stand-in
   - Run lifecycle hooks and keep tests apart
 requires: [services]
-api: [testing/MeoCordTestingModule, testing/TestingModuleBuilder, testing/TestingModule, testing/resetAllMocks]
+api:
+  [
+    testing/MeoCordTestingModule,
+    testing/TestingModuleBuilder,
+    testing/TestingModule,
+    testing/resetAllMocks,
+    testing/useMockFn,
+  ]
 since: 4.0.0
 formerly: [tutorial-testing]
 ---
@@ -133,7 +140,8 @@ npm run test:watch      # on every change
 npm run test:coverage   # with a coverage report
 ```
 
-`vitest.setup.ts` runs before every spec file. It resets MeoCord's mocks after every test:
+`vitest.setup.ts` runs before every spec file. It has MeoCord's mocks made with `vi.fn`, so Vitest treats them as its
+own, and resets them after every test:
 
 ::example{file="config/vitest.setup.ts" region="setup"}
 
@@ -183,7 +191,7 @@ jobs:
 ## Gotchas
 
 - **State set once for a whole `describe` is gone after the first test.** `vitest.setup.ts` resets every MeoCord mock
-  after each test, through `resetAllMocks()`; a `vi.fn()` only has its calls cleared. Set what a mock returns in the
+  after each test, through `resetAllMocks()`; a `vi.fn()` of your own only has its calls cleared. Set what a mock returns in the
   test that relies on it, or in `beforeEach`.
 - **A module shared across tests shares its state.** Cooldown counts and service fields carry over. Build one module
   per test, or per `describe` when the tests change nothing in it.
