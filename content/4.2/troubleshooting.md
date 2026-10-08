@@ -61,6 +61,12 @@ problem, and a last line, `in src/…`, names the file it comes from when MeoCor
 SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
 ```
 
+When MeoCord finds more than one, it reports each this way, then how many there were: `MeoCord found 3 startup errors;
+the bot did not start.` `MeoCordFactory.create()` and a testing module's `compile()` report every mistake their own
+checks find, such as two handlers of one command and a provider nothing can bind, and throw the first, so a test that
+expects that error still gets it. A decorator's mistake, such as an invalid pattern, is thrown as its file loads, so
+only the first one shows per run, unless the bot reports every startup error at once.
+
 Fix what it names. The common ones:
 
 - **"`Class`: parameter 1 of its constructor has no runtime type, so it cannot be created."** A controller or
@@ -132,6 +138,26 @@ Fix what it names. The common ones:
   ```text
   Stats.stats: StatsBuilder could not be made for "stats": missing translator.
   ```
+
+### Every startup error at once
+
+A decorator checks what it is given as its class is defined, when its file is imported, before the bot starts. By
+default it throws the first mistake it finds, so a bot with three bad patterns takes three runs to fix. Set
+`startupErrors: 'all'` in `meocord.config.ts` to have decorators keep their mistakes instead, and the bot reports all of
+them, with the mistakes `create()` finds, in one run:
+
+```text
+Tickets.close: Invalid pattern "ticket-{id}": {id} must occupy a whole segment, …
+    in src/controllers/tickets.controller.ts
+Shop.buy: @Cooldown needs a number of seconds from 0.001 to 4320000000000, not -1.
+    in src/controllers/shop.controller.ts
+MeoCord found 2 startup errors; the bot did not start.
+```
+
+In a test, call `reportAllStartupErrors()` from `meocord/testing` once in `vitest.setup.ts`, before any spec imports a
+controller: the testing module's `compile()` then reports every mistake of the classes it runs. Either way, the error
+thrown carries what it is about as `error.declaration`, such as `Tickets.close`, and its file as `error.file`. MeoCord
+5.0 reports every startup error at once by default.
 
 ### Other startup errors
 
