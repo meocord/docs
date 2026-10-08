@@ -316,8 +316,11 @@ export function movedMissingHref(line: string, id: string): string | undefined {
 
 /** The page a reader lands on when a line has no page with this id: where it is, and what this line has. */
 export function missingArticle(line: string, id: string): { nodes: Child[]; title: string } | undefined {
-  const elsewhere = pagesWithId(id).filter(found => found.line !== line)
-  if (elsewhere.length === 0 || !lines().includes(line)) return undefined
+  const found = pagesWithId(id)
+  // The line's own page on the topic answers for it, whatever other lines have
+  if (!lines().includes(line) || found.some(page => page.line === line)) return undefined
+  const elsewhere = found.filter(page => page.line !== line)
+  if (elsewhere.length === 0) return undefined
   const title = elsewhere[0].page.title
   // Said only of a release after the line's, where the topic is new
   const since = elsewhere
