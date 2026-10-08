@@ -1,4 +1,3 @@
-import { type Client } from 'discord.js'
 import { createMockClient, MeoCordTestingModule } from 'meocord/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReminderScheduler } from '@src/services/reminder.scheduler'
@@ -9,7 +8,7 @@ describe('lifecycle hooks in a test', () => {
 
   // #region lifecycle
   it('runs onReady once the module is ready, and onShutdown on close', async () => {
-    const client = createMockClient() as unknown as Client<true>
+    const client = createMockClient()
     const module = await MeoCordTestingModule.create({
       providers: [{ provide: ReminderScheduler, useClass: ReminderScheduler }],
     })

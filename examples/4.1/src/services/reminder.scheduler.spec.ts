@@ -1,4 +1,3 @@
-import { type Client } from 'discord.js'
 import { createMockClient } from 'meocord/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReminderScheduler } from '@src/services/reminder.scheduler'
@@ -9,7 +8,7 @@ describe('ReminderScheduler', () => {
   afterEach(() => vi.useRealTimers())
 
   it('sends due reminders every minute from onReady until onShutdown', async () => {
-    const client = createMockClient() as unknown as Client<true>
+    const client = createMockClient()
     const scheduler = new ReminderScheduler()
     scheduler.add('111111111111111111', 'Water the plants')
 
@@ -24,7 +23,7 @@ describe('ReminderScheduler', () => {
   })
 
   it('schedules nothing outside the primary process', async () => {
-    const client = createMockClient() as unknown as Client<true>
+    const client = createMockClient()
     const scheduler = new ReminderScheduler()
     scheduler.add('111111111111111111', 'Water the plants')
 

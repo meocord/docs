@@ -1,4 +1,4 @@
-import { type Client, TextChannel } from 'discord.js'
+import { TextChannel } from 'discord.js'
 import { createMockClient, createMockInteraction } from 'meocord/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DailyDigest, untilNext } from '@src/recipes/scheduled/daily-digest.service'
@@ -24,7 +24,7 @@ describe('DailyDigest', () => {
     channel.isSendable.mockReturnValue(true)
     const client = createMockClient()
     client.channels.fetch.mockResolvedValue(channel as never)
-    return { client: client as unknown as Client<true>, channel }
+    return { client, channel }
   }
 
   it('posts at 09:00 UTC every day, from the primary process, until shutdown', async () => {
