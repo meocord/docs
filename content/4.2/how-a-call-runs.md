@@ -116,6 +116,19 @@ keep their base's.
 MeoCord resolves this chain once per handler, so dispatch pays nothing for it.
 [`inspectHandler`](api:testing/inspectHandler) lists what a handler ends up with, in the order it runs.
 
+## A subclass's routes
+
+A subclass answers every route its bases declare, for the handlers it inherits. One it re-decorates on the same route
+takes its own options there. One it re-decorates on another route answers that route as well as the inherited one,
+and the bot names each such handler in a warning as it starts. Give the subclass
+`@Controller({ inheritedRoutes: 'replace' })`, and a handler it re-decorates answers only the routes it declares
+for it: the inherited ones are dropped, of every kind, from commands and component patterns to message patterns,
+reactions and autocompletes. A slash or context menu command that only they answered is not registered. A method the
+subclass overrides without decorators keeps every route it inherits either way.
+
+[`inspectHandler`](api:testing/inspectHandler)'s `inheritedRoutes` lists the routes a handler answers because a base
+declares them, so a test can pin what a subclass still answers.
+
 ## The call's context
 
 Every stage can read the call through [`ExecutionContext`](api:utilities/ExecutionContext): the interaction or message,
