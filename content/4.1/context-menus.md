@@ -76,7 +76,9 @@ match, and `--message` a message one.
 
 ## Testing
 
-Give the mock its target in the overrides, since discord.js makes `targetUser` and `targetMessage` read-only:
+Give the mock its target in the overrides, since discord.js makes `targetUser` and `targetMessage` read-only. For a
+user command, a `targetId` is enough: `targetUser` is the client's cached user with that id, or one made, and in a
+server `targetMember` is their member:
 
 ::example{file="controllers/context-menu/report.context-menu.controller.spec.ts" region="spec"}
 

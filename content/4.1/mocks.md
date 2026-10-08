@@ -132,7 +132,9 @@ test build. A file upload field takes an array of `Attachment`s: `createModalFie
 - **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the bot
   sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that user,
   made and cached when there's none. Every message from that author in one `guild` you give has the same member, and so
-  does an interaction given the same `user` and `guild`.
+  does an interaction given the same `user` and `guild`. `message.member` reads that cache each time, so a test that
+  deletes the author's member from `guild.members.cache` gets `null`, as discord.js gives for an author it hasn't
+  cached.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
 - **`createMockClient()`** has real, empty `users` and `channels` caches, and one bot user, the same in every mock, as
@@ -172,6 +174,15 @@ and the server's owner has every permission:
 
 ::example{file="testing/mock-member.spec.ts" region="permissions"}
 
+What discord.js computes from these, the mocks compute too, and keep computing after `resetAllMocks()`:
+
+- `role.comparePositionTo(other)` and `guild.roles.comparePositions(a, b)` rank by position, then by id;
+- `channel.permissionsFor(member)` and `member.permissionsIn(channel)` apply the channel's `permissionOverwrites` to
+  the member's roles, and an interaction's `appPermissions` are the bot's in its channel;
+- a manager's `resolve()` and `resolveId()` read its cache, given an id or the item, and `guild.members.resolve(user)`
+  finds that user's member;
+- `guild.members.me` is the bot's member: the cached one for `client.user`, or one with @everyone, made once.
+
 A member made without a server joins the one whose `members` it's given to. An interaction's channel is one of that
 server's, and a manager's `fetch(id)` finds what the server caches:
 
@@ -186,6 +197,7 @@ A method that returns a promise in discord.js resolves, so `await` and `.catch()
 | `send()`, a message's `reply()`, `crosspost()`, `forward()`, and an interaction's `editReply()`, `followUp()`, `fetchReply()` | a mock message                                       |
 | an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`, `showModal()`                                        | `undefined`                                          |
 | a manager's `fetch(id)`, or `fetch({ user })` and the like                                                                    | its cached item with that id, or a new one it caches |
+| a guild's `members.fetch({ user: ids })`                                                                                      | a `Collection` of each, as `fetch(id)` gives it      |
 | a manager's `fetch()` for a list                                                                                              | an empty `Collection`                                |
 | a manager's `create()` and `edit()`                                                                                           | a mock of its item                                   |
 | `createDM()`                                                                                                                  | a mock DM channel                                    |
@@ -196,8 +208,28 @@ A method that returns a promise in discord.js resolves, so `await` and `.catch()
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
 
-A method that returns a value at once, such as `avatarURL()`, returns `undefined`. A test still decides with
+A method that returns a value at once returns what discord.js computes where the mock has what it needs:
+`resolve()`, `comparePositionTo()`, `permissionsFor()`, `message.mentions.has(user)`, `isReady()`, and `avatarURL()`
+and `iconURL()`, `null` with no avatar or icon set. Any other returns `undefined`. A test still decides with
 `mockReturnValue`, `mockResolvedValue` and `mockRejectedValue`.
+
+## Values a mock can't compute
+
+Some of what discord.js computes depends on Discord's state a mock doesn't hold, so the mock reads it as a truthy
+placeholder:
+
+- a message's `editable`, `deletable`, `pinnable`, `crosspostable`, `bulkDeletable` and `hasThread`;
+- a member's `manageable`, `kickable`, `bannable` and `moderatable`;
+- a role's `editable`, and a channel's `viewable`, `manageable` and `deletable`, and their thread and voice
+  counterparts;
+- `partial` on messages, users, channels and reactions.
+
+The first time a test reads one, the run logs a warning that names it and says how to set it. Set the value the test
+relies on, such as `message.editable = false` or `member.kickable = false`, and it is read without a warning.
+
+`message.thread` is the thread the message's channel caches under the message's id. Cache one with
+`channel.threads.cache.set(message.id, thread)` for a message that started a thread. Without one, it is a placeholder
+thread, with a warning, since discord.js reads `null` there.
 
 ## Collectors
 
