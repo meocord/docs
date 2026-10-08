@@ -21,6 +21,7 @@ api:
     testing/createMockClient,
     testing/createDiscordError,
     testing/resetAllMocks,
+    testing/useMockFn,
   ]
 since: 4.0.0
 ---
@@ -29,8 +30,9 @@ A handler takes discord.js objects: an interaction, a message, a reaction, the u
 mocks every one of them. A mock keeps its class's prototype chain, so `instanceof` holds at every level and a mock can
 go straight to code that expects the real class.
 
-Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. Under Node's test runner
-and bun test, assert through `.mock.calls` itself: each call is recorded as an array of its arguments,
+Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. With
+[`useMockFn`](#your-test-runners-mocks), it is your test runner's own mock, and the runner treats it as one of its own.
+Under Node's test runner, assert through `.mock.calls` itself: each call is recorded as an array of its arguments,
 `mock.calls[0][0]`, not node:test's `{ arguments }` record.
 
 ## When to use it
@@ -239,17 +241,37 @@ collector. The gateway does that for the bot; in a test, pass `{ client: interac
 
 ::example{file="testing/collector.spec.ts" region="collector"}
 
+## Your test runner's mocks
+
+[`useMockFn(vi.fn)`](api:testing/useMockFn), called once in a test setup file, has `meocord/testing` make every mock
+with the runner's own mock function. The runner then treats them as its own: Vitest's `clearMocks` and `mockReset`
+config and `vi.clearAllMocks()` reach them, and `vi.mocked(interaction.reply)` gives Vitest's whole mock API, such as
+`withImplementation`. A generated project's `vitest.setup.ts` makes this call.
+
+- **jest** takes `useMockFn(jest.fn)`, in a file its `setupFiles` lists.
+- **bun test** takes `useMockFn(mock)`, with `mock` from `bun:test`, in a file `bunfig.toml` preloads. Bun's matchers,
+  such as `toHaveBeenCalledWith`, read only bun's own mocks, so this is what lets them read MeoCord's.
+- **node:test** keeps MeoCord's own mock function: its `mock.fn` records calls in a shape of its own, which
+  `useMockFn` refuses.
+
+Call it before any mock is made. Once a mock exists, a call with another function throws, since the two kinds would
+mix. A setup file runs first, so that is where it goes.
+
 ## Resetting between tests
 
-Vitest's `clearMocks` and `restoreMocks` reach only `vi.fn()`, so `meocord/testing` has its own. `clearAllMocks()`
-forgets what every mock it made has recorded. [`resetAllMocks()`](api:testing/resetAllMocks) also undoes what a test
-told them, back to how each was created:
+`clearAllMocks()` forgets what every mock from `meocord/testing` has recorded.
+[`resetAllMocks()`](api:testing/resetAllMocks) also undoes what a test told them, back to how each was created:
 
 ::example{file="testing/reset.spec.ts" region="reset"}
 
 A generated project resets after every test from `vitest.setup.ts`, as [The testing module](guide:testing#running-tests)
 shows. An older project gets the same by adding that file and `setupFiles: ['./vitest.setup.ts']` to its
 `vitest.config.ts`.
+
+Under Vitest, its own `mockReset` puts a mock back to how it was created, so its config works too. Under jest and
+bun, a runner's `mockReset` drops a mock's starting behaviour, and with it what MeoCord's mocks do, such as an
+interaction refusing a second reply. Reset there with `resetAllMocks()`, which puts that behaviour back, and leave
+jest's `resetMocks` off.
 
 ## Discord's errors
 
