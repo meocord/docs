@@ -140,6 +140,21 @@ An app's prefix function gives its prefixes only as each message arrives, so bes
 it uses the function too, or when both take a mention because the app's `mention` is on. Then every `@MessageHandler()`
 without a pattern runs, whether or not a pattern matched.
 
+### Running them side by side
+
+By default a message's handlers run in turn: the patterned handler, then each listener once the one before it has
+settled, so a slow command delays logging and auto-moderation for that message. A handler that takes 5 seconds or more
+with listeners waiting after it is named in a warning, once; `messages: { slowHandlerWarning: false }` turns it off.
+
+`@MeoCord({ messages: { handlers: 'concurrent' } })` starts the command and every listener together, and the call
+settles once all have.
+
+Each still runs through its own guards, interceptors, filters, cooldowns and observers, so one that fails reaches only
+its own filters. No order holds between them: a listener can run before the command has written what it reads, and
+their replies can arrive in any order. Keep the default for a listener that depends on the command finishing first.
+The built-in help and a command's usage are answered first either way, and a test's `dispatch(message)` resolves once
+every handler has settled, listing them in the order they started.
+
 ## Usage errors
 
 A message that names a command, after a prefix or mention, but does not fit its pattern gets the command's
