@@ -6,9 +6,20 @@ const link = { color: 'inherit', fontWeight: 'theme.font.weight.semibold', textD
 
 /**
  * Says, above a page of an archived line, that the line gets no more fixes, security fixes included, and links the
- * same page in the latest line and the latest line's upgrade guide. Lines are archived once a newer one ships.
+ * same page in the latest line and the latest line's upgrade guide. Lines are archived once a newer one ships; `tone`
+ * is danger for a line whose releases carry security advisories, and a warning otherwise.
  */
-export function ArchivedNotice({ line, latest, upgrade }: { line: string; latest: VersionOption; upgrade: string }) {
+export function ArchivedNotice({
+  line,
+  latest,
+  upgrade,
+  tone,
+}: {
+  line: string
+  latest: VersionOption
+  upgrade: string
+  tone: 'warning' | 'danger'
+}) {
   return Div({
     key: 'archived',
     maxWidth: 'calc(theme.layout.prose + 2 * theme.layout.sheetPad)',
@@ -22,15 +33,15 @@ export function ArchivedNotice({ line, latest, upgrade }: { line: string; latest
     },
     children: Aside({
       'aria-label': `MeoCord ${line} is no longer supported`,
-      'data-archived-notice': true,
+      'data-archived-notice': tone,
       padding: 'theme.space.3 theme.space.4',
       borderRadius: 'theme.radius.callout',
-      backgroundColor: 'theme.callout.danger.fill',
+      backgroundColor: `theme.callout.${tone}.fill`,
       fontSize: 'theme.type.small.size',
       lineHeight: 'theme.type.small.line',
       color: 'theme.ink.primary',
       children: [
-        Strong(`MeoCord ${line} is no longer supported.`, { key: 'title', color: 'theme.callout.danger.glyph' }),
+        Strong(`MeoCord ${line} is no longer supported.`, { key: 'title', color: `theme.callout.${tone}.glyph` }),
         ` It gets no more fixes, security fixes included. `,
         A({ key: 'latest', href: latest.href, css: link, children: `Read this page for ${latest.label}` }),
         ', or follow the ',
