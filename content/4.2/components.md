@@ -109,7 +109,9 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
   exactly; shorter digits are an `int` while a number holds them exactly. Use it for a Discord ID rather than
   `{x:number}`, which rounds one: `12345678901234567` arrives as `12345678901234568`. A `uuid` is the 8-4-4-4-12 hex
   form, in either case.
-- **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`.
+- **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`. It
+  takes a `snowflake` or a `uuid` only as a string, and throws a `TypeError` for anything else, such as a number, which
+  may have lost an ID's digits already: pass the ID as text, such as `user.id`.
 - **The handler's params are checked when the code compiles**, for a pattern written as a string as for a route:
   `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a name other than the
   route's params and a select menu's choices, such as `{ uid }` for `stats/{id}`. A form's handler may name its fields.
