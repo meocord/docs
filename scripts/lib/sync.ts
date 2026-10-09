@@ -2,7 +2,7 @@
  * Brings the repository up to date with the registry: every published version from versions.json's
  * `since` on, verified, gets its API document and changelog, joins its line, and the lines it
  * touched get their guides and example pin refreshed. Migration guides are written for the site, in
- * content/migrating/, and the sync never touches them.
+ * content/migrating/: a new line's starts as a copy of the line it forks, and the sync never touches one after.
  */
 
 import { readdirSync, readFileSync } from 'fs'
@@ -27,7 +27,7 @@ import { distTagProblems } from './package-spec.js'
 import type { Fetch, Packument } from './registry.js'
 import { apiKeys, computeSince, type SinceEntry } from './since.js'
 import { fetchVerified, type VerifiedPackage } from './verified-package.js'
-import { addVersion, findLine, lineOf, newestIn, type VersionsConfig } from './versions.js'
+import { addVersion, findLine, lineOf, newestIn, newestLine, type VersionsConfig } from './versions.js'
 import type { JSONOutput } from 'typedoc'
 
 export interface SyncDeps {
@@ -128,7 +128,7 @@ export async function sync(config: VersionsConfig, deps: SyncDeps): Promise<Sync
       const line = findLine(config, lineOf(version))!
       if (result.forked?.from) {
         if (line.guides === 'authored') forkContent(result.forked.from, line.line)
-        forkExamples(result.forked.from, line.line, version)
+        forkExamples(result.forked.from, line.line, version, { home: newestLine(config) === line.line })
       }
       // The line's README is imported before its changelog, whose links resolve against it
       if (line.guides === 'readme' && newestIn(line) === version)

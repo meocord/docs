@@ -12,6 +12,7 @@ import { readGuide } from './guide.js'
 import { withPlaceholder } from './package-spec.js'
 import { importReadme, pageFile } from './readme.js'
 import type { VersionsConfig } from './versions.js'
+import { HOME_EXAMPLE } from '../../src/config/home.js'
 import { README_SECTIONS } from '../../src/config/readme-sections.js'
 
 /** The repository root; the pipeline's tests point it at a scratch directory. */
@@ -110,21 +111,31 @@ export function linkAnchors(config: VersionsConfig, line: string): Record<string
   return entry?.guides === 'authored' ? { ...authoredAnchors(line), ...README_SECTIONS[line] } : lineAnchors(line)
 }
 
-/** Starts a new line's authored guides from another line's; an existing line's folder is never touched. */
+/**
+ * Starts a new line's authored guides from another line's, and its migration guide, which they link, unless one is
+ * written ahead; an existing line's folder is never touched.
+ */
 export function forkContent(from: string, to: string): void {
   if (existsSync(paths.content(to)))
     throw new Error(`content/${to} already exists; a line's guides are forked only once.`)
   cpSync(paths.content(from), paths.content(to), { recursive: true })
+  if (existsSync(paths.migrating(from)) && !existsSync(paths.migrating(to)))
+    cpSync(paths.migrating(from), paths.migrating(to))
 }
 
-/** Starts a line's example workspace from another's, pinned to `version`. */
-export function forkExamples(from: string, to: string, version: string): void {
+/**
+ * Starts a line's example workspace from another's, pinned to `version`. With `home`, the new line is the one the home
+ * page shows, so the home page's example moves to it from the line it came from.
+ */
+export function forkExamples(from: string, to: string, version: string, { home }: { home: boolean }): void {
   if (!existsSync(paths.examples(from))) return
   cpSync(paths.examples(from), paths.examples(to), {
     recursive: true,
     filter: source => !source.includes('node_modules'),
   })
   pinExamples(to, version)
+  const homeDir = (line: string) => path.join(paths.examples(line), 'src', path.dirname(HOME_EXAMPLE.file))
+  rmSync(homeDir(home ? from : to), { recursive: true, force: true })
 }
 
 /** Pins a line's example workspace to the exact version its examples are checked against. */

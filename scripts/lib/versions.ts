@@ -102,6 +102,11 @@ export function findLine(config: VersionsConfig, line: string): Line | undefined
   return config.lines.find(entry => entry.line === line)
 }
 
+/** The newest line versions.json lists, by number, whatever its status. */
+export function newestLine(config: { lines: readonly { line: string }[] }): string {
+  return [...config.lines].sort((a, b) => byLine(b.line, a.line))[0].line
+}
+
 /** The newest version of a line. */
 export function newestIn(line: Line): string {
   return [...line.versions].sort(semver.rcompare)[0]

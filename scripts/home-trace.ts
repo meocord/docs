@@ -9,9 +9,10 @@
 import { spawnSync } from 'child_process'
 import path from 'path'
 import { paths, ROOT, writeText } from './lib/layout.js'
+import { HOME_LINE } from '../src/config/home.js'
 
-// The line the home page shows the demo from: the newest line with an examples workspace.
-const LINE = '4.1'
+// The line the home page shows the demo from
+const LINE = HOME_LINE
 const OUT = path.join(ROOT, '.home-trace', 'trace.json')
 
 const result = spawnSync(process.execPath, ['src/home/record.ts'], { cwd: paths.examples(LINE), encoding: 'utf8' })
