@@ -19,10 +19,10 @@ since: 4.1.0
 formerly: []
 ---
 
-4.2 adds to 4.1 without breaking it: a 4.1 bot and its tests build and run without edits. What changes by default is
-what MeoCord reports: startup errors arrive together, and a few warnings are new or say more.
-[Upgrading from 4.1 to 4.2](guide:migrating#upgrading-from-41-to-42) lists each, with what to check. Every release's
-notes are in the [changelog](guide:changelog).
+4.2 adds to 4.1 without breaking it: a 4.1 bot and its tests build and run without edits. By default, startup errors
+arrive together, a few warnings are new or say more, and customId patterns rank segment by segment, which changes the
+handler only for pairs 4.1 warned about. [Upgrading from 4.1 to 4.2](guide:migrating#upgrading-from-41-to-42) lists
+each, with what to check. Every release's notes are in the [changelog](guide:changelog).
 
 ## Starting the bot
 
@@ -39,9 +39,10 @@ notes are in the [changelog](guide:changelog).
 - **`@Controller({ inheritedRoutes: 'replace' })`** makes a handler the class re-decorates answer only the routes the
   class declares for it, dropping the ones a base class declares for that method. See
   [A subclass's routes](guide:how-a-call-runs#a-subclasss-routes).
-- **`@MeoCord({ routeTies: 'literalFirst' })`** decides between two equally specific customId patterns by the first
-  segment where they differ, the literal one first, whatever the listing. `findRouteConflicts` and `resolveRoute` say
-  which pattern runs and why. See [Overlapping patterns](guide:components#overlapping-patterns).
+- **customId patterns rank segment by segment**, the way most routers rank paths: at the first segment where one
+  pattern is literal and the other a param, the literal one runs, whatever the listing. Only pairs 4.1's startup warning
+  named can change handler. `findRouteConflicts` lists only the pairs still tied, and `resolveRoute`'s `alsoMatches`
+  the patterns that lost. See [Overlapping patterns](guide:components#overlapping-patterns).
 
 ## Message commands
 
@@ -63,6 +64,6 @@ notes are in the [changelog](guide:changelog).
 
 ## Getting ready for 5.0
 
-Four options bring a 5.0 default into 4.2, so a bot can move to it one change at a time: `inheritedRoutes: 'replace'`,
-`routeTies: 'literalFirst'`, `startupErrors: 'all'` and `useStrictMocks()`. Where the default would change what a bot
+Three options bring a 5.0 default into 4.2, so a bot can move to it one change at a time: `inheritedRoutes: 'replace'`,
+`startupErrors: 'all'` and `useStrictMocks()`. Where the default would change what a bot
 does, a warning says so and names the option, and 4.2 behaves as 4.1 until you set it.

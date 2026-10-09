@@ -110,29 +110,27 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 
 ### Overlapping patterns
 
-Patterns with different segment counts never compete. When two with the same count can both match an id, the one that
-spells out more literal text wins, whatever order they were declared in:
+Patterns with different segment counts never compete. When two with the same count can both match an id, they're
+compared segment by segment, left to right: at the first segment one spells out as literal text and the other leaves to
+a parameter, the literal one wins, whatever order they were declared in:
 
 ::playground{file="controllers/button/profile.button.controller.ts" region="overlap" dispatch="button profile/summary/456"}
 
-Between equally literal patterns, the one with fewer parameters wins, then the one whose typed parameters take fewer
-values: words to choose from, then `bool`, `int`, `number`, and text last. So beside `page/{name}`, `page/{n:int}` takes
-`page/5` and leaves `page/last` to the other, in whatever order they're declared.
+So `profile/me/{section}` takes `profile/me/edit` from `profile/{userId}/edit`, which still takes `profile/123/edit`,
+and `a/{x}` takes `a/abcd` from `{x}/abcd`, though the second spells out more text.
 
-Between two equally specific patterns, such as `a/{x}/c` and `a/b/{y}`, which both take `a/b/c`, the one whose
-controller is listed first in `@MeoCord({ controllers })` runs, or, within one controller, the one declared first.
-`@MeoCord({ routeTies: 'literalFirst' })` runs instead the pattern that spells out as literal text the first segment
-where the two differ, `a/b/{y}` here, whatever the listing; the next major version (5.0) ranks that way by default.
-What that leaves tied, two patterns literal in the same places, keeps the listing order.
+When that leaves two tied, with literals and parameters in the same places, the one whose typed parameter takes fewer
+values at the first place they differ wins: words to choose from, then `bool`, `int`, `number`, and text last. So
+beside `page/{name}`, `page/{n:int}` takes `page/5` and leaves `page/last` to the other, in whatever order they're
+declared.
 
-MeoCord warns once at startup about every pair of patterns of one component type that can both take an id: the two
-profile patterns above, `page/{name}` and `page/{n:int}`, and `a/{x}/c` and `a/b/{y}`. For each pair it names the
-handler that runs and why, and where 5.0 would run the other one, what to do. With `routeTies: 'literalFirst'`, only
-the pairs listing order still decides are named. The bot still starts, and the ranking decides which handler runs;
-`MeoCordTestingModule.compile()` gives the same warning, and [`findRouteConflicts`](api:testing/findRouteConflicts)
-lists the pairs, each with the pattern that `runs` and what it was `decidedBy`: `'specificity'`, `'literal'` or
-`'order'`. Patterns with different literals in the same
-place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
+Only two patterns still tied, with the same literals and equally narrow parameters in every place, can collide, such as
+`t/{a:on|off}` and `t/{b:off|no}`, which both take `t/off`. The one whose controller is listed first in
+`@MeoCord({ controllers })` runs, or, within one controller, the one declared first. MeoCord warns once at startup about
+each such pair, naming an id both take and the handler that runs; the next major version (5.0) refuses to start with
+one. `MeoCordTestingModule.compile()` gives the same warning, and
+[`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs, each with the pattern that `runs`. Patterns with
+different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
 Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
 startup, naming both, since only one of them could ever run. `meocord register` refuses them too, before it sends any
