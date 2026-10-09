@@ -60,7 +60,6 @@ notes are in the [changelog](guide:changelog).
   `kickable`, where they read a placeholder otherwise. See [Strict mocks](guide:mocks#strict-mocks).
 - **`createMockRawMember()`** builds the member Discord sends from a server the bot isn't in, to test a user-installed
   command there. See [A server the bot isn't in](guide:mocks#a-server-the-bot-isnt-in).
-- **A mock's type guards**, such as `isButton()` and `inGuild()`, keep answering after `resetAllMocks()`.
 
 ## Getting ready for 5.0
 
