@@ -43,6 +43,9 @@ each, with what to check. Every release's notes are in the [changelog](guide:cha
   pattern is literal and the other a param, the literal one runs, whatever the listing. Only pairs 4.1's startup warning
   named can change handler. `findRouteConflicts` lists only the pairs still tied, and `resolveRoute`'s `alsoMatches`
   the patterns that lost. See [Overlapping patterns](guide:components#overlapping-patterns).
+- **`{id:snowflake}` and `{id:uuid}`** are customId param types for a Discord ID and a UUID, which the handler gets as
+  text and `route().build()` checks. Use `snowflake` for a Discord ID: `{id:number}` rounds one. See
+  [Typed params](guide:components#typed-params).
 
 ## Message commands
 
