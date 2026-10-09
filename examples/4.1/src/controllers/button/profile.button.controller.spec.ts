@@ -25,16 +25,14 @@ describe('ProfileButtonController', () => {
     expect(getResponse(interaction).calls[0].payload).toMatchObject({ content: 'Profile 800000001, opened by <@123>' })
   })
 
-  it('routes an id both patterns match to the more literal one', () => {
+  it('routes an id both patterns match to the one literal first', () => {
     const route = (customId: string) => resolveRoute(App, { type: CommandType.BUTTON, customId })
 
     expect(route('profile/summary/456')).toMatchObject({ method: 'showSummary', params: { uid: '456' } })
     expect(route('profile/123/456')).toMatchObject({ method: 'showProfile', params: { ownerId: '123', uid: '456' } })
   })
 
-  it('lists the pair, which MeoCord warns about at startup', () => {
-    expect(findRouteConflicts(App)).toEqual([
-      { type: CommandType.BUTTON, patterns: ['profile/summary/{uid}', 'profile/{ownerId}/{uid}'] },
-    ])
+  it('lists no pair, as the ranking tells every id apart', () => {
+    expect(findRouteConflicts(App)).toEqual([])
   })
 })
