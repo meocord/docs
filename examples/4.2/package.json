@@ -1,0 +1,23 @@
+{
+  "name": "examples-4-2",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.5",
+    "meocord": "4.2.0",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.16.2",
+    "@types/pg": "^8.23.1",
+    "meo-canvas": "^10.0.4",
+    "mongodb": "^7.6.0",
+    "redis": "^6.2.1",
+    "unplugin-swc": "^2.0.0",
+    "vitest": "^5.0.1"
+  }
+}

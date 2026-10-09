@@ -1731,6 +1731,9 @@
   "meocord/interface:ControllerOptions": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:ControllerOptions.inheritedRoutes": {
+    "since": "4.2.0"
+  },
   "meocord/interface:ControllerOptions.inheritStages": {
     "since": "4.1.0-beta.5"
   },
@@ -1934,6 +1937,9 @@
   "meocord/interface:MeoCordConfig.sourceMappedStacks": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/interface:MeoCordConfig.startupErrors": {
+    "since": "4.2.0"
+  },
   "meocord/interface:MeoCordMessages": {
     "since": "4.1.0-beta.6"
   },
@@ -1964,6 +1970,9 @@
   "meocord/interface:MessageCommandOptions.dmOnError": {
     "since": "4.1.0-beta.8"
   },
+  "meocord/interface:MessageCommandOptions.handlers": {
+    "since": "4.2.0"
+  },
   "meocord/interface:MessageCommandOptions.help": {
     "since": "4.1.0-beta.6"
   },
@@ -1975,6 +1984,9 @@
   },
   "meocord/interface:MessageCommandOptions.replyEmoji": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/interface:MessageCommandOptions.slowHandlerWarning": {
+    "since": "4.2.0"
   },
   "meocord/interface:MessageCommandOptions.types": {
     "since": "4.1.0-beta.5"
@@ -2590,6 +2602,12 @@
   "meocord/testing:createMockMessage(overrides)": {
     "since": "4.1.0-beta.1"
   },
+  "meocord/testing:createMockRawMember": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:createMockRawMember(overrides)": {
+    "since": "4.2.0"
+  },
   "meocord/testing:createMockTheme": {
     "since": "4.1.0-beta.5"
   },
@@ -2728,6 +2746,9 @@
   "meocord/testing:HandlerInspection.guards": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:HandlerInspection.inheritedRoutes": {
+    "since": "4.2.0"
+  },
   "meocord/testing:HandlerInspection.interceptors": {
     "since": "4.1.0-beta.0"
   },
@@ -2844,6 +2865,9 @@
   },
   "meocord/testing:MockedFunction": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:MockFnFactory": {
+    "since": "4.2.0"
   },
   "meocord/testing:MockGuildOverrides": {
     "since": "4.1.0-beta.5"
@@ -2995,6 +3019,9 @@
   "meocord/testing:MockProps": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:MockRawMemberOverrides": {
+    "since": "4.2.0"
+  },
   "meocord/testing:MockResult": {
     "since": "4.0.0-beta.0"
   },
@@ -3025,11 +3052,17 @@
   "meocord/testing:ProviderToken": {
     "since": "4.1.0-beta.3"
   },
+  "meocord/testing:reportAllStartupErrors": {
+    "since": "4.2.0"
+  },
   "meocord/testing:resetAllMocks": {
     "since": "4.1.0-beta.3"
   },
   "meocord/testing:ResolvedRoute": {
     "since": "4.0.0-beta.5"
+  },
+  "meocord/testing:ResolvedRoute.alsoMatches": {
+    "since": "4.2.0"
   },
   "meocord/testing:ResolvedRoute.controller": {
     "since": "4.0.0-beta.5"
@@ -3077,8 +3110,32 @@
   "meocord/testing:RouteConflict.patterns": {
     "since": "4.0.0-beta.5"
   },
+  "meocord/testing:RouteConflict.runs": {
+    "since": "4.2.0"
+  },
   "meocord/testing:RouteConflict.type": {
     "since": "4.0.0-beta.5"
+  },
+  "meocord/testing:RunnerMock": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock.mock": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock.mockClear": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock.mockImplementation": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock.mockImplementation(fn)": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock.mockReset": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:RunnerMock(args)": {
+    "since": "4.2.0"
   },
   "meocord/testing:testCooldownStore": {
     "since": "4.1.0-beta.4"
@@ -3256,6 +3313,15 @@
   },
   "meocord/testing:TestingModuleOptions.shutdownTimeout": {
     "since": "4.1.0-beta.10"
+  },
+  "meocord/testing:useMockFn": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:useMockFn(factory)": {
+    "since": "4.2.0"
+  },
+  "meocord/testing:useStrictMocks": {
+    "since": "4.2.0"
   },
   "meocord/testing:ValueProvider": {
     "since": "4.0.0-beta.0"

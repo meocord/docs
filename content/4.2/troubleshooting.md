@@ -1,0 +1,258 @@
+---
+id: troubleshooting
+title: Troubleshooting
+chapter: appendix
+group: help
+order: 3
+summary: The failures most bots meet, what the bot or Discord says for each, what causes it, and where the fix is.
+requires: []
+api: [responses/GuardDeniedError, decorators/Defer, testing/createDiscordError]
+since: 4.1.0
+formerly: []
+---
+
+The failures most bots meet, what causes each, and where the fix is explained. Text in quotes is what Discord's app
+or the bot's log shows.
+
+## The bot won't start
+
+**"Discord token is missing: meocord.config.ts sets discordToken, and a new app reads it from DISCORD_TOKEN in
+.env."** The config gives no token. Check that `.env` exists where the bot runs, from its working directory, and
+names `DISCORD_TOKEN`. See [Environment variables](guide:configuration#environment-variables).
+
+**"Discord refused the bot token."** Discord refused the token at login, so `start()` rejects and the process exits
+with code 1. Copy the token again from the Developer Portal, under your application, Bot, then Reset Token.
+Resetting it there makes the old one stop working.
+
+**"Discord refused the privileged intents the bot requests (…)"** `clientOptions.intents` asks for
+`GuildMembers`, `GuildPresences` or `MessageContent`, and the application hasn't enabled them. Enable each one the
+message names in the Developer Portal, under Bot, then Privileged Gateway Intents. A verified bot in 100 or more
+servers needs Discord's approval for them. See [Intents](guide:gateway-events#intents).
+
+**"Discord refused the intents the bot requests as invalid."** A value in `clientOptions.intents` isn't one of
+discord.js's `GatewayIntentBits`.
+
+**`meocord.config.ts` doesn't load.** `build`, `start` and `register` stop with the file and line, or with a list
+of every option of the wrong type. An option MeoCord doesn't know, often a typo, is only a warning. See
+[Configuration](guide:configuration#options).
+
+**"MeoCord config not found at … (working directory …)."** The bot looks for `meocord.config.mjs` beside its bundle,
+and there's none. Run `meocord build`, and start the bot from the `dist` it writes.
+
+**"MeoCord config at … failed to load: …"** The compiled config is there, but loading it threw, for the reason the
+message gives. When that's a package that isn't installed, the message names it:
+
+```text
+MeoCord config at /srv/bot/dist/meocord.config.mjs failed to load: Cannot find package 'dotenv' imported from /srv/bot/dist/meocord.config.mjs. Install dotenv in the project, then run `meocord build`.
+```
+
+When the config doesn't import the missing package itself, the message names the installed package that does, as
+"Install `name`, which `other` imports, in the project". Otherwise it says to fix `meocord.config.ts`, then build
+again.
+
+### One line naming a class, and exit code 1
+
+MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
+it is on: `Class.method:`, `Class:`, the app class's name, such as `App:`, for `@MeoCord`'s options,
+`meocord.config.ts:` for its settings, or the build's folder, such as `dist:`. The rest names the decorator and the
+problem, and a last line, `in src/…`, names the file it comes from when MeoCord can tell. Such as:
+
+```text
+SampleButtonController.handleButtonWithId: Invalid pattern "button-with-{ownerId}": {ownerId} must occupy a whole segment, …
+```
+
+Fix what it names. The common ones:
+
+- **"`Class`: parameter 1 of its constructor has no runtime type, so it cannot be created."** A controller or
+  service asks for a parameter MeoCord can't inject. Usually two classes import each other, and the message names
+  the class that injects it. A parameter typed with an interface, or with an `import type`, reads the same way.
+  Move what both need into a third service, or inject the parameter with `@Inject(token)`. `meocord/eslint` warns
+  about such cycles as you write them; see [Import cycles](guide:eslint#import-cycles).
+- **"`Class`: it injects …, which nothing provides"** A class injects a string, symbol or `createToken` token that
+  no provider supplies. Add a provider for it to `@MeoCord({ providers })`, or to the testing module's `providers`
+  in a test. See [Providers](guide:services#providers).
+- **"App: @MeoCord({ providers }): the provider for '…' injects ExecutionContext, but its factory runs once and its
+  value is shared, …"** A factory provider lists `ExecutionContext` in its `inject`. Its value is made once for the
+  whole app, so it would keep the first call's context for every later call. Inject `ExecutionContext` into a guard
+  instead. The testing module refuses it the same way. A service, interceptor or filter that injects it reads
+  "`Class`: resolved once and shared, so it cannot inject ExecutionContext", and a `useClass` provider's class "the
+  provider for '…' uses `Class`, which injects ExecutionContext"; the fix is the same.
+- **"`Class`: its constructor takes parameters, but `Class` has no decorator, …"** A class is injected, or injects,
+  without its decorator, so TypeScript recorded none of its parameter types. Add what the line says: `@Service()`, or
+  `@Controller()`, `@Guard()`, `@Interceptor()`, `@Catch()` or `@Pipe()` for the class's role. A class from a package
+  gets a provider in `@MeoCord({ providers })` instead. `Logger` and errors such as `UserError` read "MeoCord does not
+  inject it"; create them with `new`.
+- **"`Class`: @Command goes on a method, not on a class."** A decorator is on the wrong target, written directly or
+  through `applyDecorators`. Handler decorators such as `@Command`, `@MessageHandler`, `@On`, `@Defer` and
+  `@Validate` go on a method; `@Observer`, `@Interceptor`, `@Catch` and `@Pipe` go on a class, and on a method read
+  "`Class.method`: @Observer goes on a class, not on a method." Move it.
+- **"'a' → 'b' → 'a': each is made before what injects it, so none of them can be made."** Providers or classes
+  inject each other in a cycle, which the line names from where it was entered. Move what they share into a provider of
+  its own. See [Providers](guide:services#providers).
+- **"`Class`: two classes have this name; …"** MeoCord tells these classes apart by name, and the rest of the line
+  says why:
+
+  ```text
+  Shop: two classes have this name; @Cooldown and @Once tell classes apart by name, so they would share their counts. Rename one of them.
+  ```
+
+  Two classes of one name are refused when either uses `@Cooldown` or `@Once`, in any mode. With process sharding,
+  any two controllers, services or provided classes are, since `ShardContext.call` finds a class in another shard by
+  its name.
+  Rename one of the classes.
+
+- **"`Class.method`: @MessageHandler('…'): …"** A message pattern MeoCord can't read stops the bot there, such as a
+  rest that isn't last, a type nothing adds, a name used twice, or braces inside a word. So does `scope: 'dm'` on a
+  command with a `member`, `role` or `channel` param. Two patterns that match the same messages stop it too, with a
+  line naming both handlers and their patterns, such as
+  `A.swap: "swap {a}" and "swap {b}" in B.swap match the same messages, …`. See
+  [Errors at startup](guide:message-commands#errors-at-startup), which lists each one.
+- **"`Class.method`: "…" and "…" in `Other.method` match the same … customIds"** Two component handlers of one
+  type take the same ids, so only one could ever run. `MeoCordFactory.create()`, `meocord register` and
+  `MeoCordTestingModule.compile()` refuse them, `register` before it sends any command. Change one pattern; see
+  [Overlapping patterns](guide:components#overlapping-patterns).
+- **"`Class.method`: @Validate and @UsePipe are for interaction and patterned message handlers, …"** They check a
+  handler's options, customId params, modal fields or pattern params, and a message handler without a pattern, a
+  reaction, autocomplete or event handler has none. `@Cooldown` on a reaction, autocomplete or event handler is
+  refused the same way, "`@Cooldown` is for interaction and message handlers"; on the controller, it skips them.
+- **"`Class`: not decorated with @MeoCord(), so there is no app to create."** The class given to
+  `MeoCordFactory.create()`, usually in `src/main.ts`, has no `@MeoCord`.
+- **"meocord.config.ts: sharding.mode 'process' starts one shard per process, …"** With process sharding,
+  `clientOptions.shards` and `shardCount` must be unset. Otherwise, set there, they must agree with
+  `sharding.shards`, or the line reads "sharding.shards (…) and clientOptions.shards/shardCount disagree"; set the
+  shards in one place. See [Sharding](guide:sharding).
+- **"dist: this build carries native addons compiled for …, but is running on …"** A
+  [self-contained build](guide:self-contained-builds#native-addons-and-platforms) made on one platform was started
+  on another. Build where it runs; for a container, run `meocord build` inside the image.
+- **A builder that fails.** A command's builder runs as its class loads, so a name Discord refuses, such as one
+  with a capital letter or a space, stops the bot there, naming the builder and the command. See
+  [Your first command](guide:first-command#gotchas). A builder whose constructor throws, such as one that reads a
+  translator in a field, stops it the same way, with the builder's error last:
+
+  ```text
+  Stats.stats: StatsBuilder could not be made for "stats": missing translator.
+  ```
+
+### Other startup errors
+
+What MeoCord can't see as the bot loads reaches the generated `main.ts`, which logs it as "Error during startup:" with
+the error, and the process exits 1. A failure MeoCord explains itself, such as a provider that fails, is logged once, in
+MeoCord's words, and `main.ts` doesn't log it again.
+
+**"The factory providing … failed: …"** A factory in `@MeoCord({ providers })` threw or rejected, such as a database
+refusing the connection, so the bot stopped before login with the cause. Fix what the cause names; see
+[Providers](guide:services#providers).
+
+### Warnings that become errors in 5.0
+
+Some mistakes a 4.0 bot could start with only warn in 4.1, so the bot still starts, and stop it in the next major
+version (5.0). Each warning names the handler or the filter, and says what to write instead:
+
+- **"Broken: @Catch's first entry, undefined, which matches no error, is deprecated; …"** An entry in a filter's
+  `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
+  other types it lists. Import the class where it's defined, or move it out of the cycle. See
+  [Exception filters](guide:exception-filters#gotchas).
+- **"@MessageHandler('') on `Class.method` is deprecated; in the next major version (5.0) it is refused."** An empty
+  pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
+  pattern is built from.
+- **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
+  handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
+  [Messages and reactions](#messages-and-reactions).
+- **"@Service on the method `Class.method` is deprecated; in the next major version (5.0) it is refused."**
+  `@Controller`, `@Service`, `@Guard`, `@CommandBuilder` or `@MeoCord` is on a method, where it does nothing. Move it
+  to the class.
+
+The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
+major version (5.0). Use … instead." names an API that still works, and is logged once. See
+[the upgrade guide](guide:migrating#upgrading-from-40-to-41).
+
+## A command doesn't show up in Discord
+
+- **It was registered somewhere else.** Under `meocord start --dev` with `commands.developmentGuild` set, every
+  command goes to that server only. Otherwise commands go globally, or to `commands.guilds`. See
+  [Registering commands](guide:slash-commands#registering-commands).
+- **Registration didn't run.** With `commands.register: false`, only `meocord register` registers. A builder whose
+  `toJSON()` throws, such as a slash command without a description, stops that start's registration with an error
+  naming it, and no command is sent; see
+  [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration). A failed registration is
+  logged, and the bot stays online.
+- **The bot isn't in the server with the right scope.** An invite must include the `applications.commands` scope as
+  well as `bot`.
+- **The client hasn't caught up.** Server commands appear at once; global ones can take a while to reach every
+  client. Reloading Discord, with Ctrl+R or Cmd+R, refreshes the command list.
+
+A command you removed that still shows is a leftover in a scope this configuration doesn't register to. The bot
+warns "… command(s) are still registered … which this configuration does not register to", and
+`commands.clearOther` removes them.
+
+## "The application did not respond"
+
+Discord gives an interaction three seconds for its first answer, and nothing arrived in time:
+
+- **The handler is slow.** A database call or an API request before the first reply can take longer than three
+  seconds. Add [`@Defer()`](guide:defer), which acknowledges first.
+- **A guard returned `false`.** That stops the call without an answer, on purpose. Under `@Defer`, a command's
+  deferred reply is deleted. To tell the user why, throw
+  [`GuardDeniedError`](api:responses/GuardDeniedError) instead. See [Guards](guide:guards).
+- **An exception filter caught the error and sent nothing.** MeoCord's built-in fallback answers an error no
+  [exception filter](guide:exception-filters) handles, but a filter that handles one and sends nothing leaves the
+  interaction unanswered.
+- **The handler never answered.** In development, MeoCord warns once for each handler that ends without answering,
+  or defers and never follows up, and names it. An interceptor that returned before the handler ran or finished, the
+  outermost when several did, is named instead: "Shop.buy: its interceptor Cached returned before the handler ran,
+  without answering the interaction, …". See [Responses](guide:responses#gotchas).
+
+A test shows the guard case: the call doesn't run, and nothing is sent.
+
+::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="invoke"}
+
+A button, select menu or modal that no route takes is answered "Command not found!", and the log names its
+`customId`. See [When nothing matches](guide:components#when-nothing-matches).
+
+An autocomplete interaction can't be deferred: it has three seconds to answer, once. Keep its handler to a cache
+lookup. See [Autocomplete](guide:autocomplete#gotchas).
+
+## Discord API errors
+
+| Code  | Discord's message                         | What happened                                                                                                                      |
+| ----- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 10062 | Unknown interaction                       | The first answer came after the three seconds. Use `@Defer()`.                                                                     |
+| 40060 | Interaction has already been acknowledged | Two answers were sent as first answers, often a `reply` after a `deferReply`. [`respond()`](guide:responses) picks the right call. |
+| 50027 | Invalid Webhook Token                     | A follow-up or an edit came more than fifteen minutes after the interaction, when its token expires. Send a new message instead.   |
+| 50001 | Missing Access                            | The bot can't see the channel. Check its role and the channel's permissions.                                                       |
+| 50013 | Missing Permissions                       | The bot can see the channel but lacks the permission the call needs, such as Manage Messages to delete one.                        |
+
+When one of MeoCord's own answers is refused, such as an error reply or a usage reply, the refusal is logged at debug
+level when it's a state Discord reports, like these. A body Discord could not read is logged as an error, with its
+cause, since only the code that built it can fix it: `50035` (Invalid Form Body), `50109` (invalid JSON) or `50006`
+(an empty message).
+
+A test can make a mock reject with any of them through [`createDiscordError(code)`](api:testing/createDiscordError);
+see [Discord's errors](guide:mocks#discords-errors).
+
+## Messages and reactions
+
+- **A message command never runs.** In a server, the bot needs the `GuildMessages` intent, and `MessageContent`,
+  which is privileged, to read a message's text; a mention-only command needs no `MessageContent`, and a
+  `scope: 'dm'` command needs `DirectMessages` and `Partials.Channel` instead. The bot warns at startup about what's
+  missing. Messages from bots never reach
+  a handler. A pattern matches after the app's prefix, or the handler's own, and only the most specific matching
+  pattern runs. See [Which handler runs](guide:message-commands#which-handler-runs).
+- **Reactions are missed.** Reactions need the `GuildMessageReactions` intent, or `DirectMessageReactions` in DMs.
+  For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials. See
+  [Reactions](guide:reactions#gotchas).
+- **A handler on a service never runs.** Commands, components, messages and reactions reach only the app's
+  `@MeoCord({ controllers })`. The bot warns at startup, "… never run: MeoCord dispatches only to
+  @MeoCord({ controllers })", or "never runs" for one handler, naming each one; move it to a controller. See
+  [the upgrade guide](guide:migrating#a-handler-on-a-class-that-isnt-a-controller-logs-a-warning).
+- **`@On(event)` never runs.** Most events need an intent. The bot warns at startup, "The … intent is not in
+  clientOptions.intents, so Discord will not send what … handles", naming the handler. See
+  [Intents](guide:gateway-events#intents).
+
+## Sharding
+
+- **One-off work runs once per shard.** Guard it with `onReady`'s `primary`, which is `true` only in the process
+  running shard 0. See [A process per shard](guide:sharding#a-process-per-shard).
+- **A shard keeps restarting.** The manager restarts a shard that exits, waiting longer each time up to a minute.
+  One that can't log in because of the token or its intents stops the bot instead. Read the shard's first error in
+  the log.

@@ -1,0 +1,51 @@
+{
+  "repository": "https://github.com/meocord/examples",
+  "bots": [
+    {
+      "id": "feedback",
+      "title": "Feedback",
+      "shows": [
+        {
+          "what": "A slash command that opens a modal, and the modal's fields arriving in the handler's params",
+          "files": ["src/feedback/feedback.controller.ts"],
+          "guide": ["components#modals"]
+        },
+        {
+          "what": "A cooldown of five minutes per member",
+          "files": ["src/feedback/feedback.controller.ts"],
+          "guide": ["cooldowns"]
+        },
+        {
+          "what": "Buttons routed by a typed custom ID, `feedback/{id:int}/approve`",
+          "files": ["src/feedback/review.controller.ts"],
+          "guide": ["components#typed-params"]
+        },
+        {
+          "what": "A guard on a whole controller that denies with a reason",
+          "files": ["src/feedback/staff.guard.ts", "src/feedback/review.controller.ts"],
+          "guide": ["guards#where-guards-apply", "guards#refusing-a-call"]
+        },
+        {
+          "what": "`@Defer`, which acknowledges a click and locks the post until the verdict is in",
+          "files": ["src/feedback/review.controller.ts"],
+          "guide": ["defer"]
+        },
+        {
+          "what": "Answers through `respond()`, and a `UserError` shown only to the user who clicked",
+          "files": ["src/feedback/feedback.service.ts"],
+          "guide": ["responses", "exception-filters"]
+        },
+        {
+          "what": "A presenter that draws MeoCord's own loading and error views in the theme's colours",
+          "files": ["src/presenters/app.presenter.ts"],
+          "guide": ["presenters#drawing-a-view", "theming#reading-the-theme"]
+        },
+        {
+          "what": "Tests of the whole app through `MeoCordTestingModule.fromApp` and `dispatch`, with mock members",
+          "files": ["src/feedback/feedback.spec.ts"],
+          "guide": ["testing#testing-the-whole-app"]
+        }
+      ]
+    }
+  ]
+}

@@ -21,8 +21,14 @@
   },
   "lines": [
     {
-      "line": "4.1",
+      "line": "4.2",
       "status": "current",
+      "guides": "authored",
+      "versions": ["4.2.0"]
+    },
+    {
+      "line": "4.1",
+      "status": "archived",
       "guides": "authored",
       "versions": [
         "4.1.0-beta.0",

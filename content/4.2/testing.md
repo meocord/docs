@@ -1,0 +1,209 @@
+---
+id: testing
+title: The testing module
+chapter: testing
+order: 1
+summary: Build your controllers and services in a test, with no Discord connection, and run them as the bot does.
+learn:
+  - Build a testing module from the classes a test needs
+  - Swap a dependency, a guard or an interceptor for a stand-in
+  - Run lifecycle hooks and keep tests apart
+requires: [services]
+api: [testing/MeoCordTestingModule, testing/TestingModuleBuilder, testing/TestingModule, testing/resetAllMocks]
+since: 4.0.0
+formerly: [tutorial-testing]
+---
+
+`meocord/testing` runs your controllers, services, guards and everything around them inside a test, with no
+Discord connection and no token. `MeoCordTestingModule` builds a container from the classes you list, as the bot
+builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses.
+
+The mocks it comes with behave like discord.js, and work under Vitest, Jest, Node's test runner and bun test:
+
+- **Vitest** runs a generated app's tests as they come.
+- **Jest** needs Node's VM modules: meocord's CommonJS build loads packages that ship only as ES modules, which Jest
+  reads only with them. Run it as `NODE_OPTIONS=--experimental-vm-modules jest`.
+- **Node's test runner** asserts through a mock's `.mock.calls`.
+- **bun test** asserts through `.mock.calls` too: Bun's matchers, such as `toHaveBeenCalledWith`, accept only Bun's own
+  mocks.
+
+Whatever the runner, the tests need decorator metadata compiled in, which MeoCord reads to inject a class's
+dependencies. Under Jest and Node's test runner, compile them with SWC or `tsc` with decorator metadata, as a generated
+app's Vitest config does with SWC; `node --test` on `.ts` files strips the types without transforming decorators, so a
+decorated class fails to load. bun test reads `emitDecoratorMetadata` from tsconfig.json.
+
+## When to use it
+
+Use a testing module whenever the code under test is a controller, or anything MeoCord resolves for you: a service
+with injected dependencies, a guard, an interceptor, a presenter. It is how you check what a member sees.
+
+A service that takes plain values needs no module: build it with `new` and test it as a class, as
+[Testing a service](guide:services#testing-a-service) shows. To check which handler a `customId` or a message reaches
+without running it, use [`resolveRoute`](api:testing/resolveRoute) instead.
+
+## Example
+
+::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
+
+The module is built from one controller and whatever it injects. `invoke` runs the `greet` handler with a mock
+interaction whose options say `Ada`, and [`getResponse`](api:testing/getResponse) reports what the handler sent.
+
+## How it works
+
+[`MeoCordTestingModule.create`](api:testing/MeoCordTestingModule) takes the controllers, providers and observers a
+test needs, and returns a builder. `compile()` binds them into a fresh container and returns the module:
+
+- **Only what you list is built**, plus what those classes inject. Nothing else from the app is loaded, so a test
+  never starts a service it didn't ask for. To build the whole app instead, see
+  [Testing the whole app](#testing-the-whole-app).
+- **Each `compile()` is a new module**, with its own services, its own cooldown counts and its own theme cache.
+- **Handlers run through the pipeline**: `@Defer`, guards, interceptors, validation, pipes, cooldowns and exception
+  filters, in the bot's order. [Invoke and dispatch](guide:invoke-and-dispatch) covers the two ways to run one.
+
+Pass the app class as `app` to add what `@MeoCord` declares: its global guards, interceptors and filters, its
+presenter, translator, message options, observers and theme, and its cooldown store and policy. The controllers are
+still the ones you list. A store that injects something, such as a database pool, needs it in `providers`, or a
+`CooldownStore` provider of your own, such as a `MemoryCooldownStore`, in the store's place.
+
+::example{file="testing/greeting.module.spec.ts" region="app"}
+
+## Swapping a dependency
+
+`overrideProvider(Class).useValue(stub)` replaces a dependency with a stand-in that has only the members the test
+uses. A misspelled member is a compile error, so the stand-in can't drift from the class:
+
+::example{file="testing/greeting.module.spec.ts" region="override"}
+
+A provider can also be listed in any shape the app takes, `useValue`, `useClass` or `useFactory`, under a class or a
+token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInterceptor` and `overrideFilter` swap
+the stages around a handler the same way, wherever they apply: globally, on the controller or on the method.
+
+`module.get(Class)` returns an instance, for a direct test of a service as the container built it.
+
+## Testing the whole app
+
+[`MeoCordTestingModule.fromApp(App)`](api:testing/MeoCordTestingModule) builds the module as the bot builds itself:
+every controller, service and provider `@MeoCord` lists, with what the `app` option takes from it: its global
+guards, interceptors and filters, presenter, translator, message options, theme, observers and cooldown store.
+A test lists nothing again, and replaces what it must by token in `providers`, before anything is made:
+
+::example{file="recipes/database/app.spec.ts" region="spec"}
+
+`compile()` runs no factory. `init()` runs each one the test didn't replace and makes the app's `services`, as the
+bot does before it logs in; the database factory replaced here never runs, so nothing connects. `fromApp`'s
+`controllers` and `observers` options add a test's own, and the `override*` methods still apply.
+
+The module makes no Discord `Client`: a class that injects one, a guard, interceptor or filter included, is refused
+where it is resolved, naming each class of the module that injects it, until the test provides one, such as `{ provide:
+Client, useValue: createMockClient() }`.
+
+## Lifecycle hooks in a test
+
+`init()` resolves the module's factory providers, including the ones that return a promise, and runs no hook.
+`init({ ready: true })` also runs every `onReady` hook once, as the bot does when it comes online. `close()` runs the
+`onShutdown` hooks of everything the module built:
+
+::example{file="testing/lifecycle.spec.ts" region="lifecycle"}
+
+- **Order.** The hooks run as the bot runs them: `onReady` one at a time, each class after the classes it injects;
+  `onShutdown` in reverse, so a pool closes after everything that uses it.
+- **The client.** `onReady` receives a mock client and `{ primary: true }`, unless you pass
+  `init({ ready: { client, primary } })`.
+- **Failures.** Every hook runs even when one throws, and `init` or `close` then rejects with that error, or with an
+  `AggregateError` naming each hook that threw.
+- **The cooldown store.** The app's store, or the `CooldownStore` a test provides in its place, gets its `onReady`
+  first and its `onShutdown` last, once the store operations its calls started have settled.
+- **A shutdown that hangs.** `close()` waits for the whole sequence for up to `shutdownTimeout`, 10 seconds unless
+  `create()` or `fromApp()` sets it, as the bot's [`shutdownTimeout`](guide:configuration) does. It then stops waiting
+  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers,
+  or whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`.
+- **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
+  until `close()`, unless another module or app in the same process was ready first, which keeps it. See
+  [Testing recipes](guide:testing-recipes#themes).
+
+## Running tests
+
+A generated app has Vitest set up: `vitest.config.ts` compiles with SWC, which gives the decorator metadata
+injection needs, and every generated component has a spec beside it. A generated controller's spec invokes its handler
+through the testing module and checks the answer, so it fails when the handler stops answering.
+
+```bash
+npm test                # once
+npm run test:watch      # on every change
+npm run test:coverage   # with a coverage report
+```
+
+`vitest.setup.ts` runs before every spec file. It resets MeoCord's mocks after every test:
+
+::example{file="config/vitest.setup.ts" region="setup"}
+
+Tests don't load `.env`, so a real token never reaches a spec unless you ask for it, and tests run the same before
+and after a build. A project whose tests need its variables loads the files `meocord.config.ts` reads under test, in
+`vitest.setup.ts`: `config({ path: ['.env.test.local', '.env.test', '.env'], quiet: true })`, with `config` from
+`dotenv`.
+
+## What tests can't tell you
+
+The mocks behave like discord.js, but they aren't Discord. These fail only against the real thing:
+
+- **Discord's limits**: 2,000 characters in a message, 25 choices, 5 buttons in a row, 45 characters in a modal
+  title, and the rest of Discord's validation.
+- **Permissions and role order**: a bot whose role sits below a member's can't time them out, whatever the code
+  says.
+- **Intents**: an event the bot never receives because its intent is missing.
+- **Startup**: a missing or invalid token, a config that doesn't load, a native addon built for another platform.
+
+Before a release, start the bot against a test server with `npx meocord start --dev`, and use each changed command
+once. Start it with a missing and a wrong token too, and check that it says so and exits.
+
+## In CI
+
+The checks a generated project runs locally are the ones to run in CI. Tests need no token and no network, so CI
+needs no secrets:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npx meocord build --prod
+```
+
+## Gotchas
+
+- **State set once for a whole `describe` is gone after the first test.** `vitest.setup.ts` resets every MeoCord mock
+  after each test, through `resetAllMocks()`; a `vi.fn()` only has its calls cleared. Set what a mock returns in the
+  test that relies on it, or in `beforeEach`.
+- **A module shared across tests shares its state.** Cooldown counts and service fields carry over. Build one module
+  per test, or per `describe` when the tests change nothing in it.
+- **Calling a controller method directly skips the pipeline.** `module.get(Controller).method(interaction)` runs its
+  own guards, but no interceptors, validation or filters. Use `invoke` to test what dispatch runs around a handler.
+
+## Build it
+
+The feedback bot opens a form with `/feedback` and posts what members send for staff to review. Give its controller a
+spec. The settings the bot reads from the environment become test values, and each test runs a handler as dispatch
+would:
+
+::example{file="tutorial/feedback.controller.spec.ts" region="spec"}
+
+Run `npm test`. The form opens in Ada's language and refuses a second try within five minutes, and their submission
+reaches the review channel with its buttons.
+
+## Next steps
+
+- [Invoke and dispatch](guide:invoke-and-dispatch): the two ways to run a handler, and which to use when.
+- [Mocks](guide:mocks): the interactions, messages, users and errors a test passes in.
+- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and collectors under test.
+- [Services](guide:services): designing services a test can build with `new`.
