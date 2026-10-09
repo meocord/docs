@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { CURRENT_LINE, VERSIONS } from '../src/config/versions'
+import { archivedTone, CURRENT_LINE, VERSIONS } from '../src/config/versions'
 import { docs40, docs41, docsHome, literal } from './lines'
 
 test('a guide renders in the window, at its canonical latest URL', async ({ page }) => {
@@ -85,4 +85,20 @@ test('a page of an archived line says it is no longer supported, and links the s
 
   await page.goto('/docs/latest/testing')
   await expect(page.locator('[data-archived-notice]')).toHaveCount(0)
+})
+
+test("an archived line's notice is amber when a minor superseded it, and red when its releases carry advisories", async ({
+  page,
+}) => {
+  const archived = VERSIONS.lines.filter(entry => entry.status === 'archived').map(entry => entry.line)
+  test.skip(archived.length === 0, 'no line is archived')
+  const fills = new Map<string, string>()
+  for (const line of archived) {
+    await page.goto(`/docs/${line}/testing`)
+    const notice = page.locator('[data-archived-notice]')
+    await expect(notice).toHaveAttribute('data-archived-notice', archivedTone(line))
+    fills.set(archivedTone(line), await notice.evaluate(el => getComputedStyle(el).backgroundColor))
+  }
+  // The two tones look apart wherever lines of both are archived
+  if (fills.size === 2) expect(fills.get('warning')).not.toBe(fills.get('danger'))
 })
