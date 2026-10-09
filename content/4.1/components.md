@@ -103,10 +103,12 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 
 - **A segment of the wrong type matches no route**, so the next pattern is tried: `counter/lots` reaches no handler
   here.
-- **A `snowflake` is a Discord ID: 17 to 20 digits**, up to the largest 64-bit value. Its top 42 bits count
-  milliseconds since 2015-01-01, [Discord's epoch](https://discord.com/developers/docs/reference#snowflakes), so every
-  ID made from 2015-01-28 on has at least 17 digits. It stays text, as a number can't hold that many digits exactly;
-  shorter digits are an `int` while a number holds them exactly. A `uuid` is the 8-4-4-4-12 hex form, in either case.
+- **A `snowflake` is a Discord ID: 17 to 20 digits**, with no leading zero, up to the largest 64-bit value. Its top 42
+  bits count milliseconds since 2015-01-01, [Discord's epoch](https://discord.com/developers/docs/reference#snowflakes),
+  so every ID made from 2015-01-28 on has at least 17 digits. It stays text, as a number can't hold that many digits
+  exactly; shorter digits are an `int` while a number holds them exactly. Use it for a Discord ID rather than
+  `{x:number}`, which rounds one: `12345678901234567` arrives as `12345678901234568`. A `uuid` is the 8-4-4-4-12 hex
+  form, in either case.
 - **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`.
 - **The handler's params are checked when the code compiles**, for a pattern written as a string as for a route:
   `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a name other than the
@@ -126,9 +128,9 @@ So `profile/me/{section}` takes `profile/me/edit` from `profile/{userId}/edit`, 
 and `a/{x}` takes `a/abcd` from `{x}/abcd`, though the second spells out more text.
 
 When that leaves two tied, with literals and parameters in the same places, the one whose typed parameter takes fewer
-values at the first place they differ wins: words to choose from, then `bool`, `uuid`, `snowflake`, `int`, `number`, and text last. So
-beside `page/{name}`, `page/{n:int}` takes `page/5` and leaves `page/last` to the other, in whatever order they're
-declared.
+values at the first place they differ wins: words to choose from, then `bool`, `uuid`, `snowflake`, `int`, `number`, and
+text last. So beside `page/{name}`, `page/{n:int}` takes `page/5` and leaves `page/last` to the other, in whatever order
+they're declared.
 
 Only two patterns still tied, with the same literals and equally narrow parameters in every place, can collide, such as
 `t/{a:on|off}` and `t/{b:off|no}`, which both take `t/off`. The one whose controller is listed first in
