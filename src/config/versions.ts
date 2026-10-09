@@ -16,6 +16,15 @@ export const VERSIONS: VersionsManifest = {
 /** The line in force, which the site addresses as `latest`. */
 export const CURRENT_LINE = VERSIONS.lines.find(entry => entry.status === 'current')?.line ?? VERSIONS.lines[0].line
 
+/** Lines whose releases npm deprecates for security advisories, which their archived notice warns of in red. */
+const ADVISORY_LINES: ReadonlySet<string> = new Set(['4.0'])
+
+/**
+ * The tone of an archived line's notice: danger for a line whose releases carry security advisories, and a warning for
+ * one a newer minor simply superseded, which upgrading replaces without changes.
+ */
+export const archivedTone = (line: string): 'warning' | 'danger' => (ADVISORY_LINES.has(line) ? 'danger' : 'warning')
+
 /**
  * Whether search engines may index a line's pages: only the current line's, at `latest`. Other lines stay
  * readable and followed, but out of results, so a page of 4.0 never competes with its 4.1 counterpart.
