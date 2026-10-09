@@ -14,7 +14,7 @@ export class ProfileButtonController {
   // #endregion params
 
   // #region overlap
-  // Both match `profile/summary/456`; the one with more literal text wins it
+  // Both match `profile/summary/456`; `summary`, literal where the other has a param, wins it
   @Command('profile/summary/{uid}', CommandType.BUTTON)
   async showSummary(interaction: ButtonInteraction, { uid }: { uid: string }) {
     await respond(interaction).send({ content: `Summary of ${uid}` })
