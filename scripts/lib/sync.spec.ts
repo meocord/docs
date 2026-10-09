@@ -202,7 +202,7 @@ describe('forking a line', () => {
   it('copies the authored guides, and the examples pinned to the new version without their installs', () => {
     mkdirSync(path.join(root, 'examples', '9.0', 'node_modules', 'meocord'), { recursive: true })
     forkContent('9.0', '9.1')
-    forkExamples('9.0', '9.1', '9.1.0-beta.0')
+    forkExamples('9.0', '9.1', '9.1.0-beta.0', { home: false })
 
     expect(readdirSync(path.join(root, 'content', '9.1'))).toEqual(['draft.md'])
     expect(() => forkContent('9.0', '9.1')).toThrow('content/9.1 already exists')
@@ -213,8 +213,34 @@ describe('forking a line', () => {
     expect(existsSync(path.join(root, 'examples', '9.1', 'node_modules'))).toBe(false)
   })
 
+  it("starts the new line's migration guide from the line it forks, and leaves one written ahead alone", () => {
+    const guide = (line: string) => path.join(root, 'content', 'migrating', `${line}.md`)
+    mkdirSync(path.dirname(guide('9.0')), { recursive: true })
+    writeFileSync(guide('9.0'), '# Migrating\n')
+    writeFileSync(guide('9.5'), '# Written ahead\n')
+    mkdirSync(path.join(root, 'content', '9.0'), { recursive: true })
+
+    forkContent('9.0', '9.4')
+    forkContent('9.0', '9.5')
+
+    expect(read('content/migrating/9.4.md')).toBe('# Migrating\n')
+    expect(read('content/migrating/9.5.md')).toBe('# Written ahead\n')
+  })
+
+  it("moves the home page's example to a line that becomes the newest, and leaves it for one that doesn't", () => {
+    const home = (line: string) => path.join(root, 'examples', line, 'src', 'home', 'pipeline.slash.controller.ts')
+    mkdirSync(path.dirname(home('9.0')), { recursive: true })
+    writeFileSync(home('9.0'), '// #region home\n// #endregion home\n')
+
+    forkExamples('9.0', '9.2', '9.2.0', { home: false })
+    expect([existsSync(home('9.0')), existsSync(home('9.2'))]).toEqual([true, false])
+
+    forkExamples('9.0', '9.3', '9.3.0', { home: true })
+    expect([existsSync(home('9.0')), existsSync(home('9.3'))]).toEqual([false, true])
+  })
+
   it('leaves examples alone for a line that has none', () => {
-    forkExamples('8.0', '8.1', '8.1.0')
+    forkExamples('8.0', '8.1', '8.1.0', { home: false })
 
     expect(existsSync(path.join(root, 'examples', '8.1'))).toBe(false)
   })
