@@ -1,0 +1,106 @@
+import { ButtonInteraction, Collection, EmbedBuilder, GuildMember, Locale, User } from 'discord.js'
+// #region step:guards
+import { GuardDeniedError } from 'meocord/common'
+// #endregion step:guards
+import {
+  createDiscordError,
+  createMockClient,
+  createMockGuild,
+  createMockInteraction,
+  createMockMessage,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
+import { describe, expect, it } from 'vitest'
+import { FeedbackService } from '@src/tutorial/feedback.service'
+import { FeedbackSettings } from '@src/tutorial/feedback.settings'
+import { ReviewController } from '@src/tutorial/review.controller'
+
+describe('ReviewController', () => {
+  const STAFF = '900'
+
+  // A fresh module holding one open feedback, from an author who writes in Indonesian
+  function setup() {
+    const module = MeoCordTestingModule.create({
+      controllers: [ReviewController],
+      providers: [{ provide: FeedbackSettings, useValue: { reviewChannelId: '500', staffRoleId: STAFF } }],
+    }).compile()
+    const feedback = module
+      .get(FeedbackService)
+      .add({ authorId: '111', locale: Locale.Indonesian, about: 'Music bot', details: 'It skips songs.' })
+    return { module, feedback }
+  }
+
+  // A click on the review post, by a member holding the given roles
+  function click(customId: string, ...roles: string[]) {
+    const member = createMockInteraction(GuildMember, {
+      roles: { cache: new Collection(roles.map(id => [id, { id }])) } as never,
+    })
+    return createMockInteraction(ButtonInteraction, {
+      customId,
+      guildId: '1',
+      guild: createMockGuild(),
+      member,
+      user: createMockInteraction(User, { id: '222', username: 'grace' }),
+      client: createMockClient() as never,
+      message: createMockMessage({ embeds: [new EmbedBuilder().setTitle('Feedback #1 from ada')] }),
+    })
+  }
+
+  // before:localisation it('lets staff approve: the post shows the verdict, and the author hears back', async () => {
+  // #region step:localisation
+  it('lets staff approve: the post shows the verdict, and the author hears in their language', async () => {
+    // #endregion step:localisation
+    const { module } = setup()
+    const interaction = click('feedback/1/approve', STAFF)
+
+    await module.invoke(ReviewController, 'approve', interaction)
+
+    // The first edit is @Defer's loading view; the last is the verdict
+    const payload = JSON.parse(JSON.stringify(getResponse(interaction).calls.at(-1)?.payload))
+    expect(payload.embeds[0]).toMatchObject({ title: 'Feedback #1 from ada', footer: { text: 'Approved by grace.' } })
+    expect(payload.components).toEqual([])
+    expect(interaction.client.users.send).toHaveBeenCalledWith('111', {
+      // before:localisation content: 'Your feedback “Music bot” was approved. Thank you!',
+      // #region step:localisation
+      content: 'Masukanmu “Music bot” disetujui. Terima kasih!',
+      // #endregion step:localisation
+    })
+    expect(module.get(FeedbackService).get('1').status).toBe('approved')
+  })
+
+  // #region closed-dms
+  it('still records the verdict when the author has closed their DMs', async () => {
+    const { module } = setup()
+    const interaction = click('feedback/1/reject', STAFF)
+    // 50007: Discord refuses to deliver a DM to this user
+    interaction.client.users.send.mockRejectedValue(createDiscordError(50007))
+
+    await expect(module.invoke(ReviewController, 'reject', interaction)).resolves.toEqual({ ran: true })
+    expect(module.get(FeedbackService).get('1').status).toBe('rejected')
+  })
+  // #endregion closed-dms
+  // #region step:guards
+
+  it('refuses a member without the staff role, and changes nothing', async () => {
+    const { module, feedback } = setup()
+
+    await expect(module.invoke(ReviewController, 'reject', click('feedback/1/reject'))).rejects.toThrow(
+      GuardDeniedError,
+    )
+    expect(feedback.status).toBe('open')
+  })
+  // #endregion step:guards
+  // #region step:exception-filters
+
+  it('answers a button whose feedback is gone privately, in the member’s words', async () => {
+    const { module } = setup()
+    const interaction = click('feedback/7/approve', STAFF)
+
+    await module.invoke(ReviewController, 'approve', interaction)
+
+    expect(JSON.stringify(getResponse(interaction).calls.at(-1)?.payload)).toContain('That feedback no longer exists.')
+    expect(interaction.client.users.send).not.toHaveBeenCalled()
+  })
+  // #endregion step:exception-filters
+})
