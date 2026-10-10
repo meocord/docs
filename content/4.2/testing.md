@@ -131,6 +131,8 @@ Client, useValue: createMockClient() }`.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
   until `close()`, unless another module or app in the same process was ready first, which keeps it. See
   [Testing recipes](guide:testing-recipes#themes).
+- **After `close()`.** A closed module still runs what `dispatch`, `invoke` and `emit` are given, against services
+  already shut down, and warns once that it is closed. Close it after the test's last call, in `afterEach`.
 
 ## Running tests
 
