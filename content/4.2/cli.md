@@ -94,10 +94,11 @@ builds of the same output.
 
 A bot that can't log in, or exits on its own, leaves watch mode running: the next change starts it again. So does a
 rebuild that can't start, as when a saved `meocord.config.ts` has an `rsbuild` hook that throws: the bot keeps running
-its last build, watch mode says why, and saving again retries. When watch mode itself can't start, `start --dev` stops
-the bot it started and exits with code 1, as `build` does. In a terminal, it clears the screen as it starts and keeps
-your scrollback; `build` and `start --prod` never clear it, and write no escape codes into piped output such as a CI
-log or `docker logs`.
+its last build, watch mode says why, and saving again retries. A saved config is checked as at startup: one with
+problems, or one that fails to load, is reported and the running bot is left as it is. When watch mode itself can't
+start, `start --dev` stops the bot it started and exits with code 1, as `build` does. In a terminal, it clears the
+screen as it starts and keeps your scrollback; `build` and `start --prod` never clear it, and write no escape codes into
+piped output such as a CI log or `docker logs`.
 
 For production, build once and start the build:
 

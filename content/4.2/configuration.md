@@ -40,7 +40,8 @@ that compiled copy, however it's started: `meocord start`, `node dist/main.js`, 
 built bot reads `meocord.config.ts` itself.
 
 `build`, `start` and `register` check the config first. An option of the wrong type stops them with a list of every
-problem; an option MeoCord doesn't know, often a typo, is reported as a warning.
+problem; an option MeoCord doesn't know, often a typo, is reported as a warning. `meocord.config.ts` must export the
+config as its default export; a module with only named exports is refused.
 
 `meocord start --dev` watches `meocord.config.ts` and reloads it on every change. A production bot keeps the config
 it was built with, until the next `meocord build --prod`.
@@ -207,12 +208,13 @@ modified:
 Some things need no rule of your own:
 
 - **Imported images, fonts, SVG, media, PDFs, text files** and the other kinds `src/types/assets.d.ts` declares as a
-  path are emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready
-  for `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build
-  handles itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts,
-  from where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
-  An imported WebAssembly module goes to `dist/assets/` as `<hash>.module.wasm`, so two modules of one name stay apart;
-  a wasm file read through `new URL('./file.wasm', import.meta.url)` keeps its own name.
+  path are emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready for
+  `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build handles
+  itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts, from
+  where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI. An
+  imported WebAssembly module goes to `dist/assets/` as `<hash>.module.wasm`, so two modules of one name stay apart; a
+  wasm file read through `new URL('./file.wasm', import.meta.url)` keeps its own name. In a built bot, `import.meta.url`
+  names the bundle in `dist`, as `import.meta.dirname` does.
 - **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
   error, naming the file. `output.filename.image`, and `svg`, `font`, `media` and `assets`, accept a function to keep
   both.

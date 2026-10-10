@@ -65,6 +65,10 @@ A pnpm project packs as an npm, yarn or bun one does. Under pnpm, each package's
 the store, and when two packages need different versions of one dependency, each gets its own: the first
 at the top of `dist/node_modules`, the other nested under the package that needs it.
 
+A bundled dependency that builds paths from `fileURLToPath(import.meta.url)` resolves them beside the bundle, not in the
+build machine's `node_modules`. A file it reads through `new URL('./file', import.meta.url)` is emitted into `dist` and
+found there.
+
 ## Native addons and platforms
 
 A compiled binary loads only on the operating system, CPU and C library it was built for. A build made on a Mac
