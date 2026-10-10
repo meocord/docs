@@ -215,6 +215,9 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
 - **A pattern that shares a segment with a parameter throws.** Write `ticket/{id}`, not `ticket-{id}`.
 - **An untyped parameter is text.** `{ id: number }` for `{id}` converts nothing: write `{id:int}`, or use
   [Validation](guide:validation) to convert it.
+- **A `snowflake` or `uuid` param is built only from text.** For `{ownerId:snowflake}`,
+  `build({ ownerId: 12345678901234567 })` throws a `TypeError`, as the number has already rounded the ID: pass
+  `user.id`.
 - **A customId over 100 characters is refused by Discord.** Keep ids short: capture ids, not text.
 - **A collector on an unrouted id delays dead buttons elsewhere.** While any collector is listening, a genuinely dead
   button in the app is answered after 1.5 seconds. Give long-lived components a route.
