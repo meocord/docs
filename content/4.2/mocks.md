@@ -64,10 +64,14 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 - **Replies follow Discord's rules.** Replying or deferring twice throws discord.js's `InteractionAlreadyReplied` error,
   and `followUp()`, `editReply()` and `deleteReply()` throw `InteractionNotReplied` before any reply. An answer a test
   gives a value with `mockResolvedValue` or `mockImplementation` counts as one. `fetchReply()` reads back what `reply()`
-  or `update()` sent. After `deleteReply()`, and after a command shows a modal, `editReply()`, `fetchReply()` and
-  `deleteReply()` reject with Unknown Message (10008), as does `fetchReply()` before any answer. A follow-up is reached
-  by its id: `editReply({ message: followUp.id })`. `flags` are read as discord.js reads them, a number, an array, a
-  name or a bitfield. An autocomplete's `respond()` works once, and refuses more than 25 choices.
+  or `update()` sent, as it was sent: a builder changed afterwards doesn't change it. After `deleteReply()`, and after a
+  command shows a modal, `editReply()`, `fetchReply()` and `deleteReply()` reject with Unknown Message (10008), as does
+  `fetchReply()` before any answer. A follow-up is reached by its id: `editReply({ message: followUp.id })`, and
+  `followUp()` resolves to the follow-up it sent, as `fetchReply(id)` reads it. Under strict mocks, an answer whose
+  components or embeds discord.js refuses to build, such as a button with no label, rejects at the call and leaves the
+  interaction as it was; in default mode it warns once and is built when first read. `flags` are read as discord.js
+  reads them, a number, an array, a name or a bitfield. An autocomplete's `respond()` works once, and refuses more than
+  25 choices.
 - **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot,
   each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
   give them one `user`, or one message `author`, to count them together. Ids you give are kept.
