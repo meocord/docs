@@ -32,7 +32,7 @@ against `necord` 7.0.0 with `@nestjs/core` 12.1.0.
 | `@SlashCommand` on a provider method                  | `@Command` on a controller method, with a `@CommandBuilder` class                                         |
 | An options class with `@StringOption`, `@Options()`   | The builder's options, arriving as the handler's second argument                                          |
 | `@Context() [interaction]`                            | The interaction as the handler's first argument                                                           |
-| `@Button('card/:ownerId/refresh')`, `@ComponentParam` | `@Command('card/{ownerId}/refresh', CommandType.BUTTON)`, with captures                                   |
+| `@Button('card/:ownerId/refresh')`, `@ComponentParam` | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                         |
 | `@TextCommand` and `@Arguments()`                     | A [message command](guide:message-commands) pattern, with typed params                                    |
 | A Nest `CanActivate` and `NecordExecutionContext`     | A [guard](guide:guards), given the interaction directly                                                   |
 | A Nest exception filter and `NecordArgumentsHost`     | An [exception filter](guide:exception-filters), given the call                                            |

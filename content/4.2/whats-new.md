@@ -61,7 +61,8 @@ each, with what to check. Every release's notes are in the [changelog](guide:cha
   `clearMocks`, `mockReset` and `vi.mocked` reach them. A new project's setup file calls it. See
   [Your test runner's mocks](guide:mocks#your-test-runners-mocks).
 - **`useStrictMocks()`** has mocks compute what discord.js computes, such as whether a message is `editable` or a member
-  `kickable`, where they read a placeholder otherwise. See [Strict mocks](guide:mocks#strict-mocks).
+  `kickable`, where they read a placeholder otherwise. A new project's setup file calls it. See
+  [Strict mocks](guide:mocks#strict-mocks).
 - **`createMockRawMember()`** builds the member Discord sends from a server the bot isn't in, to test a user-installed
   command there. See [A server the bot isn't in](guide:mocks#a-server-the-bot-isnt-in).
 

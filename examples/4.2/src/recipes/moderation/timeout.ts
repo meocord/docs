@@ -101,7 +101,7 @@ export class MissingPermissionsFilter implements ExceptionFilter<DiscordAPIError
 
 // #region controller
 // The moderator, the proposal and the answer, such as `timeout/111/1/confirm`
-export const timeoutAnswer = route('timeout/{ownerId}/{id:int}/{action:confirm|cancel}')
+export const timeoutAnswer = route('timeout/{ownerId:snowflake}/{id:int}/{action:confirm|cancel}')
 
 @Controller()
 @UseFilter(MissingPermissionsFilter)

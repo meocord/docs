@@ -33,8 +33,8 @@ The command replies with the first page, and the button handler turns to the pag
 
 ## How it works
 
-- **No state.** Each button's `customId`, such as `leaderboard/111/2`, says whose board it is and which page it
-  shows. Any click, however old, has what it needs.
+- **No state.** Each button's `customId`, such as `leaderboard/111111111111111111/2`, says whose board it is and which
+  page it shows. Any click, however old, has what it needs.
 - **One definition.** `@Command` takes the same `leaderboardPage` route that builds the ids, so the buttons and the
   handler can't drift apart, and `build` fails to compile without both params.
 - **A number, checked.** `{page:int}` hands the handler a `number`. An id whose last segment isn't a whole number

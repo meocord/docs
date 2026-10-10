@@ -39,7 +39,7 @@ value of the call with `by`. See [Cooldowns](guide:cooldowns).
 **Cooldown store.** Where cooldowns count calls: the bot's memory by default, or the shard manager, Redis or a
 database of your own. See [Cooldown stores](guide:recipes/cooldown-stores).
 
-**`customId` pattern.** A component's route, such as `profile/{ownerId}/{uid}`. The parts in braces become the
+**`customId` pattern.** A component's route, such as `profile/{ownerId:snowflake}/{uid}`. The parts in braces become the
 handler's params. See [Patterns](guide:components#patterns).
 
 **Deferral.** An acknowledgement that answers later: a deferred reply shows that the bot is thinking, and a deferred

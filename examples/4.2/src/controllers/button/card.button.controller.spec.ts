@@ -11,7 +11,7 @@ describe('CardButtonController', () => {
   const module = MeoCordTestingModule.create({ controllers: [CardButtonController] }).compile()
 
   it('acknowledges before the guard, then answers the owner with an edit', async () => {
-    const interaction = click('card/111/refresh', '111')
+    const interaction = click('card/111111111111111111/refresh', '111111111111111111')
 
     await module.invoke(CardButtonController, 'refresh', interaction)
 
@@ -19,7 +19,7 @@ describe('CardButtonController', () => {
   })
 
   it('refuses a stranger before the handler runs, and never touches the message', async () => {
-    const interaction = click('card/111/refresh', '222')
+    const interaction = click('card/111111111111111111/refresh', '222222222222222222')
 
     // The bot answers a GuardDeniedError privately; in a test, where no fallback runs, invoke rejects with it
     await expect(module.invoke(CardButtonController, 'refresh', interaction)).rejects.toThrow(GuardDeniedError)
@@ -27,7 +27,7 @@ describe('CardButtonController', () => {
   })
 
   it('answers a fast handler with a single update under auto', async () => {
-    const interaction = click('card/111/like', '111')
+    const interaction = click('card/111111111111111111/like', '111111111111111111')
 
     await module.invoke(CardButtonController, 'like', interaction)
 

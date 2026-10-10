@@ -37,9 +37,9 @@ on its own, build it with `new`.
 
 ::example{file="testing/dispatch.spec.ts" region="dispatch"}
 
-The click's `customId`, `card/42/like`, reaches `CardButtonController.like` through the module's routing table.
-`handlers` lists every handler it ran, and [`getResponse`](api:testing/getResponse) shows the update the handler
-sent.
+The click's `customId`, `card/111111111111111111/like`, reaches `CardButtonController.like` through the module's
+routing table. `handlers` lists every handler it ran, and [`getResponse`](api:testing/getResponse) shows the update
+the handler sent.
 
 ## How it works
 

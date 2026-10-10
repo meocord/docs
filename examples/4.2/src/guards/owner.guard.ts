@@ -4,7 +4,7 @@ import { GuardDeniedError } from 'meocord/common'
 import { Guard } from 'meocord/decorator'
 import { type GuardInterface } from 'meocord/interface'
 
-/** Lets only the user whose id the button carries use it: `card/{ownerId}/…` */
+/** Lets only the user whose id the button carries use it: `card/{ownerId:snowflake}/…` */
 @Guard()
 export class OwnerGuard implements GuardInterface {
   canActivate(interaction: ButtonInteraction, { ownerId }: { ownerId: string }): boolean {

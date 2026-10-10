@@ -12,7 +12,7 @@ describe('dispatch', () => {
   // #region dispatch
   it('routes a click to the handler its customId matches, as the bot does', async () => {
     const module = MeoCordTestingModule.create({ controllers: [CardButtonController] }).compile()
-    const click = createMockInteraction(ButtonInteraction, { customId: 'card/42/like' })
+    const click = createMockInteraction(ButtonInteraction, { customId: 'card/111111111111111111/like' })
 
     const { ran, handlers } = await module.dispatch(click)
 
@@ -50,7 +50,7 @@ describe('dispatch', () => {
   // #region not-found
   it('answers a click no route takes as the bot does, and reports why', async () => {
     const module = MeoCordTestingModule.create({ controllers: [CardButtonController] }).compile()
-    const click = createMockInteraction(ButtonInteraction, { customId: 'card/42/share' })
+    const click = createMockInteraction(ButtonInteraction, { customId: 'card/111111111111111111/share' })
 
     const { ran, handlers, error } = await module.dispatch(click)
 
