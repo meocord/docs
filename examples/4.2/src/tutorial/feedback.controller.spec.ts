@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Locale, ModalSubmitInteraction, TextChannel, User } from 'discord.js'
+import { ChatInputCommandInteraction, Locale, ModalSubmitInteraction, TextChannel } from 'discord.js'
 // #region step:cooldowns
 import { CooldownError } from 'meocord/common'
 // #endregion step:cooldowns
@@ -6,6 +6,7 @@ import {
   createMockChannel,
   createMockClient,
   createMockInteraction,
+  createMockUser,
   createModalFields,
   getResponse,
   MeoCordTestingModule,
@@ -23,7 +24,7 @@ describe('FeedbackController', () => {
       // The real settings read the environment; the test says where the review channel is
       providers: [{ provide: FeedbackSettings, useValue: settings }],
     }).compile()
-  const ada = createMockInteraction(User, { id: '111', username: 'ada' })
+  const ada = createMockUser({ id: '111', username: 'ada' })
 
   // before:localisation it('opens the form', async () => {
   // #region step:localisation

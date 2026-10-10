@@ -72,9 +72,11 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   interaction as it was; in default mode it warns once and is built when first read. `flags` are read as discord.js
   reads them, a number, an array, a name or a bitfield. An autocomplete's `respond()` works once, and refuses more than
   25 choices.
-- **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot,
-  each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
-  give them one `user`, or one message `author`, to count them together. Ids you give are kept.
+- **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot, each
+  a snowflake no other mock in the run has. So does a user or an attachment made with `createMockInteraction`, and a
+  message context menu's `targetId` is its `targetMessage`'s, or one made for its own id. Two mocks are two users, so a
+  per-user cooldown counts them apart; give them one `user`, or one message `author`, to count them together. Ids you
+  give are kept.
 - **Creation times come from the id**, as discord.js reads them: `createdTimestamp` and `createdAt` are the time an
   `id` you give encodes, a thread's included. With a generated id, a message and an interaction were created when the
   mock was made. Under strict mocks so were a user, server and channel; in default mode they read their generated id's

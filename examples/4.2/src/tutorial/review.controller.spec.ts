@@ -1,4 +1,4 @@
-import { ButtonInteraction, Collection, EmbedBuilder, GuildMember, Locale, User } from 'discord.js'
+import { ButtonInteraction, Collection, EmbedBuilder, GuildMember, Locale } from 'discord.js'
 // #region step:guards
 import { GuardDeniedError } from 'meocord/common'
 // #endregion step:guards
@@ -8,6 +8,7 @@ import {
   createMockGuild,
   createMockInteraction,
   createMockMessage,
+  createMockUser,
   getResponse,
   MeoCordTestingModule,
 } from 'meocord/testing'
@@ -41,7 +42,7 @@ describe('ReviewController', () => {
       guildId: '1',
       guild: createMockGuild(),
       member,
-      user: createMockInteraction(User, { id: '222', username: 'grace' }),
+      user: createMockUser({ id: '222', username: 'grace' }),
       client: createMockClient() as never,
       message: createMockMessage({ embeds: [new EmbedBuilder().setTitle('Feedback #1 from ada')] }),
     })
