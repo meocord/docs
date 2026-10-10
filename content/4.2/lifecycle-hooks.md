@@ -55,6 +55,11 @@ declaration order: the app's cooldown store first, then the `providers`, the `se
 order, so a class stops before the classes it uses. The bot waits for the whole sequence up to `shutdownTimeout` in
 [`meocord.config.ts`](guide:configuration), 10 seconds by default, then shuts down whether or not it finished.
 
+Shutdown first stops taking events and waits for the calls under way, `@On` and `@Once` handlers included, then runs the
+`onShutdown` hooks. A call that awaits `app.stop()`, as an owner-only shutdown command does, isn't waited for.
+`shutdownTimeout` bounds the whole shutdown: the calls are waited for no longer than the timeout less a reserve kept for
+the hooks, a quarter of it, at least 1 second and never more than half. A call still running then is named in a warning.
+
 - A second signal more than a second after the first exits at once. One sooner counts as the same request,
   since a terminal's Ctrl+C can arrive twice.
 - If the bot never became ready, because the login failed, no `onShutdown` hook runs.
@@ -65,7 +70,8 @@ order, so a class stops before the classes it uses. The bot waits for the whole 
 
 `await app.stop()` stops the bot without a signal, as an owner-only shutdown command, a graceful restart or an
 integration test needs. It runs the `onShutdown` hooks under `shutdownTimeout` and closes the client. A bot in one
-process keeps its process running.
+process keeps its process running. A `stop()` while the bot is starting waits for the provider factories in progress, at
+most `shutdownTimeout`, and nothing more is made after it.
 
 - With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it. The
   manager's `stop()` keeps the manager running; a shard's ends that shard's process with the others.
