@@ -87,10 +87,11 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   `channelId`, `guildId` and `guild` you leave out: a DM channel makes the mock a DM, and a server's channel puts it in
   that server. A server's channel that names no server goes in the mock's. A channel in another server than the
   `guild` you give, or a DM channel beside a `guildId`, is refused, naming both.
-- **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role,
-  and `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or
-  permission guard runs on a mock as it does in Discord. Under `useStrictMocks()`, `memberPermissions` applies the
-  channel's overwrites, as discord.js does. In default mode it leaves them out, and warns where they would differ.
+- **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role, and
+  `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or permission
+  guard runs on a mock as it does in Discord. Under `useStrictMocks()`, `memberPermissions` applies the interaction's
+  channel's overwrites on top of them, a thread's parent's for a thread, as discord.js does, and an administrator or the
+  server's owner has every permission. In default mode it leaves them out, and warns where they would differ.
 - **A select menu has picked nothing unless given.** Its `values` are an empty array, and so are the collections of
   what its kind picks: `users` and `members`, `roles`, or `channels`, each an empty `Collection`. Give the choices a
   test needs in the overrides, as the `Collection`s discord.js holds: its `values` are then their ids, as Discord sends
