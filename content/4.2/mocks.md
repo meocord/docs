@@ -293,12 +293,13 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
 - a reaction made without a message has a whole one, so a dispatched reaction isn't fetched.
 
-So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member
-has a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`,
-and the values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke`
-also refuses a reaction handler given the reaction without its `ReactionEvent`, naming what to pass. A generated
-project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js refuses, runs with
-a warning in default mode; under strict mocks it throws, as discord.js does.
+So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member has
+a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`, and the
+values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke` also
+refuses a reaction handler given the reaction without its `ReactionEvent`, naming what to pass, and `compile()` refuses
+an override stub without its stage's method. A generated project's `vitest.setup.ts` makes this call. A second answer
+after one a test set, which discord.js refuses, runs with a warning in default mode; under strict mocks it throws, as
+discord.js does.
 
 ## Collectors
 

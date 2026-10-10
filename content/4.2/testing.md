@@ -83,8 +83,11 @@ uses. A misspelled member is a compile error, so the stand-in can't drift from t
 ::example{file="testing/greeting.module.spec.ts" region="override"}
 
 A provider can also be listed in any shape the app takes, `useValue`, `useClass` or `useFactory`, under a class or a
-token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInterceptor` and `overrideFilter` swap
-the stages around a handler the same way, wherever they apply: globally, on the controller or on the method.
+token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInterceptor` and `overrideFilter` swap the
+stages around a handler the same way, wherever they apply: globally, on the controller or on the method. An override
+stands in for the stage wherever it is bound, a guard listed in `providers` included, and wins over an
+`overrideProvider` of it. Its stub needs the stage's method, `canActivate`, `intercept` or `catch`: under strict mocks
+`compile()` refuses one without it, and otherwise warns.
 
 `module.get(Class)` returns an instance, for a direct test of a service as the container built it.
 
