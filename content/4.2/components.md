@@ -72,8 +72,9 @@ preceded and followed by "/" or by the ends of the pattern. Write "a/{uuid}" rat
 than "a-{uuid}".
 ```
 
-A parameter matches everything up to the next `/`, so an id you don't control, such as a uuid with hyphens, is
-captured whole.
+A parameter matches everything up to the next `/`, so an id you don't control, such as a uuid with hyphens, is captured
+whole. A param's name is ASCII letters, digits and `_`. Braces around anything else, such as `{café}`, are literal text,
+and MeoCord warns about them.
 
 ### Building customIds with a route
 

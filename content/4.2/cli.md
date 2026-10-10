@@ -86,7 +86,8 @@ files to that repository.
 `meocord.config.ts` and `tsconfig.json` are watched too. A change to `.env`, `.env.local`, `.env.development` or
 `.env.development.local` restarts the bot without a rebuild, since the bot reads them as it starts, as development
 whatever `NODE_ENV` the shell holds. It registers the commands to `commands.developmentGuild`, or where production would
-without one, and only when they changed since the last development start; `--force-register` sends them anyway.
+without one, and only when they changed since the last development start or differ from what Discord holds;
+`--force-register` sends them anyway.
 
 A restart stops the running bot as Ctrl+C does, so its [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) run
 before the new one starts, on every platform, Windows included. One save makes one restart, even when it makes two
@@ -120,6 +121,8 @@ npx meocord register --build           # build, then register every command
 npx meocord register --guild 123456789  # every command, to this server only
 npx meocord register --dev             # to commands.developmentGuild, as development does
 ```
+
+A blank guild id, as an unset variable gives, stops with an error rather than registering where `commands.*` says.
 
 Set `commands.register` to `false` to keep registering out of startup, and run `register` once per deploy instead.
 [Registering commands](guide:slash-commands#registering-commands) covers the scopes.
