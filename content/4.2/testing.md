@@ -126,8 +126,10 @@ Client, useValue: createMockClient() }`.
   first and its `onShutdown` last, once the store operations its calls started have settled.
 - **A shutdown that hangs.** `close()` waits for the whole sequence for up to `shutdownTimeout`, 10 seconds unless
   `create()` or `fromApp()` sets it, as the bot's [`shutdownTimeout`](guide:configuration) does. It then stops waiting
-  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers,
-  or whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`.
+  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers, or
+  whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`. A `close()` while
+  `init({ ready: true })` runs waits for the `onReady` hooks within the module's `shutdownTimeout`, warning about one
+  that never settles; everything the module constructed is shut down either way.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
   until `close()`, unless another module or app in the same process was ready first, which keeps it. See
   [Testing recipes](guide:testing-recipes#themes).

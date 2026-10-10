@@ -63,8 +63,9 @@ the hooks, a quarter of it, at least 1 second and never more than half. A call s
 - A second signal more than a second after the first exits at once. One sooner counts as the same request,
   since a terminal's Ctrl+C can arrive twice.
 - If the bot never became ready, because the login failed, no `onShutdown` hook runs.
-- A signal while the `onReady` hooks are still running shuts down only the classes the hooks had reached: those
-  whose `onReady` finished, and those before them without one. No further `onReady` starts.
+- A stop while the `onReady` hooks are running, by a signal or `app.stop()`, waits for the `onReady` in progress, then
+  shuts its class down with the others; no further `onReady` starts. One still running once only the hooks' share of
+  `shutdownTimeout` is left is named in a warning, and its class isn't shut down.
 
 ## Stopping from code
 
