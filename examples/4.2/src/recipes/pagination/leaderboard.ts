@@ -28,7 +28,7 @@ export class ScoreService {
 
 // #region page
 // Who opened the board, and the page a button leads to, such as `leaderboard/111/2`
-export const leaderboardPage = route('leaderboard/{ownerId}/{page:int}')
+export const leaderboardPage = route('leaderboard/{ownerId:snowflake}/{page:int}')
 
 export const PAGE_SIZE = 5
 

@@ -22,7 +22,7 @@ import { closeTicket, TicketController } from '@src/recipes/tickets/tickets'
 // #region spec
 describe('TicketController', () => {
   const compile = () => MeoCordTestingModule.create({ controllers: [TicketController] }).compile()
-  const ada = createMockInteraction(User, { id: '111', username: 'ada' })
+  const ada = createMockInteraction(User, { id: '111111111111111111', username: 'ada' })
 
   it('opens the form once every ten minutes for each member', async () => {
     const module = compile()
@@ -48,7 +48,7 @@ describe('TicketController', () => {
     await compile().invoke(TicketController, 'create', interaction)
 
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ name: 'ticket-ada', invitable: false }))
-    expect(thread.members.add).toHaveBeenCalledWith('111')
+    expect(thread.members.add).toHaveBeenCalledWith('111111111111111111')
     expect(thread.send).toHaveBeenCalledWith(
       expect.objectContaining({ content: '**Lost role**\nMy Member role is gone.' }),
     )
@@ -58,7 +58,7 @@ describe('TicketController', () => {
   it('lets staff who can manage threads close it, locking and archiving the thread', async () => {
     const thread = createMockInteraction(ThreadChannel)
     const interaction = createMockInteraction(ButtonInteraction, {
-      customId: closeTicket.build({ ownerId: '111' }),
+      customId: closeTicket.build({ ownerId: '111111111111111111' }),
       user: createMockInteraction(User, { id: '999' }),
       memberPermissions: new PermissionsBitField(PermissionFlagsBits.ManageThreads),
       // discord.js types a button's channel as a public or private thread, not the ThreadChannel class
@@ -74,8 +74,8 @@ describe('TicketController', () => {
 
   it('refuses anyone else, privately', async () => {
     const interaction = createMockInteraction(ButtonInteraction, {
-      customId: closeTicket.build({ ownerId: '111' }),
-      user: createMockInteraction(User, { id: '222' }),
+      customId: closeTicket.build({ ownerId: '111111111111111111' }),
+      user: createMockInteraction(User, { id: '222222222222222222' }),
       memberPermissions: new PermissionsBitField(),
     })
 

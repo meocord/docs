@@ -12,14 +12,26 @@ describe('CheckInButtonController', () => {
   it('checks each account in once an hour, on its own', async () => {
     const module = MeoCordTestingModule.create({ controllers: [CheckInButtonController] }).compile()
 
-    await module.invoke(CheckInButtonController, 'checkIn', click('1', 'check-in/1/800000001'))
+    await module.invoke(
+      CheckInButtonController,
+      'checkIn',
+      click('111111111111111111', 'check-in/111111111111111111/800000001'),
+    )
 
     // The same account again is refused; another of the user's accounts is not
     await expect(
-      module.invoke(CheckInButtonController, 'checkIn', click('1', 'check-in/1/800000001')),
+      module.invoke(
+        CheckInButtonController,
+        'checkIn',
+        click('111111111111111111', 'check-in/111111111111111111/800000001'),
+      ),
     ).rejects.toBeInstanceOf(CooldownError)
     await expect(
-      module.invoke(CheckInButtonController, 'checkIn', click('1', 'check-in/1/800000002')),
+      module.invoke(
+        CheckInButtonController,
+        'checkIn',
+        click('111111111111111111', 'check-in/111111111111111111/800000002'),
+      ),
     ).resolves.toEqual({
       ran: true,
     })
@@ -29,10 +41,18 @@ describe('CheckInButtonController', () => {
     const module = MeoCordTestingModule.create({ controllers: [CheckInButtonController] }).compile()
 
     await expect(
-      module.invoke(CheckInButtonController, 'checkIn', click('2', 'check-in/1/800000001')),
+      module.invoke(
+        CheckInButtonController,
+        'checkIn',
+        click('222222222222222222', 'check-in/111111111111111111/800000001'),
+      ),
     ).rejects.toBeInstanceOf(GuardDeniedError)
     await expect(
-      module.invoke(CheckInButtonController, 'checkIn', click('1', 'check-in/1/800000001')),
+      module.invoke(
+        CheckInButtonController,
+        'checkIn',
+        click('111111111111111111', 'check-in/111111111111111111/800000001'),
+      ),
     ).resolves.toEqual({
       ran: true,
     })

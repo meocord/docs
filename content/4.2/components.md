@@ -31,11 +31,12 @@ collector can be simpler: see [Collectors](#collectors).
 
 ## Example
 
-::playground{file="controllers/button/profile.button.controller.ts" region="params" dispatch="button profile/123/800000001"}
+::playground{file="controllers/button/profile.button.controller.ts" region="params" dispatch="button profile/175928847299117063/800000001"}
 
-The pattern `profile/{ownerId}/{uid}` matches a `customId` such as `profile/123/800000001`. The two parameters are
-captured and arrive as the handler's second argument, as text; a parameter that names a type, such as
-`{count:int}`, arrives as its value. See [Typed params](#typed-params).
+The pattern `profile/{ownerId:snowflake}/{uid}` matches a `customId` such as `profile/175928847299117063/800000001`.
+The two parameters are captured and arrive as the handler's second argument. `:snowflake` takes only a Discord ID,
+which arrives as text, as an untyped parameter does; a parameter that names another type, such as `{count:int}`,
+arrives as its value. See [Typed params](#typed-params).
 
 ## How it works
 
@@ -124,7 +125,7 @@ Patterns with different segment counts never compete. When two with the same cou
 compared segment by segment, left to right: at the first segment one spells out as literal text and the other leaves to
 a parameter, the literal one wins, whatever order they were declared in:
 
-::playground{file="controllers/button/profile.button.controller.ts" region="overlap" dispatch="button profile/summary/456"}
+::playground{file="controllers/button/profile.button.controller.ts" region="overlap" dispatch="button profile/175928847299117063/summary"}
 
 So `profile/me/{section}` takes `profile/me/edit` from `profile/{userId}/edit`, which still takes `profile/123/edit`,
 and `a/{x}` takes `a/abcd` from `{x}/abcd`, though the second spells out more text.

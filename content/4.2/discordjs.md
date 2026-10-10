@@ -29,7 +29,7 @@ This page shows one small bot both ways. The discord.js side is typechecked agai
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | A `SlashCommandBuilder`, sent with `REST` from a script | A `@CommandBuilder` class, registered when the bot starts                                                 |
 | The `interactionCreate` listener and its `if` chain     | `@Command` on a controller method; MeoCord routes to it                                                   |
-| Splitting `customId` by hand                            | A pattern such as `card/{ownerId}/refresh`, captured into an argument                                     |
+| Splitting `customId` by hand                            | A pattern such as `card/{ownerId:snowflake}/refresh`, captured into an argument                           |
 | A `messageCreate` listener that splits the content      | A [message command](guide:message-commands) pattern, such as `roll {sides}`                               |
 | Checks at the top of a handler                          | A [guard](guide:guards)                                                                                   |
 | A `Map` of timestamps                                   | [`@Cooldown`](guide:cooldowns)                                                                            |

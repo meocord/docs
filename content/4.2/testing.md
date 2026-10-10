@@ -141,7 +141,7 @@ npm run test:coverage   # with a coverage report
 ```
 
 `vitest.setup.ts` runs before every spec file. It has MeoCord's mocks made with `vi.fn`, so Vitest treats them as its
-own, and resets them after every test:
+own, and [strict](guide:mocks#strict-mocks), so they compute what discord.js computes, and resets them after every test:
 
 ::example{file="config/vitest.setup.ts" region="setup"}
 

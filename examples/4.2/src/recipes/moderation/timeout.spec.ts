@@ -16,7 +16,7 @@ describe('TimeoutController', () => {
   const compile = () => MeoCordTestingModule.create({ controllers: [TimeoutController] }).compile()
   beforeEach(() => (module = compile()))
 
-  const moderator = createMockInteraction(User, { id: '111' })
+  const moderator = createMockInteraction(User, { id: '111111111111111111' })
   const target = createMockInteraction(User, { id: '999' })
 
   // A click in a server whose member fetch resolves the target, whose timeout() the test controls
@@ -27,7 +27,7 @@ describe('TimeoutController', () => {
   ) => {
     const guild = createMockGuild()
     guild.members.fetch.mockResolvedValue(member as never)
-    const customId = timeoutAnswer.build({ ownerId: '111', id, action })
+    const customId = timeoutAnswer.build({ ownerId: '111111111111111111', id, action })
     const interaction = createMockInteraction(ButtonInteraction, { customId, user: moderator, guildId: '1', guild })
     return { interaction, member }
   }
@@ -49,7 +49,7 @@ describe('TimeoutController', () => {
   it('asks the moderator to confirm, privately, with buttons naming the proposal', async () => {
     const { interaction, customIds, id } = await propose()
 
-    expect(customIds).toEqual([`timeout/111/${id}/confirm`, `timeout/111/${id}/cancel`])
+    expect(customIds).toEqual([`timeout/111111111111111111/${id}/confirm`, `timeout/111111111111111111/${id}/cancel`])
     expect(interaction.ephemeral).toBe(true)
   })
 

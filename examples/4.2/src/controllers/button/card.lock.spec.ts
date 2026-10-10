@@ -15,14 +15,28 @@ const card: APIActionRowComponent<APIComponentInMessageActionRow>[] = [
   {
     type: ComponentType.ActionRow,
     components: [
-      { type: ComponentType.Button, style: ButtonStyle.Primary, custom_id: 'card/111/refresh', label: 'Refresh' },
-      { type: ComponentType.Button, style: ButtonStyle.Secondary, custom_id: 'card/111/export', label: 'Export' },
+      {
+        type: ComponentType.Button,
+        style: ButtonStyle.Primary,
+        custom_id: 'card/111111111111111111/refresh',
+        label: 'Refresh',
+      },
+      {
+        type: ComponentType.Button,
+        style: ButtonStyle.Secondary,
+        custom_id: 'card/111111111111111111/export',
+        label: 'Export',
+      },
     ],
   },
   {
     type: ComponentType.ActionRow,
     components: [
-      { type: ComponentType.StringSelect, custom_id: 'card/111/sort', options: [{ label: 'Newest', value: 'new' }] },
+      {
+        type: ComponentType.StringSelect,
+        custom_id: 'card/111111111111111111/sort',
+        options: [{ label: 'Newest', value: 'new' }],
+      },
     ],
   },
 ]
@@ -31,7 +45,7 @@ const card: APIActionRowComponent<APIComponentInMessageActionRow>[] = [
 const clickOnCard = (customId: string) =>
   createMockInteraction(ButtonInteraction, {
     customId,
-    user: createMockInteraction(User, { id: '111' }),
+    user: createMockInteraction(User, { id: '111111111111111111' }),
     message: createMockMessage({ components: card }),
   })
 // #endregion message
@@ -47,7 +61,7 @@ describe('@Defer on a message with controls', () => {
 
   // #region lock
   it('locks every control while the handler runs, then puts them back', async () => {
-    const interaction = clickOnCard('card/111/refresh')
+    const interaction = clickOnCard('card/111111111111111111/refresh')
 
     await module.invoke(CardButtonController, 'refresh', interaction)
 
@@ -64,7 +78,7 @@ describe('@Defer on a message with controls', () => {
   // #endregion lock
 
   it("with disable: 'clicked', locks only the button used", async () => {
-    const interaction = clickOnCard('card/111/export')
+    const interaction = clickOnCard('card/111111111111111111/export')
 
     await module.invoke(CardButtonController, 'export', interaction)
 

@@ -265,7 +265,8 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member
 has a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`,
-and the values follow. A value the test sets on a mock still wins over the computed one.
+and the values follow. A value the test sets on a mock still wins over the computed one. A generated project's
+`vitest.setup.ts` makes this call.
 
 ## Collectors
 

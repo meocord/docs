@@ -30,7 +30,7 @@ shows one small bot both ways. The discordx side is typechecked against `discord
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | A `@Discord()` class                             | A `@Controller()` class, listed in the app class                                                          |
 | `@Slash` and a `@SlashOption` per parameter      | `@Command` with a `@CommandBuilder` class                                                                 |
-| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId}/refresh', CommandType.BUTTON)`, with captures                                   |
+| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                         |
 | `@SimpleCommand` and a `@SimpleCommandOption`    | A [message command](guide:message-commands) pattern, with typed params                                    |
 | A guard function with `next()`                   | A [guard](guide:guards) class, which can inject services                                                  |
 | A `catch` around `executeCommand`                | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |

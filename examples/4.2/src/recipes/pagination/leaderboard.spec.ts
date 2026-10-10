@@ -21,7 +21,7 @@ describe('LeaderboardController', () => {
   const module = MeoCordTestingModule.create({ controllers: [LeaderboardController] }).compile()
 
   it('replies with the first page, and buttons that carry who opened it', async () => {
-    const interaction = createMockInteraction(ChatInputCommandInteraction, { user: user('111') })
+    const interaction = createMockInteraction(ChatInputCommandInteraction, { user: user('111111111111111111') })
 
     await module.invoke(LeaderboardController, 'show', interaction)
 
@@ -29,14 +29,14 @@ describe('LeaderboardController', () => {
     expect(getResponse(interaction).calls[0].method).toBe('reply')
     expect(page.embeds[0].footer.text).toBe('Page 1 of 3')
     expect(page.components[0].components).toEqual([
-      expect.objectContaining({ custom_id: 'leaderboard/111/-1', disabled: true }),
-      expect.objectContaining({ custom_id: 'leaderboard/111/1', disabled: false }),
+      expect.objectContaining({ custom_id: 'leaderboard/111111111111111111/-1', disabled: true }),
+      expect.objectContaining({ custom_id: 'leaderboard/111111111111111111/1', disabled: false }),
     ])
   })
 
   it('turns to the page a button names, updating the message', async () => {
-    const customId = leaderboardPage.build({ ownerId: '111', page: 2 })
-    const interaction = createMockInteraction(ButtonInteraction, { customId, user: user('111') })
+    const customId = leaderboardPage.build({ ownerId: '111111111111111111', page: 2 })
+    const interaction = createMockInteraction(ButtonInteraction, { customId, user: user('111111111111111111') })
 
     await module.invoke(LeaderboardController, 'turn', interaction)
 
@@ -47,7 +47,10 @@ describe('LeaderboardController', () => {
   })
 
   it('refuses anyone else, privately', async () => {
-    const interaction = createMockInteraction(ButtonInteraction, { customId: 'leaderboard/111/1', user: user('222') })
+    const interaction = createMockInteraction(ButtonInteraction, {
+      customId: 'leaderboard/111111111111111111/1',
+      user: user('222222222222222222'),
+    })
 
     await expect(module.invoke(LeaderboardController, 'turn', interaction)).rejects.toThrow(GuardDeniedError)
     expect(getResponse(interaction).sent).toBe(false)
@@ -55,8 +58,8 @@ describe('LeaderboardController', () => {
 
   it('routes only a page that is a whole number', () => {
     const route = (customId: string) => resolveRoute(App, { type: CommandType.BUTTON, customId })
-    expect(route('leaderboard/111/2')?.values).toEqual({ ownerId: '111', page: 2 })
-    expect(route('leaderboard/111/last')).toBeUndefined()
+    expect(route('leaderboard/111111111111111111/2')?.values).toEqual({ ownerId: '111111111111111111', page: 2 })
+    expect(route('leaderboard/111111111111111111/last')).toBeUndefined()
   })
 })
 // #endregion spec

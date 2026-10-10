@@ -30,7 +30,7 @@ Sapphire side is typechecked against `@sapphire/framework` 5.5.1.
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | A `Command` piece in `commands/`                   | A controller method with `@Command`, listed in the app class                                              |
 | `registerApplicationCommands` and its registry     | A `@CommandBuilder` class                                                                                 |
-| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId}/refresh`                                       |
+| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId:snowflake}/refresh`                             |
 | `messageRun` and `Args`                            | A [message command](guide:message-commands) pattern, with typed params                                    |
 | A precondition                                     | A [guard](guide:guards), for commands and components alike                                                |
 | `cooldownLimit` and `cooldownDelay`                | [`@Cooldown`](guide:cooldowns)                                                                            |

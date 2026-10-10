@@ -46,7 +46,7 @@ export class TicketCloserGuard implements GuardInterface {
 
 // #region controller
 // The Close button carries who opened the ticket, such as `ticket/111/close`
-export const closeTicket = route('ticket/{ownerId}/close')
+export const closeTicket = route('ticket/{ownerId:snowflake}/close')
 
 @Controller()
 export class TicketController {
