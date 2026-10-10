@@ -1,13 +1,13 @@
-import { MessageReaction, User } from 'discord.js'
+import { MessageReaction } from 'discord.js'
 import { ReactionHandlerAction } from 'meocord/enum'
-import { createMockInteraction, createMockMessage, MeoCordTestingModule } from 'meocord/testing'
+import { createMockInteraction, createMockMessage, createMockUser, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { StarReactionController } from '@src/controllers/reaction/star.reaction.controller'
 
 // #region spec
 describe('StarReactionController', () => {
   const module = MeoCordTestingModule.create({ controllers: [StarReactionController] }).compile()
-  const user = createMockInteraction(User, { username: 'mika', bot: false })
+  const user = createMockUser({ username: 'mika', bot: false })
 
   it('replies when a star is added, and not when one is removed', async () => {
     const message = createMockMessage()

@@ -104,6 +104,10 @@ answering, the failure is then logged as the call's fault, and a testing module'
 `respond().error()` of your own logs it. A `loading()` that fails or is late the same way is replaced by MeoCord's
 loading view, with a warning naming the presenter, and the handler still runs.
 
+The message a presenter's `error()` and `messageError()` get already fits Discord's limit for the answer, 4096
+characters in an embed and 4000 in a Components V2 Text Display, cut to end in `…`, and an empty one comes as
+MeoCord's generic error text, so a presenter can write it as its text as it is.
+
 Discord takes at most 10 attachments on a message, counting the ones a message the view is added to keeps, and each
 file within the interaction's attachment size limit, or 20 MiB without one. A view past either is sent without its
 files, and a warning says why. A send Discord refuses as too large, such as one with a file given as a path or a

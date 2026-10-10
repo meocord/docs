@@ -117,7 +117,8 @@ you ship a source mapper of your own. `meocord start` then passes no flag, and t
 ## Environment variables
 
 Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config before `main.ts`, so every value the
-files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
+files set is there by the time `@MeoCord({...})`, the rest of your modules and the packages they import read
+`process.env`. A new app's config
 reads the files Bun reads for its mode: the production files in a production build and the development files in a
 development build, however the bot is started, and `.env.test` where it runs from source under `NODE_ENV=test`. On Bun,
 a production build you start yourself, with `NODE_ENV` unset, also gets the values of `.env.development` and
@@ -128,9 +129,10 @@ files with a variable of your own, as below:
 ::example{file="config/env-files.meocord.config.ts" region="config"}
 
 The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development and runs the bot as
-development, whatever `NODE_ENV` the shell holds, so it reads and watches the development files, and
-`meocord build --prod` writes `production` into the config it compiles. A more specific file wins, and a variable the
-shell sets wins over every file, so `.env.local` can hold your own values beside the committed `.env.development`.
+development, as `build --dev` and `register --dev` do, whatever `NODE_ENV` the shell holds, so it reads and watches the
+development files, and `meocord build --prod` writes `production` into the config it compiles. A more specific file
+wins, and a variable the shell sets wins over every file, so `.env.local` can hold your own values beside the committed
+`.env.development`.
 
 To pick files by something other than `NODE_ENV`, such as a staging server, put the choice in a module the config
 imports:

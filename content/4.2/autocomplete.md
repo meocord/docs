@@ -43,8 +43,9 @@ any slash command is.
 
 1. **As the member types**, Discord sends an `AutocompleteInteraction` for the option being typed, again for each
    change.
-2. **MeoCord finds the handler** by the command's path and the focused option's name. A handler for one option wins
-   over one for the whole command, so the two can live side by side.
+2. **MeoCord finds the handler** by the command's path and the focused option's name. It tries the full path, then
+   the command's name, as for commands, and runs the first handler that claims the focused option. At one path, a
+   handler for that option wins over one for the whole command, so the two can live side by side.
 3. **The handler runs** with its guards and exception filters, but no interceptors, validation, cooldowns or `@Defer`:
    it has three seconds and answers only once. A controller's `@Cooldown` skips it, and `@Validate`, `@UsePipe`,
    `@Cooldown` or `@Defer` on the handler itself stops the bot at startup.
@@ -63,6 +64,11 @@ on `interaction.options.getFocused(true).name` yourself.
 
 The first argument is the command path, so subcommands work as they do for `@Command`:
 `@Autocomplete('settings notify email', 'address')`. See [Subcommands](guide:subcommands).
+
+A handler on the command's name alone covers every subcommand and group: `@Autocomplete('settings', 'address')`
+answers `address` in `settings notify email` and in any other subcommand that has it. A path stops at a subcommand,
+never at a group: `@Autocomplete('settings notify', 'address')`, for the group `notify`, never runs, and the bot says
+so at startup.
 
 ## When no handler claims an option
 

@@ -38,13 +38,19 @@ export class SqliteCooldownStore extends CooldownStore {
     this.db.exec('BEGIN IMMEDIATE')
     try {
       this.db.prepare('DELETE FROM cooldown_calls WHERE key = ? AND at <= ?').run(key, now - windowMs)
-      const { count, oldest } = this.db
-        .prepare('SELECT count(*) AS count, min(at) AS oldest FROM cooldown_calls WHERE key = ?')
-        .get(key) as { count: number; oldest: number | null }
+      const { count } = this.db.prepare('SELECT count(*) AS count FROM cooldown_calls WHERE key = ?').get(key) as {
+        count: number
+      }
       const allowed = count < uses
       if (allowed) this.db.prepare('INSERT INTO cooldown_calls (key, at) VALUES (?, ?)').run(key, now)
+      // A use frees up when the oldest of the newest `uses` calls leaves the window, the oldest unless a lowered limit leaves more
+      const freeing = allowed
+        ? undefined
+        : (this.db
+            .prepare('SELECT at FROM cooldown_calls WHERE key = ? ORDER BY at DESC LIMIT 1 OFFSET ?')
+            .get(key, uses - 1) as { at: number })
       this.db.exec('COMMIT')
-      return Promise.resolve({ allowed, retryAfterMs: allowed ? 0 : oldest! + windowMs - now })
+      return Promise.resolve({ allowed, retryAfterMs: allowed ? 0 : freeing!.at + windowMs - now })
     } catch (error) {
       this.db.exec('ROLLBACK')
       throw error

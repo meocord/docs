@@ -67,7 +67,9 @@ interaction gets its params built as dispatch builds them: a command's or an aut
 `customId` params with a modal's fields or a select menu's choices. A message passed alone gets what its
 `@MessageHandler` pattern captures after the app's prefix, the handler's own prefix, or a mention, typed as dispatch
 types it; a word that isn't of its type, or a missing param, goes through the handler's filters as a
-`MessageUsageError`.
+`MessageUsageError`. Give a reaction handler its `ReactionEvent` after the reaction. `invoke` builds a handler's params
+only from an interaction or a message, so with the reaction alone it warns once, or under `useStrictMocks()` refuses,
+naming what to pass.
 
 `invoke` resolves to `{ ran }`. `ran` is `false` when a guard stopped the call or an interceptor skipped the handler,
 and `error` is set when a filter handled one. A guard that returns `false` stops the call with no answer:
@@ -112,7 +114,8 @@ Whatever the bot skips reaches nothing: a message from a bot, or a bot's reactio
 A button, select menu or modal submission no route takes may belong to a collector. When the interaction's client has
 another `interactionCreate` listener, `dispatch` waits the same 1.5 seconds the bot does before answering "not
 found", and says nothing if the listener answered first. A mock's own client has no listeners, so the answer is
-immediate. See [Components](guide:components#collectors).
+immediate. To test the wait, give the interaction a real discord.js `Client` with a listener; `createMockClient()`
+doesn't keep listeners. See [Components](guide:components#collectors).
 
 ## Reading what was sent
 
@@ -138,7 +141,9 @@ For messages and reactions, read the mock's own methods, such as `message.reply`
 
 To send a gateway event to the module's `@On` and `@Once` handlers, use `module.emit(event, ...args)`. It resolves to
 `{ ran }`, how many handlers ran, and once every handler has settled, rejects if any threw: with that error, or an
-`AggregateError` holding each in its `errors`.
+`AggregateError` holding each in its `errors`. That includes a guard's `GuardDeniedError`, which the bot logs at debug,
+and a handler's `UserError`, which the bot answers with a reply when the event carries a message. `emit` runs no
+fallback, so check them with `rejects`.
 
 To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It
 lists the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata

@@ -194,8 +194,8 @@ pattern, and the collector's callback answers it:
 - **An app's own `@On('interactionCreate')` counts as a listener too**, so in such an app a genuinely dead button is
   answered after 1.5 seconds rather than at once.
 - **Wrap the callback in [`bindTheme`](api:responses/bindTheme)** to answer in the theme of the handler that started
-  the collector. Without it, the callback runs in the client's event, where the app's theme applies, not the
-  handler's `@UseTheme`.
+  the collector, the starting member's server and user themes included, for every click. Without it, the callback
+  runs in the client's event, where the clicker's server and user themes apply, not the handler's `@UseTheme`.
 
 `awaitMessageComponent()` and `awaitModalSubmit()` work the same way, and keep the handler's theme across their
 `await`.
@@ -219,8 +219,9 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
   `build({ ownerId: 12345678901234567 })` throws a `TypeError`, as the number has already rounded the ID: pass
   `user.id`.
 - **A customId over 100 characters is refused by Discord.** Keep ids short: capture ids, not text.
-- **A collector on an unrouted id delays dead buttons elsewhere.** While any collector is listening, a genuinely dead
-  button in the app is answered after 1.5 seconds. Give long-lived components a route.
+- **Any other `interactionCreate` listener delays dead components.** While a collector or any other
+  `interactionCreate` listener is attached, an `@On('interactionCreate')` handler included, a button, select menu or
+  modal submission no route takes is answered after 1.5 seconds. Give long-lived components a route.
 
 ## Build it
 

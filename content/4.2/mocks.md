@@ -32,7 +32,9 @@ A handler takes discord.js objects: an interaction, a message, a reaction, the u
 mocks every one of them. A mock keeps its class's prototype chain, so `instanceof` holds at every level and a mock can
 go straight to code that expects the real class.
 
-Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. With
+Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. Vitest's `toHaveResolved`
+and `toHaveBeenCalledBefore` read MeoCord's own mocks too. Their call order is counted across MeoCord's mocks, so
+compare two of MeoCord's mocks, or two of the runner's, rather than one of each. With
 [`useMockFn`](#your-test-runners-mocks), it is your test runner's own mock, and the runner treats it as one of its own.
 Under Node's test runner, assert through `.mock.calls` itself: each call is recorded as an array of its arguments,
 `mock.calls[0][0]`, not node:test's `{ arguments }` record.
@@ -59,17 +61,23 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
 
 - **Type guards run discord.js's logic.** `isButton()`, `isRepliable()`, `isChatInputCommand()` and the rest answer
   from the class the mock was made from. They're still mock functions, so a test can override one.
-- **Replies follow Discord's rules.** Replying or deferring twice throws, and `followUp()`, `editReply()` and
-  `deleteReply()` throw before any reply. After a command shows a modal, `editReply()`, `fetchReply()` and
-  `deleteReply()` reject with Unknown Message (10008), since there's no reply. An autocomplete's `respond()` works
-  once, and refuses more than 25 choices.
+- **Replies follow Discord's rules.** Replying or deferring twice throws discord.js's `InteractionAlreadyReplied` error,
+  and `followUp()`, `editReply()` and `deleteReply()` throw `InteractionNotReplied` before any reply. An answer a test
+  gives a value with `mockResolvedValue` or `mockImplementation` counts as one. `fetchReply()` reads back what `reply()`
+  or `update()` sent. After `deleteReply()`, and after a command shows a modal, `editReply()`, `fetchReply()` and
+  `deleteReply()` reject with Unknown Message (10008), as does `fetchReply()` before any answer. A follow-up is reached
+  by its id: `editReply({ message: followUp.id })`. `flags` are read as discord.js reads them, a number, an array, a
+  name or a bitfield. An autocomplete's `respond()` works once, and refuses more than 25 choices.
 - **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot,
   each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
   give them one `user`, or one message `author`, to count them together. Ids you give are kept.
 - **Creation times come from the id**, as discord.js reads them: `createdTimestamp` and `createdAt` are the time an
   `id` you give encodes, or, with the generated id, the time the mock was made. A `createdTimestamp` you set wins.
 - **A mock without a `guildId` is a DM.** `inGuild()`, `inCachedGuild()` and `inRawGuild()` answer from the mock's
-  `guildId` and `guild`, and in a DM `guild` and `member` are `null`.
+  `guildId` and `guild`, and in a DM `guild` and `member` are `null`. Under `useStrictMocks()`, a given `guild`, or a
+  `member`'s guild, fills the interaction's `guildId`. In default mode, give the interaction its `guildId` with its
+  `guild` or `member`: a `guild` alone leaves it a DM that still has that `guild`, and a `member` alone a DM with that
+  `member` and no `guild`, and the mock warns.
 - **An interaction has the channel it came from.** In a server, `channel` is a text channel of that server, the one
   its `guild` caches under `channelId`; in a DM, it's the user's DM channel. Its `send()` resolves, and its type
   guards, such as `isTextBased()`, answer as discord.js's do.
@@ -79,7 +87,8 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   `guild` you give, or a DM channel beside a `guildId`, is refused, naming both.
 - **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role,
   and `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or
-  permission guard runs on a mock as it does in Discord.
+  permission guard runs on a mock as it does in Discord. Under `useStrictMocks()`, `memberPermissions` applies the
+  channel's overwrites, as discord.js does. In default mode it leaves them out, and warns where they would differ.
 - **A select menu has picked nothing unless given.** Its `values` are an empty array, and so are the collections of
   what its kind picks: `users` and `members`, `roles`, or `channels`, each an empty `Collection`. Give the choices a
   test needs in the overrides, as the `Collection`s discord.js holds: its `values` are then their ids, as Discord sends
@@ -100,6 +109,9 @@ as a modal's `customId` and `fields`, or the `client`. A misspelled property nam
 To put a command somewhere a user-installed app can be used, set `context` and `authorizingIntegrationOwners`:
 
 ::example{file="controllers/slash/stats.slash.controller.spec.ts" region="contexts"}
+
+A server needs a `guildId` too, and a server the bot isn't in a member from `createMockRawMember()`, as
+[A server the bot isn't in](#a-server-the-bot-isnt-in) shows.
 
 ## Options and fields
 
@@ -124,7 +136,8 @@ the real resolver finds them:
   typing.
 
 A modal's submitted fields come from `createModalFields({ body: 'It crashed' })`, which discord.js doesn't let a
-test build. A file upload field takes an array of `Attachment`s: `createModalFields({ screenshot: [attachment] })`.
+test build. A file upload field takes an array of `Attachment`s: `createModalFields({ screenshot: [attachment] })`. An
+empty array is a select with nothing chosen. Give an upload at least one `Attachment`.
 
 ## Messages, servers and the rest
 
@@ -200,7 +213,8 @@ string. [`createMockRawMember()`](api:testing/createMockRawMember) builds it. Gi
 with the server's `guildId` and no `guild`:
 
 - `inRawGuild()` is true and `inCachedGuild()` false, and `guild` and `channel` are `null`, with its `channelId` kept;
-- `user` is the member's user, and `memberPermissions` are the member's;
+- `user` is the member's user, and `memberPermissions` are the `permissions` you give the raw member, which Discord
+  sends with the channel's overwrites applied;
 - a user option's member is the member Discord resolves, with `roles` and `permissions` but no `user`;
 - the interaction is typed as discord.js types one from such a server, so the compiler sees `member` as raw data.
 
@@ -265,8 +279,10 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member
 has a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`,
-and the values follow. A value the test sets on a mock still wins over the computed one. A generated project's
-`vitest.setup.ts` makes this call.
+and the values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke`
+also refuses a reaction handler given the reaction without its `ReactionEvent`, naming what to pass. A generated
+project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js refuses, runs with
+a warning in default mode; under strict mocks it throws, as discord.js does.
 
 ## Collectors
 
@@ -340,6 +356,11 @@ mention never reaches the fetch, since a member it names comes from the message'
   them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
   give `options: createChatInputOptions({ … })` in its overrides, or assign it afterwards.
+- **A mock's `reply`, `deferReply`, `update` and `deferUpdate` resolve to `undefined`**, though their types say
+  `InteractionResponse`. To test a collector on the response, give it one:
+  `interaction.reply.mockResolvedValue(response)`, with `response` from `createMock<InteractionResponse>()` and its
+  `createMessageComponentCollector` set to return your collector. The interaction is then `replied`, as with the default
+  mock.
 - **`useStrictMocks()` goes before the first mock.** Called once a mock exists, it throws "useStrictMocks() goes before
   any mock is made: …". Call it in the test setup file, not inside a test or after a mock made at a spec's top level.
 
