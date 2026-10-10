@@ -72,7 +72,9 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   each a snowflake no other mock in the run has. Two mocks are two users, so a per-user cooldown counts them apart;
   give them one `user`, or one message `author`, to count them together. Ids you give are kept.
 - **Creation times come from the id**, as discord.js reads them: `createdTimestamp` and `createdAt` are the time an
-  `id` you give encodes, or, with the generated id, the time the mock was made. A `createdTimestamp` you set wins.
+  `id` you give encodes, a thread's included. With a generated id, a message and an interaction were created when the
+  mock was made. Under strict mocks so were a user, server and channel; in default mode they read their generated id's
+  time, a day in 2025, with a warning. A `createdTimestamp` you set wins.
 - **A mock without a `guildId` is a DM.** `inGuild()`, `inCachedGuild()` and `inRawGuild()` answer from the mock's
   `guildId` and `guild`, and in a DM `guild` and `member` are `null`. Under `useStrictMocks()`, a given `guild`, or a
   `member`'s guild, fills the interaction's `guildId`. In default mode, give the interaction its `guildId` with its
