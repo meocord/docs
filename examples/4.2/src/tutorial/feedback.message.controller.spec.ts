@@ -1,4 +1,4 @@
-import { Collection, GuildMember, Locale, MessageReaction, User } from 'discord.js'
+import { Collection, GuildMember, Locale, MessageReaction } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
 import { ReactionHandlerAction } from 'meocord/enum'
 import {
@@ -6,6 +6,7 @@ import {
   createMockGuild,
   createMockInteraction,
   createMockMessage,
+  createMockUser,
   MeoCordTestingModule,
 } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
@@ -89,7 +90,7 @@ describe('the feedback bot in chat', () => {
       content: content ?? `Filed as feedback #${id}. Thank you!`,
     })
     const reaction = createMockInteraction(MessageReaction, { message: filed, emoji: { name: emoji } as never })
-    const user = createMockInteraction(User, { id: '222', username: 'grace', bot: false })
+    const user = createMockUser({ id: '222', username: 'grace', bot: false })
 
     await module.dispatch(reaction, { user, action: ReactionHandlerAction.ADD })
     return { id, filed }
