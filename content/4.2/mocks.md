@@ -133,7 +133,10 @@ the real resolver finds them:
   when there's none, unless given `false`, as in discord.js. So does `getChannel()` given `channelTypes`, for a channel
   of another type, and `getFocused()` when no option is `focused`.
 - `subcommandGroup`, `subcommand` and `focused` are reserved names: the last names the option an autocomplete is
-  typing.
+  typing. Its value reads as Discord sends it, a string, `''` when none is given, through `getFocused()`,
+  `getFocused(true)` and `options.data` alike. A number given for it is its digits under strict mocks. The focused
+  option is in `options.data`, so with no value given an autocomplete handler's params hold it as `''`, such as
+  `{ query: '' }`.
 
 A modal's submitted fields come from `createModalFields({ body: 'It crashed' })`, which discord.js doesn't let a
 test build. A file upload field takes an array of `Attachment`s: `createModalFields({ screenshot: [attachment] })`. An
