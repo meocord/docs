@@ -42,13 +42,15 @@ the one you have. With node-redis:
 
 A store is a [service](guide:services) that extends `CooldownStore`. `@Cooldown` calls its `consumeMany(entries)`
 once per call, with every stacked cooldown the call doesn't bypass. With `messages.dmOnCooldown`, a refused message
-command's notice is counted in the store too, under the refusing key followed by `:notice:`. Three things make a store
+command's notice is counted in the store too, under the refusing key followed by `:notice:`. Four things make a store
 correct:
 
 - **One step.** The check and the record happen together, so two calls at the limit can't both pass.
 - **One clock.** Processes on several hosts count by the database's clock, not each host's own.
 - **Every key expires.** A key whose calls have all left their window is removed, so the store doesn't grow
   forever.
+- **The wait runs until a use frees up.** A refusal's `retryAfterMs` counts from the oldest of the newest `uses` calls
+  in the window, which is the oldest call unless a lowered limit leaves more, as the built-in stores count.
 
 `RedisCooldownStore` counts each key in a sorted set. One Lua script trims, counts and adds to every key of the
 call, timed by the server's `TIME`, and sets each key to expire. So a call costs one round trip however many
@@ -178,8 +180,7 @@ Vitest, Jest or any runner with `describe`, `it` and `expect`:
 It checks that:
 
 - a key allows `uses` calls within the window, and the window slides;
-- `retryAfterMs` counts from the oldest call still in the window, and every refusal in one wait gives the same
-  `retryTimestamp`, when the store gives one;
+- every refusal in one wait gives the same `retryTimestamp`, when the store gives one;
 - each key counts on its own, and calls in the same millisecond stay distinct;
 - of several concurrent calls at the limit, exactly one passes;
 - a batch is counted against all its cooldowns at once, and a refusal names the longest wait;

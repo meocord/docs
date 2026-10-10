@@ -1,5 +1,11 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
-import { createChatInputOptions, createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { ChatInputCommandInteraction } from 'discord.js'
+import {
+  createChatInputOptions,
+  createMockInteraction,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { KickSlashController } from '@src/controllers/slash/kick.slash.controller'
 
@@ -9,7 +15,7 @@ describe('KickSlashController', () => {
   it('receives the target resolved to a user', async () => {
     const interaction = createMockInteraction(ChatInputCommandInteraction)
     interaction.options = createChatInputOptions({
-      target: createMockInteraction(User, { username: 'ada' }),
+      target: createMockUser({ username: 'ada' }),
       reason: 'spam',
     })
 

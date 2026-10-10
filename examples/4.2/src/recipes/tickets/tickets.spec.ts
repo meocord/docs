@@ -6,12 +6,12 @@ import {
   PermissionsBitField,
   TextChannel,
   ThreadChannel,
-  User,
 } from 'discord.js'
 import { CooldownError, GuardDeniedError } from 'meocord/common'
 import {
   createMockFn,
   createMockInteraction,
+  createMockUser,
   createModalFields,
   getResponse,
   MeoCordTestingModule,
@@ -22,7 +22,7 @@ import { closeTicket, TicketController } from '@src/recipes/tickets/tickets'
 // #region spec
 describe('TicketController', () => {
   const compile = () => MeoCordTestingModule.create({ controllers: [TicketController] }).compile()
-  const ada = createMockInteraction(User, { id: '111111111111111111', username: 'ada' })
+  const ada = createMockUser({ id: '111111111111111111', username: 'ada' })
 
   it('opens the form once every ten minutes for each member', async () => {
     const module = compile()
@@ -59,7 +59,7 @@ describe('TicketController', () => {
     const thread = createMockInteraction(ThreadChannel)
     const interaction = createMockInteraction(ButtonInteraction, {
       customId: closeTicket.build({ ownerId: '111111111111111111' }),
-      user: createMockInteraction(User, { id: '999' }),
+      user: createMockUser({ id: '999' }),
       memberPermissions: new PermissionsBitField(PermissionFlagsBits.ManageThreads),
       // discord.js types a button's channel as a public or private thread, not the ThreadChannel class
       channel: thread as never,
@@ -75,7 +75,7 @@ describe('TicketController', () => {
   it('refuses anyone else, privately', async () => {
     const interaction = createMockInteraction(ButtonInteraction, {
       customId: closeTicket.build({ ownerId: '111111111111111111' }),
-      user: createMockInteraction(User, { id: '222222222222222222' }),
+      user: createMockUser({ id: '222222222222222222' }),
       memberPermissions: new PermissionsBitField(),
     })
 

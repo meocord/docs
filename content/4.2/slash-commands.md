@@ -120,15 +120,21 @@ interaction to the bot, where `@Command('launch', LaunchCommandBuilder)` handles
 `EntryPointCommandHandlerType.DiscordLaunchActivity`, Discord launches the activity itself, and the bot receives
 nothing.
 
+Discord takes an entry point command only globally. A production run registers it in the global update, even when
+`commands.guilds` is set, and ignores a `guilds` list on its builder. A development run with `developmentGuild`, and
+`meocord register --guild`, leave it out of the guild update with a warning and register the rest; a production run or
+`meocord register` registers it.
+
 ## Gotchas
 
 - **Old commands linger after you move scopes.** Going from global to server commands, or back, leaves the old ones
   behind, and Discord shows both. MeoCord warns about them; set `clearOther: true` to remove them. While
   `developmentGuild` receives every command they're only warned about, since development and production often share
   one application.
-- **A command deleted outside the bot stays gone in development.** Under `start --dev`, a set of commands that hasn't
-  changed since the last start isn't sent again, so one deleted through the API or another tool isn't restored. Start
-  with `--force-register` to send the set again.
+- **A development start skips only what Discord still holds.** Under `start --dev`, a set of commands that hasn't
+  changed since the last start isn't sent again. A development start checks each scope it would skip with one listing,
+  and sends again when the commands registered there differ, as after a production run, `clearOther`, or another tool
+  removed them. `--force-register` sends every scope regardless.
 - **A handler without a matching command never runs.** The name in `@Command` is the name the builder receives, so
   build it with `setName(commandName)` rather than a second copy of the name. The bot warns at startup about such a
   handler, naming the name its builder registers, and in the next major version (5.0) it refuses to start.

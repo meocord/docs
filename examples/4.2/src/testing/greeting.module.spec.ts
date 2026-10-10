@@ -1,7 +1,8 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
+import { ChatInputCommandInteraction } from 'discord.js'
 import {
   createChatInputOptions,
   createMockInteraction,
+  createMockUser,
   getResponse,
   inspectHandler,
   MeoCordTestingModule,
@@ -14,7 +15,7 @@ import { GreetingService } from '@src/services/greeting.service'
 
 const greet = (userId: string) => {
   const interaction = createMockInteraction(ChatInputCommandInteraction, {
-    user: createMockInteraction(User, { id: userId }),
+    user: createMockUser({ id: userId }),
   })
   interaction.options = createChatInputOptions({ name: 'Ada' })
   return interaction

@@ -3,8 +3,14 @@
  * as JSON. The docs site's `bun run home:trace` writes it to .home-trace/trace.json.
  */
 import 'reflect-metadata'
-import { ChatInputCommandInteraction, User } from 'discord.js'
-import { createChatInputOptions, createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { ChatInputCommandInteraction } from 'discord.js'
+import {
+  createChatInputOptions,
+  createMockInteraction,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { BLOCKED_USER, PipelineSlashController, trace } from '@src/home/pipeline.slash.controller'
 
 const module = MeoCordTestingModule.create({ controllers: [PipelineSlashController] }).compile()
@@ -12,7 +18,7 @@ const module = MeoCordTestingModule.create({ controllers: [PipelineSlashControll
 async function run(userId: string) {
   trace.length = 0
   const interaction = createMockInteraction(ChatInputCommandInteraction, {
-    user: createMockInteraction(User, { id: userId }),
+    user: createMockUser({ id: userId }),
   })
   interaction.options = createChatInputOptions({ name: '  Ada  ' })
   try {

@@ -4,9 +4,14 @@ import {
   ButtonInteraction,
   ButtonStyle,
   ComponentType,
-  User,
 } from 'discord.js'
-import { createMockInteraction, createMockMessage, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import {
+  createMockInteraction,
+  createMockMessage,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { CardButtonController } from '@src/controllers/button/card.button.controller'
 
@@ -45,7 +50,7 @@ const card: APIActionRowComponent<APIComponentInMessageActionRow>[] = [
 const clickOnCard = (customId: string) =>
   createMockInteraction(ButtonInteraction, {
     customId,
-    user: createMockInteraction(User, { id: '111111111111111111' }),
+    user: createMockUser({ id: '111111111111111111' }),
     message: createMockMessage({ components: card }),
   })
 // #endregion message

@@ -65,7 +65,9 @@ export class MongoCooldownStore extends CooldownStore {
       { upsert: true, returnDocument: 'after' },
     )
     if (doc!.calls.some(call => call.id === id)) return { allowed: true, retryAfterMs: 0 }
-    return { allowed: false, retryAfterMs: doc!.calls[0].at.getTime() + windowMs - doc!.now.getTime() }
+    // A use frees up when the oldest of the newest `uses` calls leaves the window, the oldest unless a lowered limit leaves more
+    const freeing = doc!.calls[doc!.calls.length - uses]
+    return { allowed: false, retryAfterMs: freeing.at.getTime() + windowMs - doc!.now.getTime() }
   }
 }
 // #endregion store

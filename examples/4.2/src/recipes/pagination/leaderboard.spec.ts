@@ -1,8 +1,8 @@
-import { ButtonInteraction, ChatInputCommandInteraction, User } from 'discord.js'
+import { ButtonInteraction, ChatInputCommandInteraction } from 'discord.js'
 import { GuardDeniedError } from 'meocord/common'
 import { MeoCord } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
-import { createMockInteraction, getResponse, MeoCordTestingModule, resolveRoute } from 'meocord/testing'
+import { createMockInteraction, createMockUser, getResponse, MeoCordTestingModule, resolveRoute } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { LeaderboardController, leaderboardPage } from '@src/recipes/pagination/leaderboard'
 
@@ -11,7 +11,7 @@ type Row = { components: { custom_id: string; disabled?: boolean }[] }
 // The payload as Discord receives it, builders turned into JSON
 const sent = (interaction: ButtonInteraction | ChatInputCommandInteraction): Page =>
   JSON.parse(JSON.stringify(getResponse(interaction).calls[0].payload))
-const user = (id: string) => createMockInteraction(User, { id })
+const user = (id: string) => createMockUser({ id })
 
 @MeoCord({ controllers: [LeaderboardController], clientOptions: { intents: [] } })
 class App {}

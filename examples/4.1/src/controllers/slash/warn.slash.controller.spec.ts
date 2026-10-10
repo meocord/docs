@@ -1,7 +1,8 @@
-import { ChatInputCommandInteraction, Locale, User } from 'discord.js'
+import { ChatInputCommandInteraction, Locale } from 'discord.js'
 import {
   createChatInputOptions,
   createMockInteraction,
+  createMockUser,
   expectCompleteCatalog,
   getResponse,
   MeoCordTestingModule,
@@ -15,7 +16,7 @@ describe('WarnSlashController', () => {
 
   it('answers in the language of the user who ran it', async () => {
     const interaction = createMockInteraction(ChatInputCommandInteraction, { locale: Locale.Indonesian })
-    interaction.options = createChatInputOptions({ member: createMockInteraction(User, { username: 'ada' }) })
+    interaction.options = createChatInputOptions({ member: createMockUser({ username: 'ada' }) })
 
     await module.invoke(WarnSlashController, 'warn', interaction)
 

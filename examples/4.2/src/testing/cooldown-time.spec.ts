@@ -1,11 +1,10 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
+import { ChatInputCommandInteraction } from 'discord.js'
 import { CooldownError } from 'meocord/common'
-import { createMockInteraction, MeoCordTestingModule } from 'meocord/testing'
+import { createMockInteraction, createMockUser, MeoCordTestingModule } from 'meocord/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DailySlashController } from '@src/controllers/slash/daily.slash.controller'
 
-const from = (id: string) =>
-  createMockInteraction(ChatInputCommandInteraction, { user: createMockInteraction(User, { id }) })
+const from = (id: string) => createMockInteraction(ChatInputCommandInteraction, { user: createMockUser({ id }) })
 
 describe('a cooldown over time', () => {
   beforeEach(() => vi.useFakeTimers())

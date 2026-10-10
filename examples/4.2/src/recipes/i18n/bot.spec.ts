@@ -1,7 +1,8 @@
-import { ChatInputCommandInteraction, Guild, GuildMember, Locale, TextChannel, User } from 'discord.js'
+import { ChatInputCommandInteraction, Guild, GuildMember, Locale, TextChannel } from 'discord.js'
 import {
   createChatInputOptions,
   createMockInteraction,
+  createMockUser,
   expectCompleteCatalog,
   getResponse,
   MeoCordTestingModule,
@@ -62,7 +63,7 @@ describe('AnnounceApp', () => {
       systemChannel,
     })
     // discord.js's own toString() mentions the member through its user
-    const member = createMockInteraction(GuildMember, { guild, user: createMockInteraction(User, { id: '111' }) })
+    const member = createMockInteraction(GuildMember, { guild, user: createMockUser({ id: '111' }) })
 
     await module.emit('guildMemberAdd', member)
 

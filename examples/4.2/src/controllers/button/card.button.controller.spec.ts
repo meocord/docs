@@ -1,11 +1,11 @@
-import { ButtonInteraction, User } from 'discord.js'
+import { ButtonInteraction } from 'discord.js'
 import { GuardDeniedError } from 'meocord/common'
-import { createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { createMockInteraction, createMockUser, getResponse, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { CardButtonController } from '@src/controllers/button/card.button.controller'
 
 const click = (customId: string, userId: string) =>
-  createMockInteraction(ButtonInteraction, { customId, user: createMockInteraction(User, { id: userId }) })
+  createMockInteraction(ButtonInteraction, { customId, user: createMockUser({ id: userId }) })
 
 describe('CardButtonController', () => {
   const module = MeoCordTestingModule.create({ controllers: [CardButtonController] }).compile()
