@@ -87,6 +87,11 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   `channelId`, `guildId` and `guild` you leave out: a DM channel makes the mock a DM, and a server's channel puts it in
   that server. A server's channel that names no server goes in the mock's. A channel in another server than the
   `guild` you give, or a DM channel beside a `guildId`, is refused, naming both.
+- **Under strict mocks, a message, guild or guildId places it too.** An interaction given a `message` is in the
+  message's channel and server; given a `guild`, or a member of a server, it is in that server; given a `guildId` alone,
+  it is in a server the bot isn't in, with `guild` and `channel` `null` and a raw member. A `channel`, `guild` or
+  `guildId` other than the message's is refused. In default mode only a channel places it, and reading where it is warns
+  once where strict mocks place it otherwise.
 - **A member has roles and permissions.** An interaction's or a message's `member` has the server's @everyone role, and
   `permissions` and `memberPermissions` are computed from its roles as discord.js computes them, so a role or permission
   guard runs on a mock as it does in Discord. Under `useStrictMocks()`, `memberPermissions` applies the interaction's
