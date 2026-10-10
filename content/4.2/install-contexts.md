@@ -74,6 +74,11 @@ of the four places:
 
 ::example{file="controllers/slash/stats.slash.controller.spec.ts" region="contexts"}
 
+A server needs a `guildId` too. A server the bot isn't in needs a member from `createMockRawMember()` and no `guild`;
+there `channel` is `null`, so `interaction.channel.send` fails as it does in Discord. In DMs between users the mock's
+`channel.send` still resolves, so check `getInstallContext(interaction).botInstalled` in the handler, as the gotcha
+says.
+
 ## Gotchas
 
 - **Posting to the channel where the bot isn't.** `interaction.channel.send` fails in a server the bot isn't in and

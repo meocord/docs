@@ -31,16 +31,18 @@ export class PostgresCooldownStore extends CooldownStore {
         `DELETE FROM cooldown_calls WHERE key = $1 AND at <= clock_timestamp() - $2::float8 * interval '1 millisecond'`,
         [key, windowMs],
       )
-      const { rows } = await client.query<{ count: number; retry: number | null }>(
+      // A use frees up when the oldest of the newest `uses` calls leaves the window; bigint, as a long window overflows int
+      const { rows } = await client.query<{ count: number; retry: string | null }>(
         `SELECT count(*)::int AS count,
-                ceil(extract(epoch FROM min(at) + $2::float8 * interval '1 millisecond' - clock_timestamp()) * 1000)::int AS retry
+                ceil(extract(epoch FROM (SELECT at FROM cooldown_calls WHERE key = $1 ORDER BY at DESC OFFSET $3::int - 1 LIMIT 1)
+                  + $2::float8 * interval '1 millisecond' - clock_timestamp()) * 1000)::bigint AS retry
          FROM cooldown_calls WHERE key = $1`,
-        [key, windowMs],
+        [key, windowMs, uses],
       )
       const allowed = rows[0].count < uses
       if (allowed) await client.query('INSERT INTO cooldown_calls (key) VALUES ($1)', [key])
       await client.query('COMMIT')
-      return { allowed, retryAfterMs: allowed ? 0 : rows[0].retry! }
+      return { allowed, retryAfterMs: allowed ? 0 : Number(rows[0].retry) }
     } catch (error) {
       await client.query('ROLLBACK')
       throw error

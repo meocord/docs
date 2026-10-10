@@ -1,7 +1,13 @@
-import { ButtonInteraction, MessageReaction, User } from 'discord.js'
+import { ButtonInteraction, MessageReaction } from 'discord.js'
 import { CommandNotFoundError } from 'meocord/common'
 import { ReactionHandlerAction } from 'meocord/enum'
-import { createMockInteraction, createMockMessage, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import {
+  createMockInteraction,
+  createMockMessage,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import App from '@src/app-beyond-commands'
 import { CardButtonController } from '@src/controllers/button/card.button.controller'
@@ -39,7 +45,7 @@ describe('dispatch', () => {
     const module = MeoCordTestingModule.create({ controllers: [StarReactionController] }).compile()
     const message = createMockMessage()
     const reaction = createMockInteraction(MessageReaction, { message, emoji: { name: '⭐' } as never })
-    const user = createMockInteraction(User, { username: 'mika', bot: false })
+    const user = createMockUser({ username: 'mika', bot: false })
 
     await module.dispatch(reaction, { user, action: ReactionHandlerAction.ADD })
 

@@ -46,7 +46,8 @@ The default catalog, which every other language is checked against:
 
 ::example{file="locales/en-US.ts" region="catalog"}
 
-Another language gives what it translates. What it leaves out falls back to the default:
+Another language gives what it translates. What it leaves out, or leaves as an empty string, as translation tools
+export an untranslated one, falls back to the default:
 
 ::example{file="locales/id.ts" region="catalog"}
 
@@ -94,12 +95,14 @@ the translator is made at module scope. An interaction still reports the command
 | `t.default(key)`                       | The default catalog.                                                  |
 | `t.localizations(key)`                 | Every translation of a message, for a command builder.                |
 
-`t.localizations(key)` returns only the locales whose catalog has the message, so Discord's own fallback applies to the
-rest. Discord shows a name or a description as written, so it takes only a message without parameters: a key whose
-message takes one doesn't compile, or, in a catalog TypeScript can't read, throws as the app loads. A translation that
-uses a parameter is left out, and [`expectCompleteCatalog`](#testing-a-catalog) reports it. A helper of your own that
-passes a key on to `t.localizations()` types it as [`LocalizationKey<typeof catalog>`](api:types/LocalizationKey), from
-`meocord/common`.
+`t.localizations(key)` returns the locales whose catalog has the message, so Discord's own fallback applies to the rest.
+Discord shows en-US users the en-GB value, en-GB users the en-US one, and es-419 users the es-ES one when their own
+locale has none. So when your default is one of those three and its partner has a translation, the result includes the
+default's own wording too, and those users keep it. Discord shows a name or a description as written, so it takes only a
+message without parameters: a key whose message takes one doesn't compile, or, in a catalog TypeScript can't read,
+throws as the app loads. A translation that uses a parameter, or an empty one, is left out, and
+[`expectCompleteCatalog`](#testing-a-catalog) reports it. A helper of your own that passes a key on to
+`t.localizations()` types it as [`LocalizationKey<typeof catalog>`](api:types/LocalizationKey), from `meocord/common`.
 
 A [presenter](guide:presenters) gets the user's locale as `context.locale`, for a loading view and error titles in
 their language.
@@ -109,9 +112,13 @@ their language.
 `'Warned {user}.'` takes `{ user }`, and a missing or misspelt parameter doesn't compile. Parameters take strings
 and numbers; format numbers and dates yourself, with `Intl.NumberFormat` for instance.
 
-A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `few`, `many` and the required
-`other`. It takes a numeric `count`, which picks the form through `Intl.PluralRules` for the language, so Russian's
-`few` and `many` need no code of your own.
+A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `few`, `many` and the required `other`. An
+object with any other key is a group, so a group may hold a message named `other`. A plural takes a numeric `count`,
+which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no code of your
+own.
+
+A key's name holds no `.`: a key is the dotted path to its message, so `'ban.done'` as one key is never found. Nest it
+as `ban: { done: … }`. `createTranslator` warns about each such key, and it doesn't compile as a key.
 
 A parameter's name is ASCII letters, digits or `_`, such as `{user}` or `{user_id2}`, and a message may take hundreds.
 Other text in braces is the message's own: `'Wrap text in { and }.'` takes no parameters. A brace written twice is
@@ -153,6 +160,8 @@ presenter's "Working on it…" and "Oops!". Add a `meocord` group to any catalog
 
 ::example{file="locales/id.ts" region="meocord"}
 
+A catalog typed as `LocaleCatalog<typeof enUS>` takes one too.
+
 Each text is looked up on its own, so a line a language leaves out stays in MeoCord's English. The keys and their
 English are in [`MeoCordMessages`](api:types/MeoCordMessages): a key MeoCord lacks does not compile, nor, in a catalog
 TypeScript keeps the text of, a `{param}` its English text lacks, and the error names the text and the params it takes.
@@ -178,9 +187,10 @@ language of an interaction, a message or a locale.
 
 ## Testing a catalog
 
-`expectCompleteCatalog(t)` from `meocord/testing` fails with every message a language lacks, every message the
-default catalog doesn't have, every plural form a language needs but lacks, and every
-[parameter the default message doesn't take](#parameters-in-other-languages):
+`expectCompleteCatalog(t)` from `meocord/testing` fails with every message a language lacks or leaves empty, every
+message the default catalog doesn't have, every plural form a language needs but lacks, every translation of another
+shape than the default's, a text for a plural or a plural for a text, and every [parameter the default message doesn't
+take](#parameters-in-other-languages):
 
 ::example{file="controllers/slash/warn.slash.controller.spec.ts" region="complete"}
 

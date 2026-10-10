@@ -23,7 +23,8 @@ formerly: [tutorial-testing]
 
 `meocord/testing` runs your controllers, services, guards and everything around them inside a test, with no
 Discord connection and no token. `MeoCordTestingModule` builds a container from the classes you list, as the bot
-builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses.
+builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses, but for
+`emit`, which leaves out the bot's event fallback.
 
 The mocks it comes with behave like discord.js, and work under Vitest, Jest, Node's test runner and bun test:
 
