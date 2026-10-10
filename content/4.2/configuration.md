@@ -50,20 +50,20 @@ it was built with, until the next `meocord build --prod`.
 
 ## Options
 
-| Option               | Default   | What it does                                                                                                                                                            |
-| -------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `discordToken`       | none      | The bot token. Read it from the environment rather than writing it here.                                                                                                |
-| `appName`            | none      | Starts every log line.                                                                                                                                                  |
-| `logLevel`           | `'log'`   | The least severe line the bot prints; `'debug'` while `NODE_ENV` is `development`. See [Logging](#logging).                                                             |
-| `sourceMappedStacks` | `true`    | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                                                                     |
-| `startupErrors`      | `'first'` | `'all'` reports every startup error a decorator finds at once, as the bot starts. See [Every startup error at once](guide:troubleshooting#every-startup-error-at-once). |
-| `shutdownTimeout`    | `10000`   | Milliseconds shutdown waits for the `onShutdown` hooks, all of them together.                                                                                           |
-| `commands`           | global    | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                                                                      |
-| `sharding`           | none      | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                                                                              |
-| `rsbuild`            | none      | `(config) => config`: adjusts the Rsbuild configuration the bot is built with. See [the build hook](#the-build-hook).                                                   |
-| `bundleDependencies` | `false`   | Puts everything the bot needs inside `dist/`, so it runs without `node_modules`.                                                                                        |
-| `externals`          | `[]`      | Modules to keep out of the bundle.                                                                                                                                      |
-| `optionalExternals`  | `[]`      | Packages a dependency tries to load and runs without, such as `supports-color`.                                                                                         |
+| Option               | Default   | What it does                                                                                                                                                                                                                      |
+| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discordToken`       | none      | The bot token. Read it from the environment rather than writing it here.                                                                                                                                                          |
+| `appName`            | none      | Starts every log line.                                                                                                                                                                                                            |
+| `logLevel`           | `'log'`   | The least severe line the bot prints; `'debug'` while `NODE_ENV` is `development`. See [Logging](#logging).                                                                                                                       |
+| `sourceMappedStacks` | `true`    | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                                                                                                                               |
+| `startupErrors`      | `'first'` | `'all'` reports every startup error a decorator finds at once, as the bot starts. See [Every startup error at once](guide:troubleshooting#every-startup-error-at-once).                                                           |
+| `shutdownTimeout`    | `10000`   | Milliseconds shutdown waits for the calls under way and the `onShutdown` hooks, the whole sequence together. The calls get the timeout less a reserve for the hooks: a quarter of it, at least 1 second and never more than half. |
+| `commands`           | global    | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                                                                                                                                |
+| `sharding`           | none      | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                                                                                                                                        |
+| `rsbuild`            | none      | `(config) => config`: adjusts the Rsbuild configuration the bot is built with. See [the build hook](#the-build-hook).                                                                                                             |
+| `bundleDependencies` | `false`   | Puts everything the bot needs inside `dist/`, so it runs without `node_modules`.                                                                                                                                                  |
+| `externals`          | `[]`      | Modules to keep out of the bundle.                                                                                                                                                                                                |
+| `optionalExternals`  | `[]`      | Packages a dependency tries to load and runs without, such as `supports-color`.                                                                                                                                                   |
 
 The last two matter mostly for a bundled bot: see [Self-contained builds](guide:self-contained-builds).
 
