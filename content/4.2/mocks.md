@@ -148,9 +148,10 @@ empty array is a select with nothing chosen. Give an upload at least one `Attach
 
 - **`createMockMessage()`** mocks a message that tracks whether it was deleted: `delete()`, `edit()`, `reply()`,
   `react()`, `pin()` and `unpin()` throw once it is. It takes an `id`, `content`, `components`, `embeds` and `flags`,
-  and builders or JSON for `components` and `embeds`. What the content mentions is cached as the gateway delivers it: a
-  `<@id>` in the client's `users.cache`, and in a server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel
-  in their caches too.
+  and builders or JSON for `components` and `embeds`. It holds them as discord.js's classes, an `ActionRow` with its
+  `ButtonComponent`s, a `ContainerComponent`, an `Embed` and the rest, built from their JSON at the time of the call.
+  What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's `users.cache`, and in a
+  server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
 - **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the bot
   sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that user,
   made and cached when there's none. Every message from that author in one `guild` you give has the same member, and so
@@ -215,7 +216,7 @@ server's, and a manager's `fetch(id)` finds what the server caches:
 A user-installed command can run in a server the bot isn't in. discord.js then has no server to cache the member in,
 so `interaction.member` is the member Discord sent: plain data, with `roles` as role ids and `permissions` as a
 string. [`createMockRawMember()`](api:testing/createMockRawMember) builds it. Give it as the interaction's `member`,
-with the server's `guildId` and no `guild`:
+with the server's `guildId` and no `guild` or `channel`:
 
 - `inRawGuild()` is true and `inCachedGuild()` false, and `guild` and `channel` are `null`, with its `channelId` kept;
 - `user` is the member's user, and `memberPermissions` are the `permissions` you give the raw member, which Discord
@@ -261,11 +262,18 @@ channel's overwrites. Unless told otherwise, a mock reads these as a truthy plac
 - a message's `editable`, `deletable`, `pinnable`, `crosspostable`, `bulkDeletable` and `hasThread`;
 - a member's `manageable`, `kickable`, `bannable` and `moderatable`;
 - a role's `editable`, and a channel's `viewable`, `manageable` and `deletable`, and their thread and voice
-  counterparts;
+  counterparts, a voice channel's `full` among them;
 - `partial` on messages, users, channels and reactions.
 
 The first time a test reads one, the run logs a warning that names it and says how to set it. Set the value the test
 relies on, such as `message.editable = false` or `member.kickable = false`, and it is read without a warning.
+
+Some data discord.js gives empty, `null` or `false`, also reads as a truthy placeholder: a reaction's `me`,
+`message.mentions.repliedUser`, a message's `editedAt`, a member's `presence`, a server's `verified` and
+`systemChannel`, a channel's `parent`, and a modal's `message`. Reading one warns the same way, naming the value to set,
+such as `reaction.me = false`. When MeoCord's dispatcher reads a reaction's placeholder `partial`, it fetches the
+reaction, and the warning says so: set `reaction.partial = false` and `reaction.message.partial = false`, or use strict
+mocks.
 
 `message.thread` is the thread the message's channel caches under the message's id. Cache one with
 `channel.threads.cache.set(message.id, thread)` for a message that started a thread. Without one, it is a placeholder
@@ -280,7 +288,10 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 - the bot's member is in its server's member cache from the start;
 - @everyone has the permissions Discord gives it in a new server: the bot can view and send in a channel and join a
   voice channel, but not manage, pin, kick or ban;
-- a channel or thread made without a server has one of its own, a thread with a text channel as its parent.
+- a channel or thread made without a server has one of its own, a thread with a text channel as its parent;
+- those values read as discord.js gives them: `me` is `false`, `repliedUser` and a modal's `message` are `null`, and
+  `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
+- a reaction made without a message has a whole one, so a dispatched reaction isn't fetched.
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member
 has a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`,
