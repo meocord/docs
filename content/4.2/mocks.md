@@ -323,8 +323,10 @@ config and `vi.clearAllMocks()` reach them, and `vi.mocked(interaction.reply)` g
 - **node:test** keeps MeoCord's own mock function: its `mock.fn` records calls in a shape of its own, which
   `useMockFn` refuses.
 
-Call it before any mock is made. Once a mock exists, a call with another function throws, since the two kinds would
-mix. A setup file runs first, so that is where it goes.
+Call it before any mock is made. Once a mock exists, a call with another function throws, since the two kinds would mix.
+A setup file runs first, so that is where it goes. What it sets, with `useMockFn()` or `useStrictMocks()`, holds for
+every test, through `vi.resetModules()`, `jest.resetModules()` and Jest's `resetModules` config, and the mocks'
+generated ids keep counting through them.
 
 ## Resetting between tests
 
