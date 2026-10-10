@@ -110,10 +110,10 @@ Either layout works, and both can live in one project. A few things belong at th
 `vitest.config.ts` gives Vitest the same alias. Prefer it to long relative paths: a file moved to another folder keeps
 its imports.
 
-The build reads your `paths` as TypeScript does: from `compilerOptions.baseUrl` when your `tsconfig.json` sets one,
-else from the `tsconfig.json` itself. A `baseUrl` it only inherits through `extends` isn't applied to the `paths` it
-sets, so declare those relative to the project's own `tsconfig.json`. On TypeScript 6, which a generated app uses,
-`baseUrl` is deprecated, and the generated `tsconfig.json` declares its `paths` without it.
+The build and `meocord.config.ts` read your `paths` as `tsc` does, whatever TypeScript version the project uses: through
+`extends`, from `compilerOptions.baseUrl` when one is set, the project's own or one it inherits, else from the
+`tsconfig.json` that declares them, and with `${configDir}`. On TypeScript 6, which a generated app uses, `baseUrl` is
+deprecated, and the generated `tsconfig.json` declares its `paths` without it.
 
 ### The three tsconfigs
 

@@ -41,7 +41,9 @@ built bot reads `meocord.config.ts` itself.
 
 `build`, `start` and `register` check the config first. An option of the wrong type stops them with a list of every
 problem; an option MeoCord doesn't know, often a typo, is reported as a warning. `meocord.config.ts` must export the
-config as its default export; a module with only named exports is refused.
+config as its default export; a module with only named exports is refused. Its imports may use `tsconfig.json`'s
+`paths`, resolved as `tsc` resolves them, `extends`, `baseUrl` and `${configDir}` included, whatever TypeScript version
+the project uses.
 
 `meocord start --dev` watches `meocord.config.ts` and reloads it on every change. A production bot keeps the config
 it was built with, until the next `meocord build --prod`.
