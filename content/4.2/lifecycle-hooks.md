@@ -33,7 +33,10 @@ For something to do in response to Discord, use [gateway events](guide:gateway-e
 Every controller and service the app binds gets hooks: those listed in `@MeoCord({ controllers, services })`, everything
 they depend on, what `@MeoCord({ providers })` supplies, the app's cooldown store and its `themeFor` class.
 [Observers](guide:observers) get them too. Guards, interceptors and filters get none, unless the app also binds it:
-listed in `services` or `providers`, or injected by a class that gets hooks.
+listed in `services` or `providers`, or injected by a class that gets hooks. A service that only a guard, interceptor,
+filter, pipe or the presenter injects gets hooks too: it is made as the bot comes online, once, like any other service.
+A class that injects the call's `ExecutionContext` is made for each call instead, and has no hooks. One instance that
+two tokens reach, such as a factory alias of a service or one value provided twice, runs each hook once.
 
 ## onReady
 
