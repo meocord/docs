@@ -340,6 +340,8 @@ mention never reaches the fetch, since a member it names comes from the message'
   them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
   give `options: createChatInputOptions({ … })` in its overrides, or assign it afterwards.
+- **`useStrictMocks()` goes before the first mock.** Called once a mock exists, it throws "useStrictMocks() goes before
+  any mock is made: …". Call it in the test setup file, not inside a test or after a mock made at a spec's top level.
 
 ## Next steps
 
