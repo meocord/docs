@@ -85,7 +85,9 @@ the button you send and the handler that receives it share one definition:
 `build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a button's or a
 select menu's handler whose params name something other than the route's params and, for a select menu, its choices. A
 `/` or `%` inside a value is encoded, and the handler receives it decoded, so a value never spills into the next
-segment. An empty value, or an id longer than Discord's 100 characters, throws.
+segment. An empty value throws, and an id that is empty or longer than Discord's 100 characters throws a `RangeError`. A
+pattern no customId can match, one that is empty or whose shortest customId is over 100 characters, is warned about when
+its handler is declared.
 
 ### Typed params
 
