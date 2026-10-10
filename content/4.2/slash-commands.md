@@ -120,6 +120,11 @@ interaction to the bot, where `@Command('launch', LaunchCommandBuilder)` handles
 `EntryPointCommandHandlerType.DiscordLaunchActivity`, Discord launches the activity itself, and the bot receives
 nothing.
 
+Discord takes an entry point command only globally. A production run registers it in the global update, even when
+`commands.guilds` is set, and ignores a `guilds` list on its builder. A development run with `developmentGuild`, and
+`meocord register --guild`, leave it out of the guild update with a warning and register the rest; a production run or
+`meocord register` registers it.
+
 ## Gotchas
 
 - **Old commands linger after you move scopes.** Going from global to server commands, or back, leaves the old ones
