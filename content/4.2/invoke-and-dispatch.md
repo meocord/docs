@@ -88,8 +88,9 @@ naming what to pass.
 
 A message passed alone to a patterned handler needs content that dispatch gives to it; otherwise `invoke` rejects,
 naming the pattern. Under strict mocks a message's `content` is empty, so give it one: `invoke` rejects a message with
-no text, saying so and naming the pattern. `dispatch` skips a message with no text, as the bot does, and so, in either
-mode, a mock made without `content`: even a `@MessageHandler()` listener needs `content` to be reached.
+no text, saying so and naming the pattern. Without strict mocks, a mock made without `content` isn't checked, and a
+patterned handler gets `{}`. `dispatch` skips a message with no text, as the bot does, and so, in either mode, a mock
+made without `content`: even a `@MessageHandler()` listener needs `content` to be reached.
 
 The controller must be one the module was built with, listed in `controllers` or, with `fromApp`, one of the app's;
 `invoke` rejects any other, naming it.
