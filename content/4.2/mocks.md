@@ -145,15 +145,18 @@ member. In default mode, give a server's `guildId` with its `guild`, and for a s
 
 ## Options and fields
 
-[`createChatInputOptions(record)`](api:testing/createChatInputOptions) builds a command's options, found by name as
-the real resolver finds them:
+[`createChatInputOptions(record)`](api:testing/createChatInputOptions) builds a command's or an autocomplete's options,
+found by name as the real resolver finds them:
 
 ::example{file="testing/mocks.spec.ts" region="options"}
 
 - A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that
   reads only one of the two is caught. `getAttachment()` returns the `Attachment` given, and `null` for an option
   not given. A user option carries its user, and in a server its member: `getMember()` is
-  `null` in a DM, and a member you give answers `getUser()` with its user.
+  `null` in a DM, and a member you give answers `getUser()` with its user. In an autocomplete, Discord sends these
+  options as their ids: under strict mocks they hold the id only, as the handler's params do, and their getters return
+  `null`, or throw discord.js's error when asked with `required: true`. In default mode they keep the object, and a
+  warning names them once.
 - Each getter reads its option as discord.js does, and throws discord.js's own error: a `TypeError` with its `code`. A
   getter of another type throws, whether or not it's asked with `required: true`: `getInteger()` on `1.5`, a number
   option, throws `Option "x" is of type: 10; expected 4.`, while a whole number reads as either. A user or member read
@@ -327,6 +330,7 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
 - a reaction made without a message has a whole one, so a dispatched reaction isn't fetched;
 - a message the bot sends is its `client.user`'s, and one it sends in a DM is in that DM;
+- an autocomplete's user, member, role, channel, mentionable or attachment option is its id, as Discord sends it;
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
   until then, and reading it warns once.
 

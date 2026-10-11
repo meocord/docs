@@ -58,6 +58,10 @@ on another's value. Those options arrive as Discord sends them during typing: a 
 is its id, not the resolved object a command handler gets, and the option being typed holds its partial text. Fetch what
 you need from the id, such as `interaction.guild?.members.fetch(userId)`.
 
+A test reads them the same way under [`useStrictMocks()`](api:testing/useStrictMocks): an entity option given to
+[`createChatInputOptions`](api:testing/createChatInputOptions) holds only its id in an autocomplete, and its getters,
+such as `getUser()`, return `null`. In default mode the object is kept, with a warning naming the option.
+
 ## One handler for every option
 
 Leave out the option name, `@Autocomplete('search')`, to handle every autocompleted option of the command, and branch
