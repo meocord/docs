@@ -245,7 +245,8 @@ It takes the roles, permissions and user to give it, such as
 
 ## What methods return
 
-A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup:
+A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup. A server's
+`emojis`, `stickers`, `scheduledEvents`, `autoModerationRules` and `invites` managers answer as its other managers do:
 
 | Method                                                                                                                        | Resolves to                                                         |
 | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
