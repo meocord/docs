@@ -86,7 +86,8 @@ A member sends `!roll 20 for initiative`, and the pattern and its schema hand th
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
-[Message commands](guide:message-commands) covers prefixes, flags, lists and aliases.
+[Message commands](guide:message-commands) covers prefixes and aliases, and [Message command
+params](guide:message-params) the types, flags and lists.
 
 ## Reactions
 

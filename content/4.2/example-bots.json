@@ -46,6 +46,62 @@
           "guide": ["testing#testing-the-whole-app"]
         }
       ]
+    },
+    {
+      "id": "moderation",
+      "title": "Moderation",
+      "shows": [
+        {
+          "what": "Subcommands, each with its own handler, under one builder with default member permissions",
+          "files": ["src/moderation/mod.builder.ts", "src/moderation/mod.controller.ts"],
+          "guide": ["subcommands"]
+        },
+        {
+          "what": "A guard that reads a fact about its handler or controller, `@RequirePermission(...)`, made with `createMetadata`",
+          "files": ["src/moderation/guards.ts"],
+          "guide": ["guards#facts-about-the-handler", "custom-decorators"]
+        },
+        {
+          "what": "A guard that compares the moderator's, the bot's and the member's highest roles",
+          "files": ["src/moderation/guards.ts"],
+          "guide": ["guards"]
+        },
+        {
+          "what": "User and message context menus",
+          "files": ["src/moderation/mod.builder.ts", "src/moderation/mod.controller.ts"],
+          "guide": ["context-menus"]
+        },
+        {
+          "what": "Confirmation buttons on a typed route, `mod/{ownerId:snowflake}/{case:int}/{action:confirm|cancel}`",
+          "files": ["src/moderation/mod.controller.ts"],
+          "guide": ["components#typed-params"]
+        },
+        {
+          "what": "Autocomplete for an integer option",
+          "files": ["src/moderation/mod.controller.ts"],
+          "guide": ["autocomplete"]
+        },
+        {
+          "what": "An exception filter that turns Discord's refusal into words a moderator can act on",
+          "files": ["src/moderation/discord-refusal.filter.ts"],
+          "guide": ["exception-filters"]
+        },
+        {
+          "what": "A database provided under a token before login and closed as the bot stops, and a store that injects it",
+          "files": ["src/database/database.provider.ts", "src/cases/case.store.ts"],
+          "guide": ["recipes/database"]
+        },
+        {
+          "what": "A pending case taken once, with one `UPDATE … WHERE status = 'pending' RETURNING`",
+          "files": ["src/cases/case.store.ts"],
+          "guide": ["recipes/moderation"]
+        },
+        {
+          "what": "Tests of the whole app through `dispatch`, over a real SQLite database, a restart included",
+          "files": ["src/moderation/moderation.spec.ts"],
+          "guide": ["testing#testing-the-whole-app"]
+        }
+      ]
     }
   ]
 }

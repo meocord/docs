@@ -36,7 +36,8 @@ they depend on, what `@MeoCord({ providers })` supplies, the app's cooldown stor
 listed in `services` or `providers`, or injected by a class that gets hooks. A service that only a guard, interceptor,
 filter, pipe or the presenter injects gets hooks too: it is made as the bot comes online, once, like any other service.
 A class that injects the call's `ExecutionContext` is made for each call instead, and has no hooks. One instance that
-two tokens reach, such as a factory alias of a service or one value provided twice, runs each hook once.
+two tokens reach, such as a factory that returns a service's instance or one object given as `useValue` under two
+tokens, runs each hook once.
 
 ## onReady
 
@@ -48,6 +49,11 @@ The hooks run one at a time, each class after the classes it injects. Classes wi
 declaration order: the app's cooldown store first, then the `providers`, the `services`, the `themeFor` class, the
 `controllers` and the observers. Command registration runs alongside and never delays them. A hook still running after
 10 seconds is named in a warning, and the hooks after it wait for it.
+
+Commands and events don't wait for these hooks. Once the bot is online, a call can reach a class whose `onReady` hasn't
+run or hasn't finished, so a handler can't rely on a cache an `onReady` warms or a connection it opens. Only the
+cooldown store's `onReady` is waited for. Make what a call needs in an async [factory
+provider](guide:services#providers), which runs before login.
 
 ## onShutdown
 

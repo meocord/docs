@@ -14,7 +14,8 @@ api: [configuration/MeoCordConfig]
 
 The `create` command writes a project that runs as it is: a sample of the common kinds of
 [handler](guide:glossary#handler), a spec beside each, and the scripts to build, test and lint it. You give it a bot
-token, and `meocord start --dev` puts it online, rebuilding and restarting as you edit.
+token, and `meocord start --dev` puts it online, rebuilding and restarting as you edit. It also initialises a git
+repository and commits the project as it was created.
 
 ## When to use it
 

@@ -35,7 +35,8 @@ Nothing injects the service, so list it in the app's `services`; see
   runs the hook, and `primary` is `true` only in the one running shard 0. A bot in one process is always primary.
 - **On time every day.** Each run schedules the next from the clock, so the digest stays at 09:00. A 24-hour
   interval would drift after a slow post or a machine that slept.
-- **Stopping.** `onShutdown` clears the timeout, so a stopping bot starts no new post.
+- **Stopping.** `onShutdown` clears the timeout and marks the service stopped, so a post that is still being sent
+  schedules no next one.
 - **A quick hook.** `onReady` only sets the timeout and returns. The hooks run one at a time, so a hook that
   awaited the schedule would hold up every hook after it.
 

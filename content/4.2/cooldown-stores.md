@@ -40,10 +40,10 @@ the one you have. With node-redis:
 
 ## How it works
 
-A store is a [service](guide:services) that extends `CooldownStore`. `@Cooldown` calls its `consumeMany(entries)`
-once per call, with every stacked cooldown the call doesn't bypass. With `messages.dmOnCooldown`, a refused message
-command's notice is counted in the store too, under the refusing key followed by `:notice:`. Three things make a store
-correct:
+A store is a [service](guide:services) that extends `CooldownStore`. `@Cooldown` calls its `consumeMany(entries)` once
+per call, with every stacked cooldown the call doesn't bypass. With `messages.dmOnCooldown`, a refused message command's
+notice is counted in the store too: a one-use key under the refusing key, with `:user:<id>` added for a cooldown not
+counted per user, then `:notice:`. Three things make a store correct:
 
 - **One step.** The check and the record happen together, so two calls at the limit can't both pass.
 - **One clock.** Processes on several hosts count by the database's clock, not each host's own.
@@ -90,6 +90,10 @@ A row per call:
 
 ::example{file="recipes/cooldown-stores/postgres.store.ts" region="schema"}
 
+Create the table once before the bot counts anything: in a migration, as [the database
+recipe](guide:recipes/database#migrations) suggests, or in the pool's factory beside its own tables. Without it, every
+call with a cooldown fails to count, and the store's failure policy decides the call.
+
 The store counts a key's calls in a transaction that first takes an advisory lock on the key, so even its first
 call, which has no row yet to lock, runs one at a time. `clock_timestamp()` times each row by the database's clock:
 
@@ -133,14 +137,20 @@ A TTL index removes a key once its window has passed:
 
 ### A store of your own
 
+The PostgreSQL, SQLite and MongoDB recipes above implement only `consume`, so they keep the defaults below: stacked
+cooldowns are counted one after another, a message command fetches before it is refused, and a call counted after the
+timeout keeps its use. For a handler with one cooldown that makes no difference; for stacked cooldowns, override
+`consumeMany` as described here.
+
 Extend `CooldownStore` and implement `consume(key, { uses, windowMs })` in one step. The default `consumeMany`
 calls `consume` for each cooldown in order and stops at the first refusal, so a call one refuses has counted against
 those before it. Override `consumeMany` to check them all and record the call only if all allow it, in one round
 trip, as the built-in stores do. It's worth it for any store behind a network.
 
 Override `peekMany(entries)` too, to check the entries and record nothing. MeoCord calls it before a message command
-fetches the members, users, roles or channels it names, so a caller on cooldown costs no request. The default allows
-every call, so a store without its own `peekMany` refuses only at `consumeMany`, after the fetch.
+fetches a member, user or channel its params name, or a value of one of the app's own types, with the handler's
+cooldowns that have no `by`, so a caller on cooldown costs no request. The default allows every call, so a store without
+its own `peekMany` refuses only at `consumeMany`, after the fetch.
 
 A store that connects can do it in its own [lifecycle hooks](guide:lifecycle-hooks). Its `onReady` runs before the
 services', and a call that comes meanwhile waits for it, up to `cooldownStoreTimeoutMs`; one that would wait longer
