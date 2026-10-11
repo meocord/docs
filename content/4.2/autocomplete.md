@@ -83,6 +83,9 @@ the menu if the filter didn't.
   as the example does.
 - **A slow lookup misses the three seconds.** Autocomplete can't be deferred. Keep the lookup fast: cache what it
   searches, or search a smaller index.
+- **A handler that returns without `interaction.respond()` leaves the options failing to load.** In development,
+  MeoCord names it once, as it names any handler that ends without answering. `@MeoCord({ warnUnanswered })` turns it
+  on or off.
 - **A handler for an option without autocomplete never runs.** Discord never asks to complete it. The bot warns at
   startup, and in the next major version (5.0) it refuses to start; turn it on in the builder with
   `setAutocomplete(true)`.
