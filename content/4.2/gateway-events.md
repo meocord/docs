@@ -31,8 +31,11 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 
 ## How it works
 
-- **Where.** On any controller or service the app binds: listed in `@MeoCord({ controllers, services })`, or injected by
-  one. The handler runs on the class's one instance, the same one the rest of the app injects. `@Command`,
+- **Where.** On every instance whose lifecycle hooks run: a controller or service listed in
+  `@MeoCord({ controllers, services })`, a class one of them, a guard, an interceptor, a filter, a pipe or the presenter
+  injects, a class provided under another token, and a provided `useValue` or `useFactory` instance. The handler runs
+  on that one instance, the same one the rest of the app injects. A class made for each call, because it injects
+  `ExecutionContext`, receives no events, and startup warns about one with `@On` or `@Once`. `@Command`,
   `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
 - **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
   interceptors on the method or class apply, and the app's global ones. A guard receives the event's
