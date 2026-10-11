@@ -88,12 +88,14 @@ Not every stage applies to every handler:
 - **Validation and pipes** apply to command, component and modal handlers, and to message handlers with a pattern.
   The bot refuses to start with `@Validate` or `@UsePipe` on any other handler.
 - **Cooldowns** apply to interaction and message handlers. `@Cooldown` on an autocomplete, reaction or event handler
-  stops the bot at startup.
+  method stops the bot at startup; a controller's `@Cooldown` applies only to its interaction and message handlers and
+  skips the rest.
 - **`@Defer`** applies to command, component and modal handlers only.
 - **Autocomplete** runs its guards and filters, and no interceptors: it must answer within three seconds and has no
   reply to shape.
 - **Guards, interceptors and filters** run for reaction and event handlers too. A global guard or interceptor that
-  reads an interaction declares `types: ['interaction']`, so it skips the rest.
+  reads an interaction declares `types: ['interaction']`, so it skips the rest. An autocomplete is its own type, so a
+  guard that should also run before autocomplete handlers declares `types: ['interaction', 'autocomplete']`.
 
 ## Where stages are declared
 
@@ -138,15 +140,19 @@ through its constructor; an interceptor, a filter, a pipe and an observer receiv
 `getType()` says what is being handled: `'interaction'`, `'autocomplete'`, `'message'`, `'reaction'` or `'event'`.
 A guard, interceptor or observer declared with `types` runs only for those.
 
-`getHandlerParams()` and `getArgs()` follow the stages. A guard sees the params raw; an interceptor sees them raw
-before `next.handle()` and validated and piped after it; a filter sees them as they stood when the error was thrown.
+`getHandlerParams()` and `getArgs()` follow the stages. A guard sees the params before validation and pipes (a message
+command's already parsed, with each member, user, role or channel as an [`EntityRef`](api:types/EntityRef)); an
+interceptor sees them that way before `next.handle()`, a message command's fetched, and validated and piped after it;
+a filter sees them as they stood when the error was thrown.
 
 ## Gotchas
 
-- **A direct call runs only the guards.** Calling a controller method yourself runs its guards, and no interceptors,
-  validation, pipes, cooldowns or filters. Run it with the [testing module](guide:testing) to get every stage.
+- **A direct call runs only the guards its controller and method declare.** Calling a controller method yourself runs
+  its `@UseGuard` guards, and not the global ones, interceptors, validation, pipes, cooldowns or filters; a guard that
+  denies makes the call resolve with `undefined`. Run it with the [testing module](guide:testing) to get every stage.
 - **A global stage runs for events too.** A global guard that reads `interaction.user.id` throws on a `messageCreate`
-  handler; declare `types: ['interaction']`.
+  handler; declare `types: ['interaction']`, or `['interaction', 'autocomplete']` to run before autocomplete handlers
+  too.
 - **`@Defer` on a message, reaction, event or autocomplete handler stops the bot at startup,** since there is nothing to
   acknowledge.
 

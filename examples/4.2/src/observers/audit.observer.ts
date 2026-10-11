@@ -16,8 +16,8 @@ export class AuditObserver implements DispatchObserver {
     const interaction = context.getArgs()[0] as BaseInteraction
     const handler = context.getHandlerName() ?? 'unrouted'
 
-    // A handler that deferred and never followed up leaves the user on "thinking…"
-    if (response === 'deferred') this.logger.warn(`${handler} deferred and never answered`)
+    // A handler that deferred and never followed up leaves the user on "thinking…"; a denied call reads 'deferred' too
+    if (outcome === 'ran' && response === 'deferred') this.logger.warn(`${handler} deferred and never answered`)
 
     // Only what was refused: a denied, rate-limited or invalid call, or one no handler matched
     if (outcome === 'ran' || outcome === 'error') return
