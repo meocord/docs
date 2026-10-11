@@ -62,7 +62,7 @@ everything else in the call: the fetch of a message's entities, interceptors, va
 | It                        | The call                                                             |
 | ------------------------- | -------------------------------------------------------------------- |
 | returns `true`            | goes on to the next guard, then the rest of the call                 |
-| returns `false`           | stops silently; observers see the outcome `'denied'`                 |
+| returns `false`           | stops without answering; observers see the outcome `'denied'`        |
 | throws `GuardDeniedError` | stops, and the user is told the error's message                      |
 | throws `UserError`        | stops, and the user is told the message; observers see `'refused'`   |
 | throws anything else      | goes to the [exception filters](guide:exception-filters) as an error |
@@ -171,8 +171,8 @@ A guard can also be tested alone, with `createExecutionContext` building the con
 
 - **A guard that injects needs `@Guard()`.** Without it, TypeScript records none of its constructor's types, and the
   bot refuses to start, naming the decorator to add.
-- **Returning `false` tells the user nothing.** On a button, that's often right. On a command, throw
-  `GuardDeniedError` so they know why nothing happened.
+- **Returning `false` answers nothing.** On a button, that's often right. On a command, Discord tells the user the
+  app did not respond: throw `GuardDeniedError` to tell them why.
 - **A global guard runs before event handlers too.** One that reads `interaction.user` throws on an event; declare
   `@Guard({ types: ['interaction'] })`.
 - **A guard bound once is shared.** Listing a guard in `services` or `providers` makes one instance for every call.
