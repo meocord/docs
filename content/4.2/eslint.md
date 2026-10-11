@@ -19,7 +19,9 @@ included, with type information from the project's tsconfig files. A new project
 
 ## When to use it
 
-Keep it on in every MeoCord project, and run `npm run lint` in CI. Replace it only to lint the project with a config you
+Keep it on in every MeoCord project. `npm run lint` fixes what it can, so CI runs ESLint without `--fix`, where a
+problem fails the job, and then the typechecks the script also runs:
+`npx tsc --noEmit && npx tsc --noEmit -p tsconfig.test.json`. Replace it only to lint the project with a config you
 maintain yourself; you then lose the import-cycle warning and the floating-promise check below unless you add them.
 
 ## Example
@@ -37,6 +39,9 @@ instance, goes in `tsconfig.eslint.json`.
 
 Plugins go in the same object, spread over `typescriptConfig.plugins`, as a new project's config does for
 `eslint-plugin-unused-imports`.
+
+The default export skips `dist`, `coverage`, `build`, `lib` and `docs` at the root, and `vitest.config.ts`. To lint code
+you keep in `lib/` or `build/`, override the ignore with an entry of your own, or move the code under `src`.
 
 ## Import cycles
 
@@ -66,8 +71,9 @@ error. For each one it reports, either:
 
 ## Gotchas
 
-- **A warning doesn't fail `lint`.** To hold cycles out of the main branch, run `npx eslint --max-warnings=0` in CI;
-  passed through `npm run lint --`, the flag reaches `tsc`, which rejects it.
+- **A warning doesn't fail `lint`.** To hold cycles out of the main branch, run `npx eslint --max-warnings=0` in CI. In
+  a new project this also fails on the deprecated APIs it warns about (`@typescript-eslint/no-deprecated`), so replace
+  them first, or turn that rule off in CI. Passed through `npm run lint --`, the flag reaches `tsc`, which rejects it.
 - **A file in no tsconfig** fails to lint with type information. List it in `tsconfig.eslint.json`.
 
 ## Next steps

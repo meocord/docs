@@ -208,9 +208,10 @@ pattern, and the collector's callback answers it:
   answer then fails as already acknowledged.
 - **An app's own `@On('interactionCreate')` counts as a listener too**, so in such an app a genuinely dead button is
   answered after 1.5 seconds rather than at once.
-- **Wrap the callback in [`bindTheme`](api:responses/bindTheme)** to answer in the theme of the handler that started
-  the collector, the starting member's server and user themes included, for every click. Without it, the callback
-  runs in the client's event, where the clicker's server and user themes apply, not the handler's `@UseTheme`.
+- **Wrap the callback in [`bindTheme`](api:responses/bindTheme)** to answer in the theme of the handler that started the
+  collector, the starting member's server and user themes included, for every click. Without it, `respond(click)` fills
+  with the clicker's server and user themes, `useTheme()` reads the app's theme alone, and neither applies the handler's
+  `@UseTheme`.
 
 `awaitMessageComponent()` and `awaitModalSubmit()` work the same way, and keep the handler's theme across their
 `await`.

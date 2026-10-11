@@ -46,7 +46,7 @@ adding a controller to `src/app.ts` does.
 `build`, `start --dev` and any command given `--build` read `meocord.config.ts` first; `start --prod` and `register`
 read the config the last build compiled into `dist/`, and `meocord.config.ts` only when there is none:
 
-- a file that fails to load stops them with its file and line;
+- a file that fails to load stops them with its path and the error, and for `meocord.config.ts` the line it failed at;
 - an option of the wrong type stops them with a list of every problem;
 - an option MeoCord doesn't know is reported as a warning.
 
@@ -55,8 +55,9 @@ with code 1, so a script or a CI job stops too.
 
 `build` and `start` build for development unless they're given `-p, --prod`, which wins when both `-d` and `-p` are
 given. `register` works the other way round: it registers as production does, unless it's given `-d, --dev`. A
-development command runs as development whatever `NODE_ENV` the shell holds; `--prod` keeps a `NODE_ENV` the shell
-sets, and is `production` otherwise.
+development command runs as development whatever `NODE_ENV` the shell holds. A production one, meaning `--prod`, or
+`register` without `--dev`, keeps a `NODE_ENV` the shell sets and is `production` otherwise. A CI shell with
+`NODE_ENV=development` therefore registers to `commands.developmentGuild`.
 
 The bot runs on the runtime you launched the CLI with. In an app created with npm, yarn or pnpm, `bun run start:prod`
 runs it under Bun and `npm run start:prod` under Node; an app created with bun has `bun --bun` in its scripts, so they
@@ -69,11 +70,14 @@ on](guide:deployment#which-runtime-the-bot-runs-on) covers pinning one.
 npx {{meocord}} create my-bot
 ```
 
-`create` writes a project into a new folder named after the app, in kebab case, and installs it. Accented letters
-fold to their base letters, so `Café Bot` gives `cafe-bot`, and a name needs Latin letters or digits. It asks which
-package manager to use; `--use-npm`, `--use-yarn`, `--use-pnpm` or `--use-bun` answers for it, and fails when that
-package manager isn't installed. It's the one command run outside a project, so the command above names the version
-this guide documents. [Getting started](guide:getting-started) walks through it.
+`create` writes a project into a new folder named after the app, in kebab case, and installs it. Accented letters fold
+to their base letters, so `Café Bot` gives `cafe-bot`, and a name needs Latin letters or digits. It asks which package
+manager to use; `--use-npm`, `--use-yarn`, `--use-pnpm` or `--use-bun` answers for it, and fails when that package
+manager isn't installed. `create` refuses a folder that already exists. The prompt suggests bun when it's installed, and
+npm otherwise. When the install fails, `create` prints the package manager's error, removes the folder so the same name
+can be tried again, and exits with code 1. On a Node older than 22.13 it warns, and still creates the app. It's the one
+command run outside a project, so the command above names the version this guide documents. [Getting
+started](guide:getting-started) walks through it.
 
 After the install, `create` makes the folder a git repository and commits it, lockfile included. When git can't make
 that commit, on a machine with no `user.email` for instance, or with no git at all, the project stays as it is, and
@@ -95,11 +99,12 @@ builds of the same output.
 
 A bot that can't log in, or exits on its own, leaves watch mode running: the next change starts it again. So does a
 rebuild that can't start, as when a saved `meocord.config.ts` has an `rsbuild` hook that throws: the bot keeps running
-its last build, watch mode says why, and saving again retries. A saved config is checked as at startup: one with
-problems, or one that fails to load, is reported and the running bot is left as it is. When watch mode itself can't
-start, `start --dev` stops the bot it started and exits with code 1, as `build` does. In a terminal, it clears the
-screen as it starts and keeps your scrollback; `build` and `start --prod` never clear it, and write no escape codes into
-piped output such as a CI log or `docker logs`.
+its last build, watch mode says why, and saving again retries. A saved config is loaded and checked for options of the
+wrong type, as at startup. One with problems, or one that fails to load, is reported, and the running bot is left as it
+is. The token isn't checked again: a config that loses it restarts the bot, which then can't log in. When watch mode
+itself can't start, `start --dev` stops the bot it started and exits with code 1, as `build` does. In a terminal, it
+clears the screen as it starts and keeps your scrollback; `build` and `start --prod` never clear it, and write no escape
+codes into piped output such as a CI log or `docker logs`.
 
 For production, build once and start the build:
 
@@ -108,13 +113,14 @@ npx meocord build --prod
 npx meocord start --prod
 ```
 
-`start --prod` runs the build in `dist/` as it is, so start it after every build. `start --build --prod` does both in
-one command. `--build` matters only with `--prod`, since `start --dev` always builds.
+`start --prod` runs the build in `dist/` as it is, so build again after every change, or use `start --build --prod` to
+do both in one command. `--build` matters only with `--prod`, since `start --dev` always builds.
 
 ## Registering commands
 
 A production start registers every command as the bot logs in, and Discord applies an unchanged set without harm.
-`register` does the same without starting the bot:
+`register` does the same without starting the bot. It runs the last build in `dist/`, so it registers the commands that
+build holds: add `--build` after changing a command.
 
 ```bash
 npx meocord register --build           # build, then register every command
@@ -144,6 +150,10 @@ Set `commands.register` to `false` to keep registering out of startup, and run `
 It prints where to wire the part up: a controller goes in `@MeoCord({ controllers })`, and a service is bound the
 first time something injects it.
 
+Each part goes in `src/<kind>s/`, such as `src/services/<name>.service.ts` beside `<name>.service.spec.ts`. A file name
+is the name in kebab case, and the class name is the whole path in Pascal case: `g s billing/invoice` writes
+`src/services/billing/invoice.service.ts` with the class `BillingInvoiceService`.
+
 Once the files are written, `generate` formats them with the project's own ESLint, in one run, and says
 "Formatting with your project's ESLint..." while it waits. When it can't run, or reports problems it can't fix,
 `generate` says "Could not format the generated files:" and why, and still exits 0. Either way, the files are kept, with
@@ -166,9 +176,12 @@ src/controllers/<type>/
 └── builders/<name>.builder.ts     # slash, context-menu and primary-entry-point only
 ```
 
+`<name>` is the name in kebab case: `Greeting` writes `greeting.slash.controller.ts`.
+
 - **A builder** comes only with the three types Discord registers by name. `npx meocord g co slash Greeting` registers
-  `/greeting`. The builder receives that name from `@Command`, so the two can't drift apart. The other types are
-  reached by custom ID, or, for autocomplete, by the command they complete.
+  `/greeting`. The builder receives that name from `@Command`, so the two can't drift apart. The other types are reached
+  by custom ID; a message controller by the message's text, a reaction controller by its emoji, and an autocomplete
+  controller by the command it completes.
 - **The spec** invokes the handler through the [testing module](guide:testing), with the input Discord would send it,
   and checks its answer: a command's reply, a button's update, the choices an autocomplete offers.
 - **An autocomplete controller** completes the `query` option of the command it's named after, which already exists
@@ -185,7 +198,8 @@ Where a controller sits is only a convention: `@MeoCord({ controllers })` is wha
 
 - **`generate` never overwrites.** When a file it would write exists, it names the files and writes nothing.
 - **`generate` runs from the project's root,** beside `package.json`; in a folder without a `package.json`, it refuses
-  rather than scatter files. A name can't leave its folder: `..`, a leading `/` and a drive letter are refused.
+  rather than scatter files. A name can't leave its folder: `..`, a leading `/` and a drive letter are refused. A name
+  must start with a letter, since it becomes a class name: `g s 2fa` is refused, and `g s two-factor` is not.
 - **`start --prod` runs the last build.** After changing code, build again, or use `start --build --prod`.
 - **`--message` is for context menus only.** On any other type, `generate` refuses it.
 

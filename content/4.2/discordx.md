@@ -26,18 +26,27 @@ shows one small bot both ways. The discordx side is typechecked against `discord
 
 ## What maps to what
 
-| In discordx                                      | In MeoCord                                                                                                |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| A `@Discord()` class                             | A `@Controller()` class, listed in the app class                                                          |
-| `@Slash` and a `@SlashOption` per parameter      | `@Command` with a `@CommandBuilder` class                                                                 |
-| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                         |
-| `@SimpleCommand` and a `@SimpleCommandOption`    | A [message command](guide:message-commands) pattern, with typed params                                    |
-| A guard function with `next()`                   | A [guard](guide:guards) class, which can inject services                                                  |
-| A `catch` around `executeCommand`                | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
-| `RateLimit` from `@discordx/utilities`           | [`@Cooldown`](guide:cooldowns)                                                                            |
-| `@On({ event })` with `ArgsOf`                   | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments                                   |
-| `DIService.engine` set to tsyringe or TypeDI     | Built in: [services](guide:services) are injected by constructor                                          |
-| `importx` over your files                        | The app class's `controllers` list                                                                        |
+| In discordx                                      | In MeoCord                                                                                                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A `@Discord()` class                             | A `@Controller()` class, listed in the app class                                                                                                          |
+| `@Slash` and a `@SlashOption` per parameter      | `@Command` with a `@CommandBuilder` class                                                                                                                 |
+| `@ButtonComponent({ id })`, a string or a RegExp | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                                                                         |
+| `@SimpleCommand` and a `@SimpleCommandOption`    | A [message command](guide:message-commands) pattern, with typed params                                                                                    |
+| A guard function with `next()`                   | A [guard](guide:guards) class, which can inject services                                                                                                  |
+| A `catch` around `executeCommand`                | An [exception filter](guide:exception-filters), or [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) to DM the author |
+| A `catch` around `executeInteraction`            | The built-in fallback, or an [exception filter](guide:exception-filters)                                                                                  |
+| `RateLimit` from `@discordx/utilities`           | [`@Cooldown`](guide:cooldowns)                                                                                                                            |
+| `@On({ event })` with `ArgsOf`                   | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments                                                                                   |
+| `DIService.engine` set to tsyringe or TypeDI     | Built in: [services](guide:services) are injected by constructor                                                                                          |
+| `importx` over your files                        | The app class's `controllers` list                                                                                                                        |
+| `@SlashGroup`                                    | [Subcommand handlers](guide:subcommands) on the parent command's builder                                                                                  |
+| `@SlashChoice`                                   | `.addChoices()` on the builder's option                                                                                                                   |
+| `@SlashOption({ autocomplete })`                 | [`@Autocomplete('command', 'option')`](guide:autocomplete)                                                                                                |
+| `@ContextMenu`                                   | `@Command` with `CommandType.CONTEXT_MENU` ([context menus](guide:context-menus))                                                                         |
+| `@SelectMenuComponent`, `@ModalComponent`        | `@Command(pattern, CommandType.SELECT_MENU)` or `CommandType.MODAL_SUBMIT` ([components](guide:components))                                               |
+| `@Reaction`                                      | [`@ReactionHandler`](guide:reactions)                                                                                                                     |
+| `@Once({ event })`                               | [`@Once('clientReady')`](guide:gateway-events)                                                                                                            |
+| `@Guild`                                         | `@CommandBuilder(type, { guilds })`                                                                                                                       |
 
 ## A slash command
 
@@ -54,6 +63,11 @@ injection needs no container of your choosing:
 
 ::example{file="controllers/slash/greeting.slash.controller.ts" region="controller"}
 
+::example{file="services/greeting.service.ts" region="service"}
+
+A service is a class marked `@Service()`. The app makes one instance and injects it by its type, with no container to
+set up.
+
 ## A button with an owner
 
 discordx matches a button's `customId` against a string or a regular expression, and the handler reads its parts
@@ -61,7 +75,9 @@ itself. A guard is a function that calls `next()` to let the call through:
 
 ::example{from="compare" file="discordx/card.ts" region="button"}
 
-In MeoCord the pattern captures `ownerId`, and the guard is a class, so it can inject services:
+In MeoCord the pattern captures `ownerId`, and the guard is a class, so it can inject services. `@Defer()` is optional:
+it acknowledges the click before the guard runs and disables the card's buttons while the handler works, and
+`respond(interaction).send()` puts them back. See [Deferring](guide:defer).
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
 
@@ -77,7 +93,8 @@ message to `executeCommand`:
 ::example{from="compare" file="discordx/roll.ts" region="command"}
 
 In MeoCord a message command is a pattern, and MeoCord reads every message itself. A message that leaves out a required
-param gets the command's usage in reply, and one the schema refuses gets the reason:
+param gets the command's usage in reply, and one the schema refuses gets the reason. The prefix is the app's:
+`@MeoCord({ messages: { prefix: '!' } })`, as `@SimpleCommand`'s `prefix` was, and a handler can set its own.
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
@@ -114,12 +131,12 @@ MeoCord runs a handler through the same pipeline the bot uses, with mocks of the
 
 ## What you gain
 
-Guards are classes that inject services, [exception filters](guide:exception-filters) decide what a member is told
-when a handler throws, [typed catalogs](guide:localisation) translate the bot, and
-[`meocord/testing`](guide:testing) runs a handler through the same pipeline the bot uses. Pagination is a component
-with a typed route, as [Paginated lists](guide:recipes/pagination) shows. Each bot is its own process, with its own
-config, token and logs, so it restarts and deploys on its own, and one bot spreads across processes with
-[sharding](guide:sharding).
+Guards are classes that inject services, [exception filters](guide:exception-filters) decide what a member is told when
+a handler throws, [typed catalogs](guide:localisation) translate the bot, and [`meocord/testing`](guide:testing) runs a
+handler through the same pipeline the bot uses. Pagination is a component with a typed route, as [Paginated
+lists](guide:recipes/pagination) shows. Where discordx can run several bots in one process, each MeoCord bot is its own
+process, with its own config, token and logs, so it restarts and deploys on its own, and one bot spreads across
+processes with [sharding](guide:sharding).
 
 ## Moving over
 

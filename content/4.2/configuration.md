@@ -40,10 +40,11 @@ that compiled copy, however it's started: `meocord start`, `node dist/main.js`, 
 built bot reads `meocord.config.ts` itself.
 
 `build`, `start` and `register` check the config first. An option of the wrong type stops them with a list of every
-problem; an option MeoCord doesn't know, often a typo, is reported as a warning. `meocord.config.ts` must export the
-config as its default export; a module with only named exports is refused. Its imports may use `tsconfig.json`'s
+problem; an option MeoCord doesn't know, often a typo, is reported as a warning. The one exception is `webpack`, a build
+hook MeoCord doesn't run: the build stops and asks for it to be rewritten as `rsbuild`. `meocord.config.ts` must export
+the config as its default export; a module with only named exports is refused. Its imports may use `tsconfig.json`'s
 `paths`, resolved as `tsc` resolves them, `extends`, `baseUrl` and `${configDir}` included, whatever TypeScript version
-the project uses.
+the project uses; of an alias with several targets, the config's imports use the first.
 
 `meocord start --dev` watches `meocord.config.ts` and reloads it on every change. A production bot keeps the config
 it was built with, until the next `meocord build --prod`.
@@ -105,10 +106,10 @@ alike. The build writes `dist/main.js.map` beside the bundle, in development and
 
 - `meocord start` runs Node with `--enable-source-maps`, so Node maps each stack itself. The shard processes it
   starts inherit the flag.
-- A bundle started any other way, with `node dist/main.js` in a Docker `CMD`, under pm2, or with Bun, which applies
-  no source map to a bundle, maps its stacks through `Error.prepareStackTrace`. The map is read the first time a stack
+- A bundle started any other way, with `node dist/main.js` in a Docker `CMD`, under pm2, or with Bun, which applies no
+  source map to a bundle, maps its stacks through `Error.prepareStackTrace`. The map is read the first time a stack
   needs it, and each frame keeps the runtime's format, `at fn (/abs/path/src/file.ts:line:col)`, so a tool that parses
-  `error.stack` reads it as before.
+  `error.stack` reads it as it reads an unmapped one.
 - A hook already set on `Error.prepareStackTrace`, such as a preloaded error tracker's, receives the mapped call
   sites. One set later replaces MeoCord's unless it calls the hook it found.
 - Bun reports a call's column further along than Node does. In a minified production bundle, a frame for a call can
@@ -134,8 +135,13 @@ files with a variable of your own, as below:
 The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development and runs the bot as
 development, as `build --dev` and `register --dev` do, whatever `NODE_ENV` the shell holds, so it reads and watches the
 development files, and `meocord build --prod` writes `production` into the config it compiles. A more specific file
-wins, and a variable the shell sets wins over every file, so `.env.local` can hold your own values beside the committed
-`.env.development`.
+wins, and a variable the shell sets wins over every file, so `.env.local` can hold your own values beside a shared
+`.env.development`. A new app's `.gitignore` ignores every `.env` file but `.env.example`; un-ignore `.env.development`
+to commit it, and keep secrets out of it.
+
+The build writes its mode into the bundle wherever your code reads `process.env.NODE_ENV`, so a development build reads
+`development` however it's started; other variables are read as the bot runs. Branch on a variable of your own, such as
+`APP_ENV`, for anything that must change without a rebuild.
 
 To pick files by something other than `NODE_ENV`, such as a staging server, put the choice in a module the config
 imports:

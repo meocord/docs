@@ -51,8 +51,8 @@ package.json
 ```
 
 `start --prod` runs the build in `dist/` as it is. The build compiles `meocord.config.ts` into
-`dist/meocord.config.mjs`, so `node dist/main.js` starts it the same way, with nothing else to install, which suits a
-container.
+`dist/meocord.config.mjs`, so `node dist/main.js` starts it the same way, with no CLI, TypeScript or config loader
+needed beside the production dependencies, which suits a container.
 
 The bot finds its config and its assets beside `dist/main.js`, from wherever it's started, so `dist` can be built in CI
 or on another machine and copied over. A self-contained build with native addons is the exception: build it on the
@@ -67,8 +67,8 @@ already set alone, so the environment wins over the file. A production build rea
 On Bun, set `NODE_ENV=production` wherever you start the bot yourself, as with `bun dist/main.js`. With it unset, or set
 to anything but `production`, Bun loads that mode's files before any code runs: `.env.test` and `.env.test.local` under
 `test`, else `.env.development` and `.env.development.local`, for `staging` too. Their values win over the production
-files. The bot warns, naming `NODE_ENV`, the files, and each variable that has another mode's value where the production
-files give another:
+files. The bot warns, naming `NODE_ENV`, the files, and each variable that took its value from them, unless the
+production files give it the same value:
 
 ```text
 Bun loaded .env.development because NODE_ENV is unset, and this is a production build, so DATABASE_URL has its development value; set NODE_ENV=production, or start with `bun --no-env-file`.
@@ -84,7 +84,7 @@ passed to the bot as it is.
 
 ## Docker
 
-Build inside the image, so native addons are built for its platform, and ship only what runs:
+Build inside the image, so a self-contained build's native addons are built for its platform, and ship only what runs:
 
 ```dockerfile
 FROM node:22-slim AS build
@@ -110,11 +110,15 @@ Pass the token when the container runs, never as a build argument, which stays i
 docker run --env-file .env my-bot
 ```
 
-- **Both stages use the same base image** on purpose: a native addon built on Debian doesn't load on Alpine, and the
-  reverse.
+Docker reads `--env-file` literally, quotes included, so write its values unquoted.
+
+- **Use one base image for both stages** when the build is self-contained: its `dist/node_modules` carries native
+  binaries from the build stage, and one built on Debian doesn't load on Alpine. A regular build installs its addons in
+  the final stage, so only that stage's platform matters.
 - **Keep `.env`, `node_modules` and `dist` out of the build context** with a `.dockerignore`.
 - **`docker stop` waits 10 seconds** before killing the process, the same as the bot's default `shutdownTimeout`. Give
-  it a little more with `--stop-timeout 15`, or `stop_grace_period: 15s` in Compose.
+  it a little more with `--stop-timeout 15`, or `stop_grace_period: 15s` in Compose; with `sharding.mode: 'process'`,
+  the manager waits `shutdownTimeout` plus 5 seconds, so allow 20.
 
 ## systemd
 
@@ -157,10 +161,11 @@ pm2 start dist/main.js --name my-bot --kill-timeout 12000
 pm2 save
 ```
 
-Start it from the project's root, or set `cwd` in an ecosystem file: the bot reads `.env` from the working directory.
-It finds `dist/meocord.config.mjs` and its assets beside `dist/main.js`, in a development build as in a production
-one, however pm2 starts it. pm2 waits 1.6 seconds for a process to stop by default;
-`--kill-timeout` gives the bot's [`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) longer than `shutdownTimeout`.
+Start it from the project's root, or set `cwd` in an ecosystem file: the bot reads `.env` from the working directory. It
+finds `dist/meocord.config.mjs` and its assets beside `dist/main.js`, in a development build as in a production one,
+however pm2 starts it. pm2 waits 1.6 seconds for a process to stop by default; `--kill-timeout` gives the bot's
+[`onShutdown` hooks](guide:lifecycle-hooks#onshutdown) longer than `shutdownTimeout`. With `sharding.mode: 'process'`,
+the manager waits `shutdownTimeout` plus 5 seconds, so give it `--kill-timeout 20000`.
 
 ## Registering commands on deploy
 
@@ -215,9 +220,10 @@ Then `bun run start:prod` runs the CLI on Bun as well as the bot.
 
 ## Gotchas
 
-- **pm2's default stop is too short** for `onShutdown` hooks: give it `--kill-timeout` above `shutdownTimeout`.
-- **A Debian build doesn't load on Alpine,** and the reverse, when the bot uses a native addon. Build and run on the
-  same base image.
+- **pm2's default stop is too short** for `onShutdown` hooks: give it `--kill-timeout` above `shutdownTimeout`, and
+  above `shutdownTimeout` plus 5 seconds with `sharding.mode: 'process'`.
+- **A self-contained build made on Debian doesn't load on Alpine,** and the reverse, when the bot uses a native addon.
+  Build it on the same base image it runs on.
 - **A token as a Docker build argument** stays in the image's history. Pass it when the container runs.
 
 ## Build it

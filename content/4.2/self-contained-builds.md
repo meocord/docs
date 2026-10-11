@@ -83,21 +83,24 @@ platform never gets to fail with an error of its own.
 
 `externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings are
 copied into `dist/node_modules` too. An external named as a file inside a package, such as `'lodash/fp.js'`, packs its
-package. A build without `bundleDependencies` removes what a previous self-contained build packed into `dist`. A package
-a dependency only tries to load, such as `supports-color`, belongs in `optionalExternals`: it's packed when it's
-installed, and the dependency carries on without it when it isn't. Without it, a self-contained build that meets
-`supports-color` uninstalled warns, naming the dependency and `optionalExternals`. Don't list a name in `externals` as
-well; the build warns about that too. See [the options](guide:configuration#options).
+package. An external is packed from the project's own `node_modules`; under pnpm, add one your code doesn't import
+directly to `dependencies` so it's there. A build without `bundleDependencies` removes what a previous self-contained
+build packed into `dist`. A package a dependency only tries to load, such as `supports-color`, belongs in
+`optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. Without
+it, a self-contained build that meets `supports-color` uninstalled warns, naming the dependency and `optionalExternals`.
+Don't list a name in `externals` as well; the build warns about that too. See [the
+options](guide:configuration#options).
 
 discord.js's optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated that way.
 
 ## On Bun
 
 A self-contained build runs under Bun as under Node. With no `node_modules` in reach, Bun downloads any package the
-moment something imports it. `meocord start` passes `--no-install` for you; when you launch the bundle yourself, pass
-it too:
+moment something imports it. `meocord start` passes `--no-install` for you; when you launch the bundle yourself, pass it
+too, with `NODE_ENV=production` as [Deployment](guide:deployment#how-it-works) explains:
 
 ```dockerfile
+ENV NODE_ENV=production
 CMD ["bun", "--no-install", "dist/main.js"]
 ```
 

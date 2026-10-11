@@ -36,8 +36,7 @@ is there. In a server that only a member's own install reaches, the answer stays
 
 ## How it works
 
-`getInstallContext` reads the interaction's `context` and `authorizingIntegrationOwners`, which Discord sends with
-every interaction:
+`getInstallContext` reads the interaction's `context` and `authorizingIntegrationOwners`:
 
 | Where                                   | `where`             | `botInstalled` |
 | --------------------------------------- | ------------------- | -------------- |
@@ -45,6 +44,10 @@ every interaction:
 | Another server, through a user install  | `'guild'`           | `false`        |
 | A direct message with the bot           | `'bot-dm'`          | `true`         |
 | A direct or group message between users | `'private-channel'` | `false`        |
+
+Discord leaves `context` out only on interactions it created before contexts existed, which reached the bot alone.
+Without it, `getInstallContext` reports a server the bot is in when the interaction has a `guildId`, and a DM with the
+bot otherwise. A mock interaction given neither field reports the same.
 
 `botInstalled` says whether the bot is present, which decides whether the channel API is reachable. It says nothing
 about the bot's permissions in that channel.
@@ -55,8 +58,8 @@ about the bot's permissions in that channel.
 only after the interaction's fifteen-minute token has expired, and only where the bot is present:
 
 - **Within fifteen minutes**, everywhere: replies, updates, edits and follow-ups.
-- **After fifteen minutes**, where the bot is present: only edits, sent through the channel. An error can be logged
-  but no longer shown privately.
+- **After fifteen minutes**, where the bot is present: only edits of a public answer, sent through the channel. A
+  private answer can't be reached any more, and an error can be logged but no longer shown privately.
 - **After fifteen minutes**, where it isn't: nothing more can be sent, and the reason is logged.
 
 A token error from fourteen minutes on counts as expired, to allow for a clock running late.
@@ -64,8 +67,16 @@ A token error from fourteen minutes on counts as expired, to allow for a clock r
 ## Letting a command run in more places
 
 A builder chooses where its command can be installed and used, with discord.js's `setIntegrationTypes` and
-`setContexts`. A command installable to a user and usable in DMs between users reaches `'private-channel'`:
-everything it does has to go through the interaction.
+`setContexts`. Left out, a command is installable to servers only, and usable in servers, the bot's DMs and private
+channels. A command reaches a member's user install only when its integration types include
+`ApplicationIntegrationType.UserInstall`, and the app has User Install turned on in the Developer Portal. Discord
+applies both settings only to commands registered globally, so a command registered to `developmentGuild` or
+`commands.guilds` can't be tried through a user install:
+
+::example{file="controllers/slash/builders/stats.builder.ts" region="builder"}
+
+A command installable to a user and usable in DMs between users reaches `'private-channel'`: everything it does has to
+go through the interaction.
 
 ## Testing
 
@@ -74,17 +85,18 @@ of the four places:
 
 ::example{file="controllers/slash/stats.slash.controller.spec.ts" region="contexts"}
 
-A server needs a `guildId` too. A server the bot isn't in needs a member from `createMockRawMember()` and no `guild`;
-there `channel` is `null`, so `interaction.channel.send` fails as it does in Discord. In DMs between users the mock's
-`channel.send` still resolves, so check `getInstallContext(interaction).botInstalled` in the handler, as the gotcha
-says.
+`getInstallContext` reads only these two, as the spec above does. For a handler that also reads the server, give a
+server's mock a `guildId` too, since a mock without one is a DM in every other respect. A server the bot isn't in needs
+a member from `createMockRawMember()` and no `guild`; there `channel` is `null`, so `interaction.channel.send` fails as
+it does in Discord. In DMs between users the mock's `channel.send` still resolves, so check
+`getInstallContext(interaction).botInstalled` in the handler, as the gotcha says.
 
 ## Gotchas
 
 - **Posting to the channel where the bot isn't.** `interaction.channel.send` fails in a server the bot isn't in and
   in DMs between users. Answer through `respond()`, or check `botInstalled` first.
-- **A long job outliving its token.** Past fifteen minutes, only edits reach the member, and only where the bot is
-  present. Send progress early, or DM the result.
+- **A long job outliving its token.** Past fifteen minutes, only edits of a public answer reach the member, and only
+  where the bot is present. Send progress early, or DM the result.
 - **`botInstalled` isn't permission.** The bot can be present and still lack Send Messages in that channel.
 
 ## Next steps
