@@ -18,6 +18,7 @@ export function untilNext(hour: number, minute: number, now: Date): number {
 export class DailyDigest implements OnReady, OnShutdown {
   private readonly channelId = process.env.DIGEST_CHANNEL_ID ?? ''
   private timer?: ReturnType<typeof setTimeout>
+  private stopped = false
 
   onReady(client: Client<true>, { primary }: ReadyInfo) {
     // With a process per shard, every process runs this hook; only one should post
@@ -25,12 +26,15 @@ export class DailyDigest implements OnReady, OnShutdown {
   }
 
   onShutdown() {
+    // Also for a post still being sent, whose `finally` would set the next timeout
+    this.stopped = true
     clearTimeout(this.timer)
   }
 
   // A timeout to the next 09:00, set again after each run, stays on time where a 24-hour interval
   // would drift after a slow post or a machine that slept
   private scheduleNext(client: Client<true>) {
+    if (this.stopped) return
     this.timer = setTimeout(
       async () => {
         try {

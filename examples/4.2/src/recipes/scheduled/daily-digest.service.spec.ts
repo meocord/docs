@@ -43,6 +43,21 @@ describe('DailyDigest', () => {
     expect(channel.send).toHaveBeenCalledTimes(2)
   })
 
+  it('schedules no next post when it stops while one is being sent', async () => {
+    const { client, channel } = clientWithChannel()
+    let sent!: () => void
+    channel.send.mockReturnValue(new Promise(resolve => (sent = () => resolve(undefined as never))) as never)
+    const digest = new DailyDigest()
+
+    digest.onReady(client, { primary: true })
+    await vi.advanceTimersByTimeAsync(60_000)
+    digest.onShutdown()
+    sent()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('posts nothing from any other process', async () => {
     const { client, channel } = clientWithChannel()
 

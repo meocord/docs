@@ -116,11 +116,12 @@ named a dropped file go with it, and the user still gets the answer.
 
 ## Message command errors
 
-A message command can't be answered privately, so its errors are replies and direct messages: the usage reply, a
-guard's or validation's reason, a `UserError`'s message, and the direct messages
-[`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) send. They're plain text,
-unless the presenter has a third, optional method, `messageError(context, error)`, which draws them as views. The
-card presenter above has one, so a message command's errors get the same card.
+A message command can't be answered privately, so its errors are replies and direct messages: the usage reply, a guard's
+or validation's reason, a `UserError`'s message, and the direct messages [`dmOnError` and
+`dmOnCooldown`](guide:message-commands#telling-the-author-privately) send. They're plain text, unless the presenter has
+a third, optional method, `messageError(context, error)`, which draws them as views. The card presenter above has one,
+so a message command's errors get the same card. The reply to a `UserError` that an `@On` or `@Once` handler throws for
+an event with a message, such as `messageCreate`, goes through `messageError` too.
 
 Its [`MessageResponseContext`](api:responses/MessageResponseContext) has the `message` in place of an interaction:
 
@@ -136,11 +137,12 @@ same limits. When it fails, the author gets the plain text instead, and the fail
 
 ## The help reply
 
-The built-in [`!help`](guide:message-commands) writes plain text. A presenter with another optional method,
-`messageHelp(help, message)`, writes it instead: `help` is the [`MessageHelp`](api:types/MessageHelp) the built-in
-found, a list of commands, one command, a parent's subcommands, or that nothing matched, and the method returns the
-text or the options `message.reply` takes, such as an embed. [Message commands](guide:message-commands) shows one.
-A help command of your own reads the same model from [`HandlerRegistry`](guide:handler-discovery).
+The built-in [`!help`](guide:message-commands#a-help-command) writes plain text. A presenter with another optional
+method, `messageHelp(help, message)`, writes it instead: `help` is the [`MessageHelp`](api:types/MessageHelp) the
+built-in found: a list of commands, one command, a parent's subcommands, a name nothing matched, or that the caller has
+no command to list here, and the method returns the text or the options `message.reply` takes, such as an embed.
+[Message commands](guide:message-commands) shows one. A help command of your own reads the same model from
+[`HandlerRegistry`](guide:handler-discovery).
 
 ## Testing a presenter
 

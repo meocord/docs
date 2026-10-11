@@ -52,8 +52,9 @@ each, with what to check. Every release's notes are in the [changelog](guide:cha
 - **`messages: { handlers: 'concurrent' }`** runs a message's command and its listeners side by side, so a slow command
   no longer holds back logging and moderation. See
   [Running them side by side](guide:message-commands#running-them-side-by-side).
-- **A slow handler** that holds listeners back for 5 seconds or more is named in a warning, once, with the option that
-  frees them. `slowHandlerWarning: false` turns it off.
+- **A slow handler** that holds listeners back for 5 seconds or more is named in a warning, once per handler, with the
+  option that frees them. `messages: { slowHandlerWarning: false }` turns it off. See [Running them side by
+  side](guide:message-commands#running-them-side-by-side).
 
 ## Testing
 

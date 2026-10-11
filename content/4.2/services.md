@@ -62,9 +62,9 @@ This one sets the bot's status once it's ready, through its `onReady` [lifecycle
 
 ::example{file="services/status.service.ts" region="service"}
 
-That includes a service that only a guard, interceptor, filter, pipe or the presenter injects: it is made as the bot
-comes online, once, like any other service. A class that injects the call's `ExecutionContext` is made for each call
-instead, and has no lifecycle hooks.
+A service that only a guard, interceptor, filter, pipe or the presenter injects needn't be listed: MeoCord makes it once
+as the bot comes online, like any other service, and runs its lifecycle hooks. A class that injects the call's
+`ExecutionContext` is made for each call instead, and has no lifecycle hooks.
 
 ## Providers
 
@@ -113,9 +113,9 @@ Guards, interceptors and exception filters inject services the same way:
 - **A guard** is created for each call, so it may also inject `ExecutionContext`.
 - **An interceptor or a filter** is one instance shared across calls, like a service. It holds no per-call state
   and can't inject `ExecutionContext`; it receives the context as an argument instead.
-- **A service, a provided class or a factory provider** is made once, so none of them can inject `ExecutionContext`,
-  or list it in a factory's `inject`: MeoCord refuses it as the app is created, since it would keep the first call's
-  context for every later one.
+- **A service the app makes once, a provided class or a factory provider** can't inject `ExecutionContext`, or list it
+  in a factory's `inject`: MeoCord refuses it as the app is created, since it would keep the first call's context for
+  every later one. A helper that only a guard injects may inject it: it is then made with the guard, for each call.
 
 ## Testing a service
 

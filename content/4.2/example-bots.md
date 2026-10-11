@@ -28,6 +28,21 @@ Embed Links, since each review is posted as an embed. Their IDs go in `.env` as 
 `FEEDBACK_CHANNEL_ID`, and the bot stops as it starts if either is missing or isn't an ID. Feedback is kept in memory,
 so a restart forgets it, and a review button left from before the restart says the feedback is gone.
 
+## Moderation
+
+Warnings, timeouts and bans for a server's moderators, with every case logged in SQLite. `/mod warn` records a warning
+at once; `/mod timeout` and `/mod ban` ask the moderator to confirm first, privately, and act only on **Confirm**.
+`/mod case` shows a case and completes its number as you type, and the **Apps** menu lists a member's cases or warns a
+message's author. Every action needs **Moderate Members**, a ban **Ban Members** too, and a moderator can act only on
+members ranked below both them and the bot.
+
+::example-bot{id="moderation"}
+
+Besides its token, the bot needs **Moderate Members** and **Ban Members**, and its role above the members it moderates.
+`MODERATION_DB` in `.env` sets where the case log is kept, `moderation.db` in the working directory unless set. The case
+log uses `node:sqlite`, which ships with Node.js; on Node.js 22 it prints one experimental-feature warning as the bot
+starts.
+
 ## Running a bot
 
 Every bot runs the same way, on Node.js 22.13 or later. It needs a bot token from the

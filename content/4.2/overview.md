@@ -214,4 +214,6 @@ may add one.
 
 - [Getting started](guide:getting-started): create a bot and start it.
 - [Your first command](guide:first-command): write a slash command, its service and its test.
-- Upgrading from 4.0: the [migration guide](guide:migrating) lists what to check.
+- Upgrading from 4.1: [What's new in 4.2](guide:whats-new), and [Upgrading from 4.1 to
+  4.2](guide:migrating#upgrading-from-41-to-42) for what to check. From 4.0 or 3.x, the [migration
+  guide](guide:migrating) covers each step.

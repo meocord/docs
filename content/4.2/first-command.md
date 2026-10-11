@@ -40,7 +40,8 @@ The greeting comes from a service, a plain class marked with `@Service()`:
 
 ::example{file="services/greeting.service.ts" region="service"}
 
-The app class lists the controller, and the discord.js client options:
+Add the controller to the `controllers` your `src/app.ts` lists. In an app of its own, the app class lists the
+controller and the discord.js client options:
 
 ::example{file="app.ts" region="app"}
 
@@ -93,6 +94,11 @@ mocks for every interaction type.
 - **A method called directly skips most of the pipeline.** Only its own and its controller's guards run. In a test, go
   through `invoke`, so its interceptors, validation, cooldowns and filters run as they do in the bot, and the app's
   global guards, interceptors and filters too when the module is built with `app` or `fromApp`.
+
+## Build it
+
+The feedback bot needs no `/greet`: try it in a scratch project, or go on to [Project
+structure](guide:project-structure), where the bot's own files start.
 
 ## Next steps
 
