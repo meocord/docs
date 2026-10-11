@@ -10,7 +10,16 @@ learn:
   - Read what the user was sent with getResponse
 requires: [testing]
 api:
-  [testing/TestingModule, testing/getResponse, testing/inspectHandler, testing/InvocationResult, testing/DispatchedCall]
+  [
+    testing/TestingModule,
+    testing/getResponse,
+    testing/inspectHandler,
+    testing/InvocationResult,
+    testing/DispatchedCall,
+    testing/DispatchedHandler,
+    testing/EmitResult,
+    testing/ResponseReport,
+  ]
 since: 4.1.0
 formerly: [invoke]
 ---
@@ -49,16 +58,22 @@ module, so `overrideGuard` stubs work, and so does an injected `ExecutionContext
 
 They differ in where the handler comes from, and in what happens to an error:
 
-|                            | `invoke(Controller, 'method', ...args)`       | `dispatch(input)`                     |
-| -------------------------- | --------------------------------------------- | ------------------------------------- |
-| Handler                    | the one you name                              | whichever the bot's routing reaches   |
-| Params                     | built from the input, as dispatch builds them | the same                              |
-| Resolves to                | `{ ran, error? }`                             | `{ ran, handlers, error? }`           |
-| An error no filter handles | rejects, and the fallback doesn't run         | the fallback answers, then it rejects |
-| The user's own outcome     | a refusal rejects                             | answered, and resolves with `error`   |
+|                            | `invoke(Controller, 'method', ...args)`       | `dispatch(input)`                                     |
+| -------------------------- | --------------------------------------------- | ----------------------------------------------------- |
+| Handler                    | the one you name                              | whichever the bot's routing reaches                   |
+| Params                     | built from the input, as dispatch builds them | the same                                              |
+| Resolves to                | `{ ran, error? }`                             | `{ ran, handlers, error? }`                           |
+| An error no filter handles | rejects, and the fallback doesn't run         | the fallback answers, then it rejects                 |
+| The user's own outcome     | a refusal rejects                             | resolves with `error`, answered as the bot answers it |
 
 The user's own outcome is a usage reply, an unknown command, or the refusal of a guard, a cooldown or the cooldown
 store, a validation or a `UserError`. Both wait for the module's [observers](guide:observers) before they resolve.
+
+An interaction always gets an answer, and a message command a reply with its usage or the reason. These are only
+logged, as the bot does, so `getResponse` and the mock's methods show nothing for them: a usage error on a message
+without the prefix or a mention, a cooldown on a message or its store's failure (with `dmOnCooldown` or `dmOnError` the
+author gets a direct message instead), a guard's or a validation's refusal on a message listener or a reaction, and a
+`UserError` from a reaction.
 
 ## Running a handler with invoke
 
@@ -71,6 +86,13 @@ types it; a word that isn't of its type, or a missing param, goes through the ha
 only from an interaction or a message, so with the reaction alone it warns once, or under `useStrictMocks()` refuses,
 naming what to pass.
 
+A message passed alone to a patterned handler needs content that dispatch gives to it; otherwise `invoke` rejects,
+naming the pattern. Under strict mocks a message's `content` is empty, so give it one. `dispatch` skips a message with
+no text, as the bot does, so even a `@MessageHandler()` listener needs `content` to be reached.
+
+The controller must be one the module was built with, listed in `controllers` or, with `fromApp`, one of the app's;
+`invoke` rejects any other, naming it.
+
 `invoke` resolves to `{ ran }`. `ran` is `false` when a guard stopped the call or an interceptor skipped the handler,
 and `error` is set when a filter handled one. A guard that returns `false` stops the call with no answer:
 
@@ -80,11 +102,11 @@ A guard that throws `GuardDeniedError`, a handler that throws `UserError`, and a
 `invoke` with that error, where `dispatch` answers the user and resolves with it as `error`. Assert them with
 `await expect(module.invoke(...)).rejects.toThrow(GuardDeniedError)`.
 
-The interaction must be one dispatch routes to the handler, ranking every handler of the module as the bot does. A
-`customId` another handler's pattern takes first, or a command another handler takes by its subcommand path, rejects,
-naming the handler that runs, and so does one no pattern takes, or a command the handler doesn't handle, so a typo in a
-test doesn't pass silently. A handler declared under two patterns gets the params of the one dispatch picks. A mock
-built without a `customId` or command name isn't checked.
+The interaction or message must be one dispatch gives to the handler, ranking every handler of the module as the bot
+does. A `customId` another handler's pattern takes first, a command another handler takes by its subcommand path, or a
+message another handler takes first, rejects, naming the handler that runs, and so does one no pattern takes, or a
+command the handler doesn't handle, so a typo in a test doesn't pass silently. A handler declared under two patterns
+gets the params of the one dispatch picks. A mock built without a `customId` or command name isn't checked.
 
 ## Sending input with dispatch
 
@@ -107,6 +129,9 @@ resolves with that error; an empty list for an autocomplete, and the call resolv
 is empty:
 
 ::example{file="testing/dispatch.spec.ts" region="not-found"}
+
+A message or a reaction no handler takes gets no answer, unless the message asks for the built-in help or names a
+parent command, and resolves to `{ ran: false, handlers: [] }`.
 
 Whatever the bot skips reaches nothing: a message from a bot, or a bot's reaction to a handler without
 `bots: true`, resolves to `{ ran: false, handlers: [] }`.
@@ -132,9 +157,10 @@ A call's `payload` is typed by its `method`: once a test checks `call.method ===
 `embeds`: after `typeof call.payload === 'object' && !(call.payload instanceof MessagePayload)`, with `MessagePayload`
 from discord.js, `call.payload.content` compiles with no cast.
 
-A call a mock rejects, such as a reply refused with 10062 once the three seconds have passed, stays in `calls` with its
-`error`, and doesn't count as sent: the member saw nothing. It doesn't undo an answer made after it: when the first of
-two un-awaited replies rejects, the interaction reads as answered by the second.
+A call a mock rejects, such as a reply the test makes reject with `createDiscordError(10062)`, as Discord does once the
+three seconds have passed, stays in `calls` with its `error`, and doesn't count as sent: the member saw nothing. It
+doesn't undo an answer made after it: when the first of two un-awaited replies rejects, the interaction reads as
+answered by the second.
 
 For messages and reactions, read the mock's own methods, such as `message.reply`.
 
@@ -175,5 +201,5 @@ in Grace's language. Run `npm test` to see the flow pass.
 ## Next steps
 
 - [Mocks](guide:mocks): building the interactions, messages and reactions these take.
-- [Testing recipes](guide:testing-recipes): guards, cooldowns, themes and collectors.
+- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and failure paths under test.
 - [How a call runs](guide:how-a-call-runs): the pipeline both of them run.

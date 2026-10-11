@@ -26,18 +26,18 @@ Sapphire side is typechecked against `@sapphire/framework` 5.5.1.
 
 ## What maps to what
 
-| In Sapphire                                        | In MeoCord                                                                                                |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A `Command` piece in `commands/`                   | A controller method with `@Command`, listed in the app class                                              |
-| `registerApplicationCommands` and its registry     | A `@CommandBuilder` class                                                                                 |
-| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId:snowflake}/refresh`                             |
-| `messageRun` and `Args`                            | A [message command](guide:message-commands) pattern, with typed params                                    |
-| A precondition                                     | A [guard](guide:guards), for commands and components alike                                                |
-| `cooldownLimit` and `cooldownDelay`                | [`@Cooldown`](guide:cooldowns)                                                                            |
-| A listener for `chatInputCommandError`             | An [exception filter](guide:exception-filters), or the built-in fallback                                  |
-| A listener for `messageCommandError`               | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
-| A `Listener` piece in `listeners/`                 | [`@On`](guide:gateway-events) on a controller method                                                      |
-| `container`, augmented with your own properties    | [Services](guide:services), injected by constructor                                                       |
+| In Sapphire                                        | In MeoCord                                                                                                                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A `Command` piece in `commands/`                   | A controller method with `@Command`, listed in the app class                                                                                                                   |
+| `registerApplicationCommands` and its registry     | A `@CommandBuilder` class                                                                                                                                                      |
+| An `InteractionHandler` with `parse()` and `run()` | A method with a `customId` pattern such as `card/{ownerId:snowflake}/refresh`                                                                                                  |
+| `messageRun` and `Args`                            | A [message command](guide:message-commands) pattern, with typed params                                                                                                         |
+| A precondition                                     | A [guard](guide:guards), for commands and components alike                                                                                                                     |
+| `cooldownLimit` and `cooldownDelay`                | [`@Cooldown`](guide:cooldowns)                                                                                                                                                 |
+| A listener for `chatInputCommandError`             | An [exception filter](guide:exception-filters), or the built-in fallback                                                                                                       |
+| A listener for `messageCommandError`               | An [exception filter](guide:exception-filters), or the built-in fallback, with [`dmOnError`](guide:message-commands#telling-the-author-privately) to tell the author privately |
+| A `Listener` piece in `listeners/`                 | [`@On`](guide:gateway-events) on a controller method                                                                                                                           |
+| `container`, augmented with your own properties    | [Services](guide:services), injected by constructor                                                                                                                            |
 
 ## A slash command
 
@@ -108,7 +108,9 @@ A Sapphire listener is a piece too, and the client finds it in `listeners/`:
 ::example{from="compare" file="sapphire/main.ts" region="client"}
 
 In MeoCord an event is a decorated method, and the app class lists what the bot is made of, so nothing is found by
-its location:
+its location. MeoCord makes the client and logs it in with `discordToken` from `meocord.config.ts`. The app below lists
+this page's command and button controllers beside the event and message ones; a controller left out of the list never
+receives anything:
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
@@ -127,14 +129,19 @@ Translations and subcommands are built in: typed [catalogs](guide:localisation),
 or a param left out fails to compile, and [subcommand handlers](guide:subcommands) on the parent command's builder.
 Guards apply to buttons, select menus and modals as well as to commands, and [`meocord/testing`](guide:testing) runs a
 handler through the same pipeline the bot uses. Scheduled work is a service that starts in `onReady` and stops in
-`onShutdown`, as [Scheduled tasks](guide:recipes/scheduled) shows. MeoCord is built for TypeScript, so a JavaScript bot
-moves to it as it moves over, and its decorators and typed params become what the compiler checks.
+`onShutdown`, as [Scheduled tasks](guide:recipes/scheduled) shows. MeoCord apps are written in TypeScript, so a
+JavaScript bot becomes TypeScript as it moves over, and its decorators and typed params become what the compiler checks.
 
 ## Moving over
 
 Move a piece at a time. A command's `chatInputRun` body usually moves as it is into a controller method, and what it
 read from the container becomes a constructor parameter. A precondition becomes a guard, and a `messageRun` becomes
 a pattern whose params replace the `args.pick` calls.
+
+While both run, set `commands.register` to `false` in `meocord.config.ts` and let Sapphire keep registering every
+command, the moved ones included: MeoCord's registration replaces the application's commands in each scope with its
+builders'. A command Sapphire still handles reaches MeoCord too and gets "Command not found!", so give the app a filter
+for `CommandNotFoundError` until the last piece has moved.
 
 ## Next steps
 

@@ -25,18 +25,18 @@ This page shows one small bot both ways. The discord.js side is typechecked agai
 
 ## What maps to what
 
-| In a discord.js bot                                     | In MeoCord                                                                                                |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A `SlashCommandBuilder`, sent with `REST` from a script | A `@CommandBuilder` class, registered when the bot starts                                                 |
-| The `interactionCreate` listener and its `if` chain     | `@Command` on a controller method; MeoCord routes to it                                                   |
-| Splitting `customId` by hand                            | A pattern such as `card/{ownerId:snowflake}/refresh`, captured into an argument                           |
-| A `messageCreate` listener that splits the content      | A [message command](guide:message-commands) pattern, such as `roll {sides}`                               |
-| Checks at the top of a handler                          | A [guard](guide:guards)                                                                                   |
-| A `Map` of timestamps                                   | [`@Cooldown`](guide:cooldowns)                                                                            |
-| `try`/`catch` around every handler                      | The built-in fallback, or an [exception filter](guide:exception-filters)                                  |
-| A `catch` that replies to a message command             | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
-| `client.on(Events.GuildMemberAdd, ...)`                 | [`@On('guildMemberAdd')`](guide:gateway-events) on a controller method                                    |
-| Modules you import and pass around                      | [Services](guide:services), injected by constructor                                                       |
+| In a discord.js bot                                     | In MeoCord                                                                                                                                                                                    |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A `SlashCommandBuilder`, sent with `REST` from a script | A `@CommandBuilder` class, registered when the bot starts                                                                                                                                     |
+| The `interactionCreate` listener and its `if` chain     | `@Command` on a controller method; MeoCord routes to it                                                                                                                                       |
+| Splitting `customId` by hand                            | A pattern such as `card/{ownerId:snowflake}/refresh`, captured into an argument                                                                                                               |
+| A `messageCreate` listener that splits the content      | A [message command](guide:message-commands) pattern, such as `roll {sides}`                                                                                                                   |
+| Checks at the top of a handler                          | A [guard](guide:guards)                                                                                                                                                                       |
+| A `Map` of timestamps                                   | [`@Cooldown`](guide:cooldowns)                                                                                                                                                                |
+| `try`/`catch` around every handler                      | The built-in fallback, or an [exception filter](guide:exception-filters)                                                                                                                      |
+| A `catch` that replies to a message command             | A `UserError`, whose message is the reply; an [exception filter](guide:exception-filters); or [`dmOnError`](guide:message-commands#telling-the-author-privately) to tell the author privately |
+| `client.on(Events.GuildMemberAdd, ...)`                 | [`@On('guildMemberAdd')`](guide:gateway-events) on a controller method                                                                                                                        |
+| Modules you import and pass around                      | [Services](guide:services), injected by constructor                                                                                                                                           |
 
 ## A slash command
 
@@ -48,7 +48,7 @@ listener. The cooldown is yours to keep:
 ::example{from="compare" file="discordjs/bot.ts" region="command"}
 
 In MeoCord, the builder receives its name from `@Command`, registration happens at startup, and the cooldown is a
-decorator. The member's `name` arrives as an argument:
+decorator. The `name` option arrives in the handler's second argument:
 
 ::example{file="controllers/slash/builders/greeting.builder.ts" region="builder"}
 
@@ -99,7 +99,10 @@ In discord.js, the client, its listeners and the error handling are wired up tog
 
 ::example{from="compare" file="discordjs/bot.ts" region="client"}
 
-In MeoCord, an event is a decorated method, and the app class lists the controllers and client options:
+In MeoCord, an event is a decorated method, and the app class lists the controllers and client options. MeoCord makes
+the client and logs it in with `discordToken` from `meocord.config.ts`, read from `.env`; `meocord start` runs it. The
+app below lists this page's command and button controllers beside the event and message ones; a controller left out
+of the list never receives anything:
 
 ::example{file="controllers/event/welcome.controller.ts" region="controller"}
 
@@ -129,12 +132,18 @@ same pipeline the bot uses.
 
 ## Moving over
 
-Nothing has to move at once. The `Client` is injectable, so code that works on the client directly can live in a service
-while commands move to controllers one at a time. Until the last one has moved, set `commands.register` to `false` in
-`meocord.config.ts` and keep your own registration, since MeoCord's registration replaces the application's commands in
-each scope with its builders'. A slash command no controller handles goes to the app's
-[exception filters](guide:exception-filters), then gets "Command not found!", so give the app a filter for
-`CommandNotFoundError` while your old listener still answers some.
+Nothing has to move at once. The `Client` is injectable, so the old listeners can move into a service that injects it
+and attaches them in its constructor or `onReady`. Nothing injects that service, so list it in
+`@MeoCord({ services })`. As each command moves to a controller, delete its branch from the old listener, which still
+receives every interaction.
+
+Until the last one has moved, set `commands.register` to `false` and keep registering every command, moved ones
+included, with your own script: MeoCord's registration, at startup or with `meocord register`, replaces the
+application's commands in each scope with its builders'. A slash command no controller handles goes to the app's
+[exception filters](guide:exception-filters) at once, then gets "Command not found!". A button, select menu or modal no
+pattern takes waits 1.5 seconds for your old listener to answer first, and is answered the same way after that. Until
+the last command has moved, give the app a filter for `CommandNotFoundError` that leaves the interactions your old
+listener answers alone.
 
 ## Next steps
 

@@ -16,6 +16,10 @@ or the bot's log shows.
 
 ## The bot won't start
 
+**"Main entry file (main.js) not found!"** `meocord start --prod` and `meocord register` run the last build in
+`dist/`, and there is none. Run `meocord build --prod` first, or add `--build`: `meocord start --build --prod`,
+`meocord register --build`.
+
 **"Discord token is missing: meocord.config.ts sets discordToken, and a new app reads it from DISCORD_TOKEN in
 .env."** The config gives no token. Check that `.env` exists where the bot runs, from its working directory, and
 names `DISCORD_TOKEN`. See [Environment variables](guide:configuration#environment-variables).
@@ -32,6 +36,13 @@ servers needs Discord's approval for them. See [Intents](guide:gateway-events#in
 **"Discord refused the intents the bot requests as invalid."** A value in `clientOptions.intents` isn't one of
 discord.js's `GatewayIntentBits`.
 
+**"Invalid bitfield flag or number: …"** discord.js refuses an intent it doesn't know before the bot connects: a
+misspelled name, or `undefined` from a misspelled `GatewayIntentBits` member. The bot stops with "Error during
+startup:" and this error. Use the names `GatewayIntentBits` lists.
+
+**'Configuration file "meocord.config.ts" is missing!'** The CLI found the project's `package.json` but no
+`meocord.config.ts` beside it. Restore the file, or run the CLI from the folder that holds it.
+
 **`meocord.config.ts` doesn't load.** `build`, `start` and `register` stop with the file and line, or with a list
 of every option of the wrong type. An option MeoCord doesn't know, often a typo, is only a warning. See
 [Configuration](guide:configuration#options).
@@ -47,8 +58,10 @@ MeoCord config at /srv/bot/dist/meocord.config.mjs failed to load: Cannot find p
 ```
 
 When the config doesn't import the missing package itself, the message names the installed package that does, as
-"Install `name`, which `other` imports, in the project". Otherwise it says to fix `meocord.config.ts`, then build
-again.
+"Install `name`, which `other` imports, in the project". A file that can't be read as a module, or imports a file that
+isn't there, ends "Fix meocord.config.ts, then run `meocord build`." A config whose own code throws, such as a check
+for a variable `.env` doesn't set, ends "It threw as it loaded: check the environment it reads, such as its .env
+files." Set what it reads and start the bot again; rebuild only if the config's own code is at fault.
 
 ### One line naming a class, and exit code 1
 
@@ -155,8 +168,9 @@ MeoCord found 2 startup errors; the bot did not start.
 ```
 
 In a test, call `reportAllStartupErrors()` from `meocord/testing` once in `vitest.setup.ts`, before any spec imports a
-controller: the testing module's `compile()` then reports every mistake of the classes it runs. Either way, the error
-thrown carries what it is about as `error.declaration`, such as `Tickets.close`, and its file as `error.file`. MeoCord
+controller: the testing module's `compile()` then reports every mistake of the classes it runs. Either way, an error a
+decorator found carries what it is about as `error.declaration`, such as `Tickets.close`, and its file as
+`error.file`. The errors `create()`'s own checks find name their class at the start of the message instead. MeoCord
 5.0 reports every startup error at once by default.
 
 ### Other startup errors
@@ -171,8 +185,8 @@ refusing the connection, so the bot stopped before login with the cause. Fix wha
 
 ### Warnings that become errors in 5.0
 
-Some mistakes a 4.0 bot could start with only warn in 4.1 and 4.2, so the bot still starts, and stop it in the next
-major version (5.0). Each warning names the handler or the filter, and says what to write instead:
+Some mistakes only warn, so the bot still starts, and stop it in the next major version (5.0). Each warning names the
+handler or the filter, and says what to write instead:
 
 - **"Broken: @Catch's first entry, undefined, which matches no error, is deprecated; …"** An entry in a filter's
   `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
@@ -184,6 +198,9 @@ major version (5.0). Each warning names the handler or the filter, and says what
 - **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
   handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
   [Messages and reactions](#messages-and-reactions).
+- **"1 command handler never runs:" then `Class.method: …`** Discord never sends that handler anything: no builder
+  registers its command, subcommand or name, or its option lacks `setAutocomplete(true)`. Each line says which; see
+  [Slash commands](guide:slash-commands#gotchas).
 - **"@Service on the method `Class.method` is deprecated; in the next major version (5.0) it is refused."**
   `@Controller`, `@Service`, `@Guard`, `@CommandBuilder` or `@MeoCord` is on a method, where it does nothing. Move it
   to the class.
@@ -200,8 +217,10 @@ major version (5.0). Use … instead." names an API that still works, and is log
 - **Registration didn't run.** With `commands.register: false`, only `meocord register` registers. A builder whose
   `toJSON()` throws, such as a slash command without a description, stops that start's registration with an error
   naming it, and no command is sent; see
-  [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration). A failed registration is
-  logged, and the bot stays online.
+  [the upgrade note](guide:migrating#a-command-builder-that-throws-stops-registration). Localized names or
+  descriptions Discord would refuse stop it the same way, "No commands were registered: Discord would reject …
+  localization(s)", listing each; see [Localisation](guide:localisation#gotchas). A failed registration is logged, and
+  the bot stays online.
 - **The bot isn't in the server with the right scope.** An invite must include the `applications.commands` scope as
   well as `bot`.
 - **The client hasn't caught up.** Server commands appear at once; global ones can take a while to reach every
@@ -209,7 +228,9 @@ major version (5.0). Use … instead." names an API that still works, and is log
 
 A command you removed that still shows is a leftover in a scope this configuration doesn't register to. The bot
 warns "… command(s) are still registered … which this configuration does not register to", and
-`commands.clearOther` removes them.
+`commands.clearOther` removes them on a production start or a `meocord register` without `--dev` or `--guild`. With
+`commands.developmentGuild` set, `start --dev` and `register --dev` only warn about leftovers, even with `clearOther`,
+since a production bot sharing the application may own them.
 
 ## "The application did not respond"
 
@@ -217,8 +238,9 @@ Discord gives an interaction three seconds for its first answer, and nothing arr
 
 - **The handler is slow.** A database call or an API request before the first reply can take longer than three
   seconds. Add [`@Defer()`](guide:defer), which acknowledges first.
-- **A guard returned `false`.** That stops the call without an answer, on purpose. Under `@Defer`, a command's
-  deferred reply is deleted. To tell the user why, throw
+- **A guard returned `false` on a command, or on a modal a command opened.** That leaves the interaction unanswered,
+  on purpose; a button, a select menu or a modal from a message is acknowledged invisibly instead. Under `@Defer`, a
+  command's deferred reply is deleted. To tell the user why, throw
   [`GuardDeniedError`](api:responses/GuardDeniedError) instead. See [Guards](guide:guards).
 - **An exception filter caught the error and sent nothing.** MeoCord's built-in fallback answers an error no
   [exception filter](guide:exception-filters) handles, but a filter that handles one and sends nothing leaves the
@@ -238,15 +260,24 @@ A button, select menu or modal that no route takes is answered "Command not foun
 An autocomplete interaction can't be deferred: it has three seconds to answer, once. Keep its handler to a cache
 lookup. See [Autocomplete](guide:autocomplete#gotchas).
 
+## "An error occurred while executing the command."
+
+A handler, guard, pipe or interceptor threw, and no [exception filter](guide:exception-filters) handled it, so MeoCord's
+fallback answered. The log has the cause: `Error handling command "…":`, or `customId "…"` for a component, with the
+error and its stack. Fix the cause, or answer that error in a filter.
+
 ## Discord API errors
 
 | Code  | Discord's message                         | What happened                                                                                                                                                                                                                                                                                 |
 | ----- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 10062 | Unknown interaction                       | The first answer came after the three seconds. Use `@Defer()`.                                                                                                                                                                                                                                |
-| 40060 | Interaction has already been acknowledged | Two answers were sent as first answers, often a `reply` after a `deferReply`. [`respond()`](guide:responses) picks the right call.                                                                                                                                                            |
+| 10062 | Unknown interaction                       | The first answer came after the three seconds; the log reads `command "…" expired before it could be answered:`, or `customId "…"` for a component. Use `@Defer()`.                                                                                                                           |
+| 40060 | Interaction has already been acknowledged | Something else answered first: a second copy of the bot on the same token (a `start --dev` beside the deployed bot), a collector or another listener, or two answers sent without awaiting the first. [`respond()`](guide:responses) queues a handler's answers in order.                     |
 | 50027 | Invalid Webhook Token                     | A follow-up, or an edit sent without `respond()` or where the bot isn't present, came more than fifteen minutes after the interaction, when its token expires. `respond()` carries a late edit of a public answer through the channel where the bot is present; otherwise send a new message. |
 | 50001 | Missing Access                            | The bot can't see the channel. Check its role and the channel's permissions.                                                                                                                                                                                                                  |
 | 50013 | Missing Permissions                       | The bot can see the channel but lacks the permission the call needs, such as Manage Messages to delete one.                                                                                                                                                                                   |
+
+A `reply` after an awaited `deferReply` never reaches Discord: discord.js throws "The reply to this interaction has
+already been sent or deferred." Answer through `respond(interaction)`, which edits a deferred reply instead.
 
 When one of MeoCord's own answers is refused, such as an error reply or a usage reply, the refusal is logged at debug
 level when it's a state Discord reports, like these. A body Discord could not read is logged as an error, with its
@@ -279,6 +310,8 @@ see [Discord's errors](guide:mocks#discords-errors).
 
 - **One-off work runs once per shard.** Guard it with `onReady`'s `primary`, which is `true` only in the process
   running shard 0. See [A process per shard](guide:sharding#a-process-per-shard).
+- **"Sharding is required"** Discord refuses a bot in about 2,500 servers or more that connects as one shard. Set
+  `sharding: { shards: 'auto' }` in `meocord.config.ts`. See [Sharding](guide:sharding).
 - **A shard keeps restarting.** The manager restarts a shard that exits, waiting longer each time up to a minute.
   One that can't log in because of the token or its intents stops the bot instead. Read the shard's first error in
   the log.
