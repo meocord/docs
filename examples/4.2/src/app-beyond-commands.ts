@@ -1,14 +1,23 @@
 // #region app
 import { GatewayIntentBits, Partials } from 'discord.js'
 import { MeoCord } from 'meocord/decorator'
+import { CardButtonController } from '@src/controllers/button/card.button.controller'
 import { WelcomeController } from '@src/controllers/event/welcome.controller'
 import { DiceMessageController } from '@src/controllers/message/dice.message.controller'
 import { KeywordMessageController } from '@src/controllers/message/keyword.message.controller'
 import { StarReactionController } from '@src/controllers/reaction/star.reaction.controller'
+import { GreetingSlashController } from '@src/controllers/slash/greeting.slash.controller'
 import { ReminderScheduler } from '@src/services/reminder.scheduler'
 
 @MeoCord({
-  controllers: [DiceMessageController, KeywordMessageController, StarReactionController, WelcomeController],
+  controllers: [
+    GreetingSlashController,
+    CardButtonController,
+    DiceMessageController,
+    KeywordMessageController,
+    StarReactionController,
+    WelcomeController,
+  ],
   services: [ReminderScheduler],
   clientOptions: {
     intents: [

@@ -240,13 +240,13 @@ lookup. See [Autocomplete](guide:autocomplete#gotchas).
 
 ## Discord API errors
 
-| Code  | Discord's message                         | What happened                                                                                                                      |
-| ----- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 10062 | Unknown interaction                       | The first answer came after the three seconds. Use `@Defer()`.                                                                     |
-| 40060 | Interaction has already been acknowledged | Two answers were sent as first answers, often a `reply` after a `deferReply`. [`respond()`](guide:responses) picks the right call. |
-| 50027 | Invalid Webhook Token                     | A follow-up or an edit came more than fifteen minutes after the interaction, when its token expires. Send a new message instead.   |
-| 50001 | Missing Access                            | The bot can't see the channel. Check its role and the channel's permissions.                                                       |
-| 50013 | Missing Permissions                       | The bot can see the channel but lacks the permission the call needs, such as Manage Messages to delete one.                        |
+| Code  | Discord's message                         | What happened                                                                                                                                                                                                                                                                                 |
+| ----- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10062 | Unknown interaction                       | The first answer came after the three seconds. Use `@Defer()`.                                                                                                                                                                                                                                |
+| 40060 | Interaction has already been acknowledged | Two answers were sent as first answers, often a `reply` after a `deferReply`. [`respond()`](guide:responses) picks the right call.                                                                                                                                                            |
+| 50027 | Invalid Webhook Token                     | A follow-up, or an edit sent without `respond()` or where the bot isn't present, came more than fifteen minutes after the interaction, when its token expires. `respond()` carries a late edit of a public answer through the channel where the bot is present; otherwise send a new message. |
+| 50001 | Missing Access                            | The bot can't see the channel. Check its role and the channel's permissions.                                                                                                                                                                                                                  |
+| 50013 | Missing Permissions                       | The bot can see the channel but lacks the permission the call needs, such as Manage Messages to delete one.                                                                                                                                                                                   |
 
 When one of MeoCord's own answers is refused, such as an error reply or a usage reply, the refusal is logged at debug
 level when it's a state Discord reports, like these. A body Discord could not read is logged as an error, with its

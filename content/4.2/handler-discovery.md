@@ -56,14 +56,15 @@ A subcommand's `description` is its own, and a context menu command has none.
 
 ## Message commands
 
-A message command is listed once, with the `aliases`, `description` and `scope` its handler declares:
+A message command is listed once, with the `aliases` and `description` its handler declares, and its `scope`, which a
+`member`, `role` or `channel` param narrows to servers:
 
 ::playground{file="controllers/message/moderation.message.controller.ts" region="metadata" dispatch="message m <@140000000000000014> 1h"}
 
 For a help command, `messageHelp(message, query?)` answers as the [built-in `!help`](guide:message-commands) would: the
-commands the caller can use where they asked, or the one `query` names, its subcommands, or that nothing matches. It
-returns a [`MessageHelp`](api:types/MessageHelp) to write your own way, with each param's label in the server's
-language where the app [translates MeoCord's texts](guide:localisation):
+commands that work where they asked, leaving out hidden and guarded ones, or the one `query` names, its subcommands, or
+that nothing matches or there is nothing to list. It returns a [`MessageHelp`](api:types/MessageHelp) to write your own
+way, with each param's label in the server's language where the app [translates MeoCord's texts](guide:localisation):
 
 ::example{file="controllers/message/help.message.controller.ts" region="help"}
 
@@ -74,9 +75,9 @@ listing that is not a help command.
 ## Your own metadata
 
 `get` and `getAll` read metadata declared on a handler, the method's first and then its controller's, as
-`ExecutionContext` does. A category made with `createMetadata` and set on each controller groups a help command's
-lines: `handler.get(Category) ?? 'Other'`. [Custom decorators](guide:custom-decorators) shows how to make one. A
-string or symbol key still works, and is deprecated as it is on `ExecutionContext`.
+`ExecutionContext` does. A category made with `createMetadata` and set on each controller groups a help command's lines:
+`handler.get(Category) ?? 'Other'`. [Custom decorators](guide:custom-decorators) shows how to make one. A string or
+symbol key works too, and is deprecated as it is on `ExecutionContext`; 5.0 removes it.
 
 ## Testing
 
@@ -89,8 +90,9 @@ handlers:
 
 ## Gotchas
 
-- **A handler on a class the app doesn't bind isn't listed.** List its controller in `controllers`, or its service
-  in `services`.
+- **A handler on a class the app doesn't bind isn't listed.** List its controller in `controllers`. A service's `@On`
+  and `@Once` handlers run and are listed. Any other handler on a service is listed by `list()` too but never runs, and
+  the bot warns at startup; move it to a controller.
 - **A subcommand is its own entry.** `/settings notify email` is listed by its full path; group entries by their
   first word for one line per top-level command.
 - **The prefix isn't known to an entry.** Pass the one users type to `usage()`; an app with several prefixes picks

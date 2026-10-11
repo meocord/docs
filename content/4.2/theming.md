@@ -93,10 +93,10 @@ checks every token where it's set; see [Valid tokens](#valid-tokens).
 | `info`    | `#1699AE` | ℹ️    | —                       |
 | `loading` | —         | ⏳    | —                       |
 
-The success, warning, danger and info colours keep the hues of 4.0's `Theme`, with their lightness moved until each
-gives at least 3:1 against every surface an embed's stripe or a container's accent sits on in Discord's light, dark,
-darker and midnight themes: the contrast WCAG 2.1 asks of a graphic that carries meaning. A test in MeoCord holds every
-default to it, so a default that changes still reads on light and dark alike.
+Each default colour gives at least 3:1 against every surface an embed's stripe or a container's accent sits on in
+Discord's light, dark, darker and midnight themes: the contrast WCAG 2.1 asks of a graphic that carries meaning. A test
+in MeoCord holds every default to it. The [migration guide](guide:migrating#theme-is-deprecated-and-its-colours-changed)
+lists the values `Theme` gave before.
 
 ### Valid tokens
 
@@ -104,8 +104,9 @@ default to it, so a default that changes still reads on light and dark alike.
   `0xFFFFFF`; an `[r, g, b]` tuple of whole numbers from 0 to 255; or a discord.js colour name such as `'Blurple'`. A
   3-digit hex string such as `'#FFF'` isn't one.
 - **An emoji** is one unicode emoji, flags, keycaps, skin tones and joined sequences such as `'👨‍👩‍👧'` included, or a
-  custom one written `<:name:id>` or `<a:name:id>`. A shortcode such as `':smile:'` isn't one. A custom emoji must also
-  be one the bot may use, such as an emoji the application owns.
+  custom one written `<:name:id>` or `<a:name:id>`. A shortcode such as `':smile:'` isn't one. MeoCord checks only how a
+  custom emoji is written: one the bot can't use, such as another application's, passes the check and shows as text in
+  Discord.
 - **A button style** is `ButtonStyle.Primary`, `Secondary`, `Success` or `Danger`.
 - **A role MeoCord reserves** is refused in `colors`, `emojis` or `buttons`, in JavaScript as in TypeScript.
 
@@ -128,15 +129,15 @@ start begins until the start fails or the app has shut down, and MeoCord's defau
 
 ### Collectors and listeners
 
-A collector's `collect` callback, or a `client.on(...)` listener, is called by its emitter, outside the call that
-set it up. `respond(click)` there still takes the app's theme, with the server's and the user's over it, but not the
-handler's `@UseTheme`. To keep the handler's, wrap the callback in [`bindTheme`](api:responses/bindTheme):
+A collector's `collect` callback, or a `client.on(...)` listener, is called by its emitter, outside the call that set it
+up. There, `useTheme()` returns the app's theme alone, and `respond(click)` fills with the app's theme and the clicker's
+server and user themes over it. Neither includes the handler's `@UseTheme`. To answer in the handler's theme, wrap the
+callback in [`bindTheme`](api:responses/bindTheme):
 
 ::playground{file="controllers/slash/vote.slash.controller.ts" region="bind" dispatch="/vote"}
 
-`bindTheme` keeps the theme of the call that bound it, the server's and the user's included, so every click is
-answered in the starting member's theme. Without it, `respond(click)` takes the clicker's server and user themes, but
-not the handler's `@UseTheme`.
+`bindTheme` keeps the whole theme of the call that bound it, the server's and the user's included, so every click is
+answered in the starting member's theme.
 
 ## What respond() themes
 
@@ -149,7 +150,7 @@ To send one message as written, pass `{ fill: false }` as the second argument to
 `followUp()`, as `/banner` does above. The next message is filled again. What you send around `respond()`, with
 `interaction.reply()`, is never touched.
 
-MeoCord's replies to a message, a usage error, a guard's or validation's reason, and a `UserError`'s message, are plain
+MeoCord's replies to a message (a usage error, a guard's or validation's reason, and a `UserError`'s message) are plain
 text, which a theme leaves as it is unless the [presenter](guide:presenters#message-command-errors) draws them with
 `messageError`. With `@MeoCord({ messages: { replyEmoji: true } })` each of them begins with the call's
 `emojis.warning`, as do the direct messages of `dmOnError` and `dmOnCooldown`, and the built-in help with its
@@ -162,11 +163,11 @@ server's, in a server or in a DM.
 
 ::example{file="app-with-theme-for.ts" region="app"}
 
-Each resolver returns part of a theme, or `undefined` for none, at once or as a promise. Results are cached for
-`themeCache.ttlSeconds`, five minutes by default, and calls that ask at the same time share one lookup. At most
+Each resolver returns part of a theme, or `undefined` or `null` for none, at once or as a promise. Results are cached
+for `themeCache.ttlSeconds`, five minutes by default, and calls that ask at the same time share one lookup. At most
 `themeCache.maxGuilds` servers' and `maxUsers` users' results are kept, 10,000 and 50,000 by default; when one is full,
-the result looked up longest ago is dropped first, however often it is read. When a server's
-theme changes, clear its cached result so the next call looks it up again:
+the result looked up longest ago is dropped first, however often it is read. When a server's theme changes, clear its
+cached result so the next call looks it up again:
 
 ::example{file="controllers/slash/theme-settings.slash.controller.ts" region="invalidate"}
 
@@ -182,9 +183,9 @@ injects `ThemeCache` and clears it:
 A call's theme is looked up once, as the call starts, and holds for the whole call. The call that saves a new choice
 still answers in the old palette, and the user's next call gets the new one.
 
-A resolver that throws, or passes `themeForTimeoutMs`, leaves its layer out of that call, and the call goes on. That
-server or user isn't asked again for 10 seconds, so its calls meanwhile go without it too. A result that isn't a valid
-theme is left out with a warning.
+A resolver that throws, or doesn't answer within `themeForTimeoutMs` (1000 ms by default), leaves its layer out of that
+call, and the call goes on. That server or user isn't asked again for 10 seconds, so its calls meanwhile go without it
+too. A result that isn't a valid theme is left out with a warning.
 
 ## Adding tokens of your own
 
@@ -225,13 +226,15 @@ lists the old values if you want to keep them.
   replaces the module instead of extending it, and every other import from it stops compiling.
 - **A theme kept in a variable isn't checked for typos.** TypeScript checks only object literals, so write it with
   `satisfies ThemeOverride`.
-- **A theme from a database must be a plain object.** A class instance, such as an ORM row, is refused: return
-  `row.toObject()` or `{ ...row }`.
+- **A theme from a database must be a plain object.** A class instance, such as an ORM row, is refused: return the row's
+  plain form, such as Mongoose's `row.toObject()` or Sequelize's `row.get({ plain: true })`, or an object literal of the
+  values it sets.
 - **A `ThemeResolver` class declares its resolvers as methods.** `user = () => …` is a property of each instance, not
   of the class, so it is not read, and a class with only such properties is refused. Without `@Service()`, a
   constructor that injects is refused too.
-- **A `user` resolver runs for every message a message handler takes.** Keep it cheap; its result is cached per
-  user.
+- **Every call looks its theme up, events included.** A message handler, an `@On('messageCreate')` listener or a
+  reaction handler asks `themeFor` for each message or event it takes. Results are cached per server and per user, so a
+  resolver runs once per server or user each `ttlSeconds`, but keep it cheap: a busy channel brings many users.
 
 ## Build it
 

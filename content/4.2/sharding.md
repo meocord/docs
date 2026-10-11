@@ -14,15 +14,16 @@ since: 4.1.0
 ---
 
 Discord requires a bot in more than about 2,500 servers to split its gateway connection into shards, each carrying some
-of the servers. MeoCord runs them for you: turn it on in `meocord.config.ts`, and the rest of the app stays as it is.
+of the servers. MeoCord runs them for you: turn it on in `meocord.config.ts`, and in one process the rest of the app
+stays as it is.
 
 ## When to use it
 
 - **Discord asks for it:** past about 2,500 servers, a bot that doesn't shard can't log in.
 - **One CPU core isn't enough:** a process per shard spreads the work over several.
 
-Below that, leave `sharding` unset: a single connection is simpler, and nothing about the app changes when you turn it
-on later.
+Below that, leave `sharding` unset: a single connection is simpler. Turning it on later changes nothing in one process;
+a process per shard needs the changes below.
 
 ## Example
 
@@ -34,7 +35,9 @@ in a process of its own. Start the bot as usual.
 ## How it works
 
 By default, every shard runs in one process and one client: one set of services, `onReady` once, commands registered
-once, and nothing else changes. Unset, `sharding` leaves `clientOptions.shards` as you set it.
+once, and nothing else changes. Unset, `sharding` leaves `clientOptions.shards` as you set it. Set, `sharding.shards`,
+`'auto'` unless you give a number, becomes the client's shards. Leave `clientOptions.shards` and `shardCount` unset:
+process mode refuses them, and in one process they must agree with `sharding.shards`.
 
 ## A process per shard
 
@@ -42,23 +45,27 @@ once, and nothing else changes. Unset, `sharding` leaves `clientOptions.shards` 
 `node dist/main.js`, Bun, pm2 or Docker, and the first process becomes a manager that:
 
 - registers the commands once, then spawns the shards one after another from the built bundle, with the same runtime
-  flags, such as Bun's `--no-install`;
+  flags, such as Bun's `--no-install`. It waits for each shard to be ready, up to 30 seconds, and 5.5 seconds between
+  two shards, as Discord's identify limit asks; a shard not ready in time is logged and the next one starts;
 - restarts a shard that exits, waiting 1 second, then 2, 4 and so on up to a minute, and from the start again once a
   shard has stayed up for five minutes;
-- stops everything and exits 1 when a shard can't log in because the token is invalid or Discord refuses its intents,
-  rather than restarting it forever, and says which privileged intents to enable;
-- stops everything and exits 1 when a shard refuses the app, as it does for two services with one name or native addons
-  built for another platform, since every shard would refuse it alike. It logs
-  `Shard N cannot start; stopping every shard.` with the reason on a line of its own, and `meocord start --dev` isn't
-  told the bot failed to log in;
+- stops and exits 1, rather than restarting, when Discord refuses the token, which the manager finds before it spawns a
+  shard, or when a shard's login is refused for its intents, and says which privileged intents to enable;
+- stops everything and exits 1 when a shard refuses the app, as it does for two services with one name, since every
+  shard would refuse it alike. It logs `Shard N cannot start; stopping every shard.` with the reason on a line of its
+  own. Under `meocord start --dev` with `sharding.development: true`, watch mode reports that the application exited
+  with code 1 and waits for a change. Native addons built for another platform stop the manager itself before it starts
+  any shard;
 - on SIGINT or SIGTERM, asks each shard to shut down through its `onShutdown` hooks, waits up to `shutdownTimeout` plus
   five seconds, and kills any shard still running, on Windows too. A second signal more than a second after the first
-  kills them at once. [`app.stop()`](guide:lifecycle-hooks#stopping-from-code) does the same from any process,
-  manager or shard.
+  kills them at once. [`app.stop()`](guide:lifecycle-hooks#stopping-from-code) shuts every shard down the same way from
+  any process, manager or shard, and leaves the manager's process running.
 
-Each shard process runs the whole application with its own container, and its lifecycle hooks run in it. `onReady`'s
-`primary` is `true` only in the process running shard 0. Under `meocord start --dev`, every shard runs in one process,
-so the watcher restarts a single one; `sharding.development: true` runs separate processes there too.
+The manager runs none of the app's own code: no service, provider or hook. Each shard process runs the whole application
+with its own container, and its lifecycle hooks run in it. `onReady`'s `primary` is `true` only in the process running
+shard 0, so guard work that must happen once, such as a web server on a fixed port, with `primary`. Under
+`meocord start --dev`, every shard runs in one process, so the watcher restarts a single one;
+`sharding.development: true` runs separate processes there too.
 
 ### State in memory
 
@@ -74,8 +81,8 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
 
 - **Results:** `call(Service, 'method', ...args)` resolves to one `{ shardIds, ok, value }` or
   `{ shardIds, ok, error }` per process: one per shard with process sharding, and one in all otherwise.
-- **Which service:** each process resolves it from its own container, the class you pass in this process, and the
-  class of the same name in another.
+- **Which service:** each process resolves it from its own container: in one process, the class you pass; with process
+  sharding, the class of that name in each process.
 - **What crosses:** only JSON, arguments and results alike, in every mode: in one process and in a test too, a `Date`
   arrives as a string, a `Map` as `{}` and a function as `undefined`, and a value JSON can't write, such as a
   `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers, services or

@@ -26,19 +26,28 @@ against `necord` 7.0.0 with `@nestjs/core` 12.1.0.
 
 ## What maps to what
 
-| In Necord                                             | In MeoCord                                                                                                |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A Nest module listing every provider                  | The app class, listing controllers                                                                        |
-| `@SlashCommand` on a provider method                  | `@Command` on a controller method, with a `@CommandBuilder` class                                         |
-| An options class with `@StringOption`, `@Options()`   | The builder's options, arriving as the handler's second argument                                          |
-| `@Context() [interaction]`                            | The interaction as the handler's first argument                                                           |
-| `@Button('card/:ownerId/refresh')`, `@ComponentParam` | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                         |
-| `@TextCommand` and `@Arguments()`                     | A [message command](guide:message-commands) pattern, with typed params                                    |
-| A Nest `CanActivate` and `NecordExecutionContext`     | A [guard](guide:guards), given the interaction directly                                                   |
-| A Nest exception filter and `NecordArgumentsHost`     | An [exception filter](guide:exception-filters), given the call                                            |
-| A Nest exception filter on a `@TextCommand`           | [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately), a DM to the author |
-| `@On('guildMemberAdd')` with `ContextOf`              | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments                                   |
-| Nest providers and `@Injectable()`                    | [Services](guide:services) with `@Service()`                                                              |
+| In Necord                                             | In MeoCord                                                                                                                                                                                         |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A Nest module listing every provider                  | The app class, listing controllers                                                                                                                                                                 |
+| `@SlashCommand` on a provider method                  | `@Command` on a controller method, with a `@CommandBuilder` class                                                                                                                                  |
+| An options class with `@StringOption`, `@Options()`   | The builder's options, arriving as the handler's second argument                                                                                                                                   |
+| `@Context() [interaction]`                            | The interaction as the handler's first argument                                                                                                                                                    |
+| `@Button('card/:ownerId/refresh')`, `@ComponentParam` | `@Command('card/{ownerId:snowflake}/refresh', CommandType.BUTTON)`, with captures                                                                                                                  |
+| `@TextCommand` and `@Arguments()`                     | A [message command](guide:message-commands) pattern, with typed params                                                                                                                             |
+| A Nest `CanActivate` and `NecordExecutionContext`     | A [guard](guide:guards), given the interaction directly                                                                                                                                            |
+| A Nest exception filter and `NecordArgumentsHost`     | An [exception filter](guide:exception-filters), given the call                                                                                                                                     |
+| A Nest exception filter on a `@TextCommand`           | An [exception filter](guide:exception-filters) with `@UseFilter`, or [`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) to DM the author what no filter handled |
+| `@On('guildMemberAdd')` with `ContextOf`              | [`@On('guildMemberAdd')`](guide:gateway-events), with its own arguments                                                                                                                            |
+| Nest providers and `@Injectable()`                    | [Services](guide:services) with `@Service()`                                                                                                                                                       |
+| `@Subcommand`, `createCommandGroupDecorator`          | [Subcommand handlers](guide:subcommands)                                                                                                                                                           |
+| `@UserCommand`, `@MessageCommand`                     | `@Command` with `CommandType.CONTEXT_MENU` ([context menus](guide:context-menus))                                                                                                                  |
+| `@StringSelect`, `@Modal` and `@Fields`               | `@Command(pattern, CommandType.SELECT_MENU)` or `CommandType.MODAL_SUBMIT` ([components](guide:components))                                                                                        |
+| `AutocompleteInterceptor`                             | [`@Autocomplete('command', 'option')`](guide:autocomplete)                                                                                                                                         |
+| A Nest interceptor                                    | An [interceptor](guide:interceptors) with `@UseInterceptor`                                                                                                                                        |
+| A Nest pipe, `ValidationPipe`                         | [`@UsePipe` and `@Validate`](guide:validation)                                                                                                                                                     |
+| `@necord/localization`                                | [Typed catalogs](guide:localisation)                                                                                                                                                               |
+| `NecordModule`'s `prefix`                             | `@MeoCord({ messages: { prefix } })`                                                                                                                                                               |
+| `@Once`                                               | [`@Once`](guide:gateway-events)                                                                                                                                                                    |
 
 ## A slash command
 
@@ -64,7 +73,10 @@ execution context:
 
 ::example{from="compare" file="necord/card.component.ts" region="button"}
 
-In MeoCord the guard receives the interaction itself, and any button can reuse it:
+In MeoCord the guard receives the interaction itself, with the params the route captured, so any button whose route
+carries `{ownerId:snowflake}` can reuse it. `@Defer()` is optional: it acknowledges the click before the guard runs and
+disables the card's buttons while the handler works, and `respond(interaction).send()` puts them back. See
+[Deferring](guide:defer).
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
 
@@ -77,7 +89,9 @@ A Necord text command receives its words as strings, and `NecordModule`'s `prefi
 ::example{from="compare" file="necord/roll.command.ts" region="command"}
 
 In MeoCord a message command is a pattern. Each param is checked before the handler runs, here by a schema, and a
-message that leaves out a required param gets the command's usage in reply, and one the schema refuses gets the reason:
+message that leaves out a required param gets the command's usage in reply, and one the schema refuses gets the reason.
+The prefix is the app's: `@MeoCord({ messages: { prefix: '!' } })`, as `NecordModule`'s `prefix` was, and a handler can
+set its own.
 
 ::example{file="controllers/message/dice.message.controller.ts" region="pattern"}
 
@@ -88,13 +102,15 @@ Necord uses Nest's exception filters, which read the interaction from Necord's a
 ::example{from="compare" file="necord/error.filter.ts" region="filter"}
 
 A MeoCord filter works the same way: `@UseFilter` applies it to a handler or a controller, and `@MeoCord({ filters })`
-to the whole bot, and it is given the call's context. An error no filter handles reaches the
-[built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it and tells the member something went
-wrong: privately, or in the reply a public `@Defer` started. A message command's error is logged only, apart from a
-`UserError`, whose message is the reply, unless the app turns on
-[`dmOnError`](guide:message-commands#telling-the-author-privately):
+to the whole bot, and it is given the call's context. This one answers an `UnknownAccountError`, thrown by an account
+button's pipe, in its own words:
 
 ::example{file="filters/unknown-account.filter.ts" region="filter"}
+
+An error no filter handles reaches the [built-in fallback](guide:exception-filters#the-built-in-fallback), which logs it
+and tells the member something went wrong: privately, or in the reply a public `@Defer` started. A message command's
+error is logged only, apart from a `UserError`, whose message is the reply, unless the app turns on
+[`dmOnError`](guide:message-commands#telling-the-author-privately).
 
 ## Events and startup
 
@@ -113,8 +129,8 @@ In MeoCord the listener receives the event's arguments as they are, and the app 
 
 ## Testing
 
-Necord's package ships no testing helpers of its own. MeoCord's testing module runs a handler through the same
-pipeline the bot uses, with mocks of the discord.js objects:
+Necord ships no testing helpers of its own: a Necord bot is tested through NestJS's testing module. MeoCord's testing
+module runs a handler through the same pipeline the bot uses, with mocks of the discord.js objects:
 
 ::example{file="controllers/slash/greeting.slash.controller.spec.ts" region="spec"}
 
@@ -128,8 +144,9 @@ same pipeline the bot uses, with mocks of discord.js's own classes.
 
 ## Moving over
 
-Necord providers become controllers and services almost line for line: `@Injectable()` becomes `@Service()`, a
-handler's `@Context()` tuple becomes its first argument, and Nest guards and filters become MeoCord's.
+Necord providers become controllers and services almost line for line: `@Injectable()` becomes `@Service()`, a command's
+or component's `@Context()` tuple becomes its first argument, an event's tuple becomes its arguments in order, and Nest
+guards and filters become MeoCord's.
 
 ## Next steps
 
