@@ -50,7 +50,8 @@ process mode refuses them, and in one process they must agree with `sharding.sha
 - restarts a shard that exits, waiting 1 second, then 2, 4 and so on up to a minute, and from the start again once a
   shard has stayed up for five minutes;
 - stops and exits 1, rather than restarting, when Discord refuses the token, which the manager finds before it spawns a
-  shard, or when a shard's login is refused for its intents, and says which privileged intents to enable;
+  shard when it asks for the shard count or registers the commands, or when a shard's login is refused, for the token
+  or its intents, and says which privileged intents to enable;
 - stops everything and exits 1 when a shard refuses the app, as it does for two services with one name, since every
   shard would refuse it alike. It logs `Shard N cannot start; stopping every shard.` with the reason on a line of its
   own. Under `meocord start --dev` with `sharding.development: true`, watch mode reports that the application exited
