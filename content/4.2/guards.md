@@ -59,13 +59,15 @@ everything else in the call: the fetch of a message's entities, interceptors, va
 
 `canActivate` can be async. Its answer means:
 
-| It                        | The call                                                             |
-| ------------------------- | -------------------------------------------------------------------- |
-| returns `true`            | goes on to the next guard, then the rest of the call                 |
-| returns `false`           | stops without answering; observers see the outcome `'denied'`        |
-| throws `GuardDeniedError` | stops, and the user is told the error's message                      |
-| throws `UserError`        | stops, and the user is told the message; observers see `'refused'`   |
-| throws anything else      | goes to the [exception filters](guide:exception-filters) as an error |
+| It                        | The call                                                                                                                      |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| returns `true`            | goes on to the next guard, then the rest of the call                                                                          |
+| returns `false`           | stops silently: a component is acknowledged invisibly, and a command is left unanswered; observers see the outcome `'denied'` |
+| throws `GuardDeniedError` | stops, and the user is told the error's message                                                                               |
+| throws `UserError`        | stops, and the user is told the message; observers see `'refused'`                                                            |
+| throws anything else      | goes to the [exception filters](guide:exception-filters) as an error                                                          |
+
+Await any answer a guard sends before returning `false`.
 
 A `GuardDeniedError` or a `UserError` passes through the exception filters too, so a filter that catches it answers
 in its place. The first guard that doesn't allow the call ends it; the ones after it don't run.
