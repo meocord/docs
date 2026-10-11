@@ -87,8 +87,9 @@ only from an interaction or a message, so with the reaction alone it warns once,
 naming what to pass.
 
 A message passed alone to a patterned handler needs content that dispatch gives to it; otherwise `invoke` rejects,
-naming the pattern. Under strict mocks a message's `content` is empty, so give it one. `dispatch` skips a message with
-no text, as the bot does, so even a `@MessageHandler()` listener needs `content` to be reached.
+naming the pattern. Under strict mocks a message's `content` is empty, so give it one: `invoke` rejects a message with
+no text, saying so and naming the pattern. `dispatch` skips a message with no text, as the bot does, and so, in either
+mode, a mock made without `content`: even a `@MessageHandler()` listener needs `content` to be reached.
 
 The controller must be one the module was built with, listed in `controllers` or, with `fromApp`, one of the app's;
 `invoke` rejects any other, naming it.
@@ -105,8 +106,12 @@ A guard that throws `GuardDeniedError`, a handler that throws `UserError`, and a
 The interaction or message must be one dispatch gives to the handler, ranking every handler of the module as the bot
 does. A `customId` another handler's pattern takes first, a command another handler takes by its subcommand path, or a
 message another handler takes first, rejects, naming the handler that runs, and so does one no pattern takes, or a
-command the handler doesn't handle, so a typo in a test doesn't pass silently. A handler declared under two patterns
-gets the params of the one dispatch picks. A mock built without a `customId` or command name isn't checked.
+command the handler doesn't handle, so a typo in a test doesn't pass silently. An autocomplete is checked by its
+command, subcommand path and focused option: under `useStrictMocks()`, one dispatch gives to another `@Autocomplete`
+handler, or to none, rejects, naming what dispatch does, and without strict mocks it warns once and runs the handler.
+Give the mock the focused option an option's handler declares, such as
+`options: createChatInputOptions({ focused: 'query' })`. A handler declared under two patterns gets the params of the
+one dispatch picks. A mock built without a `customId` or command name isn't checked.
 
 ## Sending input with dispatch
 
