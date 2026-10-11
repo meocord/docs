@@ -107,7 +107,7 @@
         "@opentelemetry/api": "^1.9.1",
         "discord.js": "^14.27.0",
         "dotenv": "^18.0.5",
-        "meocord": "4.2.1",
+        "meocord": "4.2.2",
         "pg": "^8.23.0",
         "reflect-metadata": "^0.2.2",
         "zod": "^4.6.5",
@@ -1768,7 +1768,7 @@
 
     "examples-4-1/meocord": ["meocord@4.1.2", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-R0TUUXSePudFYeRXftPaATJwhrOwf3zDb1PjZT2XT7WqyB7O9yhkfSYoul4qs8l4Xiu7J5FGHJja9d+1uEwf7Q=="],
 
-    "examples-4-2/meocord": ["meocord@4.2.1", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-ZycFvxrwHZQ/J2ryPERTDRKhKzsDw9843db744cA+WlFJ5O41L6zwEg1CEfJy6ZjfSI46Rg3L/1FD4SnlqJKnw=="],
+    "examples-4-2/meocord": ["meocord@4.2.2", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-ut40C8+0Dmg1YlSsl5qyAZajn0C/1mB5uryzaodNR6K5NQu1p3qjgerwjvjT/g7NCJl05A/Ect7dnVViasI63Q=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 
