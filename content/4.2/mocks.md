@@ -155,8 +155,8 @@ found by name as the real resolver finds them:
   not given. A user option carries its user, and in a server its member: `getMember()` is
   `null` in a DM, and a member you give answers `getUser()` with its user. In an autocomplete, Discord sends these
   options as their ids: under strict mocks they hold the id only, as the handler's params do, and their getters return
-  `null`, or throw discord.js's error when asked with `required: true`. In default mode they keep the object, and a
-  warning names them once.
+  `null`, or throw discord.js's error when asked with `required: true`. Give the object, not a bare id, which reads as a
+  string option. In default mode they keep the object, and a warning names them once.
 - Each getter reads its option as discord.js does, and throws discord.js's own error: a `TypeError` with its `code`. A
   getter of another type throws, whether or not it's asked with `required: true`: `getInteger()` on `1.5`, a number
   option, throws `Option "x" is of type: 10; expected 4.`, while a whole number reads as either. A user or member read
