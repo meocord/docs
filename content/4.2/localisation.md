@@ -25,8 +25,9 @@ since: 4.1.0
 
 A translator turns a message key into text in a language. Its messages come from catalogs, one per language, and one
 set of catalogs serves both what Discord shows for your commands and what your bot says. The other catalogs are typed
-from the default one: a key the default doesn't have, a `{param}` its message doesn't take, or a message of the
-wrong shape, such as a plain text where the default has a plural, fails to compile. A key a catalog leaves out is
+from the default one: a key the default doesn't have, or a message of the wrong shape, such as a plain text where the
+default has a plural, fails to compile, and so does a `{param}` its message doesn't take, in a catalog TypeScript
+keeps the text of (see [Parameters in other languages](#parameters-in-other-languages)). A key a catalog leaves out is
 looked up in another catalog of the same language, then the default one, and
 [`expectCompleteCatalog`](#testing-a-catalog) reports it in a test, as it does a plural form a language needs but a
 catalog lacks.
@@ -115,7 +116,8 @@ and numbers; format numbers and dates yourself, with `Intl.NumberFormat` for ins
 A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `few`, `many` and the required `other`. An
 object with any other key is a group, so a group may hold a message named `other`. A plural takes a numeric `count`,
 which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no code of your
-own.
+own. A form a translation leaves out uses that translation's own `other`, not the default catalog;
+[`expectCompleteCatalog`](#testing-a-catalog) reports the form as lacking.
 
 A key's name holds no `.`: a key is the dotted path to its message, so `'ban.done'` as one key is never found. Nest it
 as `ban: { done: … }`. `createTranslator` warns about each such key, and it doesn't compile as a key.
@@ -162,9 +164,11 @@ presenter's "Working on it…" and "Oops!". Add a `meocord` group to any catalog
 
 A catalog typed as `LocaleCatalog<typeof enUS>` takes one too.
 
-Each text is looked up on its own, so a line a language leaves out stays in MeoCord's English. The keys and their
+Each text is looked up on its own, as any message is: a line a language leaves out comes from another catalog of that
+language, then the default catalog, and then MeoCord's English. The keys and their
 English are in [`MeoCordMessages`](api:types/MeoCordMessages): a key MeoCord lacks does not compile, nor, in a catalog
-TypeScript keeps the text of, a `{param}` its English text lacks, and the error names the text and the params it takes.
+TypeScript keeps the text of, a `{param}` its English text lacks, and the error names the text and the param it doesn't
+take, beside MeoCord's English: `meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usage}"`.
 [`expectCompleteCatalog`](#testing-a-catalog) checks the params of any catalog.
 
 Answers to an interaction are in the user's language; replies to a message, the direct messages about it, and
@@ -214,7 +218,8 @@ id: meocord.usage.heading takes no {command}: MeoCord's English is "Usage: {usag
 
 ## Gotchas
 
-- **The default catalog must be TypeScript,** wrapped in `defineCatalog(...)` or written `as const`. Parameters are
+- **The default catalog must be TypeScript,** wrapped in `defineCatalog(...)`, written `as const`, or written inline in
+  `createTranslator`. Parameters are
   typed from the message text, which TypeScript keeps only for a literal; a catalog that has lost it is refused
   with a compile error saying so. Other languages may be plain objects, or JSON; their parameters are then checked
   only by [`expectCompleteCatalog`](#testing-a-catalog).

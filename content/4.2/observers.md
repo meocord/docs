@@ -52,34 +52,36 @@ The call waits for neither method, so a slow observer never delays a handler. On
 An observer is a class marked [`@Observer()`](api:decorators/Observer) that implements
 [`DispatchObserver`](api:types/DispatchObserver). One instance is resolved from the container, so it injects services,
 and its `onReady` and `onShutdown` [lifecycle hooks](guide:lifecycle-hooks) run in dependency order with the rest: an
-exporter flushes what it buffered in `onShutdown`. It can't inject `ExecutionContext`; each call's context is passed
+exporter flushes what it buffered in `onShutdown`. Buffer synchronously at the start of `onSettled`: shutdown waits for
+running calls, not for the observers they report to, so an `onSettled` still awaiting something when the bot stops may
+finish after `onShutdown`. It can't inject `ExecutionContext`; each call's context is passed
 in.
 
 ## What an observer is told
 
 `onSettled`'s second argument, a [`DispatchResult`](api:types/DispatchResult), holds:
 
-| Field        | What it is                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------ |
-| `outcome`    | How the call ended; see below.                                                                               |
-| `startedAt`  | When dispatch received the call, in milliseconds since the Unix epoch.                                       |
-| `durationMs` | From dispatch until the filters and the fallback had answered.                                               |
-| `deniedBy`   | The guard class that denied the call, whether it returned `false` or threw `GuardDeniedError`.               |
-| `response`   | For an interaction, where its answer stood: `'replied'`, `'deferred'` (never followed up) or `'unanswered'`. |
-| `error`      | The error the call ended with, when it ended with one.                                                       |
-| `handled`    | Whether an exception filter or the built-in fallback answered the error; `false` without one.                |
+| Field        | What it is                                                                                                                                                                                                                                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `outcome`    | How the call ended; see below.                                                                                                                                                                                                                                                  |
+| `startedAt`  | When dispatch received the call, in milliseconds since the Unix epoch.                                                                                                                                                                                                          |
+| `durationMs` | From dispatch until the filters and the fallback had answered.                                                                                                                                                                                                                  |
+| `deniedBy`   | The guard class that denied the call, whether it returned `false` or threw `GuardDeniedError`.                                                                                                                                                                                  |
+| `response`   | For an interaction, where its answer stood: `'replied'`, `'deferred'` or `'unanswered'`. A handler that deferred and never followed up leaves `'deferred'`, and so does a call a guard denied on a component or on a `@Defer` command, which MeoCord acknowledges for the user. |
+| `error`      | The error the call ended with, when it ended with one.                                                                                                                                                                                                                          |
+| `handled`    | Whether an exception filter or the built-in fallback took the error, even where the fallback only logs it, as for an event handler; `false` without an error, or when the fallback failed to build its answer.                                                                  |
 
 The [`outcome`](api:types/DispatchOutcome) is one of:
 
-| Outcome       | When                                                                                                                                            |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'ran'`       | The call settled without an error, an interceptor that answered without the handler included.                                                   |
-| `'denied'`    | A guard returned `false` (no `error`), or `GuardDeniedError` was thrown; `deniedBy` names the guard, unless the handler threw it itself.        |
-| `'cooldown'`  | A [cooldown](guide:cooldowns) refused it with `CooldownError`.                                                                                  |
-| `'invalid'`   | [Validation](guide:validation) refused its input with `ValidationError`, or a message named a command it doesn't fit, with `MessageUsageError`. |
-| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                 |
-| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard.                                                                    |
-| `'not-found'` | No handler matches the interaction and nothing else answered it.                                                                                |
+| Outcome       | When                                                                                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'ran'`       | The call settled without an error, an interceptor that answered without the handler included.                                                                                                                       |
+| `'denied'`    | A guard returned `false` (no `error`), or `GuardDeniedError` was thrown; `deniedBy` names the guard, unless the handler threw it itself.                                                                            |
+| `'cooldown'`  | A [cooldown](guide:cooldowns) refused it with `CooldownError`.                                                                                                                                                      |
+| `'invalid'`   | [Validation](guide:validation) refused its input with `ValidationError`, or a message named a command it doesn't fit, with `MessageUsageError`.                                                                     |
+| `'refused'`   | A `UserError` told the user what to fix: their mistake, not a fault of the bot.                                                                                                                                     |
+| `'error'`     | Anything else was thrown, by the handler, a pipe, an interceptor or a guard, or the built-in fallback failed to build its answer to another outcome's error; `error` is then that failure and `handled` is `false`. |
+| `'not-found'` | No handler matches the interaction and nothing else answered it.                                                                                                                                                    |
 
 The context is the one the call's stages saw, so `getType()`, `getHandlerName()`, `getArgs()` and `getHandlerParams()`
 read the same values. For an interaction no handler matched, it has no controller or handler.
@@ -124,7 +126,8 @@ Register both: the observer in `observers`, the interceptor in `interceptors`. W
 
 `invoke` and `emit` wait for the module's observers before they resolve, so a test sees what they were told. The
 testing module takes an app's observers, and `observers` of its own. `inspectHandler(Controller, 'method', { app })`
-lists the app's observers in `observers`, in the order they are told:
+lists the app's observers in `observers`, in the order they are told, `types` aside: an observer limited to other types
+is listed but not told about this handler's calls:
 
 ::example{file="observers/audit.observer.spec.ts" region="spec"}
 

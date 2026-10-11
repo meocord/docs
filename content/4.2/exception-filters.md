@@ -39,8 +39,9 @@ Write an exception filter when an error needs an answer the fallback can't give:
 a status page, or for an error type of your own. A filter also catches MeoCord's own errors, such as a
 [cooldown](guide:cooldowns)'s `CooldownError`.
 
-To stop a call before it starts, use a [guard](guide:guards); a guard's `GuardDeniedError` is answered the same way a
-`UserError` is.
+To stop a call before it starts, use a [guard](guide:guards); after an interaction, a guard's `GuardDeniedError` is
+answered the same way a `UserError` is. [The built-in fallback](#the-built-in-fallback) shows how each is answered after
+a message.
 
 ## Example
 
@@ -76,8 +77,11 @@ When an error is thrown, MeoCord tries the filters closest to the handler first:
 So a subclass's filter for one error is tried before a catch-all on its base, whether the handler is its own or
 inherited.
 
-Within one list, the first filter whose `@Catch` matches handles the error. An error no filter handles goes to the
-built-in fallback. A filter that throws is logged, and the fallback answers the original error.
+Within one list, the first filter whose `@Catch` matches handles the error. That filter owns the answer: the filters
+after it and the fallback don't run, so a filter that only logs leaves the interaction unanswered, and Discord shows
+the user that it failed. Answer through `context.response` in every case the filter catches, or narrow its `@Catch`.
+An error no filter handles goes to the built-in fallback. A filter that throws is logged, and the fallback answers the
+original error.
 
 ::example{file="controllers/slash/quote.slash.controller.ts" region="controller"}
 
@@ -117,9 +121,11 @@ instead.
 
 It says "An error occurred while executing the command." for a fault, and "Command not found!" for
 `CommandNotFoundError`, both in the user's language when the app's translator has them; see
-[MeoCord's own texts](guide:localisation#meocords-own-texts). A `UserError`, a guard's `GuardDeniedError`, a
-`CooldownError` and a `ValidationError` show their own message, only to the caller: on a public deferred command, the
-deferral is deleted and the message follows up privately.
+[MeoCord's own texts](guide:localisation#meocords-own-texts). A `UserError`, a guard's `GuardDeniedError` and a
+`ValidationError` show their own message, only to the caller. A `CooldownError` is answered with when the wait ends
+(see [Cooldowns](guide:cooldowns)), and a `CooldownStoreError` with "Cooldowns can't be checked right now: try again
+shortly.", also only to the caller. On a public deferred command, the deferral is deleted and the message follows up
+privately.
 
 After a message command, the fallback replies to the message, without a ping, with a `UserError`'s message. A guard's or
 validation's reason is replied the same way and deleted after `@MeoCord({ messages: { deleteUsageRepliesAfter } })`
@@ -145,7 +151,7 @@ The fallback itself never throws: an answer Discord refuses is logged.
 ## Testing
 
 Filters run under `invoke`, which resolves with the `error` a filter handled. The fallback doesn't run under `invoke`:
-an error no filter handles rejects, so the test sees it.
+an error no filter handles rejects, so the test sees it, and a filter that throws rejects with its own error.
 
 ::example{file="controllers/slash/quote.slash.controller.spec.ts" region="spec"}
 

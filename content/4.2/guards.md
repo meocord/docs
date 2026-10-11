@@ -30,8 +30,9 @@ call through and `false` to stop it. To tell the user why they were stopped, it 
 [`GuardDeniedError`](api:responses/GuardDeniedError) with the reason instead.
 
 Guards run before anything that fetches from Discord or counts a call. Before an interaction's or a message's guards,
-only `@Defer`'s acknowledgement, and the app's `themeFor` lookup when it has one, come first; a reaction's partial
-message or user is fetched before its guards. So a caller they refuse costs the bot almost nothing.
+only `@Defer`'s acknowledgement, the app's `themeFor` lookup when it has one, and the reading of a message command's
+words come first; a reaction's partial message or user is fetched before its guards. So a caller they refuse costs the
+bot almost nothing.
 
 ## When to use it
 
@@ -59,13 +60,13 @@ everything else in the call: the fetch of a message's entities, interceptors, va
 
 `canActivate` can be async. Its answer means:
 
-| It                        | The call                                                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| returns `true`            | goes on to the next guard, then the rest of the call                                                                          |
-| returns `false`           | stops silently: a component is acknowledged invisibly, and a command is left unanswered; observers see the outcome `'denied'` |
-| throws `GuardDeniedError` | stops, and the user is told the error's message                                                                               |
-| throws `UserError`        | stops, and the user is told the message; observers see `'refused'`                                                            |
-| throws anything else      | goes to the [exception filters](guide:exception-filters) as an error                                                          |
+| It                        | The call                                                                                                                                                                                                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| returns `true`            | goes on to the next guard, then the rest of the call                                                                                                                                                                                                                         |
+| returns `false`           | stops silently: a button, a select menu or a modal from a message is acknowledged invisibly; a command, or a modal a command opened, is left unanswered, or under `@Defer` its deferred reply is deleted; observers see the outcome `'denied'`, with the guard as `deniedBy` |
+| throws `GuardDeniedError` | stops, and the user is told the error's message; observers see `'denied'`, with the guard as `deniedBy`                                                                                                                                                                      |
+| throws `UserError`        | stops, and the user is told the message; observers see `'refused'`                                                                                                                                                                                                           |
+| throws anything else      | goes to the [exception filters](guide:exception-filters) as an error                                                                                                                                                                                                         |
 
 Await any answer a guard sends before returning `false`.
 
@@ -91,7 +92,11 @@ A subclass that shouldn't take its bases' guards for the handlers it declares se
 
 A guard runs for every kind of handler it applies to. Global guards also run before gateway event handlers, where
 `canActivate` receives the event's arguments, such as a `GuildMember` for `guildMemberAdd`. A guard written for
-interactions declares `@Guard({ types: ['interaction'] })`, and is skipped for any other call.
+interactions declares `@Guard({ types: ['interaction'] })`, and is skipped for any other call. The types are
+`'interaction'`, `'autocomplete'`, `'message'`, `'reaction'` and `'event'`, as `ExecutionContext.getType()` reports
+them. An autocomplete is its own type, so a guard that should also run before a command's suggestions lists both:
+`@Guard({ types: ['interaction', 'autocomplete'] })`. Before an autocomplete, it answers nothing; see
+[Refusing a call](#refusing-a-call).
 
 ## Settings for one use
 
@@ -155,7 +160,7 @@ themselves.
 
 A guard that denies a handler for every message, a reaction handler or an event handler answers nothing, since it only
 filters what the handler takes. Before an autocomplete, a guard must not answer at all: returning `false` closes the
-menu with an empty list.
+menu with an empty list, and so does throwing `GuardDeniedError`, whose message the user doesn't see.
 
 ## Testing
 
@@ -169,18 +174,23 @@ A guard can also be tested alone, with `createExecutionContext` building the con
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="unit"}
 
+Generate a guard with `npx meocord g gu <name>`.
+
 ## Gotchas
 
 - **A guard that injects needs `@Guard()`.** Without it, TypeScript records none of its constructor's types, and the
   bot refuses to start, naming the decorator to add.
-- **Returning `false` answers nothing.** On a button, that's often right. On a command, Discord tells the user the
-  app did not respond: throw `GuardDeniedError` to tell them why.
+- **Returning `false` tells the user nothing.** On a button, that's often right: MeoCord acknowledges it invisibly. On
+  a command without `@Defer`, Discord tells the user the app did not respond: throw `GuardDeniedError` to tell them
+  why.
 - **A global guard runs before event handlers too.** One that reads `interaction.user` throws on an event; declare
-  `@Guard({ types: ['interaction'] })`.
+  `@Guard({ types: ['interaction'] })`, or `['interaction', 'autocomplete']` to run before autocomplete handlers too.
 - **A guard bound once is shared.** Listing a guard in `services` or `providers` makes one instance for every call.
   Each call still reads its own `params`, but other fields are shared between calls in progress.
-- **A controller method called directly runs its guards,** and nothing else of the pipeline. Test through `invoke` to
-  run every stage.
+- **A controller method called directly runs only the guards `@UseGuard` applies to it,** its own and its
+  controllers', and nothing else of the pipeline: not the global guards from `@MeoCord({ guards })`, nor interceptors,
+  validation, cooldowns or filters; a guard that denies makes the call resolve with `undefined`. Test through `invoke`
+  to run every stage.
 
 ## Build it
 

@@ -31,12 +31,13 @@ A pipe then turns one valid value into what the handler works with: an account I
 
 ## When to use it
 
-Validate what Discord can't check for you: a number's range, a string's format, a customId param a user could have
-tampered with, a modal field's length. The user is told exactly what's wrong.
+Validate what Discord can't check for you: a number's range across options, a string's format, a customId param a user
+could have tampered with, a modal field's format. The user is told exactly what's wrong.
 
-Discord already checks a slash command option's type and its `setMinValue` or `setMaxLength`, so a builder is the first
-place for those. A customId param's type, such as a number, can go in its pattern, `{count:int}`, as
-[Components](guide:components) shows. Who may run the handler isn't input; that's a [guard](guide:guards).
+Discord already checks a slash command option's type and its `setMinValue` or `setMaxLength`, and a text input's
+`setMinLength` or `setMaxLength`, so a builder is the first place for those. A customId param's type, such as a number,
+can go in its pattern, `{count:int}`, as [Components](guide:components) shows. Who may run the handler isn't input;
+that's a [guard](guide:guards).
 
 ## Example
 
@@ -92,9 +93,10 @@ pipe its settings, pass `{ provide, params }`, read with `context.getParams()` f
 ## A pipe without a schema
 
 [`@UsePipe(key, ...pipes)`](api:decorators/UsePipe) runs pipes on one value without a schema, or after `@Validate`'s
-own pipes. `@Validate` can't see a separate `@UsePipe`, so mark the value that pipe produces
-[`Piped<T>`](api:types/Piped) in the handler's params; inside the handler it's exactly `T`. A pipe whose output doesn't
-fit the parameter fails to compile.
+own pipes. `@Validate` and `@Command` check the handler's params against what they know: the schema's output, a typed
+customId param such as `{id:int}`, or a select menu's choices. Neither sees a separate `@UsePipe`, so mark the value
+that pipe produces [`Piped<T>`](api:types/Piped) in the handler's params; inside the handler it's exactly `T`. A pipe
+whose output doesn't fit the parameter fails to compile.
 
 ## Which handlers take them
 
@@ -107,8 +109,8 @@ start with either on them.
 - **Two `@Validate` on one handler throw** as the decorator applies. Combine the schemas.
 - **A guard sees the raw input.** Validation runs after the guards, so a guard reading `getHandlerParams()` gets the
   values before the schema's defaults and coercions.
-- **Mark a separate pipe's output `Piped<T>`.** Without it, the handler's params don't match the schema's output and
-  the code doesn't compile.
+- **Mark a separate pipe's output `Piped<T>`.** Without it, the handler's params don't match the schema's output, or the
+  typed customId param's type, and the code doesn't compile.
 
 ## Next steps
 
