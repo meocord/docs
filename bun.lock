@@ -107,7 +107,7 @@
         "@opentelemetry/api": "^1.9.1",
         "discord.js": "^14.27.0",
         "dotenv": "^18.0.5",
-        "meocord": "4.2.1",
+        "meocord": "4.2.0",
         "pg": "^8.23.0",
         "reflect-metadata": "^0.2.2",
         "zod": "^4.6.5",
@@ -1080,8 +1080,6 @@
 
     "get-proto": ["get-proto@1.0.1", "", { "dependencies": { "dunder-proto": "^1.0.1", "es-object-atoms": "^1.0.0" } }, "sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g=="],
 
-    "get-tsconfig": ["get-tsconfig@4.14.3", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-++QEw4DIY7WGoukz+/+A/8dGYPT9l9yIadnmSgZ8Rjr3YVSVDipQSO9CdnJo9ePqFqUUqh+wk9uIaoiAwsiPkA=="],
-
     "github-slugger": ["github-slugger@2.0.0", "", {}, "sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw=="],
 
     "glob": ["glob@11.1.0", "", { "dependencies": { "foreground-child": "^3.3.1", "jackspeak": "^4.1.1", "minimatch": "^10.1.1", "minipass": "^7.1.2", "package-json-from-dist": "^1.0.0", "path-scurry": "^2.0.0" }, "bin": { "glob": "dist/esm/bin.mjs" } }, "sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw=="],
@@ -1498,8 +1496,6 @@
 
     "resolve-from": ["resolve-from@4.0.0", "", {}, "sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g=="],
 
-    "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
-
     "reusify": ["reusify@1.1.0", "", {}, "sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw=="],
 
     "robots-parser": ["robots-parser@3.0.1", "", {}, "sha512-s+pyvQeIKIZ0dx5iJiQk1tPLJAWln39+MI5jtM8wnyws+G5azk+dMnMX0qfbqNetKKNgcWWOdi0sfm+FbQbgdQ=="],
@@ -1768,7 +1764,7 @@
 
     "examples-4-1/meocord": ["meocord@4.1.2", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-R0TUUXSePudFYeRXftPaATJwhrOwf3zDb1PjZT2XT7WqyB7O9yhkfSYoul4qs8l4Xiu7J5FGHJja9d+1uEwf7Q=="],
 
-    "examples-4-2/meocord": ["meocord@4.2.1", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-ZycFvxrwHZQ/J2ryPERTDRKhKzsDw9843db744cA+WlFJ5O41L6zwEg1CEfJy6ZjfSI46Rg3L/1FD4SnlqJKnw=="],
+    "examples-4-2/meocord": ["meocord@4.2.0", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-nnvOF9seuSzabrL6ibloUMpw44bzptahNUGesttd5zfYPF4ZNS+rnvq7LNXroLaRiW82m7zn5JeNu6HKC91LsA=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 
