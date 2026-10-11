@@ -94,8 +94,9 @@ handlers:
 ## Gotchas
 
 - **A handler on a class the app doesn't bind isn't listed.** List its controller in `controllers`. A service's `@On`
-  and `@Once` handlers run and are listed. Any other handler on a service is listed by `list()` too but never runs, and
-  the bot warns at startup; move it to a controller.
+  and `@Once` handlers run and are listed. Any other handler on a service never runs, and the bot warns at startup,
+  naming it; move it to a controller. On a service listed in `services`, or a class a controller or such a service
+  injects, `list()` lists it too.
 - **A subcommand is its own entry.** `/settings notify email` is listed by its full path; group entries by their
   first word for one line per top-level command.
 - **The prefix isn't known to an entry.** Pass the one users type to `usage()`; an app with several prefixes picks
