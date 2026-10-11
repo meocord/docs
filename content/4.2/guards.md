@@ -180,9 +180,9 @@ Generate a guard with `npx meocord g gu <name>`.
 
 - **A guard that injects needs `@Guard()`.** Without it, TypeScript records none of its constructor's types, and the
   bot refuses to start, naming the decorator to add.
-- **Returning `false` tells the user nothing.** On a button, that's often right: MeoCord acknowledges it invisibly. On
-  a command without `@Defer`, Discord tells the user the app did not respond: throw `GuardDeniedError` to tell them
-  why.
+- **Returning `false` tells the user nothing.** On a button, a select menu or a modal from a message, that's often
+  right: MeoCord acknowledges it invisibly. On a command, or a modal a command opened, without `@Defer`, Discord tells
+  the user the app did not respond: throw `GuardDeniedError` to tell them why.
 - **A global guard runs before event handlers too.** One that reads `interaction.user` throws on an event; declare
   `@Guard({ types: ['interaction'] })`, or `['interaction', 'autocomplete']` to run before autocomplete handlers too.
 - **A guard bound once is shared.** Listing a guard in `services` or `providers` makes one instance for every call.

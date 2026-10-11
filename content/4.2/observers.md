@@ -143,5 +143,6 @@ from.
 ## Next steps
 
 - [Custom decorators](guide:custom-decorators): name a set of stages once and reuse it.
-- [Testing recipes](guide:testing-recipes): assert on what your observers were told.
+- [Invoke and dispatch](guide:invoke-and-dispatch): run a call through every stage, so a test sees what your observers
+  were told.
 - [Deployment](guide:deployment): export metrics and traces from a running bot.
