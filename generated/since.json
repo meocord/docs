@@ -2617,6 +2617,9 @@
   "meocord/testing:createMockUser": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:createMockUser(props)": {
+    "since": "4.2.1"
+  },
   "meocord/testing:createModalFields": {
     "since": "4.1.0-beta.0"
   },
@@ -3031,20 +3034,38 @@
   "meocord/testing:MockResult.value": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:MockSettledResult": {
+    "since": "4.2.1"
+  },
+  "meocord/testing:MockSettledResult.type": {
+    "since": "4.2.1"
+  },
+  "meocord/testing:MockSettledResult.value": {
+    "since": "4.2.1"
+  },
   "meocord/testing:MockState": {
     "since": "4.0.0-beta.0"
   },
   "meocord/testing:MockState.calls": {
     "since": "4.0.0-beta.0"
   },
+  "meocord/testing:MockState.contexts": {
+    "since": "4.2.1"
+  },
   "meocord/testing:MockState.instances": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:MockState.invocationCallOrder": {
+    "since": "4.2.1"
   },
   "meocord/testing:MockState.lastCall": {
     "since": "4.0.0-beta.0"
   },
   "meocord/testing:MockState.results": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:MockState.settledResults": {
+    "since": "4.2.1"
   },
   "meocord/testing:Provider": {
     "since": "4.0.0-beta.0"
