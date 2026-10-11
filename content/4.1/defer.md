@@ -37,7 +37,7 @@ and replaces the loading view with the answer.
 ## How it works
 
 1. **Before any guard runs,** `@Defer` acknowledges: a deferred reply for a command or a modal sent from one, shown as
-   "thinking…", or an invisible deferred update for a button, a select menu or a modal from a message.
+   "thinking…", or an invisible deferred update for a button, a select menu, or a modal a button or select menu opened.
 2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks a component's message: its
    controls are disabled, the clicked button shows the theme's loading emoji, and the
    [presenter's](guide:presenters) loading view is added.

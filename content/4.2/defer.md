@@ -19,8 +19,8 @@ so a slow guard or handler never misses that window, and a stranger's click neve
 ## When to use it
 
 Put `@Defer()` on any interaction handler that might take more than a moment: one that calls a database or an API,
-or sits behind a guard that does. On a button, a select menu or a modal from a message, it also locks the message
-while the handler works, so a user can't click twice.
+or sits behind a guard that does. On a button, a select menu, or a modal a button or select menu opened, it also locks
+the message while the handler works, so a user can't click twice.
 
 Leave it off a handler that shows a modal, since a modal must be the first response, or use `mode: 'auto'` and show the
 modal before `after` passes; and leave it off one that always answers at once. For a handler that answers quickly most
@@ -38,11 +38,11 @@ and replaces the loading view with the answer.
 
 1. **Before any guard runs,** `@Defer` acknowledges (under `mode: 'auto'`, it waits `after` milliseconds first, and
    acknowledges only if nothing has answered): a deferred reply for a command or a modal sent from one, shown as
-   "thinking…", or an invisible deferred update for a button, a select menu or a modal from a message.
-2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks the message a button, a select
-   menu or a modal from a message sits on: its controls are disabled, the clicked button shows the emoji of the
-   [presenter's](guide:presenters) loading view, which with the default presenter is the theme's loading emoji, and
-   that loading view is added.
+   "thinking…", or an invisible deferred update for a button, a select menu, or a modal a button or select menu opened.
+2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks the message of a button, a select
+   menu, or a modal a button or select menu opened: its controls are disabled, the clicked button shows the emoji of the
+   [presenter's](guide:presenters) loading view, which with the default presenter is the theme's loading emoji, and that
+   loading view is added.
 3. **When the handler answers,** `send()` without `components` puts the message's controls back as they were before
    the lock, a button disabled on purpose included, and removes the loading view. `components: []` clears them.
 
