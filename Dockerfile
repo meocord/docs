@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG BUN_IMAGE=oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895
-ARG BUN_SLIM_IMAGE=oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61
+ARG BUN_IMAGE=oven/bun:1.4
+ARG BUN_SLIM_IMAGE=oven/bun:1.4-slim
 
 FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
