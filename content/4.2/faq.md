@@ -15,8 +15,8 @@ Short answers, each with the chapter that explains it.
 
 ## Does MeoCord run on Bun, or only Node.js?
 
-Both. The bot runs on Node.js 22.13 or later, or on Bun, and `meocord start` runs it on the runtime that started the
-CLI: `bun run start:prod` under Bun, `npm run start:prod` under Node. See
+Both. The bot runs on Node.js 22.13 or later, or on Bun, and `meocord start` runs it on the runtime you launched it
+with: `bun run start:prod` runs it on Bun, `npm run start:prod` on Node. See
 [Which runtime the bot runs on](guide:deployment#which-runtime-the-bot-runs-on).
 
 ## Can I write a bot in plain JavaScript?

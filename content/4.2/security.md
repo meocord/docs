@@ -55,7 +55,8 @@ The token is the bot's password: anyone who has it can act as the bot in every s
 ## Ask for little
 
 - **Intents.** List only the intents the bot uses. The privileged ones, Message Content, Server Members and Presence,
-  are switched on in the Developer Portal, and a bot in 100 or more servers needs Discord's approval for them.
+  are switched on in the Developer Portal, and a bot in 100 or more servers must be verified, and a verified bot needs
+  Discord's approval for them.
 - **Permissions.** Invite the bot with the permissions its commands use, never Administrator. A bot with Administrator
   that's tricked into acting does so with every permission a server has.
 - **Mentions.** Tell discord.js who a message may ping. A client-wide default is a line in the app:

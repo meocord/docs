@@ -14,6 +14,9 @@ api:
     testing/MeoCordTestingModule,
     testing/TestingModuleBuilder,
     testing/TestingModule,
+    testing/TestingModuleOptions,
+    testing/FromAppOptions,
+    testing/TestingModuleInitOptions,
     testing/resetAllMocks,
     testing/useMockFn,
   ]
@@ -32,8 +35,9 @@ The mocks it comes with behave like discord.js, and work under Vitest, Jest, Nod
 - **Jest** needs Node's VM modules: meocord's CommonJS build loads packages that ship only as ES modules, which Jest
   reads only with them. Run it as `NODE_OPTIONS=--experimental-vm-modules jest`.
 - **Node's test runner** asserts through a mock's `.mock.calls`.
-- **bun test** asserts through `.mock.calls` too: Bun's matchers, such as `toHaveBeenCalledWith`, accept only Bun's own
-  mocks.
+- **bun test** takes `useMockFn(mock)`, with `mock` from `bun:test`, in a preloaded file, so Bun's matchers, such as
+  `toHaveBeenCalledWith`, read MeoCord's mocks; without it, assert through `.mock.calls`. See
+  [Your test runner's mocks](guide:mocks#your-test-runners-mocks).
 
 Whatever the runner, the tests need decorator metadata compiled in, which MeoCord reads to inject a class's
 dependencies. Under Jest and Node's test runner, compile them with SWC or `tsc` with decorator metadata, as a generated
@@ -64,7 +68,12 @@ test needs, and returns a builder. `compile()` binds them into a fresh container
 - **Only what you list is built**, plus what those classes inject. Nothing else from the app is loaded, so a test
   never starts a service it didn't ask for. To build the whole app instead, see
   [Testing the whole app](#testing-the-whole-app).
-- **Each `compile()` is a new module**, with its own services, its own cooldown counts and its own theme cache.
+- **Each `compile()` is a new module**, with its own services and theme cache, and its own cooldown counts unless its
+  store keeps them outside the process or a `useValue` store is shared; see
+  [Testing recipes](guide:testing-recipes#how-it-works).
+- **`compile()` runs the bot's startup checks** on what it builds, such as two handlers for one command, or two
+  handlers with the same customId pattern, and throws the first it finds. A handler declared with a `CommandType` and no
+  builder is accepted, so a test fixture needs no builder.
 - **Handlers run through the pipeline**: `@Defer`, guards, interceptors, validation, pipes, cooldowns and exception
   filters, in the bot's order. [Invoke and dispatch](guide:invoke-and-dispatch) covers the two ways to run one.
 
@@ -78,7 +87,8 @@ still the ones you list. A store that injects something, such as a database pool
 ## Swapping a dependency
 
 `overrideProvider(Class).useValue(stub)` replaces a dependency with a stand-in that has only the members the test
-uses. A misspelled member is a compile error, so the stand-in can't drift from the class:
+uses. A misspelled member written in the call is a compile error, so the stand-in can't drift from the class; write
+the stub inline, or type it `Partial<Class>`, to keep that check:
 
 ::example{file="testing/greeting.module.spec.ts" region="override"}
 
@@ -89,7 +99,9 @@ stands in for the stage wherever it is bound, a guard listed in `providers` incl
 `overrideProvider` of it. Its stub needs the stage's method, `canActivate`, `intercept` or `catch`: under strict mocks
 `compile()` refuses one without it, and otherwise warns.
 
-`module.get(Class)` returns an instance, for a direct test of a service as the container built it.
+`module.get(Class)` returns an instance, for a direct test of a service as the container built it. A class that
+depends on a factory returning a promise needs `await module.init()` first, or `get` throws, saying so. `invoke`,
+`dispatch` and `emit` run `init()` themselves.
 
 ## Testing the whole app
 
@@ -162,8 +174,9 @@ and after a build. A project whose tests need its variables loads the files `meo
 
 The mocks behave like discord.js, but they aren't Discord. These fail only against the real thing:
 
-- **Discord's limits**: 2,000 characters in a message, 25 choices, 5 buttons in a row, 45 characters in a modal
-  title, and the rest of Discord's validation.
+- **Discord's limits**: 2,000 characters in a message, 5 buttons in a row, and the rest of what Discord checks and
+  discord.js doesn't. A test catches only what discord.js refuses itself, such as a builder's `setTitle` over 45
+  characters or, under strict mocks, a button with no label, and an autocomplete's 25 choices, which the mock refuses.
 - **Permissions and role order**: a bot whose role sits below a member's can't time them out, whatever the code
   says.
 - **Intents**: an event the bot never receives because its intent is missing.
@@ -175,7 +188,7 @@ once. Start it with a missing and a wrong token too, and check that it says so a
 ## In CI
 
 The checks a generated project runs locally are the ones to run in CI. Tests need no token and no network, so CI
-needs no secrets:
+needs no secrets. `npm run lint` fixes what it can, so CI runs ESLint without `--fix`, where a problem fails the job:
 
 ```yaml
 # .github/workflows/ci.yml
@@ -191,7 +204,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint
+      - run: npx eslint
+      - run: npx tsc --noEmit && npx tsc --noEmit -p tsconfig.test.json
       - run: npm run test:coverage
       - run: npx meocord build --prod
 ```
@@ -221,5 +235,5 @@ reaches the review channel with its buttons.
 
 - [Invoke and dispatch](guide:invoke-and-dispatch): the two ways to run a handler, and which to use when.
 - [Mocks](guide:mocks): the interactions, messages, users and errors a test passes in.
-- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and collectors under test.
+- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and failure paths under test.
 - [Services](guide:services): designing services a test can build with `new`.

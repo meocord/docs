@@ -20,8 +20,14 @@ api:
     testing/createMockRawMember,
     testing/createMockChannel,
     testing/createMockClient,
+    testing/createMockUser,
+    testing/createMock,
+    testing/createModalFields,
     testing/createDiscordError,
+    testing/clearAllMocks,
     testing/resetAllMocks,
+    testing/createMockFn,
+    testing/isMockFunction,
     testing/useMockFn,
     testing/useStrictMocks,
   ]
@@ -34,8 +40,9 @@ go straight to code that expects the real class.
 
 Every method is a mock function, with `.mock.calls`, which Vitest's and Jest's matchers read. Vitest's `toHaveResolved`
 and `toHaveBeenCalledBefore` read MeoCord's own mocks too. Their call order is counted across MeoCord's mocks, so
-compare two of MeoCord's mocks, or two of the runner's, rather than one of each. With
-[`useMockFn`](#your-test-runners-mocks), it is your test runner's own mock, and the runner treats it as one of its own.
+compare two of MeoCord's mocks, or two of the runner's, rather than one of each. Once
+[`useMockFn`](#your-test-runners-mocks) is called, each of these methods is your test runner's own mock, and the runner
+treats it as one of its own.
 Under Node's test runner, assert through `.mock.calls` itself: each call is recorded as an array of its arguments,
 `mock.calls[0][0]`, not node:test's `{ arguments }` record.
 
@@ -60,14 +67,16 @@ slash command. Its type guards and its replies behave as discord.js's do, and ea
 A mock is built from the class's prototype, with its methods replaced by mock functions:
 
 - **Type guards run discord.js's logic.** `isButton()`, `isRepliable()`, `isChatInputCommand()` and the rest answer
-  from the class the mock was made from. They're still mock functions, so a test can override one.
+  from the class the mock was made from, all but the deprecated `isSelectMenu()`, which returns `undefined`: use
+  `isStringSelectMenu()`. They're still mock functions, so a test can override one.
 - **Replies follow Discord's rules.** Replying or deferring twice throws discord.js's `InteractionAlreadyReplied` error,
   and `followUp()`, `editReply()` and `deleteReply()` throw `InteractionNotReplied` before any reply. An answer a test
   gives a value with `mockResolvedValue` or `mockImplementation` counts as one. Under strict mocks, an interaction is
   marked `replied`, `deferred` or `responded` once its answer resolves, as discord.js marks it, so an `editReply()`,
   `followUp()` or `deleteReply()` made before an un-awaited first answer resolves rejects with `InteractionNotReplied`,
-  and a second answer sent while the first is in flight is refused with Discord's 40060. A mock answer resolves on the
-  next microtask, so an answer still in flight across an `await` isn't caught. In default mode the flags are set at the
+  and a second answer sent while the first is in flight is refused with Discord's 40060. A mock answer lands one
+  microtask after the call, so strict mocks catch an edit or a second answer only when the code makes it before awaiting
+  anything; after any `await` in between, the first answer has landed. In default mode the flags are set at the
   call, and the first overlap a bot would refuse warns. `fetchReply()` reads back what `reply()` or `update()` sent, as
   it was sent: a builder changed afterwards doesn't change it. After `deleteReply()`, and after a command shows a modal,
   `editReply()`, `fetchReply()` and `deleteReply()` reject with Unknown Message (10008), as does `fetchReply()` before
@@ -130,8 +139,9 @@ To put a command somewhere a user-installed app can be used, set `context` and `
 
 ::example{file="controllers/slash/stats.slash.controller.spec.ts" region="contexts"}
 
-A server needs a `guildId` too, and a server the bot isn't in a member from `createMockRawMember()`, as
-[A server the bot isn't in](#a-server-the-bot-isnt-in) shows.
+Under strict mocks, a `guild` places it in that server, and a `guildId` alone in a server the bot isn't in, with a raw
+member. In default mode, give a server's `guildId` with its `guild`, and for a server the bot isn't in a member from
+`createMockRawMember()`, as [A server the bot isn't in](#a-server-the-bot-isnt-in) shows.
 
 ## Options and fields
 
@@ -158,9 +168,10 @@ the real resolver finds them:
   option is in `options.data`, so with no value given an autocomplete handler's params hold it as `''`, such as
   `{ query: '' }`.
 
-A modal's submitted fields come from `createModalFields({ body: 'It crashed' })`, which discord.js doesn't let a
-test build. A file upload field takes an array of `Attachment`s: `createModalFields({ screenshot: [attachment] })`. An
-empty array is a select with nothing chosen. Give an upload at least one `Attachment`.
+A modal's submitted fields come from [`createModalFields({ body: 'It crashed' })`](api:testing/createModalFields), which
+discord.js doesn't let a test build. A file upload field takes an array of `Attachment`s:
+`createModalFields({ screenshot: [attachment] })`. An empty array is a select with nothing chosen. Give an upload at
+least one `Attachment`.
 
 ## Messages, servers and the rest
 
@@ -170,27 +181,27 @@ empty array is a select with nothing chosen. Give an upload at least one `Attach
   `ButtonComponent`s, a `ContainerComponent`, an `Embed` and the rest, built from their JSON at the time of the call.
   What the content mentions is cached as the gateway delivers it: a `<@id>` in the client's `users.cache`, and in a
   server in `guild.members.cache`; a `<@&id>` role and a `<#id>` channel in their caches too.
-- **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the bot
-  sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that user,
-  made and cached when there's none. Every message from that author in one `guild` you give has the same member, and so
-  does an interaction given the same `user` and `guild`. `message.member` reads that cache each time, so a test that
-  deletes the author's member from `guild.members.cache` gets `null`, as discord.js gives for an author it hasn't
-  cached.
+- **`author`** sends a message as a user you give, such as one from `createMockUser()`, or `client.user` for one the
+  bot sent. It's cached on the client, and in a server the message's `member` is the guild's cached member for that
+  user, made and cached when there's none. Every message from that author in one `guild` you give has the same member,
+  and so does an interaction given the same `user` and `guild`, with its `guildId` in default mode. `message.member`
+  reads that cache each time, so a test that deletes the author's member from `guild.members.cache` gets `null`, as
+  discord.js gives for an author it hasn't cached.
 - **`createMockGuild({ members, roles, channels })`** puts those in the server's caches, where a command's typed
   params are read from. Give it to `createMockMessage({ guild })`, or pass `guild: null` for a DM.
-- **`createMockClient()`** has real, empty `users` and `channels` caches, and one bot user, the same in every mock, as
-  `client.user`.
+- **`createMockClient()`** has real, empty `users`, `channels` and `guilds` caches, and a bot user as `client.user`,
+  with the same id in every mock client, so a message can mention the bot by it.
 - **`createMockMember({ user, guild, roles, nickname })`** makes a member with the roles given; see
   [Members and roles](#members-and-roles).
-- **`createMockUser()`** mocks a person, `bot: false`. A DM to the user, or to a member of theirs, goes through the
-  user's one DM channel, which `createDM()` resolves to.
+- **[`createMockUser()`](api:testing/createMockUser)** mocks a person, `bot: false`. A DM to the user, or to a member
+  of theirs, goes through the user's one DM channel, which `createDM()` resolves to.
 - **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
   type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches, with
   the channel as their `channel`, and as `thread` on a thread's `members`. Give one to `createMockMessage({ channel })`
   to send a message there, or to an interaction to have it come from there.
-- **`createMock<Interface>()`** mocks a type with no class at runtime, such as a service's interface. A type has no
-  shape at runtime, so every property is a mock function, data included: `if (settings.enabled)` always passes. Pass
-  the values the code reads, `createMock<Settings>({ enabled: false })`.
+- **[`createMock<Interface>()`](api:testing/createMock)** mocks a type with no class at runtime, such as a service's
+  interface. A type has no shape at runtime, so every property is a mock function, data included:
+  `if (settings.enabled)` always passes. Pass the values the code reads, `createMock<Settings>({ enabled: false })`.
 
 Two messages from one `author` count against that user's cooldown, as they would from one person in Discord:
 
@@ -219,7 +230,8 @@ What discord.js computes from these, the mocks compute too, and keep computing a
 
 - `role.comparePositionTo(other)` and `guild.roles.comparePositions(a, b)` rank by position, then by id;
 - `channel.permissionsFor(member)` and `member.permissionsIn(channel)` apply the channel's `permissionOverwrites` to
-  the member's roles, and an interaction's `appPermissions` are the bot's in its channel;
+  the member's roles, and an interaction's `appPermissions` are the bot's in its channel. A thread's `permissionsFor()`
+  reads its parent's under strict mocks, and returns `undefined` in default mode;
 - a manager's `resolve()` and `resolveId()` read its cache, given an id or the item, and `guild.members.resolve(user)`
   finds that user's member;
 - `guild.members.me` is the bot's member: the cached one for `client.user`, or one with @everyone, made once.
@@ -267,10 +279,10 @@ A method that returns a promise in discord.js resolves, so `await` and `.catch()
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
 
-A method that returns a value at once returns what discord.js computes where the mock has what it needs:
-`resolve()`, `comparePositionTo()`, `permissionsFor()`, `message.mentions.has(user)`, `isReady()`, and `avatarURL()`
-and `iconURL()`, `null` with no avatar or icon set. Any other returns `undefined`. A test still decides with
-`mockReturnValue`, `mockResolvedValue` and `mockRejectedValue`.
+A method that returns a value at once returns what discord.js computes where the mock has what it needs: `resolve()`,
+`comparePositionTo()`, `permissionsFor()` (a thread's only under strict mocks), `message.mentions.has(user)`,
+`isReady()`, and `avatarURL()` and `iconURL()`, `null` with no avatar or icon set. Any other returns `undefined`. A test
+still decides with `mockReturnValue`, `mockResolvedValue` and `mockRejectedValue`.
 
 ## Values discord.js computes
 
@@ -288,14 +300,16 @@ relies on, such as `message.editable = false` or `member.kickable = false`, and 
 
 Some data discord.js gives empty, `null` or `false`, also reads as a truthy placeholder: a reaction's `me`,
 `message.mentions.repliedUser`, a message's `editedAt`, a member's `presence`, a server's `verified` and
-`systemChannel`, a channel's `parent`, and a modal's `message`. Reading one warns the same way, naming the value to set,
-such as `reaction.me = false`. When MeoCord's dispatcher reads a reaction's placeholder `partial`, it fetches the
-reaction, and the warning says so: set `reaction.partial = false` and `reaction.message.partial = false`, or use strict
-mocks.
+`systemChannel`, a channel's `parent`, and a modal's `message`. A reaction made without a message has a placeholder
+`message` too, though discord.js always gives a reaction its message. Reading one warns the same way, naming the value
+to set, such as `reaction.me = false` or `reaction.message = createMockMessage()`. When MeoCord's dispatcher reads a
+reaction's placeholder `partial`, it fetches the reaction, and the warning says so: set `reaction.partial = false` and
+`reaction.message.partial = false`, or use strict mocks.
 
-`message.thread` is the thread the message's channel caches under the message's id. Cache one with
-`channel.threads.cache.set(message.id, thread)` for a message that started a thread. Without one, it is a placeholder
-thread, with a warning, since discord.js reads `null` there.
+`message.thread` is the thread the message's channel caches under the message's id. For a message that started a thread,
+cache one on the message's channel with `channel.threads.cache.set(message.id, thread as PublicThreadChannel<false>)`,
+`thread` from `createMockChannel(ThreadChannel)`. Without one, it is a placeholder thread, with a warning, since
+discord.js reads `null` there.
 
 ### Strict mocks
 
@@ -306,7 +320,8 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 - the bot's member is in its server's member cache from the start;
 - @everyone has the permissions Discord gives it in a new server: the bot can view and send in a channel and join a
   voice channel, but not manage, pin, kick or ban. In default mode it has none, and a read that would differ warns until
-  the test sets `guild.roles.everyone.permissions`;
+  the test gives @everyone its permissions, as a role with the server's id, which is its @everyone:
+  `createMockGuild({ id, roles: [createMockInteraction(Role, { id, permissions })] })`;
 - a channel or thread made without a server has one of its own, a thread with a text channel as its parent;
 - those values read as discord.js gives them: `me` is `false`, `repliedUser` and a modal's `message` are `null`, and
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
@@ -316,12 +331,12 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   until then, and reading it warns once.
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member has
-a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`, and the
-values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke` also
-refuses a reaction handler given the reaction without its `ReactionEvent`, naming what to pass, and `compile()` refuses
-an override stub without its stage's method. A generated project's `vitest.setup.ts` makes this call. A second answer
-after one a test set, which discord.js refuses, runs with a warning in default mode; under strict mocks it throws, as
-discord.js does.
+a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me!.roles.add(role)`, and
+the values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke` also
+refuses a handler given fewer arguments than it declares where it builds none, such as a reaction handler given the
+reaction without its `ReactionEvent`, naming what to pass, and `compile()` refuses an override stub without its stage's
+method. A generated project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js
+refuses, runs with a warning in default mode; under strict mocks it throws, as discord.js does.
 
 ## Collectors
 
@@ -349,15 +364,22 @@ A setup file runs first, so that is where it goes. What it sets, with `useMockFn
 every test, through `vi.resetModules()`, `jest.resetModules()` and Jest's `resetModules` config, and the mocks'
 generated ids keep counting through them.
 
+[`createMockFn(impl?)`](api:testing/createMockFn) makes a stand-alone mock function of the same kind, the runner's own
+once `useMockFn` is called; `clearAllMocks()` and `resetAllMocks()` reach it.
+[`isMockFunction(fn)`](api:testing/isMockFunction) tells a mock from a real function.
+
 ## Resetting between tests
 
-`clearAllMocks()` forgets what every mock from `meocord/testing` has recorded.
+[`clearAllMocks()`](api:testing/clearAllMocks) forgets what every mock from `meocord/testing` has recorded.
 [`resetAllMocks()`](api:testing/resetAllMocks) also undoes what a test told them, back to how each was created:
 
 ::example{file="testing/reset.spec.ts" region="reset"}
 
+What a mock holds outside its methods stays: an interaction already answered stays `replied`, and a deleted message
+stays deleted. Make a fresh mock in each test, or in `beforeEach`, rather than one at a spec's top level.
+
 A generated project resets after every test from `vitest.setup.ts`, as [The testing module](guide:testing#running-tests)
-shows. An older project gets the same by adding that file and `setupFiles: ['./vitest.setup.ts']` to its
+shows. A project without it gets the same by adding that file and `setupFiles: ['./vitest.setup.ts']` to its
 `vitest.config.ts`.
 
 Under Vitest, its own `mockReset` puts a mock back to how it was created, so its config works too. Under jest and
@@ -393,8 +415,9 @@ mention never reaches the fetch, since a member it names comes from the message'
 - **A read-only property can't be assigned after creation.** TypeScript refuses `modal.customId = …` on a
   `ModalSubmitInteraction`, as discord.js declares it read-only. Set it in the overrides, where a misspelling is caught
   too.
-- **A MeoCord mock you configure once is reset after the first test.** Set return values in the test that relies on
-  them, or in `beforeEach`. A `vi.fn()` of your own only has its calls cleared.
+- **In a generated project, a MeoCord mock you configure once is reset after the first test.** `vitest.setup.ts` resets
+  MeoCord's mocks after every test, and `clearMocks` clears your own `vi.fn()`. Set return values in the test that
+  relies on them, or in `beforeEach`.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
   give `options: createChatInputOptions({ … })` in its overrides, or assign it afterwards.
 - **A mock's `reply`, `deferReply`, `update` and `deferUpdate` resolve to `undefined`**, though their types say
@@ -408,5 +431,5 @@ mention never reaches the fetch, since a member it names comes from the message'
 ## Next steps
 
 - [Invoke and dispatch](guide:invoke-and-dispatch): running handlers with these inputs.
-- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and collectors under test.
+- [Testing recipes](guide:testing-recipes): themes, guards, cooldowns and failure paths under test.
 - [Message commands](guide:message-commands): the typed params a mock server's caches feed.

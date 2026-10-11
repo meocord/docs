@@ -15,7 +15,10 @@ api:
     testing/createMockTheme,
     testing/withTheme,
     testing/createExecutionContext,
+    testing/ExecutionContextOptions,
     testing/inspectHandler,
+    testing/HandlerInspection,
+    testing/InspectHandlerOptions,
     testing/testCooldownStore,
     testing/createDiscordError,
   ]
@@ -94,9 +97,10 @@ from [`createExecutionContext(Controller, 'method', { args })`](api:testing/crea
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="unit"}
 
-To check how a handler is set up, without running it, [`inspectHandler`](api:testing/inspectHandler) lists its
-guards, interceptors, filters and cooldowns in the order dispatch applies them, with each guard's params, and reads
-its metadata:
+To check how a handler is set up, without running it, [`inspectHandler`](api:testing/inspectHandler) lists its guards,
+interceptors, filters and cooldowns in the order dispatch applies them, with each guard's params, and a message
+handler's `pattern`, the routes it inherits and, with `{ app }`, the app's observers. Its `get` and `getAll` read its
+metadata as `ExecutionContext` does:
 
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="inspect"}
 
@@ -125,7 +129,7 @@ What a member sees when something goes wrong deserves a test as much as the happ
   `dispatch`, the member gets the fallback's answer first, and `getResponse` shows it.
 - **An error a filter handled** resolves, with `error` set, and `getResponse` shows the filter's answer.
 - **A `UserError`** is the member's own outcome: `dispatch` resolves with it, after answering an interaction privately,
-  or replying to a message in its channel.
+  or replying to a message in its channel. One from a reaction is only logged, as the bot does.
 - **Discord's own errors** come from a mock that rejects with
   [`createDiscordError(code)`](api:testing/createDiscordError). Here the author has closed their DMs, and the review
   must be recorded anyway:
