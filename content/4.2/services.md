@@ -63,8 +63,9 @@ This one sets the bot's status once it's ready, through its `onReady` [lifecycle
 ::example{file="services/status.service.ts" region="service"}
 
 A service that only a guard, interceptor, filter, pipe or the presenter injects needn't be listed: MeoCord makes it once
-as the bot comes online, like any other service, and runs its lifecycle hooks. A class that injects the call's
-`ExecutionContext` is made for each call instead, and has no lifecycle hooks.
+as the bot comes online, like any other service, runs its lifecycle hooks, and sends it the events its `@On` and
+`@Once` handlers take. A class that injects the call's `ExecutionContext` is made for each call instead, and has no
+lifecycle hooks or events.
 
 ## Providers
 

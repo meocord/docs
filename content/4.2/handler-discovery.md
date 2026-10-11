@@ -36,8 +36,11 @@ a line for each.
 
 ## How it works
 
-The registry reads the handlers of every controller and service the app binds, once, on the first `list()`. Entries come
-class by class, in the order the app makes them, each class after what it injects.
+The registry reads the handlers of every controller and service the app binds, and the `@On` and `@Once` handlers of
+every other instance whose lifecycle hooks run, such as a service only a guard injects. It reads them on the first
+`list()`, and again once the bot's providers are made, so a list made from a provider's factory is complete once the bot
+is online. Entries come class by class, in the order the app makes them, each class after what it injects, then the
+classes only events reach.
 
 `list({ kind, controller })` filters by what a handler handles, by the class declaring it, or both, and narrows the
 entries' type to that kind. Every entry has `controller`, `method`, `kind` and `name`:
