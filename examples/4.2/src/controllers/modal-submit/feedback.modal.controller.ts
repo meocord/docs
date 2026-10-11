@@ -9,7 +9,8 @@ export class FeedbackModalController {
   // The second argument holds the captured `ticketId` and the submitted `body` field
   @Command('feedback/{ticketId}', CommandType.MODAL_SUBMIT)
   async submit(interaction: ModalSubmitInteraction, { ticketId, body }: { ticketId: string; body: string }) {
-    await respond(interaction).send({ content: `Ticket ${ticketId}: ${body}`, flags: MessageFlags.Ephemeral })
+    // A follow-up stays private wherever the form was opened; from a button, send() would update its message
+    await respond(interaction).followUp({ content: `Ticket ${ticketId}: ${body}`, flags: MessageFlags.Ephemeral })
   }
   // #endregion modal
 }

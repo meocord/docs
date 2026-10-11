@@ -14,8 +14,9 @@ since: 4.1.0
 ---
 
 A param with a type, `{amount:int}`, gives the handler a number instead of the word the user typed. A word that
-is not a value of its type never reaches the handler: the user gets the command's usage, naming the param and
-what was wrong with it.
+is not a value of its type never reaches the handler. When the message began with a prefix or a mention, the user
+gets the command's usage, naming the param and what was wrong with it; a message with neither may be ordinary chat,
+so it is left unanswered and only logged at debug level.
 
 ## When to use it
 
@@ -47,18 +48,18 @@ for it at the same time, and members go 100 to a request.
 
 ## Types
 
-| Type                                 | Gives                     | Accepts                                                     |
-| ------------------------------------ | ------------------------- | ----------------------------------------------------------- |
-| none, or `string`                    | `string`                  | A word, or "quoted words"                                   |
-| `int`, `number`                      | `number`                  | `50`, `-3`; `number` also `2.5`                             |
-| `bool`                               | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                   |
-| `duration`                           | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                           |
-| `member`                             | `GuildMember`             | A mention or an ID, of a member of the message's server     |
-| `user`                               | `User`                    | A mention or an ID                                          |
-| `role`                               | `Role`                    | A mention, an ID or the role's name                         |
-| `channel`                            | `GuildBasedChannel`       | A mention or an ID                                          |
-| words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set |
-| your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                    |
+| Type                                 | Gives                     | Accepts                                                                      |
+| ------------------------------------ | ------------------------- | ---------------------------------------------------------------------------- |
+| none, or `string`                    | `string`                  | A word, or "quoted words"                                                    |
+| `int`, `number`                      | `number`                  | `50`, `-3`; `number` also `2.5`                                              |
+| `bool`                               | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                                    |
+| `duration`                           | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                                            |
+| `member`                             | `GuildMember`             | A mention or an ID, of a member of the message's server                      |
+| `user`                               | `User`                    | A mention or an ID                                                           |
+| `role`                               | `Role`                    | A mention, an ID or the name, in any case, of a role in the message's server |
+| `channel`                            | `GuildBasedChannel`       | A mention or an ID, of a channel in the message's server                     |
+| words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set                  |
+| your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                                     |
 
 The handler's params are checked against the pattern when the code compiles. A name the pattern doesn't have, a type its
 value doesn't fit, or an optional param declared as always there is an error in the editor.
@@ -97,8 +98,9 @@ in `?`:
 
 - A value with spaces goes in quotes: `--note="buy milk"`. A flag given twice takes its last value. An untyped
   flag also takes `yes`, `no`, `on`, `off`, `true` or `false`, so `--bots=no` gives `false`.
-- A flag the command doesn't have gets the usage reply: `--all is not an option of this command`. So does a typed
-  flag left out, `--from is missing`, or given no value, `--from needs a value, such as --from=<from>`.
+- A flag the command doesn't have gets the usage reply: `--all is not an option of this command`. So does a required
+  typed flag left out: with `{--from:user}`, `!purge 5` gets `--from is missing`. A flag given with no value, `--from`,
+  gets `--from needs a value, such as --from=<from>`.
 - A flag before the command's first word, as in `!--bots purge 5`, isn't read, and the message names no command. A
   pattern that begins with a param has no command word, so its flags may come anywhere.
 - Words in quotes are never flags, so `"--bots"` stays text. A command with no flags reads `--bots` as an ordinary
@@ -112,8 +114,9 @@ A typed rest, `{name:type...}`, is a list: each word, or "quoted words", becomes
 
 ::playground{file="controllers/message/moderation.message.controller.ts" region="lists" dispatch="message poll Lunch? pizza soup; message kick <@140000000000000014> <@140000000000000015>"}
 
-The members a list names are fetched together, in one request. `{name...}` with no type stays the rest of
-the message as text, with its own spacing and line breaks.
+The members a list names, and any other member params of the call, that the cache lacks are fetched together, up
+to 100 to a request. `{name...}` with no type stays the rest of the message as text, with its own spacing and line
+breaks.
 
 ## A type of your own
 
@@ -126,6 +129,11 @@ gives in `MessageParamTypes` so handlers using it are typed:
 Then `{accent:color}` in a pattern gives the handler a number, and a word such as `blue` gets
 `accent: "blue" is not a valid hex colour` in reply.
 
+`parse(word, message)` runs in the first step, before the guards, so a caller they refuse still reaches it: keep it
+to reading the word. For a value that needs a request, such as an order from your database, return an
+[`EntityRef`](api:types/EntityRef): guards see the ref, and the handler gets what its `resolve()` returns once the
+guards let the call through.
+
 ## Testing
 
 `module.dispatch(message)` reads params as the bot does. Members the message's server caches resolve without
@@ -136,7 +144,7 @@ a request, so build the guild with them:
 ## Gotchas
 
 - **A member param in a DM.** A command with a `member`, `role` or `channel` param works in a server only,
-  and a DM is answered that way. The help listing says so too, with no `scope` needed.
+  and a DM is answered that way, after a prefix or a mention. The help listing says so too, with no `scope` needed.
 - **A member who left.** A `member` param for someone not in the server is answered only to a caller the
   guards let through, so a refused caller learns nothing about the server.
 - **`{amount:int}` and `@Validate`.** The type runs first. A schema that expects the word as a string gets a

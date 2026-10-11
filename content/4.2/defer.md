@@ -19,8 +19,8 @@ so a slow guard or handler never misses that window, and a stranger's click neve
 ## When to use it
 
 Put `@Defer()` on any interaction handler that might take more than a moment: one that calls a database or an API,
-or sits behind a guard that does. On a button or a select menu, it also locks the message while the handler works,
-so a user can't click twice.
+or sits behind a guard that does. On a button, a select menu or a modal from a message, it also locks the message
+while the handler works, so a user can't click twice.
 
 Leave it off a handler that shows a modal, since a modal must be the first response, or use `mode: 'auto'` and show the
 modal before `after` passes; and leave it off one that always answers at once. For a handler that answers quickly most
@@ -36,11 +36,13 @@ and replaces the loading view with the answer.
 
 ## How it works
 
-1. **Before any guard runs,** `@Defer` acknowledges: a deferred reply for a command or a modal sent from one, shown as
+1. **Before any guard runs,** `@Defer` acknowledges (under `mode: 'auto'`, it waits `after` milliseconds first, and
+   acknowledges only if nothing has answered): a deferred reply for a command or a modal sent from one, shown as
    "thinking…", or an invisible deferred update for a button, a select menu or a modal from a message.
-2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks a component's message: its
-   controls are disabled, the clicked button shows the theme's loading emoji, and the
-   [presenter's](guide:presenters) loading view is added.
+2. **Once guards, validation, pipes and cooldowns have allowed the call,** it locks the message a button, a select
+   menu or a modal from a message sits on: its controls are disabled, the clicked button shows the emoji of the
+   [presenter's](guide:presenters) loading view, which with the default presenter is the theme's loading emoji, and
+   that loading view is added.
 3. **When the handler answers,** `send()` without `components` puts the message's controls back as they were before
    the lock, a button disabled on purpose included, and removes the loading view. `components: []` clears them.
 
@@ -71,7 +73,9 @@ touched.
 | `suppressNotifications` | `false`   | New messages, such as a first reply sent before `'auto'` acknowledged, and follow-ups, don't notify. |
 
 Code that locks a message itself calls `respond(interaction).lock()`, which takes `disable` the same way; its options
-type is [`ResponseLockOptions`](api:responses/ResponseLockOptions) from `meocord/common`.
+type is [`ResponseLockOptions`](api:responses/ResponseLockOptions) from `meocord/common`. `lock()` acknowledges the
+interaction first if nothing has, and does nothing on a command. Outside `@Defer`, nothing puts the message back when
+the handler returns: answer with `send()` or `edit()`, which restore it, or the message stays locked.
 
 ### Acknowledging only when needed
 
@@ -107,6 +111,8 @@ the controls it shows, as Discord's JSON:
   it's below: `Chat.hi: @Defer is for interaction handlers, and this is a message handler. Remove @Defer from it.`
 - **A modal must come first.** Leave `@Defer` off a handler that shows a modal, or use `mode: 'auto'` and show it before
   `after` passes.
+- **`'auto'` needs the event loop free.** Its acknowledgement is a timer, which can't fire while synchronous work (a
+  large parse, image work without a worker) blocks the process. Use the default `'eager'` for such a handler.
 
 ## Next steps
 

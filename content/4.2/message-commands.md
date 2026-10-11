@@ -21,8 +21,8 @@ since: 4.1.0
 formerly: [messages-and-reactions]
 ---
 
-A message command is a `@MessageHandler` with a pattern. A user types `!roll 20` in a channel, and the handler
-runs with `{ sides: '20' }`. Patterns, prefixes and which handler wins are set in decorators and checked when
+A message command is a `@MessageHandler` with a pattern. A user types `!roll 20` in a channel, and a `roll {sides}`
+handler runs with `{ sides: '20' }`. Patterns, prefixes and which handler wins are set in decorators and checked when
 the bot starts, so a mistake stops the bot before it logs in rather than surfacing in chat.
 
 ## When to use it
@@ -58,8 +58,10 @@ A message goes through three steps before the handler runs:
    [cooldowns](guide:cooldowns) and [filters](guide:exception-filters) run as they do for a command, with the
    params as the handler's second argument.
 
-The handler receives the discord.js `Message` and answers it with `message.reply()` or
-`message.channel.send()`. [`respond()`](api:responses/respond) is for interactions.
+The handler receives the discord.js `Message` and answers it with `message.reply()`. To post to the channel instead,
+check it first, `if (message.channel.isSendable()) await message.channel.send(…)`, or type the handler's message as
+`OmitPartialGroupDMChannel<Message>`, which has `channel.send()`. [`respond()`](api:responses/respond) is for
+interactions.
 
 ## Patterns
 
@@ -87,7 +89,8 @@ Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
 - `prefix` is a string, or a list such as `['!', '?']`. The longest prefix that fits is used, and a space
   after it is allowed, so `! roll 20` works too. Without one, a pattern matches the message as it is.
 - `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix.
-- `mention: 'only'` starts every command in a server with a mention of the bot, never a prefix. A direct
+- `mention: 'only'` starts every command that takes the app's prefix with a mention of the bot in a server, never a
+  prefix. A handler with a `prefix` of its own still starts with it, and needs `MessageContent` for it. A direct
   message, addressed to the bot already, starts as usual. Discord sends a message's text without the
   privileged `MessageContent` intent when it mentions the bot, and in direct messages, so a mention-only bot
   needs no such intent.
@@ -104,8 +107,8 @@ matches it exactly as it is, never after a mention:
 ### A prefix for each server
 
 `prefix` can also be a function of the message, which returns a prefix or a list and may be async. It is
-called for each message a handler needs the app's prefix for, so keep it to a lookup from a cache the bot
-fills:
+called for every message a user sends, as long as some patterned handler takes the app's prefix, so keep it to a
+lookup from a cache the bot fills:
 
 ::example{file="app-with-guild-prefix.ts" region="app"}
 
@@ -137,16 +140,16 @@ A.roll: "roll" and "roll" in B.roll match the same messages, so only one of them
 ```
 
 An app's prefix function gives its prefixes only as each message arrives, so beside it a handler is refused only when
-it uses the function too, or when both take a mention because the app's `mention` is on. Then every `@MessageHandler()`
-without a pattern runs, whether or not a pattern matched.
+it uses the function too, or when both take a mention because the app's `mention` is on.
 
 ### Running them side by side
 
-By default a message's handlers run in turn: the patterned handler, then each listener once the one before it has
-settled, so a slow command delays logging and auto-moderation for that message. A running bot names a handler that
-takes 5 seconds or more with listeners waiting after it in a warning, once; `messages: { slowHandlerWarning: false }`
-turns it off. A testing module warns only with `slowHandlerWarning: true`, since a test's fake clock can pass 5 seconds
-inside a handler.
+Besides the one patterned handler, every `@MessageHandler()` without a pattern runs for the message, whether or not a
+pattern matched. By default a message's handlers run in turn: the patterned handler, then each listener once the one
+before it has settled, so a slow command delays logging and auto-moderation for that message. A running bot names a
+handler that takes 5 seconds or more with listeners waiting after it in a warning, once;
+`messages: { slowHandlerWarning: false }` turns it off. A testing module warns only with `slowHandlerWarning: true`,
+since a test's fake clock can pass 5 seconds inside a handler.
 
 `@MeoCord({ messages: { handlers: 'concurrent' } })` starts the command and every listener together, and the call
 settles once all have.
@@ -166,6 +169,11 @@ usage in reply, and the handler does not run:
 !pay @ana lots   ->  Usage: !pay <to> <amount> [note…]
                      amount: "lots" is not a valid whole number
 ```
+
+Every reply on this page, the usage, a wrong word, and where a command works, goes only to a message that began with a
+prefix or a mention. One that began with neither, in an app with no prefix or for a handler with `prefix: false` or
+`prefix: ''`, may be chat that happens to start with a command's words, so it is not answered; the error's `quiet` is
+`true`, and a filter that answers `MessageUsageError` itself should check it.
 
 The reply doesn't ping the user, and is deleted after 10 seconds; `deleteUsageRepliesAfter` in
 `@MeoCord({ messages })` sets another number of seconds, and `0` keeps it. A guard that throws
@@ -188,9 +196,11 @@ To draw these replies and direct messages instead, give the app's [presenter](gu
 method: it styles each one as an embed, with any files it attaches, such as an image it drew. A presenter without it
 leaves them plain text.
 
-The error is a [`MessageUsageError`](api:responses/MessageUsageError), carrying `usage` and `issues`. It
-reaches the handler's exception filters first, so a filter can answer in the app's own words, and
-[observers](guide:observers) see its outcome as `'invalid'`.
+The error is a [`MessageUsageError`](api:responses/MessageUsageError), carrying `usage`, the command as the user
+should type it, and `issues`, each with the `param` it is about, if any, and a `message`. `serverOnly` or `dmOnly`
+says the command was sent where it doesn't work, and `quiet` that the message used no prefix or mention, which the
+fallback leaves unanswered. It reaches the handler's exception filters first, so a filter can answer in the app's
+own words, and [observers](guide:observers) see its outcome as `'invalid'`.
 
 ### Naming only a command's first words
 
@@ -228,8 +238,9 @@ Only patterned handlers are answered, and only when no [exception filter](guide:
 The app above takes commands in servers only. A bot that also takes them in direct messages, with the
 `DirectMessages` intent and discord.js's `Partials.Channel`, answers one sent there in that conversation. A member
 whose direct messages are closed isn't told, and that's logged at debug level. A usage error, a guard's reason and a
-`UserError` are answered in the channel as before. The texts are `meocord.dm.error` and `meocord.dm.cooldown`,
-translated like [MeoCord's own texts](guide:localisation#meocords-own-texts).
+`UserError` are still answered in the channel, as [Usage errors](#usage-errors) describes. The texts are
+`meocord.dm.error` and `meocord.dm.cooldown`, translated like
+[MeoCord's own texts](guide:localisation#meocords-own-texts).
 
 ::example{file="controllers/message/daily.message.controller.ts" region="controller"}
 
@@ -249,7 +260,8 @@ A handler's options say more about its command:
 - `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an out-of-scope
   handler matches is answered `This command works in a server only.` or
   `This command works in direct messages only.` A command with a `member`, `role` or `channel` param works in
-  servers only whatever its scope says, and `scope: 'dm'` with one stops the bot as it loads; see
+  servers only whatever its scope says. A flag of those types refuses a DM only when the message gives it, though
+  help lists the command as server-only. `scope: 'dm'` with either stops the bot as it loads; see
   [Errors at startup](#errors-at-startup).
 - `hidden: true` leaves the command out of the help listing and a parent's list of subcommands.
 
@@ -318,6 +330,8 @@ built app, the source file below it, and the process exits 1:
 | A type nothing adds, `'{accent:colour}'`         | `{accent:colour} names no type. The types are …`                                            |
 | A name used twice, `'swap {a} {a}'`              | `{a} appears twice; give each param and flag its own name.`                                 |
 | A flag's name that doesn't start with a letter   | `{--9lives}: a flag's name starts with a letter, as a message could not give it otherwise.` |
+| `?` on a flag with no type, `'{--bots?}'`        | `{--bots?}: a flag without a type is optional already; write {--bots}.`                     |
+| Flags with no word, `'{--all}'`                  | `a pattern needs a word besides its flags, such as the command.`                            |
 | Braces inside a word, `'a{b}'`                   | `"a{b}" is not a param: a param is a whole word, …`                                         |
 | `scope: 'dm'` on a command with a `member` param | `scope is 'dm', but {target:member} is found only in a server.`                             |
 
@@ -348,9 +362,10 @@ See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
 
 ## Gotchas
 
-- **Nothing runs.** The bot needs the `GuildMessages` intent. A command started by a prefix or plain text also
-  needs `MessageContent`, enabled both in `clientOptions` and in the Discord developer portal; the bot warns at
-  startup when it is missing. Messages from bots never reach a handler.
+- **Nothing runs.** In a server the bot needs the `GuildMessages` intent, and a command started by a prefix or plain
+  text also needs `MessageContent`, enabled both in `clientOptions` and in the Discord developer portal. In direct
+  messages it needs `DirectMessages` and discord.js's `Partials.Channel` instead. The bot warns at startup about
+  what's missing. Messages from bots never reach a handler.
 - **A keyword stops working after adding a prefix.** The app's prefix applies to every patterned handler, so
   `'ping'` then needs `!ping`. Give a handler that should match the bare message `{ prefix: false }`.
 - **Two handlers, one pattern.** Patterns that differ only in param names or types, such as `'roll {sides}'` and

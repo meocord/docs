@@ -23,9 +23,10 @@ Use it when an option's valid values are too many for fixed choices, or change o
 own tickets, a search. Discord allows at most 25 fixed choices, and they're baked into the command when it's
 registered.
 
-For a handful of values that never change, fixed choices with `.addChoices(...)` in the builder are simpler, and need
-no handler. Autocomplete only suggests: the member can still send any value, so check it in the command's handler, or
-with [Validation](guide:validation).
+For a handful of values that never change, fixed choices with `.addChoices(...)` in the builder are simpler, and need no
+handler. An option has one or the other: discord.js refuses `setAutocomplete(true)` together with `.addChoices(...)`,
+and the controller fails to load. Autocomplete only suggests: the member can still send any value, so check it in the
+command's handler, or with [Validation](guide:validation).
 
 ## Example
 
@@ -52,8 +53,10 @@ any slash command is.
 4. **It answers** with discord.js's `interaction.respond(choices)`, not `respond()`, since an autocomplete can't be
    replied to.
 
-The handler's second argument holds the options the member has already filled in, so one option's suggestions can
-depend on another's value.
+The handler's second argument holds the options the member has already filled in, so one option's suggestions can depend
+on another's value. Those options arrive as Discord sends them during typing: a user, role, channel or attachment option
+is its id, not the resolved object a command handler gets, and the option being typed holds its partial text. Fetch what
+you need from the id, such as `interaction.guild?.members.fetch(userId)`.
 
 ## One handler for every option
 
@@ -73,14 +76,14 @@ so at startup.
 ## When no handler claims an option
 
 MeoCord answers with an empty list, and logs which command and option have no handler, so the menu shows empty rather
-than loading until it times out. An error no filter handles does the same. A filter that catches the handler's
-own error answers it itself, with `interaction.respond([])`; after a guard's or a pipe's error, MeoCord still closes
-the menu if the filter didn't.
+than loading until it times out. An error no filter handles does the same. A filter that catches the handler's own error
+must answer it itself, with `interaction.respond([])`: once the handler has run, MeoCord doesn't close the menu, so it
+fails to load unless the filter answers. After a guard's error, MeoCord still closes the menu if the filter didn't.
 
 ## Gotchas
 
-- **More than 25 choices are refused.** Discord rejects the whole answer, and the menu shows nothing. Slice the list,
-  as the example does.
+- **More than 25 choices, or a name or value longer than 100 characters, are refused.** Discord rejects the whole
+  answer, and the menu shows nothing. Slice the list, as the example does, and shorten long names.
 - **A slow lookup misses the three seconds.** Autocomplete can't be deferred. Keep the lookup fast: cache what it
   searches, or search a smaller index.
 - **A handler that returns without `interaction.respond()` leaves the options failing to load.** In development,

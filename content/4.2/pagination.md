@@ -64,7 +64,8 @@ Discord's three seconds and locks the buttons while the page is built.
 ### Jumping to a page
 
 A string select menu with one option per page routes the same way, with the page in the chosen value rather than
-in its `customId`. See [Select menus](guide:components#select-menus).
+in its `customId`. A value is text, so convert it, `Number(values[0])`, and check it, since a client can send any
+value. See [Select menus](guide:components#select-menus).
 
 ## Next steps
 
