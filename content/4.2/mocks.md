@@ -334,9 +334,10 @@ So a message another user sent isn't `editable` or `deletable`, and a member isn
 a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me!.roles.add(role)`, and
 the values follow. A value the test sets on a mock still wins over the computed one. Under strict mocks, `invoke` also
 refuses a handler given fewer arguments than it declares where it builds none, such as a reaction handler given the
-reaction without its `ReactionEvent`, naming what to pass, and `compile()` refuses an override stub without its stage's
-method. A generated project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js
-refuses, runs with a warning in default mode; under strict mocks it throws, as discord.js does.
+reaction without its `ReactionEvent`, naming what to pass, and an autocomplete that dispatch gives to another
+`@Autocomplete` handler, or to none, and `compile()` refuses an override stub without its stage's method. A generated
+project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js refuses, runs with a
+warning in default mode; under strict mocks it throws, as discord.js does.
 
 ## Collectors
 
