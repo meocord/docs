@@ -29,7 +29,7 @@ params, and a check that keeps the menu to the roles it offers.
 - **Only what was offered.** A client can send any value, so the handler keeps only ids on the list. Without the
   check, a forged submission could hand out any role the bot can manage.
 - **Updating in place.** The menu is the private reply's own component, so `send()` updates that reply with the
-  result and removes the menu.
+  result, and `components: []` removes the menu.
 - **Permissions.** The bot needs Manage Roles, and its highest role must be above every role on the list.
 
 ### Testing it

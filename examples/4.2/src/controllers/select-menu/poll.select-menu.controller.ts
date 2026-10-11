@@ -9,7 +9,8 @@ export class PollSelectMenuController {
   // poll/{pollId} captures the poll; values holds the options the member chose
   @Command('poll/{pollId}', CommandType.SELECT_MENU)
   async vote(interaction: StringSelectMenuInteraction, { pollId, values }: { pollId: string; values: string[] }) {
-    await respond(interaction).send({
+    // A follow-up, so only the voter sees it: send() would update the poll message, for everyone
+    await respond(interaction).followUp({
       content: `Poll ${pollId}: you picked ${values.join(', ')}.`,
       flags: MessageFlags.Ephemeral,
     })

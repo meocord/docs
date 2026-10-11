@@ -73,8 +73,9 @@ than "a-{uuid}".
 ```
 
 A parameter matches everything up to the next `/`, so an id you don't control, such as a uuid with hyphens, is captured
-whole. A param's name is ASCII letters, digits and `_`. Braces around anything else, such as `{café}`, are literal text,
-and MeoCord warns about them.
+whole. A param's name is ASCII letters, digits and `_`, not starting with a digit, and each name appears once in a
+pattern; anything else throws where it's declared. Braces around other text, such as `{café}`, are literal text, and
+MeoCord warns about them.
 
 ### Building customIds with a route
 
@@ -84,7 +85,7 @@ the button you send and the handler that receives it share one definition:
 ::playground{file="controllers/button/ticket.button.controller.ts" region="route" dispatch="/ticket; button ticket/42/close"}
 
 `build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a button's or a
-select menu's handler whose params name something other than the route's params and, for a select menu, its choices. A
+select menu's handler whose params require a name other than the route's params and, for a select menu, its choices. A
 `/` or `%` inside a value is encoded, and the handler receives it decoded, so a value never spills into the next
 segment. An empty value throws, and an id that is empty or longer than Discord's 100 characters throws a `RangeError`. A
 pattern no customId can match, one that is empty or whose shortest customId is over 100 characters, is warned about when
@@ -110,15 +111,17 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 - **A `snowflake` is a Discord ID: 17 to 20 digits**, with no leading zero, up to the largest 64-bit value. Its top 42
   bits count milliseconds since 2015-01-01, [Discord's epoch](https://discord.com/developers/docs/reference#snowflakes),
   so every ID made from 2015-01-28 on has at least 17 digits. It stays text, as a number can't hold that many digits
-  exactly; shorter digits are an `int` while a number holds them exactly. Use it for a Discord ID rather than
+  exactly. An `int` takes whole numbers up to 9007199254740991, the largest a number holds exactly; a longer one matches
+  no `int` route. Use `snowflake` for a Discord ID rather than
   `{x:number}`, which rounds one: `12345678901234567` arrives as `12345678901234568`. A `uuid` is the 8-4-4-4-12 hex
   form, in either case.
 - **`build` takes a value of each type**, and throws for one that wouldn't read back, such as `1.5` for an `int`. It
-  takes a `snowflake` or a `uuid` only as a string, and throws a `TypeError` for anything else, such as a number, which
-  may have lost an ID's digits already: pass the ID as text, such as `user.id`.
+  takes a `snowflake` or a `uuid` only as a string: a number fails to compile, and throws a `TypeError` where types
+  don't reach, since it may have lost an ID's digits already. Pass the ID as text, such as `user.id`.
 - **The handler's params are checked when the code compiles**, for a pattern written as a string as for a route:
-  `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a name other than the
-  route's params and a select menu's choices, such as `{ uid }` for `stats/{id}`. A form's handler may name its fields.
+  `{ count: string }` for `{count:int}` is an error, and, for a button or a select menu, so is a required name other
+  than the route's params and a select menu's choices, such as `{ uid: string }` for `stats/{id}`; an optional one,
+  `{ uid?: string }`, compiles and is always `undefined`. A form's handler may name its fields.
 - **A customId holds text the bot wrote**, so there is no `member` or `channel` type, as a message command has. Capture
   the ID, `{userId}`, and fetch it in the handler; `{target:member}` stops the bot where it's declared.
 
@@ -146,9 +149,10 @@ one. `MeoCordTestingModule.compile()` gives the same warning, and
 [`findRouteConflicts`](api:testing/findRouteConflicts) lists the pairs, each with the pattern that `runs`. Patterns with
 different literals in the same place, such as `profile/view/{uid}` and `profile/summary/{uid}`, never overlap.
 
-Two handlers whose patterns match exactly the same ids, such as `profile/{uid}` and `profile/{id}`, stop the bot at
-startup, naming both, since only one of them could ever run. `meocord register` refuses them too, before it sends any
-command, as do the shard manager, before it spawns a shard, and `MeoCordTestingModule.compile()`.
+Two handlers of one component type whose patterns match exactly the same ids, such as two buttons on `profile/{uid}`
+and `profile/{id}`, stop the bot at startup, naming both, since only one of them could ever run. `meocord register`
+refuses them too, before it sends any command, as do the shard manager, before it spawns a shard, and
+`MeoCordTestingModule.compile()`. A button and a select menu may share a pattern.
 
 ## Select menus
 
@@ -163,6 +167,9 @@ A select menu's handler receives what the member chose, beside the captured valu
 | Role        | `values`; `roles`, the `Role`s                                                 |
 | Channel     | `values`; `channels`, the channels                                             |
 | Mentionable | `values`; `users`, `members` and `roles`, as they were chosen                  |
+
+A select menu's first `send()` updates the message the menu is on, for everyone who sees it. To answer only the member
+who chose, use `followUp()` with `flags: MessageFlags.Ephemeral`, which is then a private reply, as the poll above does.
 
 Each is an array: `values` a `string[]`, `users` a `User[]`, and `members`, `roles` and `channels` as discord.js
 resolves them. The handler's declaration is checked when the code compiles, so `values: number` or `users: string` is
@@ -181,8 +188,11 @@ A form's handler receives its submitted fields, keyed by their `customId`, besid
 ::playground{file="controllers/modal-submit/feedback.modal.controller.ts" region="modal" dispatch="modal feedback/42 body='The bot is fast.'"}
 
 A command opens the form with `respond(interaction).modal(...)`, and its `customId` routes the submission here. A file
-upload field arrives as an array of the uploaded `Attachment`s. When a field or a choice shares a name with a captured
-value, the captured value wins, and development logs a warning.
+upload field arrives as an array of the uploaded `Attachment`s. Other fields arrive as Discord sends them: a text
+input's text as a `string`, a select menu's chosen values as a `string[]` (ids for a user, role, channel or mentionable
+select, which the handler fetches), a radio group's choice as a `string` or `null`, a checkbox group's as a `string[]`,
+and a checkbox as a `boolean`. When a field or a choice shares a name with a captured value, the captured value wins,
+and development logs a warning.
 
 ## Collectors
 
@@ -193,7 +203,9 @@ pattern, and the collector's callback answers it:
 
 - **MeoCord leaves the click to the collector.** A button, select menu or modal submission no route takes, while
   anything else listens for the client's interactions, gets 1.5 seconds before MeoCord answers "Command not found!".
-  If the collector answered by then, MeoCord says nothing, and the observers aren't told about it.
+  If the collector answered by then, MeoCord says nothing, and the observers aren't told about it. Give a collector's
+  components ids that no `@Command` pattern matches: a routed id runs its handler right away, and the collector's
+  answer then fails as already acknowledged.
 - **An app's own `@On('interactionCreate')` counts as a listener too**, so in such an app a genuinely dead button is
   answered after 1.5 seconds rather than at once.
 - **Wrap the callback in [`bindTheme`](api:responses/bindTheme)** to answer in the theme of the handler that started
@@ -219,8 +231,8 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
 - **An untyped parameter is text.** `{ id: number }` for `{id}` converts nothing: write `{id:int}`, or use
   [Validation](guide:validation) to convert it.
 - **A `snowflake` or `uuid` param is built only from text.** For `{ownerId:snowflake}`,
-  `build({ ownerId: 12345678901234567 })` throws a `TypeError`, as the number has already rounded the ID: pass
-  `user.id`.
+  `build({ ownerId: 12345678901234567 })` fails to compile, and throws a `TypeError` where types don't reach, since the
+  number has already rounded the ID: pass `user.id`.
 - **A customId over 100 characters is refused by Discord.** Keep ids short: capture ids, not text.
 - **Any other `interactionCreate` listener delays dead components.** While a collector or any other
   `interactionCreate` listener is attached, an `@On('interactionCreate')` handler included, a button, select menu or

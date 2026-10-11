@@ -20,8 +20,8 @@ each subcommand gets a method of its own.
 ## When to use it
 
 Use subcommands when several actions belong under one name: `/ticket open`, `/ticket close` and `/ticket list` read
-as one feature, and share one entry in Discord's command list. Discord allows up to 25 subcommands or groups in a
-command, 25 subcommands in each group, and one level of groups.
+as one feature, and are registered as one command, which counts once toward Discord's limit of 100 slash commands.
+Discord allows up to 25 subcommands or groups in a command, 25 subcommands in each group, and one level of groups.
 
 For actions that don't share a theme, separate [slash commands](guide:slash-commands) are easier to find. For a
 choice between a few values of one action, a string option with choices is simpler than a subcommand per value.

@@ -1,4 +1,4 @@
-import { ModalSubmitInteraction } from 'discord.js'
+import { MessageFlags, ModalSubmitInteraction } from 'discord.js'
 import { createMockInteraction, createModalFields, getResponse, MeoCordTestingModule } from 'meocord/testing'
 import { describe, expect, it } from 'vitest'
 import { FeedbackModalController } from '@src/controllers/modal-submit/feedback.modal.controller'
@@ -14,6 +14,10 @@ describe('FeedbackModalController', () => {
 
     await module.invoke(FeedbackModalController, 'submit', interaction)
 
-    expect(getResponse(interaction).calls[0].payload).toMatchObject({ content: 'Ticket 42: It crashed' })
+    // A private reply, whether the form was opened from a command or from a button
+    expect(getResponse(interaction).calls[0]).toMatchObject({
+      method: 'reply',
+      payload: { content: 'Ticket 42: It crashed', flags: MessageFlags.Ephemeral },
+    })
   })
 })

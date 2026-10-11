@@ -53,20 +53,24 @@ poll with its own reactions doesn't count them as votes, and never answers itsel
 
 ## Which emoji
 
-| Write                    | Matches                                                              |
-| ------------------------ | -------------------------------------------------------------------- |
-| `'👍'`                   | That standard emoji, by its character                                |
-| `'1234567890123456789'`  | That one custom emoji, by its id                                     |
-| `'<:party:1234567890…>'` | The same, as Discord shows it when you send `\:party:`               |
-| `'party'`                | Every custom emoji named `party`, one from each server the bot is in |
-| nothing                  | Every reaction                                                       |
+| Write                    | Matches                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `'👍'`                   | That standard emoji, by its character                                                                           |
+| `'1234567890123456789'`  | That one custom emoji, by its id                                                                                |
+| `'<:party:1234567890…>'` | The same, as Discord shows it when you send `\:party:`                                                          |
+| `'party'`                | Every custom emoji named `party`, from any server, including one a member brings from a server the bot isn't in |
+| nothing                  | Every reaction                                                                                                  |
 
-Use a custom emoji's id when the bot is in more than one server, so another server's `party` doesn't count.
+Use a custom emoji's id so that another emoji named `party` doesn't count.
 
 ## Added and removed
 
 `action` is [`ReactionHandlerAction.ADD`](api:types/ReactionHandlerAction) or `REMOVE`. A handler that only
 cares about one returns early for the other, as the example does. `user` is who added or removed it.
+
+A removal names only the user's id. discord.js drops one from a user it hasn't cached, such as a member who reacted
+before the bot restarted, unless `Partials.User` is in `clientOptions.partials`. Add it when a handler acts on
+`REMOVE`.
 
 ## Bots' reactions
 
@@ -74,13 +78,14 @@ A handler that wants bots' reactions sets `bots: true`:
 
 ::example{file="controllers/reaction/pin.reaction.controller.ts" region="bots"}
 
-To skip a bot's reaction for the handlers that leave bots out, a user discord.js holds only in part is fetched; if that
-fails, only the handlers with `bots: true` run.
+To tell whether a reaction came from a bot, MeoCord fetches a user that discord.js holds only by id, but only when a
+matching handler leaves bots out. If that fetch fails, only the handlers with `bots: true` run.
 
 ## Every message
 
 `@MessageHandler()` with no pattern is a listener. It runs for every message a user sends, after the one
-patterned handler the message matched, if any:
+patterned handler the message matched, if any, unless the app runs them
+[side by side](guide:message-commands#running-them-side-by-side):
 
 ::playground{file="controllers/message/keyword.message.controller.ts" region="controller" dispatch="message ping"}
 
@@ -103,17 +108,23 @@ bot does.
 ## Gotchas
 
 - **Nothing runs.** Reactions need the `GuildMessageReactions` intent, or `DirectMessageReactions` in DMs.
-  For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials.
+  For reactions on messages sent before the bot started, add the `Message` and `Reaction` partials, and for removals
+  by users discord.js hasn't cached, `Partials.User`. The bot warns at startup about a missing `Message` or `Reaction`
+  partial, naming each reaction handler.
 - **A reaction in a DM.** It needs `DirectMessageReactions`. Since discord.js 14.26.2,
   discord.js drops a reaction in a DM channel it has not cached, because Discord's reaction event names the channel by
   its id alone, with no type. MeoCord fetches that channel once, on its first reaction, and delivers the reaction to
   your handlers and to any `messageReactionAdd` or `messageReactionRemove` listener of your own. Later reactions in
   that DM need no request. One window remains: a DM reaction that arrives before the bot is ready, in the seconds
-  while discord.js waits for its servers, is still dropped.
-- **A listener gets empty text.** Without `MessageContent`, Discord sends a message's text only when it
-  mentions the bot, is in a DM, or was sent by the bot. Enable the intent in `clientOptions` and in the
-  developer portal.
-- **A name matches too much.** `'party'` matches a `party` emoji from every server. Use the id.
+  while discord.js waits for its servers, is still dropped. The message isn't cached either, so this needs the
+  `Message` and `Reaction` partials, as for any message sent before the bot started.
+- **A listener misses most messages.** Without `MessageContent`, Discord sends a message's text only when it
+  mentions the bot, is in a DM, or was sent by the bot, and a message without text reaches no listener. Enable the
+  intent in `clientOptions` and in the developer portal.
+- **A name matches too much.** `'party'` matches every custom emoji named `party`, from any server. Use the id.
+- **Clearing reactions isn't a removal.** When a moderator clears a message's reactions, or every reaction of one
+  emoji, Discord sends one event for the whole clear, and no `REMOVE` handler runs. Handle `messageReactionRemoveAll`
+  and `messageReactionRemoveEmoji` with `@On` ([Gateway events](guide:gateway-events)) to keep counts right.
 
 ## Build it
 

@@ -67,8 +67,9 @@ when called as an expression".
 A builder whose kind the compiler can't tell, one whose `build()` declares its return type as
 `ContextMenuCommandBuilder` or that picks the kind at runtime, lets its handler declare either. MeoCord then checks the
 kind as the controller loads: a handler of the other kind stops the bot, naming the handler and the builder. That check
-reads the decorator metadata the compiler emits, so it needs the interaction class imported as a value, as the generated
-controller does; `import { type … }` erases it.
+reads the decorator metadata the compiler emits, so for such a builder import the interaction class as a value, as the
+generated controller does; `import { type … }` erases it. A builder whose kind the compiler knows, as in the examples
+above, is checked at compile time, so a type import is fine there.
 
 A handler that serves both kinds takes their union, and narrows it with `isUserContextMenuCommand()` or
 `isMessageContextMenuCommand()`. `meocord g co context-menu Report` generates a user command with its handler typed to

@@ -62,6 +62,9 @@ arrive resolved, a `User` rather than its id:
 
 ::example{file="controllers/slash/kick.slash.controller.ts" region="options"}
 
+A user option is the `User` even in a server; for their `GuildMember`, read `interaction.options.getMember('target')`.
+A mentionable option is a `User` or a `Role`.
+
 An option the member left out is missing from the object, so type it as optional. To check a value beyond what Discord
 checks, such as a range or a format, use [Validation](guide:validation).
 
@@ -72,15 +75,16 @@ whether at startup:
 
 ::example{file="config/commands.meocord.config.ts" region="config"}
 
-| Option             | Default | What it does                                                                                                                         |
-| ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `guilds`           | none    | Registers every command to these servers instead of globally. Unset or `[]` means global.                                            |
-| `developmentGuild` | none    | Under `meocord start --dev`, every command goes to this server and nowhere else. Server commands show up at once.                    |
-| `register`         | `true`  | Registers at startup. `false` leaves it to `meocord register`, run from CI for instance.                                             |
-| `clearOther`       | `false` | Removes this application's commands from the scopes named here but not in use. Without it, such leftovers are reported as a warning. |
+| Option             | Default | What it does                                                                                                                                                                                                                                                  |
+| ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `guilds`           | none    | Registers every command to these servers instead of globally. Unset or `[]` means global.                                                                                                                                                                     |
+| `developmentGuild` | none    | In development (`meocord start` without `--prod`, or `meocord register --dev`), every command goes to this server and nowhere else. Server commands show up at once.                                                                                          |
+| `register`         | `true`  | Registers at startup. `false` leaves it to `meocord register`, run from CI for instance.                                                                                                                                                                      |
+| `clearOther`       | `false` | Removes this application's commands left in a scope it doesn't register to: the global scope, or a server named in `guilds`, `developmentGuild` or a builder's `guilds`. Without it, they're reported as a warning. `register --guild` checks no other scope. |
 
-A `guilds` list whose ids are all blank, such as `[process.env.GUILD_ID]` with the variable unset, registers nothing
-and warns, rather than publishing the commands globally.
+A `guilds` list whose ids are all blank, such as `[process.env.GUILD_ID]` with the variable unset, registers
+none of the commands meant for those servers, with a warning, rather than publishing them globally. A builder's own
+`guilds` and an entry point command still register.
 
 Each scope gets one bulk update, which replaces what the application has there, so a command you remove disappears on
 the next registration. A failed registration is logged, and the bot stays online.
@@ -127,10 +131,14 @@ Discord takes an entry point command only globally. A production run registers i
 
 ## Gotchas
 
-- **Old commands linger after you move scopes.** Going from global to server commands, or back, leaves the old ones
-  behind, and Discord shows both. MeoCord warns about them; set `clearOther: true` to remove them. While
-  `developmentGuild` receives every command they're only warned about, since development and production often share
-  one application.
+- **Old commands linger after you move scopes.** Going from global to server commands leaves the global ones behind,
+  and Discord shows both. MeoCord warns about leftovers, and with `clearOther: true` removes them, only in the scopes
+  the current configuration names: the global scope, `developmentGuild`, `commands.guilds` and builders' `guilds`.
+  Going back from server commands to global, the old server isn't named, so its commands are neither reported nor
+  removed. To clear them with MeoCord, set the old server's id as `developmentGuild`, run a production start or
+  `meocord register` once with `clearOther: true`, then remove that setting. This removes every command MeoCord
+  doesn't send that is registered in that server. While `developmentGuild` receives every command, leftovers are only
+  warned about, since development and production often share one application.
 - **A development start skips only what Discord still holds.** Under `start --dev`, a set of commands that hasn't
   changed since the last start isn't sent again. A development start checks each scope it would skip with one listing,
   and sends again when the commands registered there differ, as after a production run, `clearOther`, or another tool
