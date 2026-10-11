@@ -114,9 +114,10 @@ their language.
 and numbers; format numbers and dates yourself, with `Intl.NumberFormat` for instance.
 
 A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `few`, `many` and the required `other`. An
-object with any other key is a group, so a group may hold a message named `other`. A plural takes a numeric `count`,
-which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no code of your
-own. A form a translation leaves out uses that translation's own `other`, not the default catalog;
+object with any other key is a group, so a group may hold a message named `other`. The default catalog decides which is
+which: a translation of that group is a group too, even one that keeps only its `other` message. A plural takes a
+numeric `count`, which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no
+code of your own. A form a translation leaves out uses that translation's own `other`, not the default catalog;
 [`expectCompleteCatalog`](#testing-a-catalog) reports the form as lacking.
 
 A key's name holds no `.`: a key is the dotted path to its message, so `'ban.done'` as one key is never found. Nest it
@@ -193,8 +194,8 @@ language of an interaction, a message or a locale.
 
 `expectCompleteCatalog(t)` from `meocord/testing` fails with every message a language lacks or leaves empty, every
 message the default catalog doesn't have, every plural form a language needs but lacks, every translation of another
-shape than the default's, a text for a plural or a plural for a text, and every [parameter the default message doesn't
-take](#parameters-in-other-languages):
+shape than the default's, a text for a plural or a group, or a plural for a text, and every [parameter the default
+message doesn't take](#parameters-in-other-languages):
 
 ::example{file="controllers/slash/warn.slash.controller.spec.ts" region="complete"}
 
