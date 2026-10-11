@@ -63,15 +63,19 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   from the class the mock was made from. They're still mock functions, so a test can override one.
 - **Replies follow Discord's rules.** Replying or deferring twice throws discord.js's `InteractionAlreadyReplied` error,
   and `followUp()`, `editReply()` and `deleteReply()` throw `InteractionNotReplied` before any reply. An answer a test
-  gives a value with `mockResolvedValue` or `mockImplementation` counts as one. `fetchReply()` reads back what `reply()`
-  or `update()` sent, as it was sent: a builder changed afterwards doesn't change it. After `deleteReply()`, and after a
-  command shows a modal, `editReply()`, `fetchReply()` and `deleteReply()` reject with Unknown Message (10008), as does
-  `fetchReply()` before any answer. A follow-up is reached by its id: `editReply({ message: followUp.id })`, and
-  `followUp()` resolves to the follow-up it sent, as `fetchReply(id)` reads it. Under strict mocks, an answer whose
-  components or embeds discord.js refuses to build, such as a button with no label, rejects at the call and leaves the
-  interaction as it was; in default mode it warns once and is built when first read. `flags` are read as discord.js
-  reads them, a number, an array, a name or a bitfield. An autocomplete's `respond()` works once, and refuses more than
-  25 choices.
+  gives a value with `mockResolvedValue` or `mockImplementation` counts as one. Under strict mocks, an interaction is
+  marked `replied`, `deferred` or `responded` once its answer resolves, as discord.js marks it, so an `editReply()`,
+  `followUp()` or `deleteReply()` made before an un-awaited first answer resolves rejects with `InteractionNotReplied`,
+  and a second answer sent while the first is in flight is refused with Discord's 40060. A mock answer resolves on the
+  next microtask, so an answer still in flight across an `await` isn't caught. In default mode the flags are set at the
+  call, and the first overlap a bot would refuse warns. `fetchReply()` reads back what `reply()` or `update()` sent, as
+  it was sent: a builder changed afterwards doesn't change it. After `deleteReply()`, and after a command shows a modal,
+  `editReply()`, `fetchReply()` and `deleteReply()` reject with Unknown Message (10008), as does `fetchReply()` before
+  any answer. A follow-up is reached by its id: `editReply({ message: followUp.id })`, and `followUp()` resolves to the
+  follow-up it sent, as `fetchReply(id)` reads it. Under strict mocks, an answer whose components or embeds discord.js
+  refuses to build, such as a button with no label, rejects at the call and leaves the interaction as it was; in default
+  mode it warns once and is built when first read. `flags` are read as discord.js reads them, a number, an array, a name
+  or a bitfield. An autocomplete's `respond()` works once, and refuses more than 25 choices.
 - **Ids are Discord's shape.** An interaction gets an `id`, a `channelId` and a `user`, a person rather than a bot, each
   a snowflake no other mock in the run has. So does a user or an attachment made with `createMockInteraction`, and a
   message context menu's `targetId` is its `targetMessage`'s, or one made for its own id. Every generated id, a server's

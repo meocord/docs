@@ -133,7 +133,8 @@ A call's `payload` is typed by its `method`: once a test checks `call.method ===
 from discord.js, `call.payload.content` compiles with no cast.
 
 A call a mock rejects, such as a reply refused with 10062 once the three seconds have passed, stays in `calls` with its
-`error`, and doesn't count as sent: the member saw nothing.
+`error`, and doesn't count as sent: the member saw nothing. It doesn't undo an answer made after it: when the first of
+two un-awaited replies rejects, the interaction reads as answered by the second.
 
 For messages and reactions, read the mock's own methods, such as `message.reply`.
 
