@@ -168,8 +168,8 @@ A shared store can be down, restarting or cut off. When it throws, rejects or do
   message. Without it, the command is skipped silently. An [exception filter](guide:exception-filters) that catches
   `CooldownStoreError` can say it another way, or in the user's language, and [observers](guide:observers) see the
   outcome `'error'`, with that error.
-- **`'allow'`** runs the call when the store doesn't answer in time, keeping the bot available while it is down. A store
-  that answers after the timeout still counts the call.
+- **`'allow'`** runs the call, keeping the bot available while the store is down. A call the store counts after the
+  timeout keeps that count.
 
 Either way, the failure is logged once per outage, with its cause, and again when the store answers, with how many
 calls failed. An outage ends when the store answers 30 seconds or more after its latest failure, so a store that fails

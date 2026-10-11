@@ -78,9 +78,9 @@ dependency injection reads; see the
 
 ## Gotchas
 
-- **Guards from `applyDecorators` run in the order listed.** A bot upgraded from 4.0 that relied on the reverse lists
-  them the other way round; see the [upgrade
-  guide](guide:migrating#applydecorators-applies-its-decorators-in-the-order-they-stack).
+- **Guards from `applyDecorators` run in the order listed**, as stacked decorators do; the
+  [upgrade guide](guide:migrating#applydecorators-applies-its-decorators-in-the-order-they-stack) covers code that
+  relied on the reverse.
 - **A method-only decorator can't go on a controller.** `@Defer`, `@Validate` and `@UsePipe` go on handlers only,
   and refuse a class as they apply, naming the decorator, so a custom decorator that includes them does too.
 
