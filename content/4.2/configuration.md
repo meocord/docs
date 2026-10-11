@@ -40,27 +40,30 @@ that compiled copy, however it's started: `meocord start`, `node dist/main.js`, 
 built bot reads `meocord.config.ts` itself.
 
 `build`, `start` and `register` check the config first. An option of the wrong type stops them with a list of every
-problem; an option MeoCord doesn't know, often a typo, is reported as a warning.
+problem; an option MeoCord doesn't know, often a typo, is reported as a warning. `meocord.config.ts` must export the
+config as its default export; a module with only named exports is refused. Its imports may use `tsconfig.json`'s
+`paths`, resolved as `tsc` resolves them, `extends`, `baseUrl` and `${configDir}` included, whatever TypeScript version
+the project uses.
 
 `meocord start --dev` watches `meocord.config.ts` and reloads it on every change. A production bot keeps the config
 it was built with, until the next `meocord build --prod`.
 
 ## Options
 
-| Option               | Default   | What it does                                                                                                                                                            |
-| -------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `discordToken`       | none      | The bot token. Read it from the environment rather than writing it here.                                                                                                |
-| `appName`            | none      | Starts every log line.                                                                                                                                                  |
-| `logLevel`           | `'log'`   | The least severe line the bot prints; `'debug'` while `NODE_ENV` is `development`. See [Logging](#logging).                                                             |
-| `sourceMappedStacks` | `true`    | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                                                                     |
-| `startupErrors`      | `'first'` | `'all'` reports every startup error a decorator finds at once, as the bot starts. See [Every startup error at once](guide:troubleshooting#every-startup-error-at-once). |
-| `shutdownTimeout`    | `10000`   | Milliseconds shutdown waits for the `onShutdown` hooks, all of them together.                                                                                           |
-| `commands`           | global    | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                                                                      |
-| `sharding`           | none      | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                                                                              |
-| `rsbuild`            | none      | `(config) => config`: adjusts the Rsbuild configuration the bot is built with. See [the build hook](#the-build-hook).                                                   |
-| `bundleDependencies` | `false`   | Puts everything the bot needs inside `dist/`, so it runs without `node_modules`.                                                                                        |
-| `externals`          | `[]`      | Modules to keep out of the bundle.                                                                                                                                      |
-| `optionalExternals`  | `[]`      | Packages a dependency tries to load and runs without, such as `supports-color`.                                                                                         |
+| Option               | Default   | What it does                                                                                                                                                                                                                      |
+| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discordToken`       | none      | The bot token. Read it from the environment rather than writing it here.                                                                                                                                                          |
+| `appName`            | none      | Starts every log line.                                                                                                                                                                                                            |
+| `logLevel`           | `'log'`   | The least severe line the bot prints; `'debug'` while `NODE_ENV` is `development`. See [Logging](#logging).                                                                                                                       |
+| `sourceMappedStacks` | `true`    | Stack traces name your source files and lines, not the bundle's. See [Stack traces](#stack-traces).                                                                                                                               |
+| `startupErrors`      | `'first'` | `'all'` reports every startup error a decorator finds at once, as the bot starts. See [Every startup error at once](guide:troubleshooting#every-startup-error-at-once).                                                           |
+| `shutdownTimeout`    | `10000`   | Milliseconds shutdown waits for the calls under way and the `onShutdown` hooks, the whole sequence together. The calls get the timeout less a reserve for the hooks: a quarter of it, at least 1 second and never more than half. |
+| `commands`           | global    | Where commands are registered, and whether at startup: see [Slash commands](guide:slash-commands).                                                                                                                                |
+| `sharding`           | none      | Splits the gateway connection into shards: see [Sharding](guide:sharding).                                                                                                                                                        |
+| `rsbuild`            | none      | `(config) => config`: adjusts the Rsbuild configuration the bot is built with. See [the build hook](#the-build-hook).                                                                                                             |
+| `bundleDependencies` | `false`   | Puts everything the bot needs inside `dist/`, so it runs without `node_modules`.                                                                                                                                                  |
+| `externals`          | `[]`      | Modules to keep out of the bundle.                                                                                                                                                                                                |
+| `optionalExternals`  | `[]`      | Packages a dependency tries to load and runs without, such as `supports-color`.                                                                                                                                                   |
 
 The last two matter mostly for a bundled bot: see [Self-contained builds](guide:self-contained-builds).
 
@@ -117,7 +120,8 @@ you ship a source mapper of your own. `meocord start` then passes no flag, and t
 ## Environment variables
 
 Load `.env` in `meocord.config.ts`, not in `main.ts`. The bot loads its config before `main.ts`, so every value the
-files set is there by the time `@MeoCord({...})` and the rest of your modules read `process.env`. A new app's config
+files set is there by the time `@MeoCord({...})`, the rest of your modules and the packages they import read
+`process.env`. A new app's config
 reads the files Bun reads for its mode: the production files in a production build and the development files in a
 development build, however the bot is started, and `.env.test` where it runs from source under `NODE_ENV=test`. On Bun,
 a production build you start yourself, with `NODE_ENV` unset, also gets the values of `.env.development` and
@@ -128,9 +132,10 @@ files with a variable of your own, as below:
 ::example{file="config/env-files.meocord.config.ts" region="config"}
 
 The mode is `NODE_ENV`, `development` unless it's set: `meocord start --dev` builds in development and runs the bot as
-development, whatever `NODE_ENV` the shell holds, so it reads and watches the development files, and
-`meocord build --prod` writes `production` into the config it compiles. A more specific file wins, and a variable the
-shell sets wins over every file, so `.env.local` can hold your own values beside the committed `.env.development`.
+development, as `build --dev` and `register --dev` do, whatever `NODE_ENV` the shell holds, so it reads and watches the
+development files, and `meocord build --prod` writes `production` into the config it compiles. A more specific file
+wins, and a variable the shell sets wins over every file, so `.env.local` can hold your own values beside the committed
+`.env.development`.
 
 To pick files by something other than `NODE_ENV`, such as a staging server, put the choice in a module the config
 imports:
@@ -205,12 +210,13 @@ modified:
 Some things need no rule of your own:
 
 - **Imported images, fonts, SVG, media, PDFs, text files** and the other kinds `src/types/assets.d.ts` declares as a
-  path are emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready
-  for `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build
-  handles itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts,
-  from where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI.
-  An imported WebAssembly module goes to `dist/assets/` as `<hash>.module.wasm`, so two modules of one name stay apart;
-  a wasm file read through `new URL('./file.wasm', import.meta.url)` keeps its own name.
+  path are emitted to `dist/assets/` under their own names, and importing one gives its absolute path on disk, ready for
+  `fs`, a canvas or a Discord attachment. A file of another kind, JSON and WebAssembly aside, which the build handles
+  itself, needs a rule of its own in `tools.rspack`, as Markdown does above. The path is set as the bot starts, from
+  where its `dist` is, so a build made in CI or another folder finds its assets. Nothing is inlined as a data URI. An
+  imported WebAssembly module goes to `dist/assets/` as `<hash>.module.wasm`, so two modules of one name stay apart; a
+  wasm file read through `new URL('./file.wasm', import.meta.url)` keeps its own name. In a built bot, `import.meta.url`
+  names the bundle in `dist`, as `import.meta.dirname` does.
 - **Asset file names:** two imported files of one name in different folders stop the build with Rspack's conflict
   error, naming the file. `output.filename.image`, and `svg`, `font`, `media` and `assets`, accept a function to keep
   both.

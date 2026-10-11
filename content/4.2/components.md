@@ -72,8 +72,9 @@ preceded and followed by "/" or by the ends of the pattern. Write "a/{uuid}" rat
 than "a-{uuid}".
 ```
 
-A parameter matches everything up to the next `/`, so an id you don't control, such as a uuid with hyphens, is
-captured whole.
+A parameter matches everything up to the next `/`, so an id you don't control, such as a uuid with hyphens, is captured
+whole. A param's name is ASCII letters, digits and `_`. Braces around anything else, such as `{café}`, are literal text,
+and MeoCord warns about them.
 
 ### Building customIds with a route
 
@@ -85,7 +86,9 @@ the button you send and the handler that receives it share one definition:
 `build` takes exactly the pattern's params: a missing or unknown one fails to compile, and so does a button's or a
 select menu's handler whose params name something other than the route's params and, for a select menu, its choices. A
 `/` or `%` inside a value is encoded, and the handler receives it decoded, so a value never spills into the next
-segment. An empty value, or an id longer than Discord's 100 characters, throws.
+segment. An empty value throws, and an id that is empty or longer than Discord's 100 characters throws a `RangeError`. A
+pattern no customId can match, one that is empty or whose shortest customId is over 100 characters, is warned about when
+its handler is declared.
 
 ### Typed params
 
@@ -194,8 +197,8 @@ pattern, and the collector's callback answers it:
 - **An app's own `@On('interactionCreate')` counts as a listener too**, so in such an app a genuinely dead button is
   answered after 1.5 seconds rather than at once.
 - **Wrap the callback in [`bindTheme`](api:responses/bindTheme)** to answer in the theme of the handler that started
-  the collector. Without it, the callback runs in the client's event, where the app's theme applies, not the
-  handler's `@UseTheme`.
+  the collector, the starting member's server and user themes included, for every click. Without it, the callback
+  runs in the client's event, where the clicker's server and user themes apply, not the handler's `@UseTheme`.
 
 `awaitMessageComponent()` and `awaitModalSubmit()` work the same way, and keep the handler's theme across their
 `await`.
@@ -219,8 +222,9 @@ To check which handler an id reaches without running it, use [`resolveRoute`](ap
   `build({ ownerId: 12345678901234567 })` throws a `TypeError`, as the number has already rounded the ID: pass
   `user.id`.
 - **A customId over 100 characters is refused by Discord.** Keep ids short: capture ids, not text.
-- **A collector on an unrouted id delays dead buttons elsewhere.** While any collector is listening, a genuinely dead
-  button in the app is answered after 1.5 seconds. Give long-lived components a route.
+- **Any other `interactionCreate` listener delays dead components.** While a collector or any other
+  `interactionCreate` listener is attached, an `@On('interactionCreate')` handler included, a button, select menu or
+  modal submission no route takes is answered after 1.5 seconds. Give long-lived components a route.
 
 ## Build it
 

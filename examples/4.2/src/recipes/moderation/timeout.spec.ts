@@ -1,9 +1,10 @@
-import { ButtonInteraction, ChatInputCommandInteraction, GuildMember, RESTJSONErrorCodes, User } from 'discord.js'
+import { ButtonInteraction, ChatInputCommandInteraction, GuildMember, RESTJSONErrorCodes } from 'discord.js'
 import {
   createChatInputOptions,
   createDiscordError,
   createMockGuild,
   createMockInteraction,
+  createMockUser,
   getResponse,
   MeoCordTestingModule,
 } from 'meocord/testing'
@@ -16,8 +17,8 @@ describe('TimeoutController', () => {
   const compile = () => MeoCordTestingModule.create({ controllers: [TimeoutController] }).compile()
   beforeEach(() => (module = compile()))
 
-  const moderator = createMockInteraction(User, { id: '111111111111111111' })
-  const target = createMockInteraction(User, { id: '999' })
+  const moderator = createMockUser({ id: '111111111111111111' })
+  const target = createMockUser({ id: '999' })
 
   // A click in a server whose member fetch resolves the target, whose timeout() the test controls
   const click = (

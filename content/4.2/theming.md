@@ -134,6 +134,10 @@ handler's `@UseTheme`. To keep the handler's, wrap the callback in [`bindTheme`]
 
 ::playground{file="controllers/slash/vote.slash.controller.ts" region="bind" dispatch="/vote"}
 
+`bindTheme` keeps the theme of the call that bound it, the server's and the user's included, so every click is
+answered in the starting member's theme. Without it, `respond(click)` takes the clicker's server and user themes, but
+not the handler's `@UseTheme`.
+
 ## What respond() themes
 
 An embed with no `color`, and a Components V2 container with no `accent_color`, sent through
@@ -159,7 +163,9 @@ server's, in a server or in a DM.
 ::example{file="app-with-theme-for.ts" region="app"}
 
 Each resolver returns part of a theme, or `undefined` for none, at once or as a promise. Results are cached for
-`themeCache.ttlSeconds`, five minutes by default, and calls that ask at the same time share one lookup. When a server's
+`themeCache.ttlSeconds`, five minutes by default, and calls that ask at the same time share one lookup. At most
+`themeCache.maxGuilds` servers' and `maxUsers` users' results are kept, 10,000 and 50,000 by default; when one is full,
+the result looked up longest ago is dropped first, however often it is read. When a server's
 theme changes, clear its cached result so the next call looks it up again:
 
 ::example{file="controllers/slash/theme-settings.slash.controller.ts" region="invalidate"}

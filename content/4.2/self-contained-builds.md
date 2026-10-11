@@ -65,6 +65,10 @@ A pnpm project packs as an npm, yarn or bun one does. Under pnpm, each package's
 the store, and when two packages need different versions of one dependency, each gets its own: the first
 at the top of `dist/node_modules`, the other nested under the package that needs it.
 
+A bundled dependency that builds paths from `fileURLToPath(import.meta.url)` resolves them beside the bundle, not in the
+build machine's `node_modules`. A file it reads through `new URL('./file', import.meta.url)` is emitted into `dist` and
+found there.
+
 ## Native addons and platforms
 
 A compiled binary loads only on the operating system, CPU and C library it was built for. A build made on a Mac
@@ -72,16 +76,18 @@ carries macOS binaries, and a Debian (glibc) binary doesn't load on Alpine (musl
 for a container, run `npx meocord build --prod` inside the image.
 
 The build records its platform in `meocord.platform.json`. A bot started on another platform stops before it goes
-online, with a message naming both.
+online, with a message naming both. The check runs before any package loads, so a native addon built for another
+platform never gets to fail with an error of its own.
 
 ## Externals
 
 `externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings are
-copied into `dist/node_modules` too. A package a dependency only tries to load, such as `supports-color`, belongs in
-`optionalExternals`: it's packed when it's installed, and the dependency carries on without it when it isn't. Without
-it, a self-contained build that meets `supports-color` uninstalled warns, naming the dependency and `optionalExternals`.
-Don't list a name in `externals` as well; the build warns about that too. See
-[the options](guide:configuration#options).
+copied into `dist/node_modules` too. An external named as a file inside a package, such as `'lodash/fp.js'`, packs its
+package. A build without `bundleDependencies` removes what a previous self-contained build packed into `dist`. A package
+a dependency only tries to load, such as `supports-color`, belongs in `optionalExternals`: it's packed when it's
+installed, and the dependency carries on without it when it isn't. Without it, a self-contained build that meets
+`supports-color` uninstalled warns, naming the dependency and `optionalExternals`. Don't list a name in `externals` as
+well; the build warns about that too. See [the options](guide:configuration#options).
 
 discord.js's optional accelerators, `zlib-sync`, `bufferutil` and `utf-8-validate`, are always treated that way.
 

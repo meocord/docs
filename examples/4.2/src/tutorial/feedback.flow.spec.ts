@@ -1,18 +1,11 @@
-import {
-  ButtonInteraction,
-  Collection,
-  GuildMember,
-  Locale,
-  ModalSubmitInteraction,
-  TextChannel,
-  User,
-} from 'discord.js'
+import { ButtonInteraction, Collection, GuildMember, Locale, ModalSubmitInteraction, TextChannel } from 'discord.js'
 import {
   createMockChannel,
   createMockClient,
   createMockGuild,
   createMockInteraction,
   createMockMessage,
+  createMockUser,
   createModalFields,
   getResponse,
   MeoCordTestingModule,
@@ -49,7 +42,7 @@ describe('the feedback bot, from form to verdict', () => {
       ...inServer,
       customId: 'feedback/submit',
       locale: Locale.Indonesian,
-      user: createMockInteraction(User, { id: '111', username: 'ada' }),
+      user: createMockUser({ id: '111', username: 'ada' }),
       fields: createModalFields({ about: 'Music bot', details: 'It skips songs.' }),
     })
     await module.invoke(FeedbackController, 'submit', submit)
@@ -79,7 +72,7 @@ describe('the feedback bot, from form to verdict', () => {
       locale: Locale.Indonesian,
       member: staffMember,
       message: post,
-      user: createMockInteraction(User, { id: '222', username: 'grace' }),
+      user: createMockUser({ id: '222', username: 'grace' }),
     })
     await module.invoke(ReviewController, 'approve', approve)
 

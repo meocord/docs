@@ -62,6 +62,10 @@ This one sets the bot's status once it's ready, through its `onReady` [lifecycle
 
 ::example{file="services/status.service.ts" region="service"}
 
+That includes a service that only a guard, interceptor, filter, pipe or the presenter injects: it is made as the bot
+comes online, once, like any other service. A class that injects the call's `ExecutionContext` is made for each call
+instead, and has no lifecycle hooks.
+
 ## Providers
 
 Not everything a bot shares is a class it can construct itself. The app's

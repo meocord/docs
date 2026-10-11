@@ -1,5 +1,11 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
-import { createChatInputOptions, createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { ChatInputCommandInteraction } from 'discord.js'
+import {
+  createChatInputOptions,
+  createMockInteraction,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotesController } from '@src/recipes/database/notes.controller'
 import { type Note, NotesStore } from '@src/recipes/database/notes.store'
@@ -28,7 +34,7 @@ describe('NotesController', () => {
     store = new MemoryNotesStore()
     module = compile(store)
   })
-  const ada = createMockInteraction(User, { id: '111' })
+  const ada = createMockUser({ id: '111' })
 
   it('saves a note for the user, acknowledging privately first', async () => {
     const interaction = createMockInteraction(ChatInputCommandInteraction, {

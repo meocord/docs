@@ -158,8 +158,9 @@ its `consumeMany` returns:
 ::example{file="recipes/cooldown-stores/releasing.store.ts" region="store"}
 
 A store without `release` keeps such a call counted. Under `'allow'` the call ran uncounted, so the late count stays.
-`testCooldownStore` checks a store's `release` when it gives one. A release still under way when the bot stops
-finishes before the store's `onShutdown` runs, so a store can close its connection there.
+`testCooldownStore` checks a store's `release` when it gives one, and that it frees only the call it gives back. A
+release still under way when the bot stops finishes before the store's `onShutdown` runs, so a store can close its
+connection there.
 
 ### Telling one wait from the next
 
@@ -178,11 +179,13 @@ Vitest, Jest or any runner with `describe`, `it` and `expect`:
 It checks that:
 
 - a key allows `uses` calls within the window, and the window slides;
-- `retryAfterMs` counts from the oldest call still in the window, and every refusal in one wait gives the same
+- `retryAfterMs` counts until a use frees up, from the oldest of the newest `uses` calls in the window, which is the
+  oldest call unless a lowered limit leaves more, and every refusal in one wait gives the same
   `retryTimestamp`, when the store gives one;
 - each key counts on its own, and calls in the same millisecond stay distinct;
 - of several concurrent calls at the limit, exactly one passes;
-- a batch is counted against all its cooldowns at once, and a refusal names the longest wait;
+- a batch is counted against all its cooldowns at once, and a refusal names the longest wait, or, with the default
+  `consumeMany`, the first refusal;
 - a refused batch records nothing, or, with the default `consumeMany`, counts the cooldowns before the one that
   refuses, as one call to `consume` after another does;
 - of several concurrent batches at the limit, exactly one passes;

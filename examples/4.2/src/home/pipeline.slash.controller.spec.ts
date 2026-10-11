@@ -1,12 +1,18 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
-import { createChatInputOptions, createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { ChatInputCommandInteraction } from 'discord.js'
+import {
+  createChatInputOptions,
+  createMockInteraction,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { GuardDeniedError } from 'meocord/common'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { BLOCKED_USER, PipelineSlashController, trace } from '@src/home/pipeline.slash.controller'
 
 const call = (userId: string) => {
   const interaction = createMockInteraction(ChatInputCommandInteraction, {
-    user: createMockInteraction(User, { id: userId }),
+    user: createMockUser({ id: userId }),
   })
   interaction.options = createChatInputOptions({ name: '  Ada  ' })
   return interaction

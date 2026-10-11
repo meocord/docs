@@ -23,7 +23,8 @@ formerly: [tutorial-testing]
 
 `meocord/testing` runs your controllers, services, guards and everything around them inside a test, with no
 Discord connection and no token. `MeoCordTestingModule` builds a container from the classes you list, as the bot
-builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses.
+builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses, but for
+`emit`, which leaves out the bot's event fallback.
 
 The mocks it comes with behave like discord.js, and work under Vitest, Jest, Node's test runner and bun test:
 
@@ -82,8 +83,11 @@ uses. A misspelled member is a compile error, so the stand-in can't drift from t
 ::example{file="testing/greeting.module.spec.ts" region="override"}
 
 A provider can also be listed in any shape the app takes, `useValue`, `useClass` or `useFactory`, under a class or a
-token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInterceptor` and `overrideFilter` swap
-the stages around a handler the same way, wherever they apply: globally, on the controller or on the method.
+token; see [Providers](guide:services#providers). `overrideGuard`, `overrideInterceptor` and `overrideFilter` swap the
+stages around a handler the same way, wherever they apply: globally, on the controller or on the method. An override
+stands in for the stage wherever it is bound, a guard listed in `providers` included, and wins over an
+`overrideProvider` of it. Its stub needs the stage's method, `canActivate`, `intercept` or `catch`: under strict mocks
+`compile()` refuses one without it, and otherwise warns.
 
 `module.get(Class)` returns an instance, for a direct test of a service as the container built it.
 
@@ -122,11 +126,15 @@ Client, useValue: createMockClient() }`.
   first and its `onShutdown` last, once the store operations its calls started have settled.
 - **A shutdown that hangs.** `close()` waits for the whole sequence for up to `shutdownTimeout`, 10 seconds unless
   `create()` or `fromApp()` sets it, as the bot's [`shutdownTimeout`](guide:configuration) does. It then stops waiting
-  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers,
-  or whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`.
+  and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers, or
+  whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`. A `close()` while
+  `init({ ready: true })` runs waits for the `onReady` hooks within the module's `shutdownTimeout`, warning about one
+  that never settles; everything the module constructed is shut down either way.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
   until `close()`, unless another module or app in the same process was ready first, which keeps it. See
   [Testing recipes](guide:testing-recipes#themes).
+- **After `close()`.** A closed module still runs what `dispatch`, `invoke` and `emit` are given, against services
+  already shut down, and warns once that it is closed. Close it after the test's last call, in `afterEach`.
 
 ## Running tests
 

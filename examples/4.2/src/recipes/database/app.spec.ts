@@ -1,5 +1,11 @@
-import { ChatInputCommandInteraction, User } from 'discord.js'
-import { createChatInputOptions, createMockInteraction, getResponse, MeoCordTestingModule } from 'meocord/testing'
+import { ChatInputCommandInteraction } from 'discord.js'
+import {
+  createChatInputOptions,
+  createMockInteraction,
+  createMockUser,
+  getResponse,
+  MeoCordTestingModule,
+} from 'meocord/testing'
 import { describe, expect, it, vi } from 'vitest'
 import App from '@src/recipes/database/app'
 import { DATABASE } from '@src/recipes/database/database'
@@ -24,7 +30,7 @@ describe('the notes app', () => {
     })
       .compile()
       .init()
-    const user = createMockInteraction(User, { id: '111' })
+    const user = createMockUser({ id: '111' })
     const note = createMockInteraction(ChatInputCommandInteraction, {
       commandName: 'note',
       user,
