@@ -307,7 +307,9 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 - those values read as discord.js gives them: `me` is `false`, `repliedUser` and a modal's `message` are `null`, and
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
 - a reaction made without a message has a whole one, so a dispatched reaction isn't fetched;
-- a message the bot sends is its `client.user`'s, and one it sends in a DM is in that DM.
+- a message the bot sends is its `client.user`'s, and one it sends in a DM is in that DM;
+- an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
+  until then, and reading it warns once.
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member has
 a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me.roles.add()`, and the
