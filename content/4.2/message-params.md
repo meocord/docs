@@ -48,18 +48,18 @@ for it at the same time, and members go 100 to a request.
 
 ## Types
 
-| Type                                 | Gives                     | Accepts                                                                      |
-| ------------------------------------ | ------------------------- | ---------------------------------------------------------------------------- |
-| none, or `string`                    | `string`                  | A word, or "quoted words"                                                    |
-| `int`, `number`                      | `number`                  | `50`, `-3`; `number` also `2.5`                                              |
-| `bool`                               | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                                    |
-| `duration`                           | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                                            |
-| `member`                             | `GuildMember`             | A mention or an ID, of a member of the message's server                      |
-| `user`                               | `User`                    | A mention or an ID                                                           |
-| `role`                               | `Role`                    | A mention, an ID or the name, in any case, of a role in the message's server |
-| `channel`                            | `GuildBasedChannel`       | A mention or an ID, of a channel in the message's server                     |
-| words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set                  |
-| your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                                     |
+| Type                                 | Gives                     | Accepts                                                                                                                                                                              |
+| ------------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| none, or `string`                    | `string`                  | A word, or "quoted words"                                                                                                                                                            |
+| `int`, `number`                      | `number`                  | `50`, `-3`; `number` also `2.5`                                                                                                                                                      |
+| `bool`                               | `boolean`                 | `yes`, `no`, `true`, `false`, `on`, `off`                                                                                                                                            |
+| `duration`                           | `number`, in milliseconds | `90s`, `10m`, `2h30m`, `7d`, `1w`                                                                                                                                                    |
+| `member`                             | `GuildMember`             | A mention or an ID, of a member of the message's server                                                                                                                              |
+| `user`                               | `User`                    | A mention or an ID                                                                                                                                                                   |
+| `role`                               | `Role`                    | A mention, an ID or the name, in any case, of a role in the message's server; see [Several optional params](#several-optional-params) for a role that another optional param follows |
+| `channel`                            | `GuildBasedChannel`       | A mention or an ID, of a channel in the message's server                                                                                                                             |
+| words, such as `on\|off`             | `'on' \| 'off'`           | One of the words, in any case unless `caseSensitive` is set                                                                                                                          |
+| your own, from `messages: { types }` | what its `parse` returns  | What its `parse` accepts                                                                                                                                                             |
 
 The handler's params are checked against the pattern when the code compiles. A name the pattern doesn't have, a type its
 value doesn't fit, or an optional param declared as always there is an error in the editor.
@@ -73,9 +73,9 @@ fits its type, and is skipped otherwise, so the word goes on to the next:
 
 ::example{file="controllers/message/economy.message.controller.ts" region="optionals"}
 
-Whether a word fits is read from the word alone, so an optional param that another follows needs a built-in
-type or words to choose from. Text, or an app's own type, there stops the bot at startup. The last optional
-takes any word.
+Whether a word fits is read from the word alone, so a `role` there takes a mention or an ID, not a name, as `member`,
+`user` and `channel` always do. An optional param that another follows needs a built-in type or words to choose from.
+Text, or an app's own type, there stops the bot at startup. The last optional takes any word.
 
 ## Guards see references
 

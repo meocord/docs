@@ -185,7 +185,8 @@ still answers in the old palette, and the user's next call gets the new one.
 
 A resolver that throws, or doesn't answer within `themeForTimeoutMs` (1000 ms by default), leaves its layer out of that
 call, and the call goes on. That server or user isn't asked again for 10 seconds, so its calls meanwhile go without it
-too. A result that isn't a valid theme is left out with a warning.
+too. A result that isn't a valid theme is left out with a warning, as is one that can't be read, such as an object with
+a cycle or a getter that throws.
 
 ## Adding tokens of your own
 
