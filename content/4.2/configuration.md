@@ -101,8 +101,9 @@ log collector, objects included. Set `FORCE_COLOR=1` to keep the colour where yo
 
 ### Stack traces
 
-A stack trace names your source, such as `src/services/profile.service.ts:42:11`, not the bundle, on Node and Bun
-alike. The build writes `dist/main.js.map` beside the bundle, in development and production, and:
+A stack trace names your source, such as `src/services/profile.service.ts:42:11`, not the bundle. On Node that holds
+for every trace Node prints; on Bun, for `error.stack`, and so for every trace the `Logger` prints. The build writes
+`dist/main.js.map` beside the bundle, in development and production, and:
 
 - `meocord start` runs Node with `--enable-source-maps`, so Node maps each stack itself. The shard processes it
   starts inherit the flag.
@@ -112,6 +113,9 @@ alike. The build writes `dist/main.js.map` beside the bundle, in development and
   `error.stack` reads it as it reads an unmapped one.
 - A hook already set on `Error.prepareStackTrace`, such as a preloaded error tracker's, receives the mapped call
   sites. One set later replaces MeoCord's unless it calls the hook it found.
+- What Bun prints itself doesn't go through that hook: an uncaught error, an unhandled rejection, and
+  `console.error(error)` before anything reads `error.stack` keep the bundle's positions. Log errors through the
+  `Logger`, or read `error.stack`, to see your source.
 - Bun reports a call's column further along than Node does. In a minified production bundle, a frame for a call can
   map to the statement just before it, one line up; the frame that threw maps exactly.
 
