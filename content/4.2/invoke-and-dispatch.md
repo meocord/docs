@@ -178,6 +178,10 @@ To send a gateway event to the module's `@On` and `@Once` handlers, use `module.
 and a handler's `UserError`, which the bot answers with a reply when the event carries a message. `emit` runs no
 fallback, so check them with `rejects`.
 
+`invoke` on an `@On` or `@Once` handler runs it as `emit` does, as an event with the arguments you give, under
+`useStrictMocks()`; without strict mocks it warns where that would differ. A method a command, message or reaction
+route also reaches runs as that route's input gives.
+
 To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It
 lists the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata
 as `ExecutionContext` does. [Testing recipes](guide:testing-recipes#guards) has an example.
