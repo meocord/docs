@@ -74,9 +74,10 @@ the hooks, a quarter of it, at least 1 second and never more than half. A call s
   whose `onReady`, and that of everything it depends on, has finished or doesn't exist. A provided pool with no
   `onReady` is closed; a class whose `onReady` never ran isn't shut down, nor is anything that depends on it.
 - A start that fails, because a provider's factory or the login failed, shuts down what it made by the same rule, so
-  the process can end with its exit code. A value given with `useValue` stays open until the bot stops: a retry of
-  `start()` makes the rest again, and `app.stop()`, a Ctrl+C or a SIGTERM closes it. A Ctrl+C or a SIGTERM while a
-  failed start shuts down waits for that shutdown to finish.
+  the process can end with its exit code. A value given with `useValue` is left open: a retry of `start()` makes the
+  rest again, and once the bot stops, by `app.stop()`, a Ctrl+C or a SIGTERM, the value is shut down by the same rule,
+  which leaves out one with an `onReady` a failed start never ran. A stop while a failed start shuts down waits for
+  that shutdown, all within one `shutdownTimeout`.
 - A stop while the `onReady` hooks are running, by a signal or `app.stop()`, waits for the `onReady` in progress, then
   shuts its class down with the others; no further `onReady` starts. One still running once only the hooks' share of
   `shutdownTimeout` is left is named in a warning, and its class isn't shut down.
