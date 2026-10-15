@@ -71,8 +71,9 @@ test needs, and returns a builder. `compile()` binds them into a fresh container
 - **Each `compile()` is a new module**, with its own services and theme cache, and its own cooldown counts unless its
   store keeps them outside the process or a `useValue` store is shared; see
   [Testing recipes](guide:testing-recipes#how-it-works). It sets its presenter, theme and translator on the client of
-  each call it runs, so give each test its own client: in default mode a module without a presenter, dispatching on a
-  client another module used, answers with that module's presenter, with a warning once.
+  each call it runs, an `emit()`'s under strict mocks only, so give each test its own client: in default mode a module
+  without a presenter, dispatching on a client another module used, answers with that module's presenter, with a
+  warning once.
 - **`compile()` runs the bot's startup checks** on what it builds, such as two handlers for one command, or two
   handlers with the same customId pattern, and throws the first it finds. A handler declared with a `CommandType` and no
   builder is accepted, so a test fixture needs no builder.
