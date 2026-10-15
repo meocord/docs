@@ -114,10 +114,12 @@ their language.
 and numbers; format numbers and dates yourself, with `Intl.NumberFormat` for instance.
 
 A plural is an object whose keys are plural categories, `zero`, `one`, `two`, `few`, `many` and the required `other`. An
-object with any other key is a group, so a group may hold a message named `other`. The default catalog decides which is
-which: a translation of that group is a group too, even one that keeps only its `other` message. A plural takes a
-numeric `count`, which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no
-code of your own. A form a translation leaves out uses that translation's own `other`, not the default catalog;
+object with any other key is a group, so a group may hold a message named `other`. Where the default catalog has a
+group, a translation of it is a group too, even one that keeps only its `other` message. Elsewhere a translation's own
+keys decide, so a plural given for a plain default message, as a catalog loaded from JSON may hold for a language with
+more plural forms, is read as that plural, and `expectCompleteCatalog` reports it. A plural takes a numeric `count`,
+which picks the form through `Intl.PluralRules` for the language, so Russian's `few` and `many` need no code of your
+own. A form a translation leaves out uses that translation's own `other`, not the default catalog;
 [`expectCompleteCatalog`](#testing-a-catalog) reports the form as lacking.
 
 A key's name holds no `.`: a key is the dotted path to its message, so `'ban.done'` as one key is never found. Nest it
