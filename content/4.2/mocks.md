@@ -380,7 +380,8 @@ A testing module follows the bot more closely under strict mocks too, each with 
 - `emit()` sets the module's presenter, theme and translator on the client of each event argument, as the bot sets them
   on its own client, and a module without a presenter answers with MeoCord's default on a client another module used.
 - [`inspectHandler`](api:testing/inspectHandler) lists only the guards, interceptors and observers dispatch runs for
-  the handler's context types.
+  the handler's context types, and its `inheritedRoutes` names an inherited `@On` or `@Once` event too, such as
+  `event "guildCreate"`, which default mode leaves out.
 
 ## Collectors
 
