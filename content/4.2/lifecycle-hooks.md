@@ -92,8 +92,9 @@ most `shutdownTimeout`, and nothing more is made after it.
 
 - With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it. The
   manager's `stop()` keeps the manager running; a shard's ends that shard's process with the others. A manager's
-  `stop()` while its `start()` registers the commands or asks Discord for the shard count ends the start there: nothing
-  more is registered and no shard is spawned, and `start()` resolves.
+  `stop()` while its `start()` registers the commands or asks Discord for the shard count ends the start there: a
+  registration already sending the commands finishes, nothing more asks Discord and no shard is spawned, and `start()`
+  resolves.
 - A client that fails to close, or a shard the manager has to kill, sets `process.exitCode` to 1, unless another code is
   set, as a signal's shutdown would.
 - A stop while the bot logs in ends that login, so its `start()` rejects.
