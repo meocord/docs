@@ -69,15 +69,16 @@ the hooks, a quarter of it, at least 1 second and never more than half. A call s
 - A second signal more than a second after the first exits at once. One sooner counts as the same request,
   since a terminal's Ctrl+C can arrive twice.
 - A signal while the bot starts exits 0, as one once it is online does: the process exits with the code set when the
-  shutdown began, so a code `main.ts` sets as `start()` rejects for the stop doesn't count.
+  shutdown began, so a code `main.ts` sets as `start()` rejects for the stop doesn't count. It still exits 1 when a
+  client fails to close, or when a provider's factory fails while the shutdown waits for it.
 - A stop while the bot starts, before it is online, shuts down what the startup made: each class and provided value
   whose `onReady`, and that of everything it depends on, has finished or doesn't exist. A provided pool with no
   `onReady` is closed; a class whose `onReady` never ran isn't shut down, nor is anything that depends on it.
 - A start that fails, because a provider's factory or the login failed, shuts down what it made by the same rule, so
-  the process can end with its exit code. A value given with `useValue` is left open: a retry of `start()` makes the
-  rest again, and once the bot stops, by `app.stop()`, a Ctrl+C or a SIGTERM, the value is shut down by the same rule,
-  which leaves out one with an `onReady` a failed start never ran. A stop while a failed start shuts down waits for
-  that shutdown, all within one `shutdownTimeout`.
+  the process can end with its exit code. A value given with `useValue` is left open: a retry of `start()` after the
+  failed start makes the rest again, and once the bot stops, by `app.stop()`, a Ctrl+C or a SIGTERM, the value is shut
+  down by the same rule, which leaves out one with an `onReady` a failed start never ran. A stop while a failed start
+  shuts down waits for that shutdown, all within one `shutdownTimeout`.
 - A stop while the `onReady` hooks are running, by a signal or `app.stop()`, waits for the `onReady` in progress, then
   shuts its class down with the others; no further `onReady` starts. One still running once only the hooks' share of
   `shutdownTimeout` is left is named in a warning, and its class isn't shut down.
@@ -90,7 +91,9 @@ process keeps its process running. A `stop()` while the bot is starting waits fo
 most `shutdownTimeout`, and nothing more is made after it.
 
 - With [process sharding](guide:sharding#a-process-per-shard), it stops every shard, whichever process calls it. The
-  manager's `stop()` keeps the manager running; a shard's ends that shard's process with the others.
+  manager's `stop()` keeps the manager running; a shard's ends that shard's process with the others. A manager's
+  `stop()` while its `start()` registers the commands or asks Discord for the shard count ends the start there: nothing
+  more is registered and no shard is spawned, and `start()` resolves.
 - A client that fails to close, or a shard the manager has to kill, sets `process.exitCode` to 1, unless another code is
   set, as a signal's shutdown would.
 - A stop while the bot logs in ends that login, so its `start()` rejects.
