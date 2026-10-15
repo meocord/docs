@@ -60,7 +60,7 @@ you need from the id, such as `interaction.guild?.members.fetch(userId)`.
 
 A test reads them the same way under [`useStrictMocks()`](api:testing/useStrictMocks): an entity option given to
 [`createChatInputOptions`](api:testing/createChatInputOptions) holds only its id in an autocomplete, and its getters,
-such as `getUser()`, return `null`. In default mode the object is kept, with a warning naming the option.
+such as `getUser()`, return `null`. In default mode the object is kept, with a warning that names the options once.
 
 ## One handler for every option
 

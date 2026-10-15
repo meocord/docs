@@ -150,13 +150,13 @@ found by name as the real resolver finds them:
 
 ::example{file="testing/mocks.spec.ts" region="options"}
 
-- A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that
-  reads only one of the two is caught. `getAttachment()` returns the `Attachment` given, and `null` for an option
-  not given. A user option carries its user, and in a server its member: `getMember()` is
-  `null` in a DM, and a member you give answers `getUser()` with its user. In an autocomplete, Discord sends these
-  options as their ids: under strict mocks they hold the id only, as the handler's params do, and their getters return
-  `null`, or throw discord.js's error when asked with `required: true`. Give the object, not a bare id, which reads as a
-  string option. In default mode they keep the object, and a warning names them once.
+- A user, role, channel or attachment option is set both as the id and as the resolved object, so a handler that reads
+  only one of the two is caught. `getAttachment()` returns the `Attachment` given, and `null` for an option not given. A
+  user option carries its user, and in a server its member: `getMember()` is `null` in a DM, and a member you give
+  answers `getUser()` with its user. In an autocomplete, Discord sends a user, member, role, channel, mentionable or
+  attachment option as its id: under strict mocks it holds the id only, as the handler's params do, and its getter
+  returns `null`, or throws discord.js's error when asked with `required: true`. Give the object, not a bare id, which
+  reads as a string option. In default mode the object is kept, and a warning names the options once.
 - Each getter reads its option as discord.js does, and throws discord.js's own error: a `TypeError` with its `code`. A
   getter of another type throws, whether or not it's asked with `required: true`: `getInteger()` on `1.5`, a number
   option, throws `Option "x" is of type: 10; expected 4.`, while a whole number reads as either. A user or member read
@@ -170,6 +170,13 @@ found by name as the real resolver finds them:
   `getFocused(true)` and `options.data` alike. A number given for it is its digits under strict mocks. The focused
   option is in `options.data`, so with no value given an autocomplete handler's params hold it as `''`, such as
   `{ query: '' }`.
+- Under strict mocks the focused option is read by its name too, as discord.js reads it: before anything is typed
+  `getString()` reads `''` and `get()` returns it, marked `focused`; a typed number reads through `getInteger()`, and
+  `getString()` on it throws discord.js's type error; and one given no value takes any of the string, integer and
+  number getters, since the mock doesn't know its declared type. In default mode these getters read as before, `null`
+  for an option given no value, with a warning once.
+- `getMentionable()` on a user option returns the user's member in a server and the user in a DM under strict mocks,
+  as discord.js reads `member ?? user`. In default mode it returns the user, with a warning once.
 
 A modal's submitted fields come from [`createModalFields({ body: 'It crashed' })`](api:testing/createModalFields), which
 discord.js doesn't let a test build. A file upload field takes an array of `Attachment`s:
@@ -330,7 +337,9 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
 - a reaction made without a message has a whole one, so a dispatched reaction isn't fetched;
 - a message the bot sends is its `client.user`'s, and one it sends in a DM is in that DM;
-- an autocomplete's user, member, role, channel, mentionable or attachment option is its id, as Discord sends it;
+- an autocomplete's user, member, role, channel, mentionable or attachment option is its id, as Discord sends it,
+  and its focused option is read by name, `''` before anything is typed;
+- `getMentionable()` on a user option gives the user's member in a server;
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
   until then, and reading it warns once.
 
