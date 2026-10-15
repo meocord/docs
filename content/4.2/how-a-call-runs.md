@@ -130,7 +130,8 @@ they answered is not registered. A method the subclass overrides without decorat
 either way.
 
 [`inspectHandler`](api:testing/inspectHandler)'s `inheritedRoutes` lists the routes a handler answers because a base
-declares them, events aside, so a test can pin what a subclass still answers.
+declares them, so a test can pin what a subclass still answers. Under `useStrictMocks()` it names an inherited `@On`
+or `@Once` event too, such as `event "guildCreate"`; default mode leaves events out, with a warning.
 
 ## The call's context
 
