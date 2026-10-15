@@ -86,8 +86,9 @@ Inject `ShardContext` from `meocord/core`, and `call` a service's method in ever
   sharding, the class of that name in each process.
 - **What crosses:** only JSON, arguments and results alike, in every mode: in one process and in a test too, a `Date`
   arrives as a string, a `Map` as `{}` and a function as `undefined`, and a value JSON can't write, such as a
-  `BigInt`, gives an error result. With process sharding, the bot refuses to start when two controllers, services or
-  provided classes share a name.
+  `BigInt`, gives an error result. An object arrives with its own fields only, without its class's getters; return a
+  plain object, or give the class a `toJSON`. With process sharding, the bot refuses to start when two controllers,
+  services or provided classes share a name.
 - **Types:** each result is typed as it arrives, as [`Jsonified<T>`](api:types/Jsonified) from `meocord/core` gives it:
   a method returning `Promise<Date>` gives `string` values. A param JSON would change, such as a `Date`, can't be
   passed, and the compile error names the type to declare instead:
