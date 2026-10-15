@@ -79,6 +79,11 @@ The build records its platform in `meocord.platform.json`. A bot started on anot
 online, with a message naming both. The check runs before any package loads, so a native addon built for another
 platform never gets to fail with an error of its own.
 
+A build packs one copy of each native package, and every importer loads it. When bundled code imports one that is
+installed twice, such as `natpkg@1` at the top of `node_modules` and `natpkg@2` under a package that needs it, the
+build warns, naming each copy's version and place and the one packed. Install one version, with `npm dedupe` or an
+`overrides` entry; the next major version (5.0) stops the build there.
+
 ## Externals
 
 `externals` keeps a module out of the bundle for any other reason; with `bundleDependencies`, those named as strings are
