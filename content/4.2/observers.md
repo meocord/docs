@@ -126,8 +126,9 @@ Register both: the observer in `observers`, the interceptor in `interceptors`. W
 
 `invoke` and `emit` wait for the module's observers before they resolve, so a test sees what they were told. The
 testing module takes an app's observers, and `observers` of its own. `inspectHandler(Controller, 'method', { app })`
-lists the app's observers in `observers`, in the order they are told, `types` aside: an observer limited to other types
-is listed but not told about this handler's calls:
+lists the app's observers in `observers`, in the order they are told. Under strict mocks an observer limited by
+`types` to other kinds of call isn't listed, as it isn't told about this handler's calls; in default mode it is listed,
+with a warning once:
 
 ::example{file="observers/audit.observer.spec.ts" region="spec"}
 
