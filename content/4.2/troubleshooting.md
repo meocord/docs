@@ -205,9 +205,10 @@ Each warning names the handler, the class or the setting, and says what to write
 - **"… `[]` takes messages as they are, with no prefix; write `''` for that"** A static `prefix: []` takes messages with
   no prefix; in 5.0 it starts no command. Write `''`, or `false` on a handler for no prefix and no mention.
 - **"… Until the next major version (5.0) refuses it at startup, @On(…) in … does not run."** or **"… is on a class
-  made for each call, …"** An `@On` or `@Once` sits on a class only a stage or the presenter injects, with a decorator
-  a controller's handler would be refused for, or on a class that injects `ExecutionContext`. Move the handler to a
-  service; see [Gateway events](guide:gateway-events).
+  made for each call, …"** An `@On` or `@Once` sits on a class the app only makes, such as a service only a stage or
+  the presenter injects, a `useClass` provider, or a `useValue` or `useFactory` instance, with a decorator a listed
+  service's handler would be refused for, or an `@Once` on a class sharing another's name; or on a class that injects
+  `ExecutionContext`. Move the handler to a service; see [Gateway events](guide:gateway-events).
 - **"… gives no guilds and inherits …'s; declare guilds on … to keep them."** A `@CommandBuilder` subclass registers
   in its base's servers; in 5.0, in the configured scope. Declare `guilds` on it.
 - **"… not registered: … no guild ids, as when the variable holding them is unset."** A builder's `guilds` holds no
