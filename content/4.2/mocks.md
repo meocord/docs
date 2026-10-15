@@ -171,10 +171,10 @@ found by name as the real resolver finds them:
   option is in `options.data`, so with no value given an autocomplete handler's params hold it as `''`, such as
   `{ query: '' }`.
 - Under strict mocks the focused option is read by its name too, as discord.js reads it: before anything is typed
-  `getString()` reads `''` and `get()` returns it, marked `focused`; a typed number reads through `getInteger()`, and
-  `getString()` on it throws discord.js's type error; and one given no value takes any of the string, integer and
-  number getters, since the mock doesn't know its declared type. In default mode these getters read as before, `null`
-  for an option given no value, with a warning once.
+  `getString()` reads `''` and `get()` returns it, marked `focused`; a typed whole number reads through `getInteger()`
+  only, and one with a fraction through `getNumber()`, and `getString()` on either throws discord.js's type error; and
+  one given no value takes any of the string, integer and number getters, since the mock doesn't know its declared type.
+  In default mode these getters read as before, `null` for an option given no value, with a warning once.
 - `getMentionable()` on a user option returns the user's member in a server and the user in a DM under strict mocks,
   as discord.js reads `member ?? user`. In default mode it returns the user, with a warning once.
 
