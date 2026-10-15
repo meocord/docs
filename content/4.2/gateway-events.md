@@ -43,10 +43,11 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 - **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
   interceptors on the method or class apply, and the app's global ones. A guard receives the event's
   arguments, and `ExecutionContext.getType()` is `'event'`.
-- **Stages an event can't take.** `@Defer`, `@Validate`, `@UsePipe` and `@Cooldown` don't apply to an event. On a
-  controller or service listed in `@MeoCord({ controllers, services })`, the app refuses to start with one on an `@On`
-  or `@Once` handler. On any other class, such as one a provider makes, that handler doesn't run, and startup warns,
-  naming it; the next major version (5.0) refuses it there too.
+- **What an event handler refuses.** `@Defer`, `@Validate`, `@UsePipe` and `@Cooldown` don't apply to an event,
+  and `@Once` tells classes apart by name. On a controller or service listed in
+  `@MeoCord({ controllers, services })`, the app refuses to start with one of those on an `@On` or `@Once` handler, or
+  with an `@Once` on a class that shares another's name. On any other class, such as one a provider makes, that
+  handler doesn't run, and startup warns, naming it; the next major version (5.0) refuses it there too.
 - **Alongside dispatch.** `@On('interactionCreate')` and `@On('messageCreate')` run beside MeoCord's own
   dispatch of those events, not in place of it.
 
