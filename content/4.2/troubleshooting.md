@@ -185,16 +185,39 @@ refusing the connection, so the bot stopped before login with the cause. Fix wha
 
 ### Warnings that become errors in 5.0
 
-Some mistakes only warn, so the bot still starts, and stop it in the next major version (5.0). Each warning names the
-handler or the filter, and says what to write instead:
+Some mistakes only warn, so the bot still starts, and stop it, or do something else, in the next major version (5.0).
+Each warning names the handler, the class or the setting, and says what to write instead:
 
 - **"Broken: @Catch's first entry, undefined, which matches no error, is deprecated; …"** An entry in a filter's
   `@Catch` isn't a class, often an `undefined` from two files that import each other. The filter still catches the
   other types it lists. Import the class where it's defined, or move it out of the cycle. See
   [Exception filters](guide:exception-filters#gotchas).
 - **"@MessageHandler('') on `Class.method` is deprecated; in the next major version (5.0) it is refused."** An empty
-  pattern runs for every message, as no pattern does. Write `@MessageHandler()` for a listener, or check the value the
-  pattern is built from.
+  pattern, or one of spaces alone, runs for every message, as no pattern does. Write `@MessageHandler()` for a
+  listener, or check the value the pattern is built from.
+- **"`Class.method`: @Command goes on an instance method, not a static one; it never runs."** A handler decorator, or
+  `@Inject`, sits on a static member, where nothing reads it. Move it to an instance member.
+- **"… can take the same messages, as one takes a word where the other has an optional param; …"** Two patterns
+  differ only in which params are optional. The one the warning names answers, whatever the order; change one
+  pattern, or give one its own prefix. See [Which handler runs](guide:message-commands#which-handler-runs).
+- **"… differ only in case, and this command reads flags in any case, …"** Two flags such as `{--v}` and `{--V}`:
+  `--v` and `--V` both set the first. Rename one, or set `caseSensitive: true`.
+- **"… `[]` takes messages as they are, with no prefix; write `''` for that"** A static `prefix: []` takes messages with
+  no prefix; in 5.0 it starts no command. Write `''`, or `false` on a handler for no prefix and no mention.
+- **"… Until the next major version (5.0) refuses it at startup, @On(…) in … does not run."** or **"… is on a class
+  made for each call, …"** An `@On` or `@Once` sits on a class only a stage or the presenter injects, with a decorator
+  a controller's handler would be refused for, or on a class that injects `ExecutionContext`. Move the handler to a
+  service; see [Gateway events](guide:gateway-events).
+- **"… gives no guilds and inherits …'s; declare guilds on … to keep them."** A `@CommandBuilder` subclass registers
+  in its base's servers; in 5.0, in the configured scope. Declare `guilds` on it.
+- **"… not registered: … no guild ids, as when the variable holding them is unset."** A builder's `guilds` holds no
+  id, and `meocord register` still exits 0. Set the ids; see
+  [A command in its own servers](guide:slash-commands#a-command-in-its-own-servers).
+- **"… deleteUsageRepliesAfter … longer than a timer can wait …"** Over 2,147,483 seconds keeps usage replies. Give
+  a shorter time, or `0` to keep them.
+- **"… is installed more than once for bundled code: …"** A build warning: a self-contained build packs one copy of a
+  native addon. Install one version; see
+  [Native addons and platforms](guide:self-contained-builds#native-addons-and-platforms).
 - **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
   handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
   [Messages and reactions](#messages-and-reactions).
@@ -206,8 +229,8 @@ handler or the filter, and says what to write instead:
   to the class.
 
 The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
-major version (5.0). Use … instead." names an API that still works, and is logged once. See
-[the upgrade guide](guide:migrating#upgrading-from-40-to-41).
+major version (5.0). Use … instead." names an API that still works, and is logged once. See the upgrade guide for
+[4.1](guide:migrating#upgrading-from-40-to-41) and [4.2.3](guide:migrating#upgrading-from-422-to-423).
 
 ## A command doesn't show up in Discord
 
