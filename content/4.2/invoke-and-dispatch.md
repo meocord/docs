@@ -67,9 +67,9 @@ They differ in where the handler comes from, and in what happens to an error:
 | The user's own outcome     | a refusal rejects                             | resolves with `error`, answered as the bot answers it |
 
 The user's own outcome is a usage reply, an unknown command, or the refusal of a guard, a cooldown or the cooldown
-store, a validation or a `UserError`. Both wait for the module's [observers](guide:observers) before they resolve.
-Under strict mocks a call whose answer fails to build is reported to them once, as the bot reports it; in default mode
-an interaction's observers hear it twice, with a warning once.
+store, a validation or a `UserError`. Both wait for the module's [observers](guide:observers) before they resolve. Under
+strict mocks a call `dispatch()` runs whose answer fails to build is reported to them once, as the bot reports it; in
+default mode an interaction's observers hear it twice, with a warning once.
 
 An interaction always gets an answer, and a message command a reply with its usage or the reason. These are only
 logged, as the bot does, so `getResponse` and the mock's methods show nothing for them: a usage error on a message
@@ -186,11 +186,12 @@ as it was, with a warning once when the module has any of them.
 `useStrictMocks()`; without strict mocks it warns where that would differ. A method a command, message or reaction
 route also reaches runs as that route's input gives.
 
-To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It
-lists the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata
-as `ExecutionContext` does. Under strict mocks it lists only the stages dispatch runs for the handler's context types,
-such as no global `@Guard({ types: ['message'] })` for a slash command; in default mode it lists every one, with a
-warning once where dispatch runs fewer. [Testing recipes](guide:testing-recipes#guards) has an example.
+To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It lists
+the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata as
+`ExecutionContext` does. Under strict mocks it lists only the guards, interceptors and observers dispatch runs for the
+handler's context types, such as no global `@Guard({ types: ['message'] })` for a slash command; in default mode it
+lists every one, with a warning once where dispatch runs fewer. [Testing recipes](guide:testing-recipes#guards) has an
+example.
 
 ## Gotchas
 
