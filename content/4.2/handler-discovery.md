@@ -93,10 +93,11 @@ handlers:
 
 ## Gotchas
 
-- **A handler on a class the app doesn't bind isn't listed.** List its controller in `controllers`. A service's `@On`
-  and `@Once` handlers run and are listed. Any other handler on a service never runs, and the bot warns at startup,
-  naming it; move it to a controller. On a service listed in `services`, or a class a controller or such a service
-  injects, `list()` lists it too.
+- **Listed isn't always run.** `list()` lists every handler of a class the app binds: a controller in `controllers`, a
+  service in `services`, or a class one of them injects. Of any other instance whose lifecycle hooks run, it lists the
+  `@On` and `@Once` handlers only. A command, component, modal, autocomplete, message or reaction handler runs only on
+  a controller in `controllers`; one on any other class is listed but never runs, and the bot warns at startup, naming
+  it, so move it to a controller. An `@On` or `@Once` handler runs wherever it's listed.
 - **A subcommand is its own entry.** `/settings notify email` is listed by its full path; group entries by their
   first word for one line per top-level command.
 - **The prefix isn't known to an entry.** Pass the one users type to `usage()`; an app with several prefixes picks

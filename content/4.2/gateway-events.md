@@ -37,9 +37,16 @@ For commands and components, use their decorators instead: `@Command`, `@Message
   on that one instance, the same one the rest of the app injects. A class made for each call, because it injects
   `ExecutionContext`, receives no events, and startup warns about one with `@On` or `@Once`. `@Command`,
   `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
+- **Order.** The handlers of one event start in [dependency order](guide:lifecycle-hooks), as the lifecycle hooks
+  run, so a class's handler starts after those of the classes it injects. They run side by side: one doesn't wait for
+  another to finish.
 - **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
   interceptors on the method or class apply, and the app's global ones. A guard receives the event's
   arguments, and `ExecutionContext.getType()` is `'event'`.
+- **Stages an event can't take.** `@Defer`, `@Validate`, `@UsePipe` and `@Cooldown` don't apply to an event. On a
+  controller or service listed in `@MeoCord({ controllers, services })`, the app refuses to start with one on an `@On`
+  or `@Once` handler. On any other class, such as one a provider makes, that handler doesn't run, and startup warns,
+  naming it; the next major version (5.0) refuses it there too.
 - **Alongside dispatch.** `@On('interactionCreate')` and `@On('messageCreate')` run beside MeoCord's own
   dispatch of those events, not in place of it.
 
