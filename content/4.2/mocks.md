@@ -204,7 +204,11 @@ least one `Attachment`.
 - **`createMockMember({ user, guild, roles, nickname })`** makes a member with the roles given; see
   [Members and roles](#members-and-roles).
 - **[`createMockUser()`](api:testing/createMockUser)** mocks a person, `bot: false`. A DM to the user, or to a member
-  of theirs, goes through the user's one DM channel, which `createDM()` resolves to.
+  of theirs, goes through the user's one DM channel, which `createDM()` resolves to. That channel has the user as its
+  `recipient`, and is the user's `dmChannel` once made. Under strict mocks, a client's `users.createDM(user)` resolves
+  to it and `users.send(user, options)` sends through it, and the channel's `client` is the user's. In default mode
+  `users.createDM()` gives every user the same channel, `users.send()` resolves to an empty message, and a test that
+  reads a DM channel's `client` gets a client of its own, each with a warning once.
 - **`createMockChannel(Class)`** mocks a channel of the class you pass, such as `TextChannel` or `ThreadChannel`. Its
   type guards answer for that class, and its managers, `messages`, `threads` or `members`, have real, empty caches, with
   the channel as their `channel`, and as `thread` on a thread's `members`. Give one to `createMockMessage({ channel })`
@@ -274,23 +278,34 @@ It takes the roles, permissions and user to give it, such as
 A method that returns a promise in discord.js resolves, so `await` and `.catch()` work with no setup. A server's
 `emojis`, `stickers`, `scheduledEvents`, `autoModerationRules` and `invites` managers answer as its other managers do:
 
-| Method                                                                                                                        | Resolves to                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `send()`, a message's `reply()`, `crosspost()`, `forward()`, and an interaction's `editReply()`, `followUp()`, `fetchReply()` | a mock message in the channel it was sent in, holding what was sent |
-| an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`, `showModal()`                                        | `undefined`                                                         |
-| a manager's `fetch(id)`, or `fetch({ user })` and the like                                                                    | its cached item with that id, or a new one it caches                |
-| a guild's `members.fetch({ user: ids })`                                                                                      | a `Collection` of each, as `fetch(id)` gives it                     |
-| a manager's `fetch()` for a list                                                                                              | an empty `Collection`                                               |
-| a manager's `create()` and `edit()`                                                                                           | a mock of its item                                                  |
-| `createDM()`                                                                                                                  | a mock DM channel                                                   |
-| a structure's own `edit()`, `fetch()`, `delete()` and setters, but a message's `delete()`                                     | the structure itself                                                |
-| a message's `delete()`, `pin()` and `unpin()`                                                                                 | `undefined`                                                         |
-| any other method that returns a promise                                                                                       | `undefined`                                                         |
+| Method                                                                                                                        | Resolves to                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `send()`, a message's `reply()`, `crosspost()`, `forward()`, and an interaction's `editReply()`, `followUp()`, `fetchReply()` | a mock message in the channel it was sent in, holding what was sent                  |
+| an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`, `showModal()`                                        | `undefined`                                                                          |
+| a manager's `fetch(id)`, or `fetch({ user })` and the like                                                                    | its cached item with that id, a message made in that channel, or a new one it caches |
+| a guild's `members.fetch({ user: ids })`                                                                                      | a `Collection` of each, as `fetch(id)` gives it                                      |
+| a manager's `fetch()` for a list                                                                                              | an empty `Collection`; under strict mocks, a channel's messages                      |
+| a manager's `create()` and `edit()`                                                                                           | a mock of its item; under strict mocks, the item asked for                           |
+| `createDM()`                                                                                                                  | the user's DM channel                                                                |
+| a member's `kick()`                                                                                                           | the member                                                                           |
+| `awaitMessages()` and `awaitReactions()`                                                                                      | an empty `Collection`, as nothing answers a mock                                     |
+| a structure's own `edit()`, `fetch()`, `delete()` and setters, but a message's `delete()`                                     | the structure itself                                                                 |
+| a message's `delete()`, `pin()` and `unpin()`                                                                                 | `undefined`                                                                          |
+| any other method that returns a promise                                                                                       | `undefined`                                                                          |
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
 
+Under strict mocks, a channel caches each message made in it, or sent there through `send()` or `reply()`, as
+discord.js caches messages as they arrive, and its `messages.fetch()` with no id lists them, newest first, honouring
+`limit`, 50 by default, `before`, `after` and `around`. `guild.channels.create()` makes the type its options name, a
+manager's `edit(id, options)` resolves to the item with that id, and a `name` given to `create()` or `edit()` names
+the item. In default mode a channel's `messages.cache` stays as it was, `fetch()` for a list resolves to an empty
+`Collection`, `create()` makes a text channel, and `edit()` a new item under another id, each with a warning once. In
+both modes a thread a channel's thread manager creates or fetches has that channel as its `parent`.
+
 A method that returns a value at once returns what discord.js computes where the mock has what it needs: `resolve()`,
-`comparePositionTo()`, `permissionsFor()` (a thread's only under strict mocks), `message.mentions.has(user)`,
+`comparePositionTo()`, `permissionsFor()` (a thread's, or a channel's made without a server, only under strict
+mocks), `message.mentions.has(user)`,
 `isReady()`, and `avatarURL()` and `iconURL()`, `null` with no avatar or icon set. Any other returns `undefined`. A test
 still decides with `mockReturnValue`, `mockResolvedValue` and `mockRejectedValue`.
 
@@ -332,7 +347,13 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   voice channel, but not manage, pin, kick or ban. In default mode it has none, and a read that would differ warns until
   the test gives @everyone its permissions, as a role with the server's id, which is its @everyone:
   `createMockGuild({ id, roles: [createMockInteraction(Role, { id, permissions })] })`;
-- a channel or thread made without a server has one of its own, a thread with a text channel as its parent;
+- a channel or thread made without a server has one of its own, a thread with a text channel as its parent. In
+  default mode such a channel's `permissionsFor()`, `overwritesFor()`, `memberPermissions()` and `rolePermissions()`
+  return `undefined`, as a thread's do, with a warning once;
+- a client's `users.createDM()` and `users.send()` reach the user's own DM channel, whose `client` is the user's;
+- a channel caches the messages made or sent in it, and its `messages.fetch()` with no id lists them;
+- `guild.channels.create()` makes the type named, `create()` and `edit()` apply a `name`, and `edit(id)` resolves to
+  that item;
 - those values read as discord.js gives them: `me` is `false`, `repliedUser` and a modal's `message` are `null`, and
   `editedAt`, `presence`, `verified`, `systemChannel` and `parent` are computed from what the mock holds;
 - a reaction made without a message has a whole one, so a dispatched reaction isn't fetched;
@@ -351,6 +372,15 @@ reaction without its `ReactionEvent`, naming what to pass, and an autocomplete t
 `@Autocomplete` handler or to none; `compile()` refuses an override stub without its stage's method. A generated
 project's `vitest.setup.ts` makes this call. A second answer after one a test set, which discord.js refuses, runs with a
 warning in default mode; under strict mocks it throws, as discord.js does.
+
+A testing module follows the bot more closely under strict mocks too, each with a warning once in default mode:
+
+- `dispatch()` reports a call whose answer fails to build once, as `'error'`, as the bot does. In default mode an
+  interaction's observers hear it twice, first with its own outcome. `dispatch()` rejects with that failure either way.
+- `emit()` sets the module's presenter, theme and translator on the client of each event argument, as the bot sets them
+  on its own client, and a module without a presenter answers with MeoCord's default on a client another module used.
+- [`inspectHandler`](api:testing/inspectHandler) lists only the guards, interceptors and observers dispatch runs for
+  the handler's context types.
 
 ## Collectors
 
