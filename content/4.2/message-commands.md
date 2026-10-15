@@ -88,6 +88,8 @@ Set the prefix once, for the whole app, in `@MeoCord({ messages })`:
 
 - `prefix` is a string, or a list such as `['!', '?']`. The longest prefix that fits is used, and a space
   after it is allowed, so `! roll 20` works too. Without one, a pattern matches the message as it is.
+- `prefix: []`, on the app or a handler, also takes messages with no prefix, and logs a warning at startup: in the
+  next major version (5.0) it starts no command, as a prefix function's `[]` does. Write `''` for no prefix.
 - `mention: true` also accepts a mention of the bot, `@Bot roll 20`, in place of the prefix.
 - `mention: 'only'` starts every command that takes the app's prefix with a mention of the bot in a server, never a
   prefix. A handler with a `prefix` of its own still starts with it, and needs `MessageContent` for it. A direct
@@ -129,6 +131,8 @@ Only one patterned handler runs for a message: the most specific one that matche
 2. Then a fixed number of words beats a rest: `roll {a} {b}` beats `roll {rest...}`.
 3. Then a pattern without an optional param beats one with it, and fewer params beat more.
 4. Patterns still equal go to the one whose first differing word is literal: `roll {x}` beats `{verb} 6`.
+5. Then a required param beats an optional one at the first place where one pattern has each: `a {x} {y?}` beats
+   `a {x:int?} {y:int?}`.
 
 A handler whose `scope` fits where the message was sent comes first, so `help` can have a server handler and a
 DM handler. The order is fixed at startup: declaration order and file layout never decide it. Two handlers that can
@@ -138,6 +142,11 @@ handler's own `'!'` and another's `['!', '?']`, or one's own `'!'` beside the ap
 ```text
 A.roll: "roll" and "roll" in B.roll match the same messages, so only one of them could ever answer those. Change one pattern, or give one its own prefix.
 ```
+
+Two patterns that take the same messages only because one has an optional param where the other has a required one,
+such as `'a {x} {y?}'` and `'a {x:int?} {y:int?}'`, are ranked by the last rule instead, so the same handler answers
+whatever the order. Startup logs a warning naming both and the one that answers; the next major version (5.0) stops
+the bot for such a pair too.
 
 An app's prefix function gives its prefixes only as each message arrives, so beside it a handler is refused only when
 it uses the function too, or when both take a mention because the app's `mention` is on.
@@ -260,9 +269,11 @@ A handler's options say more about its command:
 - `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an out-of-scope
   handler matches is answered `This command works in a server only.` or
   `This command works in direct messages only.` A command with a `member`, `role` or `channel` param works in
-  servers only whatever its scope says. A flag of those types refuses a DM only when the message gives it, though
-  help lists the command as server-only. `scope: 'dm'` with either stops the bot as it loads; see
-  [Errors at startup](#errors-at-startup).
+  servers only whatever its scope says, and so does one with a required flag of those types. An optional such flag
+  refuses a DM only when the message gives it, and help lists the command in a DM. A DM to a command that works only
+  in a server gets `This command works in a server only.` whatever words it gives; when another route of the command
+  works in a DM, a DM that names it without fitting gets that route's usage. `scope: 'dm'` with any of these stops the
+  bot as it loads; see [Errors at startup](#errors-at-startup).
 - `hidden: true` leaves the command out of the help listing and a parent's list of subcommands.
 
 ## A help command
@@ -338,17 +349,21 @@ built app, the source file below it, and the process exits 1:
 Two patterns that match the same messages stop the bot too, naming both handlers: `… match the same messages, so only
 one of them could ever answer those. Change one pattern, or give one its own prefix.` They match alike when they take
 the same prefix and differ only in param names or types, as `'roll {sides}'` and `'roll {count:int}'` do, or only in
-case, unless both are case-sensitive. An alias and a pattern count the same way.
+case, unless both are case-sensitive. An alias and a pattern count the same way. Two that differ only in which params
+are optional warn instead; see [Which handler runs](#which-handler-runs).
 
 ## Testing
 
 `resolveRoute(App, { content })` returns the handler a message reaches, with the params its pattern captures, from
 decorator metadata alone. A message that starts with a mention of the bot needs the bot's id, as `botId`, and `dm: true`
 resolves it as a direct message, where only handlers whose scope fits run: one scoped to servers, or with a `member`,
-`role` or `channel` param, isn't returned, as dispatch answers such a message with its usage. `resolveRoute` can't call
-a prefix function, so for an app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError`
-without one. `module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage
-replies and the built-in help included:
+`role` or `channel` param, isn't returned, as dispatch answers such a message `This command works in a server only.`
+Under `useStrictMocks()`, neither is one with a required flag of those types, or one the message gives; default mode
+returns it with a warning. Without `dm`, under `useStrictMocks()`, a message is read as sent in a server, as dispatch
+reads one, so a handler that works only in a DM isn't returned. `resolveRoute` can't call a prefix function, so for an
+app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError` without one.
+`module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage replies and the
+built-in help included:
 
 ::example{file="controllers/message/economy.message.controller.spec.ts" region="spec"}
 
@@ -370,9 +385,9 @@ See [Invoke and dispatch](guide:invoke-and-dispatch) for when to use each.
   `'ping'` then needs `!ping`. Give a handler that should match the bare message `{ prefix: false }`.
 - **Two handlers, one pattern.** Patterns that differ only in param names or types, such as `'roll {sides}'` and
   `'roll {count:int}'`, match the same messages and stop the bot at startup. Change one, or give one its own prefix.
-- **An empty pattern runs for every message.** `@MessageHandler('')`, often a pattern built from a value that is
-  empty, runs as `@MessageHandler()` does, and logs a warning naming the handler. It is deprecated, and stops the bot
-  in the next major version (5.0). Write `@MessageHandler()` for a listener.
+- **An empty pattern runs for every message.** `@MessageHandler('')`, or a pattern of spaces alone, often one built
+  from a value that is empty, runs as `@MessageHandler()` does, and logs a warning naming the handler. It is
+  deprecated, and stops the bot in the next major version (5.0). Write `@MessageHandler()` for a listener.
 
 ## Build it
 

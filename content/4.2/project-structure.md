@@ -112,8 +112,9 @@ its imports.
 
 The build and `meocord.config.ts` read your `paths` as `tsc` does, whatever TypeScript version the project uses: through
 `extends`, from `compilerOptions.baseUrl` when one is set, the project's own or one it inherits, else from the
-`tsconfig.json` that declares them, and with `${configDir}`. On TypeScript 6, which a generated app uses, `baseUrl` is
-deprecated, and the generated `tsconfig.json` declares its `paths` without it.
+`tsconfig.json` that declares them, and with `${configDir}`. One thing differs from `tsc`: a file inside a project
+the root `tsconfig.json`'s `references` name resolves through the root's `paths`, not its own. On TypeScript 6, which
+a generated app uses, `baseUrl` is deprecated, and the generated `tsconfig.json` declares its `paths` without it.
 
 ### The three tsconfigs
 

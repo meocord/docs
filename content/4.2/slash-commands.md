@@ -95,8 +95,12 @@ A builder's `guilds` option sends its command to those servers only, for staff c
 
 ::example{file="controllers/slash/builders/ban.builder.ts" region="builder"}
 
-A builder whose list is empty, once blank ids are dropped, is registered nowhere, rather than published globally by
-accident.
+A builder whose list is empty, once blank ids are dropped, as with an unset environment variable, is registered
+nowhere, rather than published globally by accident. One warning names each such builder and its command;
+`meocord register` still exits 0 for them, and exits 1 in the next major version (5.0).
+
+A builder that extends another and gives no `guilds` inherits its base's, and logs a warning naming both. Declare
+`guilds` on the subclass to keep them: the next major version (5.0) registers it in the configured scope.
 
 ### Registering without starting
 
@@ -110,7 +114,8 @@ npx meocord register --guild 1234567  # every command to one server
 ```
 
 It exits with a non-zero code when it can't register every command, as when Discord rejects the token or the commands,
-so a deploy step can stop on it.
+so a deploy step can stop on it. A builder whose `guilds` hold no id is the exception until 5.0; see
+[A command in its own servers](#a-command-in-its-own-servers).
 
 ## Entry point commands
 

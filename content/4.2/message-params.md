@@ -99,12 +99,18 @@ in `?`:
 - A value with spaces goes in quotes: `--note="buy milk"`. A flag given twice takes its last value. An untyped
   flag also takes `yes`, `no`, `on`, `off`, `true` or `false`, so `--bots=no` gives `false`.
 - A flag the command doesn't have gets the usage reply: `--all is not an option of this command`. So does a required
-  typed flag left out: with `{--from:user}`, `!purge 5` gets `--from is missing`. A flag given with no value, `--from`,
-  gets `--from needs a value, such as --from=<from>`.
+  typed flag left out: with `{--from:user}`, `!purge 5` gets `--from is missing`, in the same reply as any words the
+  message lacks. A flag given with no value, `--from`, gets `--from needs a value, such as --from=<from>`.
 - A flag before the command's first word, as in `!--bots purge 5`, isn't read, and the message names no command. A
   pattern that begins with a param has no command word, so its flags may come anywhere.
 - Words in quotes are never flags, so `"--bots"` stays text. A command with no flags reads `--bots` as an ordinary
   word. A rest takes the message's text without its flags, keeping its own spacing and line breaks.
+- A pattern's own word that starts with `--`, such as `--force` in `deploy --force {env} {--dry}`, is matched in its
+  place, so `!deploy --force prod` runs it. Anywhere else in the message, or given a value as `--force=yes`, it is a
+  flag.
+- On a command that reads flags in any case, two flags whose names differ only in case, such as `{--v}` and `{--V}`,
+  log a warning at startup: `--v` and `--V` both set the first. Rename one, or set `caseSensitive: true`; the next
+  major version (5.0) refuses such a pattern.
 - A flag's name starts with a letter, then letters, digits or `_`. `{--9lives}` stops the bot as it loads, since a
   message couldn't give it; see [Errors at startup](guide:message-commands#errors-at-startup).
 

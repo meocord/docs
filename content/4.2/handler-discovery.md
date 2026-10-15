@@ -57,7 +57,7 @@ A subcommand's `description` is its own, and a context menu command has none.
 ## Message commands
 
 A message command is listed once, with the `aliases` and `description` its handler declares, and its `scope`, which a
-`member`, `role` or `channel` param narrows to servers:
+`member`, `role` or `channel` param, or a required flag of those types, narrows to servers:
 
 ::playground{file="controllers/message/moderation.message.controller.ts" region="metadata" dispatch="message m <@140000000000000014> 1h"}
 
