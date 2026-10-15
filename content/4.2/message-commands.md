@@ -268,12 +268,13 @@ A handler's options say more about its command:
 - `description` is what the command does, for the help listing.
 - `scope` is where the command works: `'guild'`, `'dm'` or `'any'`, the default. A message only an out-of-scope
   handler matches is answered `This command works in a server only.` or
-  `This command works in direct messages only.` A command with a `member`, `role` or `channel` param works in
-  servers only whatever its scope says, and so does one with a required flag of those types. An optional such flag
-  refuses a DM only when the message gives it, and help lists the command in a DM. A DM to a command that works only
-  in a server gets `This command works in a server only.` whatever words it gives; when another route of the command
-  works in a DM, a DM that names it without fitting gets that route's usage. `scope: 'dm'` with any of these stops the
-  bot as it loads; see [Errors at startup](#errors-at-startup).
+  `This command works in direct messages only.`, or not at all when it has no prefix or mention, as it may be chat.
+  A command with a `member`, `role` or `channel` param works in servers only whatever its scope says, and so does one
+  with a required flag of those types. An optional such flag refuses a DM only when the message gives it, and help
+  lists the command in a DM. A DM that starts with a prefix or mention, to a command that works only in a server, gets
+  `This command works in a server only.` whatever words it gives; when another route of the command works in a DM, a
+  DM that names it without fitting gets that route's usage. `scope: 'dm'` with any of these stops the bot as it loads;
+  see [Errors at startup](#errors-at-startup).
 - `hidden: true` leaves the command out of the help listing and a parent's list of subcommands.
 
 ## A help command
@@ -357,11 +358,11 @@ are optional warn instead; see [Which handler runs](#which-handler-runs).
 `resolveRoute(App, { content })` returns the handler a message reaches, with the params its pattern captures, from
 decorator metadata alone. A message that starts with a mention of the bot needs the bot's id, as `botId`, and `dm: true`
 resolves it as a direct message, where only handlers whose scope fits run: one scoped to servers, or with a `member`,
-`role` or `channel` param, isn't returned, as dispatch answers such a message `This command works in a server only.`
-Under `useStrictMocks()`, neither is one with a required flag of those types, or one the message gives; default mode
-returns it with a warning. Without `dm`, under `useStrictMocks()`, a message is read as sent in a server, as dispatch
-reads one, so a handler that works only in a DM isn't returned. `resolveRoute` can't call a prefix function, so for an
-app that has one, pass the prefix the message has, as `prefix`; it throws a `TypeError` without one.
+`role` or `channel` param, isn't returned, as dispatch never runs it for a DM. Under `useStrictMocks()`, neither is
+one with a required flag of those types, or one the message gives; default mode returns it with a warning. Without
+`dm`, under `useStrictMocks()`, a message is read as sent in a server, as dispatch reads one, so a handler that works
+only in a DM isn't returned. `resolveRoute` can't call a prefix function, so for an app that has one, pass the prefix
+the message has, as `prefix`; it throws a `TypeError` without one.
 `module.dispatch(message)` sends the message through routing and the pipeline as the bot does, usage replies and the
 built-in help included:
 
