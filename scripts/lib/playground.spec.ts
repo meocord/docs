@@ -118,9 +118,9 @@ describe('runtimeEntry', () => {
 
 describe('nodeModulesPlugin', () => {
   const runtimeDir = path.resolve(import.meta.dirname, '../../src/playground/runtime')
-  const bundle = async (contents: string) => {
+  const bundle = async (contents: string, resolveDir = runtimeDir) => {
     const result = await build({
-      stdin: { contents, resolveDir: runtimeDir, loader: 'ts' },
+      stdin: { contents, resolveDir, loader: 'ts' },
       bundle: true,
       write: false,
       format: 'esm',
@@ -135,17 +135,30 @@ describe('nodeModulesPlugin', () => {
     const code = await bundle(`
       import { readFileSync } from 'node:fs'
       import { WebSocketManager } from '@discordjs/ws'
-      import Table from 'cli-table3'
       import { randomUUID } from 'node:crypto'
       import { EventEmitter } from 'node:events'
       import { AsyncLocalStorage } from 'node:async_hooks'
-      export { readFileSync, WebSocketManager, Table, randomUUID, EventEmitter, AsyncLocalStorage }
+      export { readFileSync, WebSocketManager, randomUUID, EventEmitter, AsyncLocalStorage }
     `)
     // Every Node import is resolved in the bundle, none left for a browser to fetch
-    expect(code).not.toMatch(/from\s*["'](node:)?(fs|crypto|events|async_hooks|@discordjs\/ws|cli-table3)["']/)
+    expect(code).not.toMatch(/from\s*["'](node:)?(fs|crypto|events|async_hooks|@discordjs\/ws)["']/)
     expect(code).toContain('Symbol.toPrimitive')
     expect(code).toContain('crypto.randomUUID')
     expect(code).toMatch(/AsyncLocalStorage = class|class AsyncLocalStorage/)
+  })
+
+  it('ships none of cli-table3 from where meocord resolves it, as only its command registration prints a table', async () => {
+    const { globSync, realpathSync } = await import('fs')
+    const root = path.resolve(import.meta.dirname, '../..')
+    const [meocord] = globSync('examples/*/node_modules/meocord/package.json', { cwd: root })
+    expect(meocord).toBeDefined()
+    // Where meocord's own import of cli-table3 resolves, which the real package would be bundled from
+    const code = await bundle(
+      `export { default } from 'cli-table3'`,
+      path.dirname(realpathSync(path.join(root, meocord!))),
+    )
+    expect(code).toContain('Symbol.toPrimitive')
+    expect(code).not.toContain('colWidths')
   })
 
   it('rewrites the async generator prototype the event emitter reads, which lowered code cannot evaluate', async () => {
