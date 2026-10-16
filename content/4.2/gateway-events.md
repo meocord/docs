@@ -33,10 +33,11 @@ For commands and components, use their decorators instead: `@Command`, `@Message
 
 - **Where.** On every instance whose lifecycle hooks run: a controller or service listed in
   `@MeoCord({ controllers, services })`, a class one of them, a guard, an interceptor, a filter, a pipe or the presenter
-  injects, a class provided under another token, and a provided `useValue` or `useFactory` instance. The handler runs
-  on that one instance, the same one the rest of the app injects. A class made for each call, because it injects
-  `ExecutionContext`, receives no events, and startup warns about one with `@On` or `@Once`. `@Command`,
-  `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in `controllers`.
+  injects, a class provided under another token, and a provided `useValue` or `useFactory` instance, though not the
+  cooldown store. The handler runs on that one instance, the same one the rest of the app injects. A class made for
+  each call, because it injects `ExecutionContext`, receives no events, and startup warns about one with `@On` or
+  `@Once`. `@Command`, `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in
+  `controllers`.
 - **Order.** The handlers of one event start in [dependency order](guide:lifecycle-hooks), as the lifecycle hooks
   run, so a class's handler starts after those of the classes it injects. They run side by side: one doesn't wait for
   another to finish.

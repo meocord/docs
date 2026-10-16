@@ -37,10 +37,10 @@ a line for each.
 ## How it works
 
 The registry reads the handlers of every controller and service the app binds, and the `@On` and `@Once` handlers of
-every other instance whose lifecycle hooks run, such as a service only a guard injects. It reads them on the first
-`list()`, and again once the bot's providers are made, so a list made from a provider's factory is complete once the bot
-is online. Entries come class by class, in the order the app makes them, each class after what it injects, then the
-classes only events reach.
+every other instance whose lifecycle hooks run, such as a service only a guard injects, the cooldown store aside. It
+reads them on the first `list()`, and again once the bot's providers are made, so a list made from a provider's factory
+is complete once the bot is online. Entries come class by class, in the order the app makes them, each class after what
+it injects, then the classes only events reach.
 
 `list({ kind, controller })` filters by what a handler handles, by the class declaring it, or both, and narrows the
 entries' type to that kind. Every entry has `controller`, `method`, `kind` and `name`:
@@ -94,10 +94,10 @@ handlers:
 ## Gotchas
 
 - **Listed isn't always run.** `list()` lists every handler of a class the app binds: a controller in `controllers`, a
-  service in `services`, or a class one of them injects. Of any other instance whose lifecycle hooks run, it lists the
-  `@On` and `@Once` handlers only. A command, component, modal, autocomplete, message or reaction handler runs only on
-  a controller in `controllers`; one on any other class is listed but never runs, and the bot warns at startup, naming
-  it, so move it to a controller. An `@On` or `@Once` handler runs wherever it's listed.
+  service in `services`, or a class one of them injects. Of any other instance whose lifecycle hooks run but the
+  cooldown store, it lists the `@On` and `@Once` handlers only. A command, component, modal, autocomplete, message or
+  reaction handler runs only on a controller in `controllers`; one on any other class is listed but never runs, and the
+  bot warns at startup, naming it, so move it to a controller. An `@On` or `@Once` handler runs wherever it's listed.
 - **A subcommand is its own entry.** `/settings notify email` is listed by its full path; group entries by their
   first word for one line per top-level command.
 - **The prefix isn't known to an entry.** Pass the one users type to `usage()`; an app with several prefixes picks
