@@ -1029,6 +1029,9 @@
   "meocord/core:HandlerRegistry.constructor(classes)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/core:HandlerRegistry.constructor(controllers)": {
+    "since": "4.2.3"
+  },
   "meocord/core:HandlerRegistry.constructor(messages)": {
     "since": "4.1.0-beta.5"
   },
@@ -3178,6 +3181,9 @@
   },
   "meocord/testing:TestingModule.constructor": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:TestingModule.constructor(app)": {
+    "since": "4.2.3"
   },
   "meocord/testing:TestingModule.constructor(appWarnUnanswered)": {
     "since": "4.1.0-beta.5"
