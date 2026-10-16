@@ -135,13 +135,14 @@ describe('nodeModulesPlugin', () => {
     const code = await bundle(`
       import { readFileSync } from 'node:fs'
       import { WebSocketManager } from '@discordjs/ws'
+      import Table from 'cli-table3'
       import { randomUUID } from 'node:crypto'
       import { EventEmitter } from 'node:events'
       import { AsyncLocalStorage } from 'node:async_hooks'
-      export { readFileSync, WebSocketManager, randomUUID, EventEmitter, AsyncLocalStorage }
+      export { readFileSync, WebSocketManager, Table, randomUUID, EventEmitter, AsyncLocalStorage }
     `)
     // Every Node import is resolved in the bundle, none left for a browser to fetch
-    expect(code).not.toMatch(/from\s*["'](node:)?(fs|crypto|events|async_hooks|@discordjs\/ws)["']/)
+    expect(code).not.toMatch(/from\s*["'](node:)?(fs|crypto|events|async_hooks|@discordjs\/ws|cli-table3)["']/)
     expect(code).toContain('Symbol.toPrimitive')
     expect(code).toContain('crypto.randomUUID')
     expect(code).toMatch(/AsyncLocalStorage = class|class AsyncLocalStorage/)

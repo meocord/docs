@@ -119,13 +119,15 @@ const SHIMS: Record<string, string> = {
 }
 
 /**
- * Modules mocked dispatch never reaches: the network, the file system, processes and discord.js's
- * gateway. Each resolves to a stub any use of which works.
+ * Modules mocked dispatch never reaches: the network, the file system, processes, discord.js's
+ * gateway, and the table meocord prints once it has registered commands. Each resolves to a stub any
+ * use of which works.
  */
 const STUBBED = new Set([
   'assert',
   'bufferutil',
   'child_process',
+  'cli-table3',
   'console',
   'diagnostics_channel',
   'dns',
