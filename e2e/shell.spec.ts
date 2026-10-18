@@ -57,6 +57,23 @@ test('a press outside the version menu closes it', async ({ page }) => {
   await expect(page.getByRole('menu')).toBeHidden()
 })
 
+test('pressing the version button again closes its menu, and a third press opens it', async ({ page }) => {
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: /^Documentation version/ })
+  const menu = page.getByRole('menu', { name: 'Documentation version' })
+
+  await trigger.click()
+  await expect(menu).toBeVisible()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+  await trigger.click()
+  await expect(menu).toBeHidden()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+
+  await trigger.click()
+  await expect(menu).toBeVisible()
+})
+
 test('the theme control switches the mode and shows the choice', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.goto('/')

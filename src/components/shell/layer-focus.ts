@@ -8,9 +8,16 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
  * Focus for an open layer: moves focus in when it opens, keeps Tab inside it, closes on Escape or a
  * press outside, and hands focus back to whatever had it when the layer closes, or to `returnTo`
  * when the layer opened from something that took focus for it. An Escape a control in the layer has
- * prevented, having used it itself, leaves the layer open.
+ * prevented, having used it itself, leaves the layer open. A press on `trigger`, the control that
+ * opens the layer, is left to that control, so pressing it again closes the layer rather than
+ * closing and reopening it.
  */
-export function useLayerFocus(ref: RefObject<HTMLElement | null>, close: () => void, returnTo?: Element | null) {
+export function useLayerFocus(
+  ref: RefObject<HTMLElement | null>,
+  close: () => void,
+  returnTo?: Element | null,
+  trigger?: Element | null,
+) {
   // Read through a ref, so a new `close` each render does not re-run the effect and move focus again.
   const closeRef = useRef(close)
   useEffect(() => {
@@ -46,7 +53,8 @@ export function useLayerFocus(ref: RefObject<HTMLElement | null>, close: () => v
       }
     }
     const onPointerDown = (event: PointerEvent) => {
-      if (!layer.contains(event.target as Node)) dismiss()
+      const target = event.target as Node
+      if (!layer.contains(target) && !trigger?.contains(target)) dismiss()
     }
 
     document.addEventListener('keydown', onKeyDown)
@@ -56,7 +64,7 @@ export function useLayerFocus(ref: RefObject<HTMLElement | null>, close: () => v
       document.removeEventListener('pointerdown', onPointerDown, true)
       if (handBack?.isConnected) handBack.focus()
     }
-  }, [ref, returnTo])
+  }, [ref, returnTo, trigger])
 }
 
 /** Arrow keys, Home and End move focus through a menu's items. */

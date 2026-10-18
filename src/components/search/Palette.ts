@@ -274,8 +274,8 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
       overflow: 'hidden',
       css: {
         transform: 'translateX(-50%)',
-        '@keyframes settle': { from: { opacity: 0, transform: 'translate(-50%, -4px) scale(.98)' } },
-        animation: 'settle theme.motion.duration.open theme.motion.ease.enter',
+        '@keyframes palette-settle': { from: { opacity: 0, transform: 'translate(-50%, -4px) scale(.98)' } },
+        animation: 'palette-settle theme.motion.duration.open theme.motion.ease.enter',
         '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
       },
       children: [

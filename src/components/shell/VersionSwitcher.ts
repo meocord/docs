@@ -1,6 +1,6 @@
 'use client'
 
-import { type KeyboardEvent, type MouseEvent, useRef } from 'react'
+import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from 'react'
 import { Button, Component, Div, For, Span, usePortal, type PortalLayerProps } from '@meonode/ui'
 import { focusCss, hitAreaCss, transitionCss } from '@/lib/design/css'
 import { Glyph } from '@/components/shell/icons'
@@ -31,6 +31,10 @@ export interface VersionSwitcherProps {
 interface MenuData extends VersionSwitcherProps {
   /** Where the trigger sits, so the menu opens under its right edge. */
   anchor: { bottom: number; right: number }
+  /** The button that opened the menu, whose own press closes it */
+  trigger: HTMLElement
+  /** Told while the menu is mounted, so the trigger reads as expanded, and when it closes, however it closed */
+  onOpenChange: (open: boolean) => void
 }
 
 function VersionRow(option: VersionOption, current: VersionOption, close: () => void) {
@@ -62,7 +66,12 @@ function VersionRow(option: VersionOption, current: VersionOption, close: () => 
 
 function VersionMenu({ data, close }: PortalLayerProps<MenuData>) {
   const ref = useRef<HTMLDivElement>(null)
-  useLayerFocus(ref, close)
+  useLayerFocus(ref, close, undefined, data.trigger)
+  const { onOpenChange } = data
+  useEffect(() => {
+    onOpenChange(true)
+    return () => onOpenChange(false)
+  }, [onOpenChange])
   const groups = GROUPS.map(group => ({
     ...group,
     options: data.options.filter(o => o.status === group.status),
@@ -81,8 +90,8 @@ function VersionMenu({ data, close }: PortalLayerProps<MenuData>) {
     maxHeight: 'min(420px, 70dvh)',
     overflowY: 'auto',
     css: {
-      '@keyframes settle': { from: { opacity: 0, transform: 'translateY(-4px) scale(.98)' } },
-      animation: 'settle theme.motion.duration.open theme.motion.ease.enter',
+      '@keyframes version-menu-settle': { from: { opacity: 0, transform: 'translateY(-4px) scale(.98)' } },
+      animation: 'version-menu-settle theme.motion.duration.open theme.motion.ease.enter',
       transformOrigin: 'top right',
       '@media (prefers-reduced-motion: reduce)': { animationName: 'none' },
     },
@@ -119,6 +128,7 @@ function VersionMenu({ data, close }: PortalLayerProps<MenuData>) {
 /** The toolbar's version control: shows the line being read and opens a menu of the others. */
 export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionSwitcher({ current, options }) {
   const portal = usePortal()
+  const [open, setOpen] = useState(false)
 
   return Button(
     [
@@ -131,13 +141,17 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
     {
       type: 'button',
       'aria-haspopup': 'menu',
+      'aria-expanded': open,
       'aria-label': `Documentation version ${current.label}`,
       onClick: (event: MouseEvent<HTMLButtonElement>) => {
+        if (open) return portal.close()
         const rect = event.currentTarget.getBoundingClientRect()
         portal.open(VersionMenu, {
           current,
           options,
           anchor: { bottom: rect.bottom, right: window.innerWidth - rect.right },
+          trigger: event.currentTarget,
+          onOpenChange: setOpen,
         })
       },
       display: 'inline-flex',
