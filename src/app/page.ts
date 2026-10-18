@@ -31,10 +31,10 @@ async function home() {
   const status = VERSIONS.lines.find(entry => entry.line === HOME_LINE)?.status
 
   return Window({
-    crumbs: [{ title: 'Overview' }],
+    crumbs: [{ title: 'Home' }],
     structuredData: [website(SITE_DESCRIPTION), framework(SITE_DESCRIPTION, REPOSITORY)],
-    // The home page is the line's overview, so the sidebar marks it.
-    groups: sidebar(HOME_LINE, 'overview'),
+    // No row is current: the home is its own page, and Overview is a Guide page with content of its own.
+    groups: sidebar(HOME_LINE),
     // The home is the Guide's first page, under the same tabs
     tabs: guideTabs(HOME_LINE, 'guide'),
     version: versionChoices(HOME_LINE),

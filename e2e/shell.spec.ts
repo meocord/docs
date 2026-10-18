@@ -211,11 +211,11 @@ test.describe('nothing spills past the reading column', () => {
   }
 })
 
-test('the home page marks Overview in the sidebar', async ({ page }) => {
+test('the home page marks no sidebar row as the current page', async ({ page }) => {
   await page.goto('/')
-  const current = page.getByRole('navigation').locator('a[aria-current="page"]')
-  await expect(current).toHaveCount(1)
-  await expect(current).toHaveText('Overview')
+  const navigation = page.getByRole('navigation')
+  await expect(navigation.getByRole('link', { name: 'Overview' })).toBeVisible()
+  await expect(navigation.locator('a[aria-current="page"]')).toHaveCount(0)
 })
 
 test('a sidebar label too long for its row wraps, whole, beside its badge', async ({ page }) => {
