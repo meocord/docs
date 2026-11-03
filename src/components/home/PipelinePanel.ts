@@ -197,6 +197,12 @@ const Panel = createNode('section', {
       flexDirection: 'column',
       padding: 'theme.space.3 theme.space.2',
     },
+    '& [data-recorded]': {
+      margin: '0 0 theme.space.2',
+      padding: '0 theme.space.2',
+      fontSize: 'theme.type.caption.size',
+      color: 'theme.ink.secondary',
+    },
     '& [data-pane="trace"] h3': {
       margin: '0 0 theme.space.1',
       padding: '0 theme.space.2',
@@ -400,6 +406,7 @@ export function PipelinePanel(demo: PipelineDemo) {
             'data-pane': 'trace',
             children: [
               H3('Trace', { key: 'h' }),
+              P('Recorded from a real run of this code, at build time', { key: 'recorded', 'data-recorded': true }),
               Ol({ key: 'stages', children: demo.stages.map(stageRow) }),
               // Each stage's sentence laid under the one shown, unseen, so the trace stands as tall as
               // its longest and nothing moves as the call steps through.

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
 import { Div, H1, Node, Span } from '@meonode/ui'
+import { Link } from '@/components/shell/links'
 import { BuildSection, DoorsSection, WhySection } from '@/components/home/HomeSections'
-import { HomeRows, Prose } from '@/components/nodes'
+import { HeroActions, HomeRows, Prose } from '@/components/nodes'
 import { PipelinePanel } from '@/components/home/PipelinePanel'
 
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
@@ -13,7 +14,7 @@ import { specFor, VERSIONS } from '@/config/versions'
 import { REPOSITORY } from '@/lib/docs/render'
 import { guideTabs } from '@/lib/docs/guide-site'
 import { sidebar, versionChoices } from '@/lib/docs/site'
-import { buildKinds, claims, doors, pipelineDemo } from '@/lib/home/data'
+import { buildKinds, claims, doors, heroActions, pipelineDemo } from '@/lib/home/data'
 import { framework, website } from '@/lib/seo/structured-data'
 import { pageMetadata } from '@/lib/docs/page-metadata'
 
@@ -60,10 +61,16 @@ async function home() {
             `${HOME_LINE}${status === 'prerelease' ? ' beta' : ''}`,
           ].join(' · '),
         }),
+        // Where to start, before the demo: on a phone the sidebar's links are behind its button
+        HeroActions({
+          key: 'actions',
+          children: heroActions().map(action => Link({ key: action.href, href: action.href, children: action.title })),
+        }),
         PipelinePanel(pipelineDemo()),
+        // Why first, then what to build, then where to go next
         HomeRows({
           key: 'rows',
-          children: [BuildSection(buildKinds()), WhySection(claims()), DoorsSection(doors(), specFor(HOME_LINE))],
+          children: [WhySection(claims()), BuildSection(buildKinds()), DoorsSection(doors(), specFor(HOME_LINE))],
         }),
         Node(ReadingIsland, { key: 'island' }),
       ],

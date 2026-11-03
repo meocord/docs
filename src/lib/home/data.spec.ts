@@ -7,7 +7,8 @@ import { PipelinePanel } from '@/components/home/PipelinePanel'
 import { pageAnchors } from '../../../scripts/lib/content'
 import { guidePath, readGuide } from '../../../scripts/lib/guide'
 import { HOME_LINE } from '@/config/home'
-import { buildKinds, CLAIMS, claims, doors, pipelineDemo } from '@/lib/home/data'
+import { hasPlaygroundPage } from '@/lib/docs/guide-site'
+import { buildKinds, CLAIMS, claims, doors, heroActions, pipelineDemo } from '@/lib/home/data'
 import { VERSIONS } from '@/config/versions'
 import { lineSegment } from '@/lib/urls'
 
@@ -82,11 +83,12 @@ describe('the sections below', () => {
       return !page || (anchor !== undefined && !pageAnchors(page.body).has(anchor))
     })
     expect(missing).toEqual([])
+    // The story's order: the pipeline, then answering Discord, then the compiler, then testing
     expect(claims().map(claim => claim.href)).toEqual([
-      `${docsHome}/responses#how-it-works`,
-      `${docsHome}/testing`,
       `${docsHome}/how-a-call-runs`,
+      `${docsHome}/responses#how-it-works`,
       `${docsHome}/components#typed-params`,
+      `${docsHome}/testing`,
     ])
   })
 
@@ -107,6 +109,14 @@ describe('the sections below', () => {
     expect(kinds[0].href).toBe(`${docsHome}/what-can-i-build#slash-commands`)
     const lead = renderToStaticMarkup(Div({ children: kinds[0].lead }).render()).replace(/^<div>|<\/div>$/g, '')
     expect(lead).toBe('<p>A member types <code>/echo</code> and picks its options.</p>')
+  })
+
+  // The playground is linked only once its runtime is built, as the sidebar links it
+  it('starts the page with Get started, then the playground where it is built', () => {
+    expect(heroActions()).toEqual([
+      { title: 'Get started', href: `${docsHome}/getting-started` },
+      ...(hasPlaygroundPage(HOME_LINE) ? [{ title: 'Try the playground', href: `${docsHome}/playground` }] : []),
+    ])
   })
 
   it('opens three doors: the Guide, the reference, and moving from another version or framework', () => {
