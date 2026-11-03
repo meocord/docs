@@ -1,5 +1,5 @@
 import { createNode } from '@meonode/ui'
-import { hitAreaCss } from '@/lib/design/css'
+import { focusCss, hitAreaCss, transitionCss } from '@/lib/design/css'
 
 /**
  * The home page's sections below the pipeline panel: a tile for each kind of handler, the claims of
@@ -106,5 +106,33 @@ export const HomeRows = createNode('div', {
     },
     '& [data-steps] > li > div > p': { margin: '2px 0 theme.space.3', color: 'theme.ink.primary' },
     '& [data-steps] [data-code]': { margin: 0 },
+  },
+})
+
+/** The links under the home page's title: the first, the main one, filled with the accent; the rest raised like a control. */
+export const HeroActions = createNode('div', {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 'theme.space.3',
+  margin: '-16px 0 theme.space.8',
+  css: {
+    '& a': {
+      display: 'inline-flex',
+      alignItems: 'center',
+      height: 34,
+      padding: '0 theme.space.4',
+      borderRadius: 'theme.radius.control',
+      backgroundColor: 'theme.surface.sheet',
+      boxShadow: 'theme.elevation.1',
+      color: 'theme.ink.primary',
+      fontSize: 'theme.type.control.size',
+      fontWeight: 'theme.font.weight.semibold',
+      textDecoration: 'none',
+      ...transitionCss(),
+      ...focusCss,
+    },
+    '& a:hover': { backgroundColor: 'theme.surface.fillHover' },
+    '& a:first-child': { backgroundColor: 'theme.accent.default', color: 'theme.accent.content', boxShadow: 'none' },
+    '& a:first-child:hover': { backgroundColor: 'theme.accent.hover' },
   },
 })

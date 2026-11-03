@@ -140,24 +140,24 @@ export interface Claim {
  */
 export const CLAIMS: readonly { title: string; body: string; guide: string }[] = [
   {
-    title: 'One call answers Discord.',
-    body: '`respond()` tracks each answer as unanswered, deferred or replied, and makes the call Discord expects: reply, update, edit or follow-up.',
-    guide: 'guide:responses#how-it-works',
-  },
-  {
-    title: 'Tested as it runs.',
-    body: "`invoke` and `dispatch` run a handler through the bot's own pipeline, with mocks of discord.js's own classes.",
-    guide: 'guide:testing',
-  },
-  {
     title: 'One pipeline, every call.',
     body: 'Guards, interceptors, validation, cooldowns and exception filters run in a fixed order around each handler they apply to.',
     guide: 'guide:how-a-call-runs',
   },
   {
+    title: 'One call answers Discord.',
+    body: '`respond()` tracks each answer as unanswered, deferred or replied, and makes the call Discord expects: reply, update, edit or follow-up.',
+    guide: 'guide:responses#how-it-works',
+  },
+  {
     title: 'Checked by the compiler.',
     body: "A handler whose params don't fit its route or pattern fails to compile, and so does a catalog key the default catalog lacks.",
     guide: 'guide:components#typed-params',
+  },
+  {
+    title: 'Tested as it runs.',
+    body: "`invoke` and `dispatch` run a handler through the bot's own pipeline, with mocks of discord.js's own classes.",
+    guide: 'guide:testing',
   },
 ]
 
@@ -198,6 +198,23 @@ export function buildKinds(): BuildKind[] {
       },
     ]
   })
+}
+
+/** A link under the home page's title. */
+export interface HeroAction {
+  title: string
+  href: string
+}
+
+/** The home page's first moves, under its title, the main one first: start the Guide, or try MeoCord in the browser. */
+export function heroActions(): HeroAction[] {
+  const start = guideEntries(HOME_LINE).find(({ page }) => page.id === 'getting-started')?.page
+  return [
+    ...(start ? [{ title: 'Get started', href: guidePageHref(HOME_LINE, start) }] : []),
+    ...(hasPlaygroundPage(HOME_LINE)
+      ? [{ title: 'Try the playground', href: docsHref({ kind: 'playground', line: HOME_LINE }, VERSIONS) }]
+      : []),
+  ]
 }
 
 /** One of the home page's doors: where a reader goes next, by what they came to do. */

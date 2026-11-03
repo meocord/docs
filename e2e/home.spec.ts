@@ -274,3 +274,26 @@ test.describe('the sections below the panel, drawn as the reader nears them', ()
     expect(found).toBe('doors')
   })
 })
+
+for (const viewport of [
+  { name: 'desktop', width: 1280, height: 800 },
+  { name: 'phone', width: 390, height: 844 },
+]) {
+  test(`the title offers Get started and the playground, above the demo, on a ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+    // "Get started" exactly: the sidebar's "Getting started" is another link
+    const start = page.getByRole('link', { name: 'Get started', exact: true })
+    await expect(start).toBeInViewport()
+    await expect(page.getByRole('link', { name: 'Try the playground' })).toBeVisible()
+    const panel = page.getByRole('heading', { name: 'One call, through the pipeline' })
+    expect((await start.boundingBox())!.y).toBeLessThan((await panel.boundingBox())!.y)
+  })
+}
+
+test('the page says why before what to build, and that the trace was recorded', async ({ page }) => {
+  await page.goto('/')
+  const headings = await page.getByRole('heading', { level: 2 }).allTextContents()
+  expect(headings.indexOf('Why MeoCord')).toBeLessThan(headings.indexOf('What you can build'))
+  await expect(page.getByText('Recorded from a real run of this code, at build time')).toBeVisible()
+})

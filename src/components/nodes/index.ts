@@ -5,6 +5,6 @@
  * checks that none has come in. Import them from here, not from the files beside this one.
  */
 export { CreditLink } from './footer'
-export { HomeRows } from './home'
+export { HeroActions, HomeRows } from './home'
 export { InspectorPane, SheetBody, SheetCard, SheetPane, SidebarBody } from './panes'
 export { Prose } from './prose'
