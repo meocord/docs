@@ -1,5 +1,5 @@
 import { createNode } from '@meonode/ui'
-import { focusCss, hitAreaCss, transitionCss } from '@/lib/design/css'
+import { focusCss, hitAreaCss, touchCss, transitionCss } from '@/lib/design/css'
 
 /**
  * The home page's sections below the pipeline panel: a tile for each kind of handler, the claims of
@@ -130,6 +130,7 @@ export const HeroActions = createNode('div', {
       textDecoration: 'none',
       ...transitionCss(),
       ...focusCss,
+      ...touchCss,
     },
     '& a:hover': { backgroundColor: 'theme.surface.fillHover' },
     '& a:first-child': { backgroundColor: 'theme.accent.default', color: 'theme.accent.content', boxShadow: 'none' },
