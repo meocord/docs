@@ -260,8 +260,8 @@ test.describe('the sections below the panel, drawn as the reader nears them', ()
     )
     expect(visibility).toEqual([
       ['pipeline-title', 'visible'],
-      ['build', 'auto'],
       ['why', 'auto'],
+      ['build', 'auto'],
       ['doors', 'auto'],
     ])
     await expect(page.getByRole('heading', { level: 2, name: 'Where to go next' })).toBeAttached()
