@@ -38,6 +38,9 @@ typecheck without it.
 
 ## Example
 
+The samples read message text, which needs the privileged **Message Content** intent: turn it on first, on your
+application's **Bot** page in the Developer Portal, or Discord refuses the bot's login.
+
 ```bash
 npx {{meocord}} create my-bot
 cd my-bot

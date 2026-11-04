@@ -20,8 +20,8 @@ MeoCord is a framework for Discord bots built on [discord.js](https://discord.js
 
 Two parts carry the everyday work. [`respond()`](guide:responses) answers every interaction with the call Discord
 expects for where the answer stands, so a [handler](guide:glossary#handler) says what to send and never which method
-sends it. And [`meocord/testing`](guide:testing) runs a handler exactly as the bot does, through the same pipeline, with
-mocks of discord.js's own classes, so a test passes because the bot works.
+sends it. And [`meocord/testing`](guide:testing) runs a handler through the bot's own pipeline, with mocks of
+discord.js's own classes, so a test passes because the bot's code works.
 
 Every call a handler receives passes through that pipeline. Guards decide whether it runs, interceptors wrap it,
 validation and pipes check and shape its input, cooldowns limit how often it runs, and exception filters decide what the
