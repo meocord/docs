@@ -96,6 +96,12 @@ src
     └── presenters/
 ```
 
+| Group by kind while                                   | Group by feature once                                            |
+| ----------------------------------------------------- | ---------------------------------------------------------------- |
+| the bot has a handful of commands, a file or two each | a feature has several parts: a command, a form, buttons, a guard |
+| a change touches one kind, such as every guard        | a change touches one feature, added or removed as a unit         |
+| the layout `create` wrote still reads easily          | features share little but what sits in `shared/`                 |
+
 Either layout works, and both can live in one project. A few things belong at the top of `src`, whichever you choose:
 
 - **`i18n.ts` and `locales/`**, since every feature's builders and replies use the same translator. See

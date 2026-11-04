@@ -15,7 +15,8 @@ formerly: [quick-start, tutorial]
 
 A slash command in MeoCord has three parts: a builder that describes it to Discord, a controller method that handles
 it, and the app class that lists the controller. This page builds `/greet`, which answers "Hello, Ada!" to
-`/greet name:Ada`.
+`/greet name:Ada`: a stand-alone exercise, outside the feedback bot, which carries on in [Project
+structure](guide:project-structure).
 
 ## When to use it
 
@@ -97,8 +98,8 @@ mocks for every interaction type.
 
 ## Build it
 
-The feedback bot needs no `/greet`: try it in a scratch project, or go on to [Project
-structure](guide:project-structure), where the bot's own files start.
+`/greet` stays out of the feedback bot: try it in a scratch project, then go on to [Project
+structure](guide:project-structure), where the feedback bot's own files start.
 
 ## Next steps
 
