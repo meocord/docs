@@ -63,6 +63,21 @@ isn't there, ends "Fix meocord.config.ts, then run `meocord build`." A config wh
 for a variable `.env` doesn't set, ends "It threw as it loaded: check the environment it reads, such as its .env
 files." Set what it reads and start the bot again; rebuild only if the config's own code is at fault.
 
+**"ReferenceError: Cannot access '…' before initialization"**, as a production build starts. `@rspack/core` 2.3.2,
+which a fresh install takes, minifies a class that names itself in a static field, such as
+`static instance = new Registry()`, into code that fails as the class is defined. discord.js has such classes, so a
+[self-contained build](guide:self-contained-builds) always meets it, with
+`discord.js/src/managers/MessageManager.js` in the stack. An ordinary build meets it when your own code has such a
+class. Hold the bundler at 2.2 in `package.json`, then install and build again:
+
+```json
+{ "overrides": { "@rsbuild/core": "2.2.14" } }
+```
+
+npm and Bun read `overrides`. Yarn calls the field `resolutions`, and pnpm reads `overrides` from
+`pnpm-workspace.yaml`, not from `package.json`. Remove the entry once `@rspack/core` has a release that fixes
+[rspack#16586](https://github.com/web-infra-dev/rspack/issues/16586).
+
 ### One line naming a class, and exit code 1
 
 MeoCord refuses a mistake it can see as the bot loads, and reports it without a stack. Its first line starts with what
