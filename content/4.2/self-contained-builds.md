@@ -115,6 +115,9 @@ CMD ["bun", "--no-install", "dist/main.js"]
   Build where it runs, and read the startup message: it names both platforms.
 - **Bun without `--no-install`** fetches a missing package at runtime instead of failing, so a bundle that lacks one
   seems to work until the network is down.
+- **A build that stops with `ReferenceError: Cannot access '…' before initialization`** as it starts was minified by
+  `@rspack/core` 2.3.2, which breaks classes discord.js has. Hold the bundler at 2.2: see
+  [Troubleshooting](guide:troubleshooting#the-bot-wont-start).
 
 ## Next steps
 
