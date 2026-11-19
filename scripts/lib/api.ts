@@ -4,7 +4,7 @@
  * tarball's paths or the bundler's chunk files.
  */
 
-import { existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
 import path from 'path'
 import {
   Application,
@@ -90,23 +90,66 @@ export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.Pr
   return clean as JSONOutput.ProjectReflection
 }
 
-/** Runs TypeDoc over an unpacked package and returns its API document. */
 /** This repository's own install, where the packages a documented package leans on are found. */
 const REPOSITORY_MODULES = path.resolve(import.meta.dirname, '..', '..', 'node_modules')
 
+/** A declaration file, for `import` (`.d.ts`, `.d.mts`) or `require` (`.d.cts`). */
+const DECLARATION_FILE = /\.d\.[cm]?ts$/
+
+/** The package a module specifier names: `@scope/name` or `name`, without a subpath; none for a relative or `node:` one. */
+function packageOfSpecifier(specifier: string): string | undefined {
+  if (specifier.startsWith('.') || specifier.startsWith('node:') || path.isAbsolute(specifier)) return undefined
+  const parts = specifier.split('/')
+  return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]
+}
+
+/**
+ * The packages the declaration files a package ships import, re-export or reference, read as TypeScript reads them, so
+ * a name in a comment doesn't count. Its own node_modules, where peers are linked, is left out.
+ */
+function declaredPackages(packageDir: string): Set<string> {
+  const names = new Set<string>()
+  const visit = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules') visit(full)
+      } else if (DECLARATION_FILE.test(entry.name)) {
+        const { importedFiles, typeReferenceDirectives } = ts.preProcessFile(readFileSync(full, 'utf8'), true, true)
+        for (const { fileName } of [...importedFiles, ...typeReferenceDirectives]) {
+          const name = packageOfSpecifier(fileName)
+          if (name) names.add(name)
+        }
+      }
+    }
+  }
+  visit(packageDir)
+  return names
+}
+
 /**
  * Links a package's peer dependencies, discord.js among them, from this repository's install into its
- * node_modules, so the types it names from them resolve rather than read as `any`. A peer the
- * repository lacks, or holds outside the package's range, fails the generation, naming it.
+ * node_modules, so the types it names from them resolve rather than read as `any`. A required peer the
+ * repository lacks, or any peer it holds outside the package's range, fails the generation, naming it. So does
+ * an optional peer it lacks that the package's declarations import. One they don't import is skipped: no type in
+ * the API document comes from it.
  */
-function linkPeers(packageDir: string): void {
+export function linkPeers(packageDir: string, modules = REPOSITORY_MODULES): void {
   const manifest = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
     peerDependencies?: Record<string, string>
+    peerDependenciesMeta?: Record<string, { optional?: boolean }>
   }
+  let declared: Set<string> | undefined
   for (const [name, range] of Object.entries(manifest.peerDependencies ?? {})) {
-    const installed = path.join(REPOSITORY_MODULES, name)
-    if (!existsSync(path.join(installed, 'package.json')))
-      throw new Error(`${name} ${range}, a peer of the package, isn't installed here: add it to devDependencies.`)
+    const installed = path.join(modules, name)
+    if (!existsSync(path.join(installed, 'package.json'))) {
+      if (manifest.peerDependenciesMeta?.[name]?.optional !== true)
+        throw new Error(`${name} ${range}, a peer of the package, isn't installed here: add it to devDependencies.`)
+      if (!(declared ??= declaredPackages(packageDir)).has(name)) continue
+      throw new Error(
+        `${name} ${range}, an optional peer the package's declarations import, isn't installed here: add it to devDependencies.`,
+      )
+    }
     const { version } = JSON.parse(readFileSync(path.join(installed, 'package.json'), 'utf8')) as { version: string }
     if (!semver.satisfies(version, range))
       throw new Error(`${name}@${version} is installed here, outside the package's peer range ${range}.`)
@@ -143,6 +186,7 @@ function bindingText(pattern: ts.BindingPattern): string {
   return ts.isObjectBindingPattern(pattern) ? `{ ${names.join(', ')} }` : `[${names.join(', ')}]`
 }
 
+/** Runs TypeDoc over an unpacked package and returns its API document. */
 export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typedoc'>): Promise<ApiDocument> {
   const entries = entryPoints(packageDir)
   if (Object.keys(entries).length === 0)
