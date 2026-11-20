@@ -107,10 +107,42 @@ const REPOSITORY_MODULES = path.resolve(import.meta.dirname, '..', '..', 'node_m
 /** The packages whose names an entry point re-exports as discord.js's own: discord.js and its `@discordjs/*` packages. */
 const DISCORD_PACKAGE = /^(?:discord\.js|@discordjs\/[^/]+)$/
 
+/** The module an alias declaration names: the `from` of a re-export or of an import. */
+function specifierOf(declaration: ts.Declaration | undefined): string | undefined {
+  const statement =
+    declaration && ts.isExportSpecifier(declaration)
+      ? declaration.parent.parent
+      : declaration && ts.isImportSpecifier(declaration)
+        ? declaration.parent.parent.parent
+        : undefined
+  const specifier = statement?.moduleSpecifier
+  return specifier && ts.isStringLiteral(specifier) ? specifier.text : undefined
+}
+
 /**
- * What each entry point re-exports from discord.js's packages, by specifier, with each name a value or
- * a type by what it declares: a bundled declaration file lists both in one `export { … } from`.
- * Needs the package's peers linked; a name that doesn't resolve fails rather than being guessed.
+ * The first discord.js specifier on the alias chain from an entry's export to its declaration, so a name
+ * a local chunk brings in counts as one the entry re-exports. A local hop that doesn't resolve fails,
+ * since what it hides can't be told.
+ */
+function discordSpecifier(checker: ts.TypeChecker, entry: string, symbol: ts.Symbol): string | undefined {
+  const seen = new Set<ts.Symbol>()
+  for (let hop: ts.Symbol | undefined = symbol; hop && hop.flags & ts.SymbolFlags.Alias && !seen.has(hop);) {
+    seen.add(hop)
+    const specifier = specifierOf(hop.declarations?.[0])
+    if (specifier && DISCORD_PACKAGE.test(packageOfSpecifier(specifier) ?? '')) return specifier
+    const next = checker.getImmediateAliasedSymbol(hop)
+    if (specifier?.startsWith('.') && !next?.declarations?.length)
+      throw new Error(`${entry} re-exports ${symbol.name} through ${specifier}, which doesn't resolve.`)
+    hop = next
+  }
+  return undefined
+}
+
+/**
+ * What each entry point re-exports from discord.js's packages, by the specifier that brings each name
+ * in, directly or through a local chunk, with each name a value or a type by what it declares: a bundled
+ * declaration file lists both in one `export { … } from`. Needs the package's peers linked; a name that
+ * doesn't resolve fails rather than being guessed.
  */
 export function discordReexports(packageDir: string, entries = entryPoints(packageDir)): ApiReexport[] {
   const files = Object.entries(entries).map(([entry, file]) => [entry, path.join(packageDir, file)] as const)
@@ -133,15 +165,13 @@ export function discordReexports(packageDir: string, entries = entryPoints(packa
     if (!moduleSymbol) continue
     const byFrom = new Map<string, { values: string[]; types: string[] }>()
     for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
-      const from = symbol.declarations?.find(ts.isExportSpecifier)?.parent.parent.moduleSpecifier
-      if (!from || !ts.isStringLiteral(from) || !DISCORD_PACKAGE.test(packageOfSpecifier(from.text) ?? '')) continue
+      const from = discordSpecifier(checker, entry, symbol)
+      if (!from) continue
       const target = checker.getAliasedSymbol(symbol)
       if (!target.declarations?.length)
-        throw new Error(
-          `${entry} re-exports ${symbol.name} from ${from.text}, which doesn't resolve: link its peers first.`,
-        )
-      const names = byFrom.get(from.text) ?? { values: [], types: [] }
-      byFrom.set(from.text, names)
+        throw new Error(`${entry} re-exports ${symbol.name} from ${from}, which doesn't resolve: link its peers first.`)
+      const names = byFrom.get(from) ?? { values: [], types: [] }
+      byFrom.set(from, names)
       ;(target.flags & ts.SymbolFlags.Value ? names.values : names.types).push(symbol.name)
     }
     for (const [from, { values, types }] of [...byFrom].sort(([a], [b]) => a.localeCompare(b)))
