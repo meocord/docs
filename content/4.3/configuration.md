@@ -102,7 +102,8 @@ log collector, objects included. Set `FORCE_COLOR=1` to keep the colour where yo
 ### Stack traces
 
 A stack trace names your source, such as `src/services/profile.service.ts:42:11`, not the bundle. On Node that holds
-for every trace Node prints; on Bun, for `error.stack`, and so for every trace the `Logger` prints. The build writes
+for every trace Node prints; on Bun, for `error.stack`, every trace the `Logger` prints, and what Bun prints of an
+error itself. The build writes
 `dist/main.js.map` beside the bundle, in development and production, and:
 
 - `meocord start` runs Node with `--enable-source-maps`, so Node maps each stack itself. The shard processes it
@@ -113,14 +114,21 @@ for every trace Node prints; on Bun, for `error.stack`, and so for every trace t
   `error.stack` reads it as it reads an unmapped one.
 - A hook already set on `Error.prepareStackTrace`, such as a preloaded error tracker's, receives the mapped call
   sites. One set later replaces MeoCord's unless it calls the hook it found.
-- What Bun prints itself doesn't go through that hook: an uncaught error, an unhandled rejection, and
-  `console.error(error)` before anything reads `error.stack` keep the bundle's positions. Log errors through the
-  `Logger`, or read `error.stack`, to see your source.
+- Under Bun, the bundle also gives `Error.prototype` an inspection hook and adds an `uncaughtException` and an
+  `unhandledRejection` listener to `process`. `console.error(error)`, an uncaught error and an unhandled rejection
+  print in Node's format, `Error: message` then `at` lines naming `src/` files, with the error's own properties, such
+  as a `DiscordAPIError`'s `code`, and its `cause`. Bun's source excerpt and its `Bun v…` line are gone.
+- Those listeners end the process as Bun would: code 1 for an uncaught error, and for a rejection as Bun's
+  `--unhandled-rejections` mode decides. Each does nothing while a listener of your own is there, so yours keeps the
+  error and the exit, and `process.listenerCount()` for each event is one higher.
+- An error whose `stack` isn't a string of its own, such as a `DOMException`, is printed by Bun's own formatter, and
+  under `--unhandled-rejections=warn` Bun's own warning keeps the bundle's positions.
 - Bun reports a call's column further along than Node does. In a minified production bundle, a frame for a call can
   map to the statement just before it, one line up; the frame that threw maps exactly.
 
 Set `sourceMappedStacks: false` when an error tracker applies uploaded source maps to the bundle's own positions, or
-you ship a source mapper of your own. `meocord start` then passes no flag, and the bundle installs no hook.
+you ship a source mapper of your own. `meocord start` then passes no flag, and the bundle installs no hook, so Bun
+prints errors its own way.
 
 ## Environment variables
 
@@ -185,7 +193,7 @@ shows.
 ## The app's options
 
 `@MeoCord({...})` takes `controllers` and `clientOptions`, which every bot needs, and these, each taught on its own
-page:
+page. `clientOptions.allowedMentions` decides who a message pings; see [Security](guide:security).
 
 | Options                                                           | Taught in                                    |
 | ----------------------------------------------------------------- | -------------------------------------------- |
@@ -195,11 +203,12 @@ page:
 | `presenter`                                                       | [Presenters](guide:presenters)               |
 | `warnUnanswered`                                                  | [Answering with respond()](guide:responses)  |
 | `messages`                                                        | [Message commands](guide:message-commands)   |
-| `guards`                                                          | [Guards](guide:guards)                       |
+| `guards`, `answerDenied`, `globalStagesOnEvents`                  | [Guards](guide:guards)                       |
 | `interceptors`                                                    | [Interceptors](guide:interceptors)           |
 | `filters`                                                         | [Exception filters](guide:exception-filters) |
 | `cooldownStore`, `cooldownStoreFailure`, `cooldownStoreTimeoutMs` | [Cooldowns](guide:cooldowns)                 |
 | `observers`                                                       | [Observers](guide:observers)                 |
+| `waitForReady`, `warnSlow`                                        | [Lifecycle hooks](guide:lifecycle-hooks)     |
 
 To share options between app classes, type the object as [`MeoCordOptions`](api:configuration/MeoCordOptions) from
 `meocord/decorator`. Its `guards`, `interceptors` and `filters` are checked against the classes they hold, as in
