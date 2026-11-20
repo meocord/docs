@@ -27,13 +27,14 @@ formerly: [tutorial-testing]
 `meocord/testing` runs your controllers, services, guards and everything around them inside a test, with no
 Discord connection and no token. `MeoCordTestingModule` builds a container from the classes you list, as the bot
 builds one from `@MeoCord`, and the module it compiles runs handlers through the same pipeline the bot uses, but for
-`emit`, which leaves out the bot's event fallback.
+`emit`, which runs the bot's event fallback only with
+[`eventFallback: true`](guide:invoke-and-dispatch#events-and-handler-setup).
 
 The mocks it comes with behave like discord.js, and work under Vitest, Jest, Node's test runner and bun test:
 
 - **Vitest** runs a generated app's tests as they come.
-- **Jest** needs Node's VM modules: meocord's CommonJS build loads packages that ship only as ES modules, which Jest
-  reads only with them. Run it as `NODE_OPTIONS=--experimental-vm-modules jest`.
+- **Jest** runs as `jest`, with no Node flags: meocord's CommonJS build bundles the packages that ship only as ES
+  modules.
 - **Node's test runner** asserts through a mock's `.mock.calls`.
 - **bun test** takes `useMockFn(mock)`, with `mock` from `bun:test`, in a preloaded file, so Bun's matchers, such as
   `toHaveBeenCalledWith`, read MeoCord's mocks; without it, assert through `.mock.calls`. See
@@ -43,6 +44,11 @@ Whatever the runner, the tests need decorator metadata compiled in, which MeoCor
 dependencies. Under Jest and Node's test runner, compile them with SWC or `tsc` with decorator metadata, as a generated
 app's Vitest config does with SWC; `node --test` on `.ts` files strips the types without transforming decorators, so a
 decorated class fails to load. bun test reads `emitDecoratorMetadata` from tsconfig.json.
+
+A test process can load both of meocord's builds, such as jest setup files written in CommonJS beside specs written as
+ES modules. A class the app injects, such as `Translator`, `ThemeCache` or `ExecutionContext`, is then one class for
+both, so a constructor typed with either build's class gets the app's instance, and `instanceof` agrees. Other
+classes, such as `Logger` and `MeoCordTestingModule`, stay one per build: import each from the same build throughout.
 
 ## When to use it
 
@@ -86,6 +92,20 @@ still the ones you list. A store that injects something, such as a database pool
 `CooldownStore` provider of your own, such as a `MemoryCooldownStore`, in the store's place.
 
 ::example{file="testing/greeting.module.spec.ts" region="app"}
+
+### Options the app sets
+
+A module built with `app`, or with `fromApp`, follows three of the app's `@MeoCord` options as the bot does, one with
+another default:
+
+- **`answerDenied: true`.** A guard's `false` on an interaction counts as a thrown `GuardDeniedError`: `invoke` rejects
+  with it and sends nothing, and `dispatch` answers it as the bot does, privately. Without the option, `invoke` resolves
+  with `ran: false`. See [Guards](guide:guards).
+- **`waitForReady: true`.** A `dispatch`, `invoke` or `emit` made while `init({ ready: true })` runs the `onReady` hooks
+  waits for the hooks of the classes it uses, as the bot's calls do. A call made once they have settled, or without
+  `ready`, runs at once. See [Lifecycle hooks](guide:lifecycle-hooks).
+- **`warnSlow`.** The module warns about slow work only when the app sets `warnSlow: true`, where the bot warns unless
+  it is `false`: a test's fake clock can pass those times inside a handler.
 
 ## Swapping a dependency
 
@@ -142,14 +162,35 @@ Client, useValue: createMockClient() }`.
 - **A shutdown that hangs.** `close()` waits for the whole sequence for up to `shutdownTimeout`, 10 seconds unless
   `create()` or `fromApp()` sets it, as the bot's [`shutdownTimeout`](guide:configuration) does. It then stops waiting
   and logs that it did, and still rejects with a hook that failed before then. A test whose fake store never answers, or
-  whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`. A `close()` while
-  `init({ ready: true })` runs waits for the `onReady` hooks within the module's `shutdownTimeout`, warning about one
-  that never settles; everything the module constructed is shut down either way.
+  whose `onShutdown` never settles, sets it short, such as `shutdownTimeout: 50`.
+- **A `close()` during the `onReady` hooks.** Once `init({ ready: true })` is asked, `close()` lets no further
+  `onReady` start, as a bot that stops while it comes online, and waits for the one under way within the module's
+  `shutdownTimeout`. It runs no `onShutdown` for a class whose `onReady` hasn't settled by then, the one it stopped
+  waiting for or one that never started, nor for anything that depends on it; one whose `onReady` threw has settled and
+  is shut down. A test that expects every hook to run awaits `init({ ready: true })` before `close()`. Without `ready`,
+  `close()` shuts down everything the module made.
+- **A `close()` during `init()`.** It waits for the factory under way at most `shutdownTimeout`, then warns, naming the
+  factory, and shuts down without it. `init()` makes nothing after that factory, no other factory, no listed service
+  and no `onReady` hook, and still resolves. A value the factory returns later is shut down once it arrives and
+  `close()` is done with the rest. A `get()` of a factory value `init()` skipped throws, saying `close()` ended `init()`
+  before it made that value. A `dispatch`, `invoke` or `emit` made while that `init()` ran never starts, as a call the
+  bot drops at a stop: no handler runs, and it resolves with `ran: false`, or `ran: 0` for `emit`, and the error "The
+  bot stopped before this call started.".
+- **A call that closes the module.** A `close()` called from a call the module is running, such as a handler that
+  awaits `module.close()`, doesn't wait for that call, as the bot's `app.stop()` doesn't; it still waits for the other
+  calls under way.
+- **A hook that closes the module.** A `close()` called while an `onShutdown` hook of that close runs, by the hook or
+  by work it started, awaited or not, resolves for it at once, and the hooks after it run in order. One called after
+  the hook has returned waits for the whole close.
 - **The theme outside calls.** Once ready, the module's app theme is the one `useTheme()` reads outside any call,
   until `close()`, unless another module or app in the same process was ready first, which keeps it. See
   [Testing recipes](guide:testing-recipes#themes).
 - **After `close()`.** A closed module still runs what `dispatch`, `invoke` and `emit` are given, against services
-  already shut down, and warns once that it is closed. Close it after the test's last call, in `afterEach`.
+  already shut down, and warns once that it is closed, answering in the handler's theme without asking the app's
+  `themeFor` resolver, which its `onShutdown` may have closed. Close it after the test's last call, in `afterEach`. A
+  `get()`
+  returns what `close()` shut down without a word; one that makes an instance with an `onShutdown` only then, such as a
+  listed service an `init()` that `close()` ended didn't make, warns once, naming it, since nothing shuts it down.
 
 ## Running tests
 
