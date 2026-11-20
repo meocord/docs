@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+import { getRelativeURL } from 'next/dist/shared/lib/router/utils/relativize-url'
+import nextConfig from '../next.config'
 import { proxy } from '@/proxy'
 import { cacheControlFor, playgroundFrameCsp, STATIC_FILE_CSP, UNSTORED, VERSIONED_PAGE } from '@/lib/cache-policy'
 import { SITE_URL } from '@/config/site'
@@ -63,6 +65,27 @@ describe('proxy', () => {
     vi.resetModules()
     const { proxy: bare } = await import('@/proxy')
     expect(bare(request('/docs/4.1/api/4.1.0-beta.8/core/MeoCordApp')).headers.get('x-middleware-rewrite')).toBeNull()
+  })
+
+  it("rewrites to a URL on Next's own server when the request was forwarded from https to Next on 127.0.0.1", async () => {
+    // Next's server builds the proxy's request from the URL it knows itself by, with the forwarded scheme, and serves a
+    // rewrite itself only when the target has that URL's origin; any other is fetched as another site, and fails
+    const own = 'https://127.0.0.1:3001'
+    const routes = { '4.1': { versions: ['4.1.0-beta.7', '4.1.0-beta.8'], servedBy: { 'core/MeoCordApp': [0, 0] } } }
+    vi.resetModules()
+    vi.stubEnv('EXACT_ROUTES', JSON.stringify(routes))
+    // As next build inlines it from next.config.ts
+    vi.stubEnv('__NEXT_NO_MIDDLEWARE_URL_NORMALIZE', nextConfig.skipProxyUrlNormalize ? 'true' : '')
+    try {
+      const { proxy: built } = await import('@/proxy')
+      const path = '/docs/4.1/api/4.1.0-beta.8/core/MeoCordApp'
+      const rewrite = built(new NextRequest(`${own}${path}`)).headers.get('x-middleware-rewrite')!
+      expect(getRelativeURL(rewrite, `${own}${path}`)).toBe('/docs/4.1/api/4.1.0-beta.7/core/MeoCordApp')
+      const redirect = built(new NextRequest(`${own}/docs/${CURRENT}/guards`)).headers.get('Location')!
+      expect(getRelativeURL(redirect, `${own}/docs/${CURRENT}/guards`)).toBe('/docs/latest/guards')
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('gives public files the flat-deny policy', () => {
