@@ -63,12 +63,19 @@ The token is the bot's password: anyone who has it can act as the bot in every s
 
 ::example{file="security/app.ts" region="app"}
 
+`npx {{meocord}} create` sets `allowedMentions: { parse: [] }`, so `respond()`'s replies and your own `message.reply`
+and `channel.send` ping no one. A message that should ping says so: `{ users: [id] }`, or `repliedUser: true` for a
+reply that pings its author. An app that leaves `allowedMentions` unset gets one warning at startup, since 5.0 makes
+`{ parse: [] }` the default; set it to anything to silence it, such as
+`{ parse: ['users', 'roles', 'everyone'], repliedUser: true }` to keep every mention.
+
 ## Components carry no authority
 
 A button's custom ID is written by the bot, but anyone who can see the message can click it. Before a button acts for
-someone, check who clicked: a guard that compares the clicking user with the ID the custom ID carries, as in
-[the pagination recipe](guide:recipes/pagination), or one that checks a role, as the feedback bot's staff guard does in
-[Guards](guide:guards#build-it). Keep secrets out of custom IDs: anyone who inspects the message can read them.
+someone, check who clicked: [`OwnerGuard`](api:utilities/OwnerGuard), which compares the clicking user with the ID the
+custom ID carries, as in [the pagination recipe](guide:recipes/pagination), or a guard that checks a role, as the
+feedback bot's staff guard does in [Guards](guide:guards#build-it). Keep secrets out of custom IDs: anyone who inspects
+the message can read them.
 
 A select menu's values are what the client sent. Act only on values the bot offered, as
 [the select menu recipe](guide:recipes/select-menus) does.
@@ -113,8 +120,9 @@ built with.
 ## Gotchas
 
 - **`setDefaultMemberPermissions` is a default,** which a server's admins can change. Check permissions in a guard.
-- **A button's custom ID says nothing about who clicked.** Compare the user, or check a role.
-- **Echoing a member's text pings** whoever it mentions unless the message sets `allowedMentions`.
+- **A button's custom ID says nothing about who clicked.** Add `OwnerGuard` to compare the user, or check a role.
+- **Echoing a member's text pings** whoever it mentions unless the message, or the app's `clientOptions`, sets
+  `allowedMentions`.
 
 ## Build it
 
