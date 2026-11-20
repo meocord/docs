@@ -8,6 +8,7 @@ learn:
   - Run a handler through the pipeline with invoke
   - Check which handler an interaction, message or reaction reaches with dispatch
   - Read what the user was sent with getResponse
+  - Send an event with emit, and have its refusals answered as the bot answers them
 requires: [testing]
 api:
   [
@@ -130,6 +131,13 @@ A reaction takes the user who reacted and, optionally, the action; it's an add u
 `handlers` lists each handler reached, in the order it ran, with its own `ran` and `error`. A message can reach a
 patterned handler and every `@MessageHandler()` listener at once, and a reaction several handlers.
 
+Under strict mocks, `dispatch` also delivers a message to the mock client's `messageCreate` listeners, and a reaction
+to its `messageReactionAdd` or `messageReactionRemove` listeners, routed or not, as the gateway calls them after
+MeoCord's: the listeners attached before routing starts, once the route has run to its first `await`. So a collector a
+handler starts takes the next message, never the one that started it. A reaction is applied to its message first, as
+the gateway applies it: an add caches it on `message.reactions` and counts the user in. What a listener throws rejects
+`dispatch`. [Mocks](guide:mocks#collectors) shows a handler that waits for an answer.
+
 ### When nothing matches
 
 An input no route takes is answered as the bot answers it: "Command not found!" for an interaction, and the call
@@ -144,11 +152,16 @@ parent command, and resolves to `{ ran: false, handlers: [] }`.
 Whatever the bot skips reaches nothing: a message from a bot, or a bot's reaction to a handler without
 `bots: true`, resolves to `{ ran: false, handlers: [] }`.
 
-A button, select menu or modal submission no route takes may belong to a collector. When the interaction's client has
-another `interactionCreate` listener, `dispatch` waits the same 1.5 seconds the bot does before answering "not
-found", and says nothing if the listener answered first. A mock's own client has no listeners, so the answer is
-immediate. To test the wait, give the interaction a real discord.js `Client` with a listener; `createMockClient()`
-doesn't keep listeners. See [Components](guide:components#collectors).
+A button, select menu or modal submission no route takes may belong to a collector. Under strict mocks, `dispatch`
+leaves it to the mock client's `interactionCreate` listeners, as the bot leaves it to a collector: it delivers it to
+each, in the order they were attached, and answers "not found" only if none answered. It doesn't wait 1.5 seconds: it
+waits for what each listener returns, then one turn of the event loop, so fake timers and a short test timeout still
+hold. What a listener throws rejects `dispatch` once MeoCord has answered. A component a route takes goes to the route
+alone, and `dispatch` alone delivers it: a test that also emits it on the client delivers it twice.
+
+With a real discord.js `Client` that has another listener, `dispatch` waits the 1.5 seconds the bot does, and delivers
+nothing to its listeners. In default mode the mock client's emitter attaches and reaches nothing, with a warning once.
+See [Components](guide:components#collectors).
 
 ## Reading what was sent
 
@@ -176,11 +189,23 @@ For messages and reactions, read the mock's own methods, such as `message.reply`
 
 To send a gateway event to the module's `@On` and `@Once` handlers, use `module.emit(event, ...args)`. It resolves to
 `{ ran }`, how many handlers ran, and once every handler has settled, rejects if any threw: with that error, or an
-`AggregateError` holding each in its `errors`. That includes a guard's `GuardDeniedError`, which the bot logs at debug,
-and a handler's `UserError`, which the bot answers with a reply when the event carries a message. `emit` runs no
-fallback, so check them with `rejects`. Under strict mocks it sets the module's presenter, theme and translator on the
-client of each event argument, so a handler's `respond()` draws as the bot draws it; in default mode the client is left
-as it was, with a warning once when the module has any of them.
+`AggregateError` holding each in its `errors`.
+
+A guard's `GuardDeniedError` and a handler's `UserError` are the bot's to answer: it skips the event on the first, and
+replies to the second when the event carries a message. With `eventFallback: true` in `create()` or `fromApp()`,
+`emit` answers them as the bot does. A refused handler is skipped and isn't counted in `ran`, and a `UserError` is
+answered as a reply to the newest message among the event's arguments, with the app's presenter and `replyEmoji`.
+Neither rejects `emit`; any other error still does:
+
+::example{file="testing/emit.spec.ts" region="fallback"}
+
+Without the option, `emit` rejects with both, and the first time it does it logs one warning for the run: 5.0 answers
+them as the bot does. Set `eventFallback: false` to keep the rejection without the warning. The option applies to
+`emit` alone, not to `invoke` of an `@On` handler.
+
+Under strict mocks, or with `eventFallback: true`, `emit` sets the module's presenter, theme and translator on the
+client of each event argument, so a handler's `respond()` draws as the bot draws it. Otherwise the client is left as it
+was, with a warning once when the module has any of them.
 
 `invoke` on an `@On` or `@Once` handler runs it as `emit` does, as an event with the arguments you give, under
 `useStrictMocks()`; without strict mocks it warns where that would differ. A method a command, message or reaction
@@ -188,10 +213,11 @@ route also reaches runs as that route's input gives.
 
 To check what a handler is set up with, without running it, use [`inspectHandler`](api:testing/inspectHandler). It lists
 the guards, interceptors, filters and cooldowns dispatch applies, in order, and reads the handler's metadata as
-`ExecutionContext` does. Under strict mocks it lists only the guards, interceptors and observers dispatch runs for the
-handler's context types, such as no global `@Guard({ types: ['message'] })` for a slash command; in default mode it
-lists every one, with a warning once where dispatch runs fewer. [Testing recipes](guide:testing-recipes#guards) has an
-example.
+`ExecutionContext` does. Its `defer` is the handler's `@Defer` as the bot applies it, one it inherits included, with its
+defaults filled in, or `undefined` without one. Under strict mocks it lists only the guards, interceptors and
+observers dispatch runs for the handler's context types, such as no global `@Guard({ types: ['message'] })` for a
+slash command; in default mode it lists every one, with a warning once where dispatch runs fewer.
+[Testing recipes](guide:testing-recipes#guards) has an example.
 
 ## Gotchas
 
@@ -201,7 +227,9 @@ example.
 - **An unhandled error rejects both.** With `dispatch`, the member still got the fallback's answer first. Assert the
   rejection with `await expect(...).rejects.toThrow(...)`, and read `getResponse` after it.
 - **A collector's click needs the bot's client.** A click built with a fresh mock client isn't the client the call
-  came to. Build it with `{ client: interaction.client }`, as [Mocks](guide:mocks#collectors) shows.
+  came to, so no collector there hears it. Build it from the reply, `message: await interaction.fetchReply()`, which
+  under strict mocks puts it on the reply's client, or give it `{ client: interaction.client }`, as
+  [Mocks](guide:mocks#collectors) shows.
 
 ## Build it
 

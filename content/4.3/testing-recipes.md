@@ -107,6 +107,13 @@ metadata as `ExecutionContext` does:
 With `{ app }`, the app's global guards come first. Through `invoke`, a guard that returns `false` resolves with
 `ran: false`, and one that throws `GuardDeniedError` rejects with it.
 
+Its `defer` is the handler's `@Defer` as the bot applies it, one inherited from the method it overrides included, with
+the defaults filled in: `ephemeral: false`, `suppressNotifications: false`, `disable: 'all'`, `mode: 'eager'`, and
+`after: 1500` for `mode: 'auto'`. A handler without one reads `undefined`. A test checks that a command defers
+privately without dispatching it:
+
+::example{file="testing/inspect-defer.spec.ts" region="defer"}
+
 ## Cooldowns
 
 Each testing module here counts in a fresh store, so the second call within the window is refused and a different user
