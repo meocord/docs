@@ -197,7 +197,8 @@ jobs:
       # The same runner measures both builds, so host speed doesn't enter the comparison
       - run: bun run build
       - name: Count stylesheet links in the prerendered pages
-        run: grep -o '<link rel="stylesheet"' -r .next/server/app --include='*.html' | wc -l
+        # grep exits non-zero when it finds none, which is the inline build's expected count
+        run: '{ grep -o ''<link rel="stylesheet"'' -r .next/server/app --include=''*.html'' || true; } | wc -l'
       - run: bun run test:e2e --grep @performance-detail --project chromium
         env:
           PERF_DETAIL: '1'
@@ -207,7 +208,8 @@ jobs:
         env:
           PERF_INLINE_CSS: '1'
       - name: Count stylesheet links in the prerendered pages
-        run: grep -o '<link rel="stylesheet"' -r .next/server/app --include='*.html' | wc -l
+        # grep exits non-zero when it finds none, which is the inline build's expected count
+        run: '{ grep -o ''<link rel="stylesheet"'' -r .next/server/app --include=''*.html'' || true; } | wc -l'
       - run: bun run test:e2e --grep @performance-detail --project chromium
         env:
           PERF_DETAIL: '1'
