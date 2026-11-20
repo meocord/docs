@@ -33,6 +33,11 @@ describe('ApiModel', () => {
     expect(model.params()).toContainEqual({ section: 'decorator', symbol: 'Cooldown' })
   })
 
+  it('builds its sections once, for every caller to share', () => {
+    expect(model.sections()).toBe(model.sections())
+    expect(new ApiModel('4.1', project, versions, since).sections()).toEqual(model.sections())
+  })
+
   it('describes a function: signature with linked types, params with their properties, returns and examples', () => {
     const cooldown = model.symbol('decorator', 'Cooldown')!
     expect(cooldown).toMatchObject({
