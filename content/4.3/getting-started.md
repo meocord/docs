@@ -94,8 +94,7 @@ or the code, and it starts the bot again.
   your application's **Bot** page, or the login is refused with a message that names it. A bot that reads no message
   text can drop `GatewayIntentBits.MessageContent` from `src/app.ts` instead.
 - **A command registered globally can take a while to appear.** Set `DEV_GUILD_ID` while you develop.
-- **`meocord start --prod` runs what was built last.** Add `--build`, or run `meocord build --prod` first, after a
-  change.
+- **`meocord start --prod` runs the last build,** and warns when your source changed since; add `--build`.
 
 ## Build it
 

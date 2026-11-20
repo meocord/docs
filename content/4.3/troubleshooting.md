@@ -231,9 +231,6 @@ Each warning names the handler, the class or the setting, and says what to write
   [A command in its own servers](guide:slash-commands#a-command-in-its-own-servers).
 - **"… deleteUsageRepliesAfter … longer than a timer can wait …"** Over 2,147,483 seconds keeps usage replies. Give
   a shorter time, or `0` to keep them.
-- **"… is installed more than once for bundled code: …"** A build warning: a self-contained build packs one copy of a
-  native addon. Install one version; see
-  [Native addons and platforms](guide:self-contained-builds#native-addons-and-platforms).
 - **"… never run: MeoCord dispatches only to @MeoCord({ controllers })."** A command, component, message or reaction
   handler sits on a service or another class outside `@MeoCord({ controllers })`. Move it to a controller; see
   [Messages and reactions](#messages-and-reactions).
@@ -243,10 +240,20 @@ Each warning names the handler, the class or the setting, and says what to write
 - **"@Service on the method `Class.method` is deprecated; in the next major version (5.0) it is refused."**
   `@Controller`, `@Service`, `@Guard`, `@CommandBuilder` or `@MeoCord` is on a method, where it does nothing. Move it
   to the class.
+- **"Replies ping whoever their text mentions, since clientOptions.allowedMentions is unset."** 5.0 pings no one unless
+  a message says so. Set `clientOptions.allowedMentions`, to `{ parse: [] }` for that now; see
+  [Security](guide:security#ask-for-little).
+- **"Global guard … also runs before @On and @Once handlers; …"** A global guard or interceptor without `types`, in an
+  app with event handlers. Declare its `types`, or set `@MeoCord({ globalStagesOnEvents })` to `true` or `false`; see
+  [Where guards apply](guide:guards#where-guards-apply).
+- **"1 context menu handler declares a params argument it is never given:"** A context menu command has no options,
+  so its second argument is always `{}`; in 5.0 the handler fails to compile. Remove the argument; see
+  [Context menus](guide:context-menus).
 
 The upgrade guide lists each of these warnings, with what to change. A warning that ends "will be removed in the next
 major version (5.0). Use … instead." names an API that still works, and is logged once. See the upgrade guide for
-[4.1](guide:migrating#upgrading-from-40-to-41) and [4.2.3](guide:migrating#upgrading-from-422-to-423).
+[4.1](guide:migrating#upgrading-from-40-to-41), [4.2.3](guide:migrating#upgrading-from-422-to-423) and
+[4.3](guide:migrating#upgrading-from-42-to-43).
 
 ## A command doesn't show up in Discord
 
@@ -269,7 +276,9 @@ A command you removed that still shows is a leftover in a scope this configurati
 warns "… command(s) are still registered … which this configuration does not register to", and
 `commands.clearOther` removes them on a production start or a `meocord register` without `--dev` or `--guild`. With
 `commands.developmentGuild` set, `start --dev` and `register --dev` only warn about leftovers, even with `clearOther`,
-since a production bot sharing the application may own them.
+since a production bot sharing the application may own them. A command that shows twice is often one left in a server
+the configuration no longer names: `meocord register --prune` finds and removes it in every server the bot is in; see
+[the CLI](guide:cli#removing-commands-left-in-other-servers).
 
 ## "The application did not respond"
 
@@ -280,7 +289,8 @@ Discord gives an interaction three seconds for its first answer, and nothing arr
 - **A guard returned `false` on a command, or on a modal a command opened.** That leaves the interaction unanswered,
   on purpose; a button, a select menu or a modal from a message is acknowledged invisibly instead. Under `@Defer`, a
   command's deferred reply is deleted. To tell the user why, throw
-  [`GuardDeniedError`](api:responses/GuardDeniedError) instead. See [Guards](guide:guards).
+  [`GuardDeniedError`](api:responses/GuardDeniedError) instead, or set `@MeoCord({ answerDenied: true })` to answer
+  every such `false`. See [Guards](guide:guards#refusing-a-call).
 - **An exception filter caught the error and sent nothing.** MeoCord's built-in fallback answers an error no
   [exception filter](guide:exception-filters) handles, but a filter that handles one and sends nothing leaves the
   interaction unanswered.

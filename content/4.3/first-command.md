@@ -41,7 +41,8 @@ The greeting comes from a service, a plain class marked with `@Service()`:
 
 ::example{file="services/greeting.service.ts" region="service"}
 
-Add the controller to the `controllers` your `src/app.ts` lists. In an app of its own, the app class lists the
+`npx {{meocord}} generate` adds a controller it writes to the `controllers` your `src/app.ts` lists; add one you wrote
+yourself there. In an app of its own, the app class lists the
 controller and the discord.js client options:
 
 ::example{file="app.ts" region="app"}
@@ -88,8 +89,6 @@ mocks for every interaction type.
 
 ## Gotchas
 
-- **A new controller does nothing until it's in `controllers`.** `meocord generate` doesn't edit `src/app.ts`, so add
-  each class it writes there yourself.
 - **A command's name is lowercase,** at most 32 characters, with no spaces: Discord refuses others, and the builder
   throws as the controller loads, naming the builder and the command.
 - **A method called directly skips most of the pipeline.** Only its own and its controller's guards run. In a test, go
