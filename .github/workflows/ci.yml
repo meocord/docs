@@ -17,6 +17,11 @@ env:
   BUN_VERSION: 1.4.x
   IMAGE: ghcr.io/${{ github.repository }}
 
+# bash -eo pipefail: a pipeline fails when any command in it fails, so `bun run build | tee` fails with the build
+defaults:
+  run:
+    shell: bash
+
 jobs:
   lint:
     name: Lint
@@ -107,7 +112,8 @@ jobs:
       # @meonode/compiler leaves __meo$ markers in what it compiles; none means the SWC plugin did not load
       - name: Check the meonode compiler ran
         run: |
-          markers=$(grep -ro '__meo\$:' .next/server | wc -l)
+          # grep exits non-zero when it finds nothing; the count decides, and 0 fails below
+          markers=$({ grep -ro '__meo\$:' .next/server || true; } | wc -l)
           echo "meonode compiler markers in .next/server: $markers"
           test "$markers" -gt 0
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
