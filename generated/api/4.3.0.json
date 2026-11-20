@@ -89974,5 +89974,63 @@
    }
   ],
   "packageName": "meocord"
- }
+ },
+ "reexports": [
+  {
+   "entry": "meocord/common",
+   "from": "discord.js",
+   "values": [
+    "Faces",
+    "GuildNavigationMentions",
+    "HeadingLevel",
+    "TimestampStyles",
+    "applicationDirectory",
+    "blockQuote",
+    "bold",
+    "channelLink",
+    "channelMention",
+    "chatInputApplicationCommandMention",
+    "codeBlock",
+    "email",
+    "escapeBold",
+    "escapeBulletedList",
+    "escapeCodeBlock",
+    "escapeEscape",
+    "escapeHeading",
+    "escapeInlineCode",
+    "escapeItalic",
+    "escapeMarkdown",
+    "escapeMaskedLink",
+    "escapeNumberedList",
+    "escapeSpoiler",
+    "escapeStrikethrough",
+    "escapeUnderline",
+    "formatEmoji",
+    "heading",
+    "hideLinkEmbed",
+    "hyperlink",
+    "inlineCode",
+    "italic",
+    "linkedRoleMention",
+    "messageLink",
+    "orderedList",
+    "phoneNumber",
+    "quote",
+    "roleMention",
+    "spoiler",
+    "strikethrough",
+    "subtext",
+    "time",
+    "underline",
+    "unorderedList",
+    "userMention"
+   ],
+   "types": [
+    "EscapeMarkdownOptions",
+    "FormatEmojiOptions",
+    "RecursiveArray",
+    "TimestampStylesString"
+   ]
+  }
+ ]
 }

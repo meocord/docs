@@ -2,7 +2,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, write
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { generateApi, linkPeers } from './api.js'
+import { discordReexports, generateApi, linkPeers } from './api.js'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'meocord-docs-api-'))
 cpSync(path.join(import.meta.dirname, '..', '__fixtures__', 'package'), dir, { recursive: true })
@@ -17,7 +17,61 @@ describe('generateApi', () => {
 
     expect(second).toEqual(first)
     expect(first.project.id).toBe(0)
+    // A package that re-exports nothing from discord.js writes the document it did before the field existed
+    expect(first).not.toHaveProperty('reexports')
   }, 60_000)
+})
+
+describe('discordReexports', () => {
+  let pkg: string
+  beforeEach(() => {
+    pkg = mkdtempSync(path.join(tmpdir(), 'meocord-docs-reexports-'))
+    writeFileSync(
+      path.join(pkg, 'package.json'),
+      JSON.stringify({
+        name: 'meocord',
+        version: '9.0.0',
+        type: 'module',
+        exports: { './common': { import: { types: './dist/types/common/index.d.ts' } } },
+        peerDependencies: { 'discord.js': '^14.27.0' },
+      }),
+    )
+    mkdirSync(path.join(pkg, 'dist', 'types', 'common'), { recursive: true })
+  })
+  afterEach(() => rmSync(pkg, { recursive: true, force: true }))
+  const declare = (source: string) => writeFileSync(path.join(pkg, 'dist', 'types', 'common', 'index.d.ts'), source)
+
+  it("lists an entry's discord.js names as values and types by what each declares, in one bundled export", () => {
+    declare(
+      "export { TimestampStylesString, userMention, TimestampStyles } from 'discord.js';\nexport { helper } from './helper.js';\nexport declare function own(): string;\n",
+    )
+    writeFileSync(path.join(pkg, 'dist', 'types', 'common', 'helper.d.ts'), 'export declare const helper: number;\n')
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([
+      {
+        entry: 'meocord/common',
+        from: 'discord.js',
+        values: ['TimestampStyles', 'userMention'],
+        types: ['TimestampStylesString'],
+      },
+    ])
+  })
+
+  it('lists nothing for an entry that re-exports nothing from discord.js', () => {
+    declare("import { Client } from 'discord.js';\nexport declare function own(client: Client): string;\n")
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([])
+  })
+
+  it("fails on a name that doesn't resolve, rather than guessing its kind", () => {
+    declare("export { userMention } from 'discord.js';\n")
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports userMention from discord.js, which doesn't resolve",
+    )
+  })
 })
 
 describe('linkPeers', () => {

@@ -4,6 +4,7 @@ import type { JSONOutput } from 'typedoc'
 import manifest from '../../../versions.json'
 import { guideRendered } from '../../../scripts/lib/guide'
 import { releasesOf, shownSince } from '../../../scripts/lib/since'
+import type { ApiReexport } from '../../../scripts/lib/api'
 import { VERSIONS } from '@/config/versions'
 import type { Layouts } from '@/lib/docs/api-layout'
 import { API_KINDS, ApiModel, type ApiScheme, type ApiSection, type SinceData } from '@/lib/docs/api-model'
@@ -47,6 +48,27 @@ export function versionRange(line: string, versions: readonly string[]): string 
 }
 
 const apiFile = (version: string) => path.join(process.cwd(), 'generated', 'api', `${version}.json`)
+
+type ApiFileDocument = { project: JSONOutput.ProjectReflection; reexports?: ApiReexport[] }
+// Only the re-exports are kept: a model keeps what it needs of the project, and the documents are large
+const reexportsOf = new Map<string, ApiReexport[]>()
+/** A version's generated API document, parsed; undefined for a version without one. */
+function readApiDocument(version: string): ApiFileDocument | undefined {
+  const file = apiFile(version)
+  if (!existsSync(file)) {
+    reexportsOf.set(version, [])
+    return undefined
+  }
+  const document = JSON.parse(readFileSync(file, 'utf8')) as ApiFileDocument
+  reexportsOf.set(version, document.reexports ?? [])
+  return document
+}
+
+/** What a version's entry points re-export from discord.js, which has no pages here; none for most versions. */
+export function apiReexports(version: string): ApiReexport[] {
+  if (!reexportsOf.has(version)) readApiDocument(version)
+  return reexportsOf.get(version) ?? []
+}
 
 let since: Record<string, SinceData> | undefined
 function sinceData(): Record<string, SinceData> {
@@ -106,10 +128,7 @@ export function apiModel(line: string, version?: string, by = apiArrangement(lin
   if (!source || lineOf(source) !== line || !lineVersions(line).includes(source)) return undefined
   const key = `${line}@${version ?? ''}@${by}`
   if (!models.has(key)) {
-    const file = apiFile(source)
-    const project = existsSync(file)
-      ? (JSON.parse(readFileSync(file, 'utf8')) as { project: JSONOutput.ProjectReflection }).project
-      : undefined
+    const project = readApiDocument(source)?.project
     const scheme: ApiScheme =
       by === 'entry'
         ? { by }

@@ -35,7 +35,15 @@ import {
   type Layouts,
 } from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
-import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref, versionRange } from '@/lib/docs/api-site'
+import {
+  apiLayouts,
+  apiModel,
+  apiReexports,
+  apiSections,
+  lineVersions,
+  resolveSiteHref,
+  versionRange,
+} from '@/lib/docs/api-site'
 import {
   CLI_SECTION,
   cliCommand,
@@ -634,6 +642,46 @@ function categorised(symbols: ApiListing[], level: 'h2' | 'h3', key: string, toc
   })
 }
 
+/** The kind the names an entry point re-exports from discord.js are listed under. */
+const REEXPORTS_SECTION = 'utilities'
+/** Where discord.js documents the formatters MeoCord re-exports. */
+const DISCORD_FORMATTERS_DOCS = 'https://discord.js.org/docs/packages/formatters/stable'
+
+/**
+ * The names an API's entry points re-export from discord.js, each under a heading of `level`: listed
+ * without pages of their own, since discord.js documents them.
+ */
+function reexported(model: ApiModel, level: 'h2' | 'h3', key: string, toc?: TocEntry[]): Child[] {
+  return apiReexports(model.version ?? lineVersions(model.line)[0]!).flatMap(({ entry, from, values, types }) => {
+    const title = `Re-exported from ${from}`
+    const id = `${key}-${headingId(title)}`
+    if (toc) toc.push({ id, title, depth: 2 })
+    return [
+      Node(level, { key: id, id, children: title }),
+      P(
+        [
+          'Imported from ',
+          Code(entry, { key: 'entry' }),
+          ', these are ',
+          Code(from, { key: 'from' }),
+          "'s own, the same as importing them from it. ",
+          A({ key: 'docs', href: DISCORD_FORMATTERS_DOCS, children: "discord.js's documentation" }),
+          ' describes them.',
+        ],
+        { key: `${id}-lead` },
+      ),
+      Ul({
+        key: `${id}-list`,
+        'data-api-list': true,
+        children: [
+          ...values.map(name => Li({ key: name, children: Code(name) })),
+          ...types.map(name => Li({ key: name, children: Code(`type ${name}`) })),
+        ],
+      }),
+    ]
+  })
+}
+
 /** The index's content: every symbol of the API with its summary, by kind, each kind linked to its page. */
 export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]; toc: TocEntry[] } {
   const toc: TocEntry[] = []
@@ -648,6 +696,7 @@ export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]
       return [
         H2(A({ href, children: section.title }), { key: section.slug, id: section.slug, 'data-kind-heading': true }),
         ...categorised(section.symbols, 'h3', section.slug),
+        ...(section.slug === REEXPORTS_SECTION ? reexported(model, 'h3', section.slug) : []),
       ]
     }),
   ]
@@ -679,7 +728,12 @@ export function apiKindArticle(model: ApiModel, section: string): { nodes: Child
       ]
     : []
   return {
-    nodes: [H1(kind.title, { key: 'title' }), ...intro, ...categorised(kind.symbols, 'h2', section, toc)],
+    nodes: [
+      H1(kind.title, { key: 'title' }),
+      ...intro,
+      ...categorised(kind.symbols, 'h2', section, toc),
+      ...(section === REEXPORTS_SECTION ? reexported(model, 'h2', section, toc) : []),
+    ],
     toc,
   }
 }
