@@ -199,9 +199,9 @@ Each spec builds its own module from them, and reads like the steps a member tak
 - **After `close()`.** A closed module still runs what `dispatch`, `invoke` and `emit` are given, against services
   already shut down, and warns once that it is closed, answering in the handler's theme without asking the app's
   `themeFor` resolver, which its `onShutdown` may have closed. Close it after the test's last call, in `afterEach`. A
-  `get()`
-  returns what `close()` shut down without a word; one that makes an instance with an `onShutdown` only then, such as a
-  listed service an `init()` that `close()` ended didn't make, warns once, naming it, since nothing shuts it down.
+  `get()` returns what `close()` shut down without a word; one that makes an instance with an `onShutdown` only then,
+  such as a listed service an `init()` that `close()` ended didn't make, warns once, naming it, since nothing shuts it
+  down.
 
 ## Running tests
 
