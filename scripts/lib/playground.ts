@@ -155,6 +155,21 @@ const STUBBED = new Set([
 const ASYNC_GENERATOR_PROTOTYPE =
   /Object\.getPrototypeOf\(\s*Object\.getPrototypeOf\(\s*async function\*\s*\(\)\s*\{\s*\}\s*\)\.prototype\s*\)/g
 
+/**
+ * The copy of Node's `util.inspect` the event emitter bundles, which it calls only to word an unhandled `'error'`
+ * that isn't an `Error`. The runtime already holds the `util` polyfill, which gives the same text.
+ */
+const VENDORED_INSPECT = /^var require_inspect = __commonJS\(\{\n[\s\S]*?^\}\);$/m
+
+/** The event emitter's `source` as the Worker runs it; throws, naming `file`, when its vendored inspect isn't there. */
+export function emitterSource(source: string, file: string): string {
+  if (!VENDORED_INSPECT.test(source))
+    throw new Error(`${file} has no vendored inspect to replace: check its layout against VENDORED_INSPECT`)
+  return source
+    .replace(ASYNC_GENERATOR_PROTOTYPE, 'Object.prototype')
+    .replace(VENDORED_INSPECT, () => 'var require_inspect = () => require("util");')
+}
+
 /** Resolves Node's modules for a browser Worker: a polyfill, a shim of the runtime's, or the stub. */
 export function nodeModulesPlugin(runtimeDir: string, packagesDir: string): Plugin {
   const node = (file: string) => path.join(runtimeDir, 'node', file)
@@ -163,8 +178,7 @@ export function nodeModulesPlugin(runtimeDir: string, packagesDir: string): Plug
     setup(build) {
       build.onLoad({ filter: /async_event_emitter[/\\]dist[/\\]index\.(mjs|cjs)$/ }, async args => {
         const { readFile } = await import('fs/promises')
-        const source = (await readFile(args.path, 'utf8')).replace(ASYNC_GENERATOR_PROTOTYPE, 'Object.prototype')
-        return { contents: source, loader: 'js' }
+        return { contents: emitterSource(await readFile(args.path, 'utf8'), args.path), loader: 'js' }
       })
       build.onResolve({ filter: /.*/ }, args => {
         const bare = args.path.replace(/^node:/, '')
