@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -22,6 +22,9 @@ describe('generateApi', () => {
   }, 60_000)
 })
 
+/** The repository's installs, which the fixtures link from. */
+const MODULES = path.resolve(import.meta.dirname, '..', '..', 'node_modules')
+
 describe('discordReexports', () => {
   let pkg: string
   beforeEach(() => {
@@ -40,10 +43,14 @@ describe('discordReexports', () => {
   })
   afterEach(() => rmSync(pkg, { recursive: true, force: true }))
   const declare = (source: string) => writeFileSync(path.join(pkg, 'dist', 'types', 'common', 'index.d.ts'), source)
+  const link = (target: string, name: string) => {
+    mkdirSync(path.dirname(path.join(pkg, 'node_modules', name)), { recursive: true })
+    symlinkSync(realpathSync(target), path.join(pkg, 'node_modules', name), 'dir')
+  }
 
   it("lists an entry's discord.js names as values and types by what each declares, in one bundled export", () => {
     declare(
-      "export { TimestampStylesString, userMention, TimestampStyles } from 'discord.js';\nexport { helper } from './helper.js';\nexport declare function own(): string;\n",
+      "export { TimestampStylesString, userMention, TimestampStyles, HeadingLevel } from 'discord.js';\nexport { helper } from './helper.js';\nexport declare function own(): string;\n",
     )
     writeFileSync(path.join(pkg, 'dist', 'types', 'common', 'helper.d.ts'), 'export declare const helper: number;\n')
     linkPeers(pkg)
@@ -52,9 +59,26 @@ describe('discordReexports', () => {
       {
         entry: 'meocord/common',
         from: 'discord.js',
-        values: ['TimestampStyles', 'userMention'],
+        values: ['HeadingLevel', 'TimestampStyles', 'userMention'],
         types: ['TimestampStylesString'],
       },
+    ])
+  })
+
+  it('counts every @discordjs package as discord.js and no other bare package, a class among the values', () => {
+    declare(
+      "export { bold, Faces } from '@discordjs/formatters';\nexport { SemVer } from 'semver';\nexport { userMention } from 'discord.js';\n",
+    )
+    linkPeers(pkg)
+    // discord.js's own dependency, and a typed package that isn't discord's, resolvable from the fixture
+    const discord = realpathSync(path.join(MODULES, 'discord.js'))
+    link(path.join(discord, '..', '@discordjs', 'formatters'), '@discordjs/formatters')
+    link(path.join(MODULES, 'semver'), 'semver')
+    link(path.join(MODULES, '@types', 'semver'), '@types/semver')
+
+    expect(discordReexports(pkg)).toEqual([
+      { entry: 'meocord/common', from: '@discordjs/formatters', values: ['Faces', 'bold'], types: [] },
+      { entry: 'meocord/common', from: 'discord.js', values: ['userMention'], types: [] },
     ])
   })
 
