@@ -103,6 +103,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const manifest = cliManifest(target.version ?? lineVersions(line)[0])
     const command = manifest && cliCommand(manifest, target.symbol)
     if (!command) return {}
+    // An exact version's page points at the line's, where the line still has the command
+    const newest = cliManifest(lineVersions(line)[0])
+    const lineHasIt = !target.version || (!!newest && !!cliCommand(newest, command.name))
     return pageMetadata({
       title: `meocord ${command.name} · CLI${target.version ? ` ${target.version}` : ''}`,
       line,
@@ -112,7 +115,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
         commandSummary(command),
         `Usage, options and examples for MeoCord ${line}.`,
       ),
-      canonical: docsHref({ kind: 'api', line, section: CLI_SECTION, symbol: command.name }, VERSIONS),
+      canonical: lineHasIt
+        ? docsHref({ kind: 'api', line, section: CLI_SECTION, symbol: command.name }, VERSIONS)
+        : undefined,
       index: !target.version,
     })
   }
