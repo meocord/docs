@@ -49,7 +49,7 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@lezer/highlight": "^1.2.5",
-    "@meonode/ui": "^3.1.3",
+    "@meonode/ui": "^3.3.0",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-gfm": "^3.1.0",
     "mdast-util-to-markdown": "^2",
