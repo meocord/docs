@@ -229,6 +229,12 @@ pattern, and the collector's callback answers it:
 `awaitMessageComponent()` and `awaitModalSubmit()` work the same way, and keep the handler's theme across their
 `await`.
 
+A test sees the same hand-over with a mock client, under [strict mocks](guide:mocks#strict-mocks). `dispatch` leaves a
+click no route takes to the client's `interactionCreate` listeners, where the collector answers it, and answers "not
+found" only if none did. It waits for the listeners, not 1.5 seconds:
+
+::example{file="testing/strict-collectors.spec.ts" region="hand-over"}
+
 ## When nothing matches
 
 An interaction no pattern takes raises `CommandNotFoundError`. The built-in fallback answers it with "Command not
