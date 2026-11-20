@@ -6,8 +6,8 @@ order: 3
 summary: Stand in for discord.js interactions, messages, users and Discord's errors, with the rules discord.js follows.
 learn:
   - Mock any discord.js class, with the properties a test needs
-  - Build a command's options, a modal's fields and a message with its mentions
-  - Give a member roles, and read its permissions as discord.js computes them
+  - Build a command's options, a modal's fields, a message, and a member with roles and permissions
+  - Run discord.js's collectors on mocks, and have a mock's values type-checked
   - Reset mocks between tests, and reject with Discord's own errors
 requires: [testing]
 api:
@@ -30,6 +30,7 @@ api:
     testing/isMockFunction,
     testing/useMockFn,
     testing/useStrictMocks,
+    testing/MockTypeOptions,
   ]
 since: 4.0.0
 ---
@@ -124,7 +125,11 @@ A mock is built from the class's prototype, with its methods replaced by mock fu
   them.
 - **An interaction has a client.** One made without a `client` gets one from `createMockClient()`, as a message does:
   its user is in `client.users.cache`, its channel in `client.channels.cache` once read, and `client.user` is the
-  mock bot.
+  mock bot. Under strict mocks it shares that client with what it holds, as in discord.js: its user, member, channel
+  and server, a message's author and the users it mentions, and what its options or a select menu resolve to. It
+  takes the `client` given, else the mock client a `message`, `channel` or `guild` given already holds, else a new
+  one, so `createMockMessage({ channel })` is on the channel's client. In default mode each keeps a client of its own,
+  and code that reads one where strict mocks give another warns once.
 - **Locales are set as Discord sends them.** `locale` is `'en-US'`, and `guildLocale` is `'en-US'` in a server and
   `null` in a DM, so a [translator](guide:localisation) works on a default mock.
 
@@ -281,19 +286,39 @@ A method that returns a promise in discord.js resolves, so `await` and `.catch()
 | Method                                                                                                                        | Resolves to                                                                          |
 | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `send()`, a message's `reply()`, `crosspost()`, `forward()`, and an interaction's `editReply()`, `followUp()`, `fetchReply()` | a mock message in the channel it was sent in, holding what was sent                  |
-| an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`, `showModal()`                                        | `undefined`                                                                          |
+| an interaction's `reply()`, `deferReply()`, `update()`, `deferUpdate()`                                                       | `undefined`; under strict mocks, a mock `InteractionResponse`                        |
+| an interaction's `showModal()`                                                                                                | `undefined`                                                                          |
 | a manager's `fetch(id)`, or `fetch({ user })` and the like                                                                    | its cached item with that id, a message made in that channel, or a new one it caches |
 | a guild's `members.fetch({ user: ids })`                                                                                      | a `Collection` of each, as `fetch(id)` gives it                                      |
 | a manager's `fetch()` for a list                                                                                              | an empty `Collection`; under strict mocks, a channel's messages                      |
 | a manager's `create()` and `edit()`                                                                                           | a mock of its item; under strict mocks, the item asked for                           |
 | `createDM()`                                                                                                                  | the user's DM channel                                                                |
 | a member's `kick()`, `ban()` and `timeout()`                                                                                  | the member                                                                           |
-| `awaitMessages()` and `awaitReactions()`                                                                                      | an empty `Collection`, as nothing answers a mock                                     |
+| `awaitMessages()` and `awaitReactions()`                                                                                      | an empty `Collection`; under strict mocks, what they collect                         |
 | a structure's own `edit()`, `fetch()`, `delete()` and setters, but a message's `delete()`                                     | the structure itself                                                                 |
 | a message's `delete()`, `pin()` and `unpin()`                                                                                 | `undefined`                                                                          |
 | any other method that returns a promise                                                                                       | `undefined`                                                                          |
 
 ::example{file="testing/mock-defaults.spec.ts" region="promises"}
+
+Under strict mocks, an interaction's four answers resolve to what discord.js's do. The mock `InteractionResponse` is
+bound to the interaction: its `edit()`, `delete()` and `fetch()` reach `editReply()`, `deleteReply()` and
+`fetchReply()`, and its `createMessageComponentCollector()` runs a collector on the reply, as
+[Collectors](#collectors) shows. With `withResponse: true`, each resolves to an `InteractionCallbackResponse`:
+
+- `reply()`'s and `deferReply()`'s `resource` is of type `ChannelMessageWithSource` and holds the message as
+  `fetchReply()` reads it then, for `deferReply()` the loading message, whose id the reply keeps;
+- `update()`'s is of type `UpdateMessage` and holds the updated message;
+- `deferUpdate()` has no `resource`: it is `null`.
+
+A deferred reply reads as Discord shows it until it is edited: `fetchReply()` after `deferReply()` gives a message
+flagged `Loading`, and `Ephemeral` too for a private deferral. An edit clears `Loading`. `respond(interaction).send()`
+resolves to the message the reply or the update sent. In default mode the four resolve to `undefined`, and the first
+time a test's or an app's own code calls one, a warning is logged for the run.
+
+`fetchReply()`, `editReply()` and `followUp()` each resolve to a new message object, the message as it stands then, as
+discord.js returns a copy rather than its cached `Message`. Two `fetchReply()` calls aren't `===`, and a message held
+from before an edit keeps its old content: compare messages by `id`, and tell two edits apart by `editedTimestamp`.
 
 Under strict mocks, a channel caches each message made in it, or sent there through `send()` or `reply()`, as
 discord.js caches messages as they arrive, and its `messages.fetch()` with no id lists them, newest first, honouring
@@ -336,6 +361,10 @@ cache one on the message's channel with `channel.threads.cache.set(message.id, t
 `thread` from `createMockChannel(ThreadChannel)`. Without one, it is a placeholder thread, with a warning, since
 discord.js reads `null` there.
 
+A property the mock's discord.js class doesn't have, such as `isRepliable` on a message, or `guild` on a class
+without one, reads a placeholder too. The first read of one by a test's or an app's code warns once for the run, naming
+it, its class and what strict mocks answer; MeoCord's own reads stay quiet.
+
 ### Strict mocks
 
 [`useStrictMocks()`](api:testing/useStrictMocks), called once in a test setup file before any mock is made, has the
@@ -362,7 +391,16 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   and its focused option is read by name, `''` before anything is typed;
 - `getMentionable()` on a user option gives the user's member in a server;
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
-  until then, and reading it warns once.
+  until then, and reading it warns once;
+- a property the class doesn't have reads `undefined` and isn't `in` the mock, as on discord.js's objects, so
+  `message.isRepliable?.()` is `undefined` and `if (value.guild)` is false for a class without a `guild`. `in` is true
+  for a field the class sets on its instances, such as `'content' in message`, read from the discord.js the app
+  installed. A property the test gives or assigns, and a mock of an app's own subclass, answer as before;
+- an interaction's `reply()`, `deferReply()`, `update()` and `deferUpdate()` resolve to a mock `InteractionResponse`,
+  or with `withResponse` an `InteractionCallbackResponse`, as [What methods return](#what-methods-return) describes;
+- a mock and what it holds are on one client, as [How it works](#how-it-works) describes;
+- the mock client's emitter works, and collectors run discord.js's own code, as [Collectors](#collectors) shows. A
+  command's `message`, and a message's raw `channel_id` and `guild_id`, read `undefined`, as on discord.js's classes.
 
 So a message another user sent isn't `editable` or `deletable`, and a member isn't `kickable` until the bot's member has
 a role above theirs with Kick Members. Give the bot's member that role, through `guild.members.me!.roles.add(role)`, and
@@ -377,17 +415,53 @@ A testing module follows the bot more closely under strict mocks too, each with 
 
 - `dispatch()` reports a call whose answer fails to build once, as `'error'`, as the bot does. In default mode an
   interaction's observers hear it twice, first with its own outcome. `dispatch()` rejects with that failure either way.
+- `dispatch()` leaves a component no route takes to the mock client's `interactionCreate` listeners, and delivers a
+  message or a reaction to its `messageCreate` and reaction listeners, as
+  [Invoke and dispatch](guide:invoke-and-dispatch#sending-input-with-dispatch) describes.
 - `emit()` sets the module's presenter, theme and translator on the client of each event argument, as the bot sets them
   on its own client, and a module without a presenter answers with MeoCord's default on a client another module used.
+- `init({ ready: true })` and `close()` run the lifecycle hooks of a class that only a guard, an interceptor, a pipe, a
+  filter or the presenter injects in the bot's order: its `onReady` after the controllers' and observers', and its
+  `onShutdown` before theirs. Default mode warns once, naming the first class whose hooks run in another order.
 - [`inspectHandler`](api:testing/inspectHandler) lists only the guards, interceptors and observers dispatch runs for
   the handler's context types, and its `inheritedRoutes` names an inherited `@On` or `@Once` event too, such as
   `event "guildCreate"`, which default mode leaves out.
 
 ## Collectors
 
+Under strict mocks, a collector runs discord.js's own code on the mock client, so a handler that collects runs in its
+test as it does in the bot:
+
+- `createMessageComponentCollector()` and `awaitMessageComponent()`, on a message, on an `InteractionResponse` or on a
+  text channel, collect a click that `module.dispatch()` delivers or that a test emits on the client;
+- a channel's `createMessageCollector()` and `awaitMessages()`, and a message's `createReactionCollector()` and
+  `awaitReactions()`, collect the messages and reactions `dispatch()` delivers;
+- `max`, `filter`, `componentType`, `time`, `idle`, `dispose` and `stop()` work as in discord.js, and the await methods
+  resolve with what they collected, or reject on their `time`. Each method stays a mock function that records its
+  calls.
+
+A click built from the reply, with `message: await interaction.fetchReply()`, is on the reply's client, so `dispatch()`
+delivers it where the collector listens:
+
+::example{file="testing/strict-collectors.spec.ts" region="component"}
+
+To answer `awaitMessageComponent()` or `awaitMessages()`, start the handler without awaiting it, dispatch the answer
+once the handler has asked, then await the handler:
+
+::example{file="testing/strict-collectors.spec.ts" region="await-messages"}
+
+discord.js times a collector's `time` and `idle` with `node:timers`, so a test's fake timers don't move them. A handler
+that awaits `awaitMessages({ time: 60_000 })` with nothing dispatched waits that long, past a test's timeout: dispatch
+the answer, give the collector `max`, or call `collector.stop()`.
+
+In default mode the create methods return `undefined`, the await methods resolve at once to an empty `Collection`, and
+the first call an app's or a test's code makes to one warns once. A mock on a real discord.js `Client` keeps them
+inert in either mode.
+
 A collector's callback answers a click with `respond()` after the handler has returned. It takes the theme of the app
 the click's client belongs to, so a click a test builds must come from the same client as the call that started the
-collector. The gateway does that for the bot; in a test, pass `{ client: interaction.client }`:
+collector. The gateway does that for the bot; in a test, build the click from the reply as above, or pass
+`{ client: interaction.client }`:
 
 ::example{file="testing/collector.spec.ts" region="collector"}
 
@@ -404,14 +478,33 @@ config and `vi.clearAllMocks()` reach them, and `vi.mocked(interaction.reply)` g
 - **node:test** keeps MeoCord's own mock function: its `mock.fn` records calls in a shape of its own, which
   `useMockFn` refuses.
 
-Call it before any mock is made. Once a mock exists, a call with another function throws, since the two kinds would mix.
-A setup file runs first, so that is where it goes. What it sets, with `useMockFn()` or `useStrictMocks()`, holds for
-every test, through `vi.resetModules()`, `jest.resetModules()` and Jest's `resetModules` config, and the mocks'
-generated ids keep counting through them.
+Call it before any mock is made. Once a mock has been made, a call throws "useMockFn() goes before any mock is made",
+whether or not that mock is still in use, since the two kinds would mix. A setup file runs first, so that is where it
+goes, ahead of anything that makes a mock when it is imported. What it sets, with `useMockFn()` or `useStrictMocks()`,
+holds for every test, through `vi.resetModules()`, `jest.resetModules()` and Jest's `resetModules` config, and the
+mocks' generated ids keep counting through them.
 
 [`createMockFn(impl?)`](api:testing/createMockFn) makes a stand-alone mock function of the same kind, the runner's own
 once `useMockFn` is called; `clearAllMocks()` and `resetAllMocks()` reach it.
 [`isMockFunction(fn)`](api:testing/isMockFunction) tells a mock from a real function.
+
+## Typed values
+
+A mock's `mockReturnValue`, `mockResolvedValue` and `mockImplementation` take `any`, and its `mock.calls` and
+`mock.results` read as `any`. To have them checked against the function they mock, merge `typedValues: true` into
+`MockTypeOptions`, in a declaration file the tests compile with:
+
+::example{file="augmented/types/meocord-testing.d.ts" region="typed-values"}
+
+Each mock then takes only what its function returns, resolves to or is, and reads its own arguments and results.
+`mockResolvedValue(undefined)` stays allowed, since a mock's answers resolve to `undefined` by default, and an
+overloaded method, such as `guild.members.fetch`, takes what any of its overloads gives. A partial fake is refused:
+cast it where it is intended:
+
+::example{file="augmented/typed-values.spec.ts" region="typed"}
+
+A project whose tests compile as both ES modules and CommonJS declares it in a `.d.ts` and a `.d.cts`. 5.0 types the
+values by default.
 
 ## Resetting between tests
 
@@ -422,6 +515,13 @@ once `useMockFn` is called; `clearAllMocks()` and `resetAllMocks()` reach it.
 
 What a mock holds outside its methods stays: an interaction already answered stays `replied`, and a deleted message
 stays deleted. Make a fresh mock in each test, or in `beforeEach`, rather than one at a spec's top level.
+
+Both reach each of MeoCord's own mocks the next time it is used: called, read through `fn.mock` or a matcher, or set.
+So an array read before the reset, as in `const calls = fn.mock.calls`, keeps its entries until the mock is next used,
+then empties in place; reading `fn.mock.calls` again sees the reset at once. MeoCord's own mocks don't stay in memory
+once a test drops them. With `useMockFn(vi.fn)`, Vitest holds each of its mocks until the test yields, so a test making
+thousands of mock interactions in one loop yields between batches, with
+`await new Promise(resolve => setTimeout(resolve, 0))`.
 
 A generated project resets after every test from `vitest.setup.ts`, as [The testing module](guide:testing#running-tests)
 shows. A project without it gets the same by adding that file and `setupFiles: ['./vitest.setup.ts']` to its
@@ -465,11 +565,15 @@ mention never reaches the fetch, since a member it names comes from the message'
   relies on them, or in `beforeEach`.
 - **A command's options aren't there by default.** A mock `ChatInputCommandInteraction` has no options until you
   give `options: createChatInputOptions({ … })` in its overrides, or assign it afterwards.
-- **A mock's `reply`, `deferReply`, `update` and `deferUpdate` resolve to `undefined`**, though their types say
-  `InteractionResponse`. To test a collector on the response, give it one:
-  `interaction.reply.mockResolvedValue(response)`, with `response` from `createMock<InteractionResponse>()` and its
-  `createMessageComponentCollector` set to return your collector. The interaction is then `replied`, as with the default
-  mock.
+- **In default mode, `reply`, `deferReply`, `update` and `deferUpdate` resolve to `undefined`**, though their types say
+  `InteractionResponse`, and the first call from a test's or an app's code warns. A test that asserts `Logger.warn` was
+  never called fails on that warning. Call `useStrictMocks()`, which resolves them to a mock response that runs its
+  collector, or assert on the warnings the test expects.
+- **A collector isn't moved by fake timers.** discord.js times it with `node:timers`. End it with `max`, `stop()` or a
+  dispatched answer, not by advancing the clock.
+- **A test that dispatches and also emits delivers twice.** `dispatch()` already delivers a component no route takes, a
+  message and a reaction to the mock client's listeners, under strict mocks. Emit on the client only what `dispatch`
+  doesn't send.
 - **`useStrictMocks()` goes before the first mock.** Called once a mock exists, it throws "useStrictMocks() goes before
   any mock is made: …". Call it in the test setup file, not inside a test or after a mock made at a spec's top level.
 
