@@ -140,6 +140,13 @@ describe('page metadata', () => {
     },
   )
 
+  it('an exact version’s API symbol the line no longer has: never indexed, and no canonical', async () => {
+    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.5', 'types', 'MetadataKey'] }))
+    expect(meta.title).toEqual({ absolute: expect.stringMatching(/^MetadataKey · /) })
+    expect(meta.robots).toEqual(closed)
+    expect(meta.alternates?.canonical).toBeUndefined()
+  })
+
   it('an exact version’s page that other versions share: its titles name every version it serves', async () => {
     const meta = await api.generateMetadata(
       params({ line: '4.1', path: ['4.1.0-beta.8', 'responses', 'CooldownError'] }),

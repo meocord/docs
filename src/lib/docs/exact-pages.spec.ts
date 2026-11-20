@@ -5,7 +5,8 @@ import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
-import { apiArticle, exactApiPage, type ExactApiPage } from '@/lib/docs/api-render'
+import { apiArticle, apiVersions, exactApiPage, type ExactApiPage } from '@/lib/docs/api-render'
+import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
 import { exactApiParams, lineVersions, versionRange } from '@/lib/docs/api-site'
 import {
   checkExactRoutes,
@@ -26,6 +27,8 @@ const pathOf = (line: string, version: string, section: string, symbol: string) 
 const shared = groups.find(group => group.versions.length > 1 && group.symbol === 'MeoCordFactory')!
 const sharedPage = pageOf(shared.line, shared.versions[0]!, shared.section, shared.symbol)
 
+// A link to the version's own pages inside a signature's code, as e2e/exact-pages.spec.ts looks for one
+const SIGNATURE_LINK = /<pre data-signature="true"[^>]*><code>(?:(?!<\/code>)[\s\S])*<a href="\.\.\//
 /** A page's article and sidebar, as markup. */
 const markupOf = (page: ExactApiPage) =>
   renderToStaticMarkup(
@@ -100,6 +103,24 @@ describe('exact-version pages', { timeout: WALK_TIMEOUT_MS }, () => {
     expect(named).toEqual([])
   })
 
+  it('carries the line’s tabs and the symbol’s version switcher, links relative to the version', () => {
+    const firsts = [...new Map(groups.map(group => [group.line, group])).values()]
+    for (const { line, versions, section, symbol } of firsts) {
+      const page = pageOf(line, versions[0]!, section, symbol)
+      const relative = (value: unknown) =>
+        value === undefined
+          ? undefined
+          : JSON.parse(JSON.stringify(value).split(`/docs/${line}/api/${versions[0]}/`).join('../'))
+      expect(page.switcher, line).toEqual(relative(apiVersions(line, symbol)))
+      expect(page.tabs, line).toEqual(relative(guideEnabled(line) ? guideTabs(line, 'api') : undefined))
+    }
+    // Both are there to compare: a line with the Guide's tabs, and a switcher with versions to pick
+    expect(firsts.some(({ line, versions, section, symbol }) => pageOf(line, versions[0]!, section, symbol).tabs)).toBe(
+      true,
+    )
+    expect(sharedPage.switcher.options.length).toBeGreaterThan(1)
+  })
+
   it('links each version of a shared page to its own pages, the sidebar marking the page itself', () => {
     const hrefs = hrefsOf(sharedPage)
     // No link names a version; one to the version's pages is relative to it
@@ -107,7 +128,9 @@ describe('exact-version pages', { timeout: WALK_TIMEOUT_MS }, () => {
     const relative = hrefs.filter(href => href.startsWith('../'))
     expect(relative.length).toBeGreaterThan(0)
     // A type in its signature among them, which e2e/exact-pages.spec.ts follows
-    expect(markupOf(sharedPage)).toMatch(/data-signature[^>]*>.*?<a href="\.\.\//s)
+    expect(markupOf(sharedPage)).toMatch(SIGNATURE_LINK)
+    // A page whose signature links nothing doesn't count for its sidebar's links
+    expect(markupOf(pageOf('4.1', '4.1.0-beta.8', 'responses', 'CommandNotFoundError'))).not.toMatch(SIGNATURE_LINK)
     for (const version of shared.versions) {
       const page = new URL(pathOf(shared.line, version, shared.section, shared.symbol), 'https://docs.test')
       for (const href of relative) {
