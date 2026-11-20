@@ -1,0 +1,117 @@
+---
+id: gateway-events
+title: Gateway events
+chapter: messages
+order: 4
+summary: Handle any discord.js client event, such as a member joining, with `@On` and `@Once`.
+learn:
+  - Handle a client event every time, or once
+  - Run guards and filters on an event
+  - Find the intent an event needs, and test the handler
+requires: [first-command]
+api: [decorators/On, decorators/Once]
+since: 4.1.0
+---
+
+`@On('guildMemberAdd')` runs a method every time discord.js emits that event, and `@Once` the first time only.
+The handler's parameters are typed from discord.js's `ClientEvents`, so `guildMemberAdd` gives a `GuildMember`.
+
+## When to use it
+
+Use an event handler for what happens in Discord without a command: a member joins, the bot is added to a
+server, a message is edited or deleted, a role changes.
+
+For commands and components, use their decorators instead: `@Command`, `@MessageHandler` and
+`@ReactionHandler` route by name, pattern or emoji. For work when the bot starts and stops, use
+[lifecycle hooks](guide:lifecycle-hooks) rather than `@Once('clientReady')`.
+
+## Example
+
+::playground{file="controllers/event/welcome.controller.ts" region="controller" dispatch="event guildMemberAdd"}
+
+## How it works
+
+- **Where.** On every instance whose lifecycle hooks run: a controller or service listed in
+  `@MeoCord({ controllers, services })`, a class one of them, a guard, an interceptor, a filter, a pipe or the presenter
+  injects, a class provided under another token, and a provided `useValue` or `useFactory` instance, though not the
+  cooldown store. The handler runs on that one instance, the same one the rest of the app injects. A class made for
+  each call, because it injects `ExecutionContext`, receives no events, and startup warns about one with `@On` or
+  `@Once`. `@Command`, `@MessageHandler`, `@ReactionHandler` and `@Autocomplete` run only on a controller in
+  `controllers`.
+- **Order.** The handlers of one event start in [dependency order](guide:lifecycle-hooks), as the lifecycle hooks
+  run, so a class's handler starts after those of the classes it injects. They run side by side: one doesn't wait for
+  another to finish.
+- **Pipeline.** An event runs through the same [pipeline](guide:how-a-call-runs) as a command. Guards and
+  interceptors on the method or class apply, and the app's global ones. A guard receives the event's
+  arguments, and `ExecutionContext.getType()` is `'event'`.
+- **What an event handler refuses.** `@Defer`, `@Validate`, `@UsePipe` and `@Cooldown` don't apply to an event,
+  and `@Once` tells classes apart by name. On a controller or service listed in
+  `@MeoCord({ controllers, services })`, the app refuses to start with one of those on an `@On` or `@Once` handler, or
+  with an `@Once` on a class that shares another's name. On any other class, such as one a provider makes, that
+  handler doesn't run, and startup warns, naming it; the next major version (5.0) refuses it there too.
+- **Alongside dispatch.** `@On('interactionCreate')` and `@On('messageCreate')` run beside MeoCord's own
+  dispatch of those events, not in place of it.
+
+## Guards on events
+
+A global guard written for interactions should skip events. Declare which calls it takes:
+
+::example{file="guards/maintenance.guard.ts" region="guard"}
+
+At startup, in an app with `@On` or `@Once` handlers, MeoCord names each global guard or interceptor without
+`types`, since it will also run on events.
+
+## Errors
+
+An error a handler throws goes to its [exception filters](guide:exception-filters), as a command's does. One no
+filter handles is logged with the event and the handler's name. It never stops the bot, or the other handlers
+of that event.
+
+A [`UserError`](api:responses/UserError) is answered where there is someone to answer. For an event with a
+message, such as `messageCreate`, its message is sent as a reply to that message, or to the edited one for
+`messageUpdate`. Other events have no one to answer, so nothing is sent.
+
+## Intents
+
+Most events need an intent: `guildMemberAdd` needs `GuildMembers`, which is privileged. At startup MeoCord warns
+once for each intent or partial a handler needs that `clientOptions` lacks.
+
+A privileged intent is also enabled in the Discord developer portal, under Bot, then Privileged Gateway
+Intents. If Discord refuses one at login, the bot names the privileged intents it
+requests and where to enable them, and `app.start()` rejects with an error
+`isExplainedError(error)` recognises, so the generated `main.ts` doesn't log it twice.
+
+## Testing
+
+`module.emit(event, ...args)` sends an event to the module's handlers through the same pipeline, and resolves to
+`{ ran }`, how many handlers ran:
+
+::example{file="controllers/event/welcome.controller.spec.ts" region="spec"}
+
+`emit` rejects once every handler has settled if any threw: with that error, or an `AggregateError` when
+several did. That includes a guard's `GuardDeniedError`, which the bot logs at debug, and a handler's `UserError`,
+which the bot answers with a reply when the event carries a message. `emit` runs no fallback, so check them with
+`rejects`.
+
+## Gotchas
+
+- **Nothing runs.** Check the startup warnings for a missing intent. `guildMemberAdd` without `GuildMembers`
+  is never emitted.
+- **Two classes with one name.** `@Once` tells classes apart by name, so the bot refuses to start when two
+  classes share a name and either has a `@Once` handler. Rename one.
+- **A global guard denies every event.** It was written for interactions. Give it `types: ['interaction']`.
+
+## Build it
+
+When the bot joins a server, it tells the server how to leave feedback:
+
+::example{file="tutorial/welcome.controller.ts" region="gateway-events"}
+
+Add `WelcomeController` to the app's `controllers`. `guildCreate` needs only the `Guilds` intent the bot
+already has. `systemChannel` is `null` in a server without one, so the bot sends nothing there.
+
+## Next steps
+
+- [Lifecycle hooks](guide:lifecycle-hooks): start and stop work with the bot.
+- [Guards](guide:guards): decide which calls a guard takes.
+- [Exception filters](guide:exception-filters): answer an event's errors your own way.

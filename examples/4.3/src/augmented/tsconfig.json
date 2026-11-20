@@ -1,0 +1,7 @@
+{
+  // A program of its own: an augmentation reaches every file compiled with it, so the app's own tokens it adds would
+  // otherwise be required of every theme in examples/4.1. `files`, not `include`, so a renamed example fails
+  "extends": "../../tsconfig.json",
+  "include": [],
+  "files": ["types/theme.d.ts", "vip.app.ts"]
+}
