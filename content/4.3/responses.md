@@ -120,3 +120,4 @@ keeps the message's attachments.
 - [@Defer](guide:defer): acknowledge before the guards run, and lock a component's message while the handler works.
 - [Presenters](guide:presenters): style the loading and error views `respond()` shows for you.
 - [Theming](guide:theming): the colour `respond()` fills in, and how to change it.
+- [Formatting](guide:formatting): split a long answer into a reply and follow-ups, and fit text to Discord's limits.

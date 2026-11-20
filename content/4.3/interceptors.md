@@ -77,7 +77,10 @@ controller's, then the method's; within one list, the first is outermost:
 ::example{file="controllers/slash/lookup.slash.controller.ts" region="controller"}
 
 Global interceptors also wrap message, reaction and event handlers. One written for interactions declares
-`@Interceptor({ types: ['interaction'] })`, as the reporting interceptor above does. Autocomplete handlers run no
+`@Interceptor({ types: ['interaction'] })`, as the reporting interceptor above does, or the app sets
+`@MeoCord({ globalStagesOnEvents: false })` to keep every global interceptor and guard without `types` off `@On` and
+`@Once` handlers. Left unset in an app with event handlers, the bot warns about each such interceptor at startup; see
+[Where guards apply](guide:guards#where-guards-apply). Autocomplete handlers run no
 interceptors, since they must answer within three seconds and have no reply to shape.
 
 ## The call's params

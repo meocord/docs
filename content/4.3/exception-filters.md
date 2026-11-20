@@ -40,7 +40,9 @@ a status page, or for an error type of your own. A filter also catches MeoCord's
 [cooldown](guide:cooldowns)'s `CooldownError`.
 
 To stop a call before it starts, use a [guard](guide:guards); after an interaction, a guard's `GuardDeniedError` is
-answered the same way a `UserError` is. [The built-in fallback](#the-built-in-fallback) shows how each is answered after
+answered the same way a `UserError` is. With `@MeoCord({ answerDenied: true })`, a guard's `false` on an interaction
+takes the same path, as a `GuardDeniedError` saying "You can't use this.", so a filter that catches `GuardDeniedError`
+answers it too. [The built-in fallback](#the-built-in-fallback) shows how each is answered after
 a message.
 
 ## Example

@@ -247,3 +247,4 @@ the post keeps its buttons. Press it as a member with the role, and the verdict 
 - [Validation and pipes](guide:validation): check the input a guard let through.
 - [Exception filters](guide:exception-filters): answer a `GuardDeniedError` in your own words.
 - [Testing recipes](guide:testing-recipes): test a guard with and without the role it needs.
+- [Formatting](guide:formatting#naming-permissions): name the permissions a member lacks, in their language.

@@ -1,6 +1,5 @@
 // #region filter
-import { time } from 'discord.js'
-import { CooldownError, type ExecutionContext } from 'meocord/common'
+import { CooldownError, type ExecutionContext, time } from 'meocord/common'
 import { Catch } from 'meocord/decorator'
 import { type ExceptionFilter } from 'meocord/interface'
 

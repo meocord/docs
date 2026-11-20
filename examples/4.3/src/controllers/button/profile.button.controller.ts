@@ -1,5 +1,5 @@
 import { type ButtonInteraction } from 'discord.js'
-import { respond } from 'meocord/common'
+import { respond, userMention } from 'meocord/common'
 import { Command, Controller } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
 
@@ -9,7 +9,7 @@ export class ProfileButtonController {
   // customId `profile/175928847299117063/800000001` gives ownerId '175928847299117063' and uid '800000001'
   @Command('profile/{ownerId:snowflake}/{uid}', CommandType.BUTTON)
   async showProfile(interaction: ButtonInteraction, { ownerId, uid }: { ownerId: string; uid: string }) {
-    await respond(interaction).send({ content: `Profile ${uid}, opened by <@${ownerId}>` })
+    await respond(interaction).send({ content: `Profile ${uid}, opened by ${userMention(ownerId)}` })
   }
   // #endregion params
 
@@ -17,7 +17,7 @@ export class ProfileButtonController {
   // Both match `profile/175928847299117063/summary`; `summary`, literal where the other has a param, wins it
   @Command('profile/{ownerId:snowflake}/summary', CommandType.BUTTON)
   async showSummary(interaction: ButtonInteraction, { ownerId }: { ownerId: string }) {
-    await respond(interaction).send({ content: `Summary for <@${ownerId}>` })
+    await respond(interaction).send({ content: `Summary for ${userMention(ownerId)}` })
   }
   // #endregion overlap
 }

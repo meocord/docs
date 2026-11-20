@@ -176,3 +176,4 @@ Start the bot with `npx meocord start --dev` and run `/feedback` in your test se
 - [Subcommands](guide:subcommands): several actions under one command.
 - [Answering with respond()](guide:responses): replies, edits and follow-ups.
 - [Autocomplete](guide:autocomplete): suggestions as a member types an option.
+- [Formatting](guide:formatting): mention a command so a reader can click it.
