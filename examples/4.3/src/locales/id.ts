@@ -2,6 +2,7 @@
 // Any part of the default catalog; what it leaves out falls back to it
 export default {
   warn: { name: 'peringatan', description: 'Beri peringatan ke anggota', done: '{user} diberi peringatan.' },
+  lookup: { description: 'Cari {thing} menurut nama', things: { user: 'pengguna', role: 'peran' } },
   // Indonesian has a single plural form
   warnings: { other: '{user} punya {count} peringatan' },
   types: { color: 'warna hex' },
