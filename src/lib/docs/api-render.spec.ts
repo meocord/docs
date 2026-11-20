@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs'
+import path from 'node:path'
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -13,7 +15,7 @@ import {
   renderApiIndex,
   runsAt,
 } from '@/lib/docs/api-render'
-import { apiModel, apiSections, lineVersions } from '@/lib/docs/api-site'
+import { apiModel, apiReexports, apiSections, lineVersions } from '@/lib/docs/api-site'
 import { glanceTopic } from '@/lib/docs/glance'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
 import { VERSIONS } from '@/config/versions'
@@ -250,6 +252,47 @@ describe('the API by kind', () => {
     )
     // The index and kinds exist only where the API is arranged by kind
     expect(renderApiIndex('4.0')).toBeUndefined()
+  })
+
+  it("lists what meocord/common re-exports from discord.js under Utilities, linked to discord.js's documentation", () => {
+    const model = apiModel('4.3')!
+    const docs43 = `/docs/${lineSegment('4.3', VERSIONS)}`
+    const index = html(apiIndexArticle('4.3', model).nodes)
+    const section = index.slice(index.indexOf('<h2 id="utilities"'), index.indexOf('<h2 id="testing"'))
+    expect(section).toContain('<h3 id="utilities-re-exported-from-discord-js">Re-exported from discord.js</h3>')
+    expect(section).toContain('<a href="https://discord.js.org/docs/packages/formatters/stable">')
+    expect(section).toContain('<li><code>userMention</code></li>')
+    expect(section).toContain('<li><code>type TimestampStylesString</code></li>')
+    // Discord.js documents them: none links to a page here
+    expect(section).not.toContain(`${docs43}/api/utilities/userMention`)
+    const kind = apiKindArticle(model, 'utilities')!
+    expect(html(kind.nodes)).toContain(
+      '<h2 id="utilities-re-exported-from-discord-js">Re-exported from discord.js</h2>',
+    )
+    expect(kind.toc.map(entry => entry.title)).toContain('Re-exported from discord.js')
+    // Only Utilities lists them
+    expect(html(apiKindArticle(model, 'responses')!.nodes)).not.toContain('Re-exported from')
+    // A line whose meocord re-exports nothing from discord.js has no such heading
+    expect(html(apiIndexArticle('4.2', apiModel('4.2')!).nodes)).not.toContain('Re-exported from')
+  })
+
+  it("reads the re-exports from 4.3.0's generated API alone: 44 values and 4 types, none for an earlier version", () => {
+    const [common, ...others] = apiReexports('4.3.0')
+    expect(others).toEqual([])
+    expect(common).toMatchObject({ entry: 'meocord/common', from: 'discord.js' })
+    expect(common!.values).toHaveLength(44)
+    expect(common!.types).toEqual([
+      'EscapeMarkdownOptions',
+      'FormatEmojiOptions',
+      'RecursiveArray',
+      'TimestampStylesString',
+    ])
+    // Every other generated document predates re-exports, so none carries them
+    const earlier = readdirSync(path.join(process.cwd(), 'generated', 'api'))
+      .map(file => path.basename(file, '.json'))
+      .filter(version => version !== '4.3.0')
+    expect(earlier).toEqual(expect.arrayContaining(['4.0.1', '4.1.2', '4.2.3']))
+    for (const version of earlier) expect(apiReexports(version), version).toEqual([])
   })
 
   it('says where an entry runs, after its description, each stage linked to its place in the figure', () => {

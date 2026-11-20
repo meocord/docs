@@ -32,9 +32,20 @@ export interface ApiMeta {
   typedoc: string
 }
 
+/** The names an entry point re-exports from one of discord.js's packages, which TypeDoc leaves out as external. */
+export interface ApiReexport {
+  entry: string
+  /** The specifier they are re-exported from, as `discord.js`. */
+  from: string
+  values: string[]
+  types: string[]
+}
+
 export interface ApiDocument {
   meta: ApiMeta
   project: JSONOutput.ProjectReflection
+  /** Present only when an entry point re-exports from discord.js. */
+  reexports?: ApiReexport[]
 }
 
 type ExportTarget = string | { types?: string; import?: string | { types?: string } }
@@ -92,6 +103,52 @@ export function stripLocal(project: JSONOutput.ProjectReflection): JSONOutput.Pr
 
 /** This repository's own install, where the packages a documented package leans on are found. */
 const REPOSITORY_MODULES = path.resolve(import.meta.dirname, '..', '..', 'node_modules')
+
+/** The packages whose names an entry point re-exports as discord.js's own: discord.js and its `@discordjs/*` packages. */
+const DISCORD_PACKAGE = /^(?:discord\.js|@discordjs\/[^/]+)$/
+
+/**
+ * What each entry point re-exports from discord.js's packages, by specifier, with each name a value or
+ * a type by what it declares: a bundled declaration file lists both in one `export { … } from`.
+ * Needs the package's peers linked; a name that doesn't resolve fails rather than being guessed.
+ */
+export function discordReexports(packageDir: string, entries = entryPoints(packageDir)): ApiReexport[] {
+  const files = Object.entries(entries).map(([entry, file]) => [entry, path.join(packageDir, file)] as const)
+  const program = ts.createProgram(
+    files.map(([, file]) => file),
+    {
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      target: ts.ScriptTarget.ES2022,
+      skipLibCheck: true,
+      noEmit: true,
+      types: [],
+    },
+  )
+  const checker = program.getTypeChecker()
+  const found: ApiReexport[] = []
+  for (const [entry, file] of files) {
+    const source = program.getSourceFile(file)
+    const moduleSymbol = source && checker.getSymbolAtLocation(source)
+    if (!moduleSymbol) continue
+    const byFrom = new Map<string, { values: string[]; types: string[] }>()
+    for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+      const from = symbol.declarations?.find(ts.isExportSpecifier)?.parent.parent.moduleSpecifier
+      if (!from || !ts.isStringLiteral(from) || !DISCORD_PACKAGE.test(packageOfSpecifier(from.text) ?? '')) continue
+      const target = checker.getAliasedSymbol(symbol)
+      if (!target.declarations?.length)
+        throw new Error(
+          `${entry} re-exports ${symbol.name} from ${from.text}, which doesn't resolve: link its peers first.`,
+        )
+      const names = byFrom.get(from.text) ?? { values: [], types: [] }
+      byFrom.set(from.text, names)
+      ;(target.flags & ts.SymbolFlags.Value ? names.values : names.types).push(symbol.name)
+    }
+    for (const [from, { values, types }] of [...byFrom].sort(([a], [b]) => a.localeCompare(b)))
+      found.push({ entry, from, values: values.sort(), types: types.sort() })
+  }
+  return found
+}
 
 /** A declaration file, for `import` (`.d.ts`, `.d.mts`) or `require` (`.d.cts`). */
 const DECLARATION_FILE = /\.d\.[cm]?ts$/
@@ -351,5 +408,6 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   if (missing.length > 0)
     throw new Error(`TypeDoc produced no module for ${missing.join(', ')} in ${meta.package}@${meta.version}.`)
   json.name = meta.package
-  return { meta: { ...meta, typedoc: Application.VERSION }, project: json }
+  const reexports = discordReexports(packageDir, entries)
+  return { meta: { ...meta, typedoc: Application.VERSION }, project: json, ...(reexports.length > 0 && { reexports }) }
 }
