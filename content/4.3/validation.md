@@ -68,6 +68,14 @@ is. The built-in fallback answers it: privately after an interaction, and after 
 channel that's deleted like a usage reply. Schema libraries write their messages in English; an [exception
 filter](guide:exception-filters) that maps the issues to your own words is where to translate them.
 
+Each issue keeps what the schema reported as `raw`, with the library's own fields, such as zod's `code` and `minimum`.
+A filter words a refusal from them rather than parsing the English message:
+
+::example{file="filters/validation-words.filter.ts" region="filter"}
+
+`raw` is non-enumerable, so `toEqual({ message, path })` and a serialised issue leave it out, and an issue you build
+yourself has none.
+
 ::example{file="controllers/slash/remind.slash.controller.spec.ts" region="spec"}
 
 A handler takes one `@Validate`. To check several things, combine them in one schema.
