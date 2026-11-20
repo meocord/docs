@@ -25,7 +25,7 @@ import {
   renderExactApiPage,
   renderGlancePage,
 } from '@/lib/docs/api-render'
-import { checkExactRoutes, exactApiGroup, exactApiPageParams } from '@/lib/docs/exact-pages'
+import { exactRoutes, servedPages, sharedVersions } from '@/lib/docs/exact-routes'
 import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
 import { GLANCE_SECTION, glanceTopic } from '@/lib/docs/glance'
 import { docsHref, versionElsewhere } from '@/lib/urls'
@@ -51,13 +51,24 @@ function parse(line: string, path: string[]): { section: string; symbol?: string
 // through the `latest` rewrite, whose URL is not among the static params. See the `instant` docs.
 export const instant = false
 
+/**
+ * The versions that share an exact version's page of a symbol, as `bun run api:routes` grouped them; the version alone
+ * where nothing inlined the routes, as under `next dev` without them. Undefined for a version the routes lack.
+ */
+function exactVersions(line: string, version: string, section: string, symbol: string): string[] | undefined {
+  const routes = exactRoutes()
+  return routes[line] ? sharedVersions(routes, line, version, `${section}/${symbol}`) : [version]
+}
+
 export function generateStaticParams() {
-  // The proxy sends each other version of a shared page here, so its routes must be these pages'
-  checkExactRoutes()
   return [
     ...apiKindParams().map(({ line, section }) => ({ line, path: [section] })),
     ...apiParams().map(({ line, section, symbol }) => ({ line, path: [section, symbol] })),
-    ...exactApiPageParams().map(({ line, version, section, symbol }) => ({ line, path: [version, section, symbol] })),
+    // One for each set of versions that share a page; the proxy sends the others of the set to it
+    ...servedPages(exactRoutes()).map(({ line, version, section, symbol }) => ({
+      line,
+      path: [version, section, symbol],
+    })),
     ...glanceParams().map(({ line, topic }) => ({ line, path: [GLANCE_SECTION, topic] })),
     ...cliParams().map(({ line, version, command }) => ({
       line,
@@ -122,11 +133,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     })
   }
   if (target.version) {
-    const group = exactApiGroup(line, target.version, target.section, target.symbol)
-    const page = group && exactApiPage(line, group.versions[0]!, group.section, group.symbol)
-    if (!group || !page) return {}
+    const versions = exactVersions(line, target.version, target.section, target.symbol)
+    const page = versions && exactApiPage(line, versions[0]!, target.section, target.symbol)
+    if (!versions || !page) return {}
     return pageMetadata({
-      title: `${page.symbol.name} · ${page.symbol.entry} ${versionRange(line, group.versions)}`,
+      title: `${page.symbol.name} · ${page.symbol.entry} ${versionRange(line, versions)}`,
       line,
       description: page.description,
       // The line's page, where the line has the symbol; only the line's is indexed.
@@ -157,9 +168,9 @@ async function apiPage(line: string, path: string[]) {
     return renderCliPage(line, target.symbol, target.version)?.render()
   if (!target.version) return renderApiPage(line, target.section, target.symbol)?.render()
   // The page the versions whose page is the same share, made from the first of them
-  const group = exactApiGroup(line, target.version, target.section, target.symbol)
-  const page = group && exactApiPage(line, group.versions[0]!, group.section, group.symbol)
-  return page && renderExactApiPage(page, group.versions).render()
+  const versions = exactVersions(line, target.version, target.section, target.symbol)
+  const page = versions && exactApiPage(line, versions[0]!, target.section, target.symbol)
+  return page && renderExactApiPage(page, versions).render()
 }
 
 export default async function ApiPage({ params }: Params) {

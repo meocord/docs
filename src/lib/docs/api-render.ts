@@ -519,6 +519,9 @@ export interface ExactApiPage {
   layouts: Layouts
   /** The trail to the page, without the version. */
   crumbs: Crumb[]
+  /** The page's own link, which the sidebar marks as the page being read. */
+  href: string
+  /** The version's sidebar, one array every page of the version shares; `exactSidebar` marks the page in it. */
   sidebar: NavGroup[]
   tabs?: NavTab[]
   switcher: { current: VersionOption; options: VersionOption[] }
@@ -530,13 +533,26 @@ export interface ExactApiPage {
 /** Where an exact version's page links to its own version's pages, relative to the page: `../core/MeoCordApp`. */
 const VERSION_RELATIVE = '../'
 
+/** Writes each link to `version`'s own pages in `value` relative to the version segment. */
+const relativeTo = <T>(line: string, version: string, value: T): T =>
+  JSON.parse(JSON.stringify(value).split(`/docs/${line}/api/${version}/`).join(VERSION_RELATIVE)) as T
+
+const versionSidebars = new Map<string, NavGroup[]>()
+
+/** An exact version's sidebar, with no page marked, its links relative: built once for the version's pages to share. */
+function versionSidebar(line: string, version: string, model: ApiModel): NavGroup[] {
+  const key = `${line}@${version}`
+  if (!versionSidebars.has(key)) versionSidebars.set(key, relativeTo(line, version, apiSidebar(line, model)))
+  return versionSidebars.get(key)!
+}
+
 /** The page an exact version of a line shows for a symbol, or undefined when that version has no such symbol. */
 export function exactApiPage(line: string, version: string, section: string, name: string): ExactApiPage | undefined {
   const model = apiModel(line, version)
   const symbol = model?.symbol(section, name)
   if (!model || !symbol) return undefined
   const layouts = apiLayouts(line, version)
-  const page: ExactApiPage = {
+  const page: Omit<ExactApiPage, 'sidebar'> = {
     line,
     section: symbol.section,
     symbol,
@@ -547,7 +563,7 @@ export function exactApiPage(line: string, version: string, section: string, nam
         .map(key => [key, layouts[key]!]),
     ),
     crumbs: [...apiCrumbs(line, model, symbol.section, symbol.entry), { title: symbol.name }],
-    sidebar: apiSidebar(line, model, model.href({ section: symbol.section, symbol: symbol.name })),
+    href: model.href({ section: symbol.section, symbol: symbol.name }),
     tabs: guideEnabled(line) ? guideTabs(line, 'api') : undefined,
     switcher: apiVersions(line, symbol.name),
     description: apiDescription(line, symbol),
@@ -555,8 +571,15 @@ export function exactApiPage(line: string, version: string, section: string, nam
       ? docsHref({ kind: 'api', line, section, symbol: name }, VERSIONS)
       : undefined,
   }
-  const versioned = `/docs/${line}/api/${version}/`
-  return JSON.parse(JSON.stringify(page).split(versioned).join(VERSION_RELATIVE)) as ExactApiPage
+  return { ...relativeTo(line, version, page), sidebar: versionSidebar(line, version, model) }
+}
+
+/** An exact page's sidebar with the page itself marked as the one being read. */
+export function exactSidebar(page: ExactApiPage): NavGroup[] {
+  return page.sidebar.map(group => ({
+    ...group,
+    items: group.items.map(item => (item.href === page.href ? { ...item, current: true } : item)),
+  }))
 }
 
 /** An exact page in the docs window, its crumb naming `versions`, the versions that share it. */
@@ -565,7 +588,7 @@ export function renderExactApiPage(page: ExactApiPage, versions: readonly string
   const [lineCrumb, ...trail] = page.crumbs
   return Window({
     crumbs: [lineCrumb!, { title: versionRange(page.line, versions) }, ...trail],
-    groups: page.sidebar,
+    groups: exactSidebar(page),
     tabs: page.tabs,
     version: page.switcher,
     repository: REPOSITORY,

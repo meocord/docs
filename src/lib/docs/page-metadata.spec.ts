@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import * as guide from '@/app/docs/[line]/[...slug]/page'
 import * as landing from '@/app/docs/[line]/page'
 import * as api from '@/app/docs/[line]/api/[...path]/page'
@@ -10,6 +10,7 @@ import * as home from '@/app/page'
 import * as notFound from '@/app/not-found'
 import { describe as summarize, DESCRIPTION_LENGTH, firstParagraph, plainText } from '@/lib/docs/page-metadata'
 import { ogImage } from '@/lib/og/cards'
+import { exactApiRoutes } from '@/lib/docs/exact-pages'
 import { VERSIONS } from '@/config/versions'
 import { docsHref, lineSegment } from '@/lib/urls'
 
@@ -148,6 +149,11 @@ describe('page metadata', () => {
   })
 
   it('an exact version’s page that other versions share: its titles name every version it serves', async () => {
+    // The routes `bun run api:routes` writes, as next.config.ts inlines them
+    vi.stubEnv('EXACT_ROUTES', JSON.stringify(exactApiRoutes()))
+    onTestFinished(() => {
+      vi.unstubAllEnvs()
+    })
     const meta = await api.generateMetadata(
       params({ line: '4.1', path: ['4.1.0-beta.8', 'responses', 'CooldownError'] }),
     )

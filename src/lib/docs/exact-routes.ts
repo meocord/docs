@@ -15,7 +15,7 @@ export const EXACT_ROUTES_FILE = '.api-routes.json'
 const EXACT_PAGE = /^\/docs\/([^/]+)\/api\/(\d+\.\d+\.\d+[^/]*)\/([^/]+\/[^/]+)$/
 
 /**
- * The routes `bun run api:routes` wrote, as next.config.ts inlines them into the proxy. A production build without
+ * The routes `bun run api:routes` wrote, as next.config.ts inlines them. A production build without
  * them fails, so no shared page goes unserved; a dev server without them gets none, and each version's URL renders its
  * own page.
  */
@@ -24,6 +24,40 @@ export function readExactRoutes(production: boolean, root = process.cwd()): stri
   if (existsSync(file)) return readFileSync(file, 'utf8').trim()
   if (production) throw new Error(`No exact-version routes at ${file}: run \`bun run api:routes\`.`)
   return '{}'
+}
+
+let inlined: { text: string; routes: ExactRoutes } | undefined
+
+/**
+ * The routes next.config.ts inlines as `EXACT_ROUTES` into the proxy and the API route, parsed once. Empty where nothing
+ * inlined them, as under `next dev` without the file and in unit tests: each version's page then serves itself.
+ */
+export function exactRoutes(): ExactRoutes {
+  const text = process.env.EXACT_ROUTES ?? '{}'
+  if (inlined?.text !== text) inlined = { text, routes: JSON.parse(text) as ExactRoutes }
+  return inlined.routes
+}
+
+/**
+ * The versions of `line` that share `version`'s page of `page` (`section/symbol`), oldest first, the first serving it;
+ * undefined where the routes list no such version or symbol.
+ */
+export function sharedVersions(routes: ExactRoutes, line: string, version: string, page: string): string[] | undefined {
+  const entry = routes[line]
+  const served = entry?.servedBy[page]
+  const by = served?.[entry!.versions.indexOf(version)]
+  if (by === undefined || by < 0) return undefined
+  return entry!.versions.filter((_, index) => served![index] === by)
+}
+
+/** Every exact version's page that is prerendered: for each set of versions that share a page, the first's. */
+export function servedPages(routes: ExactRoutes): { line: string; version: string; section: string; symbol: string }[] {
+  return Object.entries(routes).flatMap(([line, { versions, servedBy }]) =>
+    Object.entries(servedBy).flatMap(([page, served]) => {
+      const [section, symbol] = page.split('/') as [string, string]
+      return [...new Set(served.filter(by => by >= 0))].map(by => ({ line, version: versions[by]!, section, symbol }))
+    }),
+  )
 }
 
 /**

@@ -10,8 +10,8 @@ import manifest from './versions.json'
 const SITE_INDEXABLE = process.env.SITE_INDEXABLE === 'true' ? 'true' : 'false'
 
 /**
- * Inlined at build into the proxy, the one module that reads it: which version's page serves each exact version's API
- * page, from `bun run api:routes`. A production build without it fails.
+ * Inlined at build into the proxy and the API route, the server code that reads it through `exactRoutes()`: which
+ * version's page serves each exact version's API page, from `bun run api:routes`. A production build without it fails.
  */
 const EXACT_ROUTES = readExactRoutes(process.env.NODE_ENV === 'production')
 
