@@ -211,3 +211,4 @@ to wait, such as "Slow down: try again in 5 minutes."
 - [Exception filters](guide:exception-filters): answer `CooldownError` in your own words.
 - [Cooldown stores](guide:recipes/cooldown-stores): count in Redis, across shards, or in your own database.
 - [Observers](guide:observers): count refused calls, which report the outcome `'cooldown'`, in your metrics.
+- [Formatting](guide:formatting#writing-a-duration): write a wait in the reader's language, as MeoCord's refusal does.
