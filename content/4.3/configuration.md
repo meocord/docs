@@ -248,8 +248,8 @@ Some things need no rule of your own:
 
 - **`.env` loaded in `main.ts` is too late** for the config and for `@MeoCord({...})`, which read `process.env`
   first. Load it in `meocord.config.ts`.
-- **A production bot doesn't see a config change** until it's built again: run `meocord build --prod`, or
-  `meocord start --build --prod`.
+- **A production bot doesn't see a config change** until it's built again; `meocord start --prod` warns, so add
+  `--build`.
 - **`logLevel` hides your own lines too.** `Logger` prints through it, so `'warn'` also hides your `logger.log()`
   calls.
 - **The token doesn't belong in the file.** `meocord.config.ts` is committed; `.env` isn't.

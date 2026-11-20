@@ -38,8 +38,8 @@ npx meocord start --prod         # start that build
 ```
 
 Inside a project, `npx meocord` runs the version the project installed. Keep `start --dev` running while you work,
-and add a part with `generate` beside it: the bot rebuilds and restarts once something imports the new files, as
-adding a controller to `src/app.ts` does.
+and add a part with `generate` beside it: the bot rebuilds and restarts once something imports the new files, as the
+controller `generate` adds to `src/app.ts` does.
 
 ## How it works
 
@@ -116,6 +116,19 @@ npx meocord start --prod
 `start --prod` runs the build in `dist/` as it is, so build again after every change, or use `start --build --prod` to
 do both in one command. `--build` matters only with `--prod`, since `start --dev` always builds.
 
+Without `--build`, `start --prod` and `register` warn when the build in `dist/` is older than your source, naming the
+first file changed since, or when it is a development build, and then run it as before:
+
+```text
+dist was built before src/controllers/slash/ping.slash.controller.ts changed, so start --prod runs the previous build.
+Add --build, or run meocord build --prod first.
+```
+
+Every build records its mode and the files it read in `dist/meocord.build.json`: the source, `tsconfig.json` and each
+file it extends, and with `bundleDependencies` the lockfile. The check hashes only files whose size or modification time
+changed, so a checkout that touches files without changing them gives no warning, and it stops after about 200 ms,
+saying nothing. A `dist` with no record beside it, as on a server that has only `dist`, gives no warning either.
+
 ## Registering commands
 
 A production start registers every command as the bot logs in, and Discord applies an unchanged set without harm.
@@ -129,7 +142,26 @@ npx meocord register --dev             # to commands.developmentGuild, as develo
 ```
 
 A blank guild id, as an unset variable gives, stops with an error rather than registering where `commands.*` says.
+Each run registers as its own flags and `commands` say: a variable left in your shell or `.env`, such as
+`MEOCORD_REGISTER_GUILD`, steers neither `register` nor `start`.
 
+### Removing commands left in other servers
+
+Commands registered to a server stay there when the configuration moves on, such as a test server after you moved to
+global commands, and its members then see every command twice. `--prune` finds and removes them:
+
+```bash
+npx meocord register --prune --dry-run  # report what would be removed, and change nothing
+npx meocord register --prune            # register, then remove this build's commands from other servers
+npx meocord register --prune all --yes  # also remove commands this build doesn't declare, without asking
+```
+
+After a successful registration, `--prune` checks every server the bot is in, one request per command it removes. It
+removes only the commands this build declares, by name and type, from servers the configuration no longer names, and
+lists the others it keeps. `--prune all` removes those too, asking once in a terminal, or without asking given `--yes`.
+`--prune-guild <id>` adds a server the bot isn't in, and `--after <id>` resumes a run that stopped early, as its message
+says. A development start also warns when this checkout once registered to a server the configuration no longer
+names.
 Set `commands.register` to `false` to keep registering out of startup, and run `register` once per deploy instead.
 [Registering commands](guide:slash-commands#registering-commands) covers the scopes.
 
@@ -147,8 +179,14 @@ Set `commands.register` to `false` to keep registering out of startup, and run `
 | `pipe`        | `pi`  | a pipe and its spec                 |
 | `observer`    | `ob`  | a dispatch observer and its spec    |
 
-It prints where to wire the part up: a controller goes in `@MeoCord({ controllers })`, and a service is bound the
-first time something injects it.
+A controller or an observer is added to `src/app.ts`: its import after your last import, and its entry in
+`@MeoCord({ controllers })` or `@MeoCord({ observers })`. The edit uses your project's own `typescript`, inserts only
+those lines in the list's own layout, and is linted with your project's ESLint, without fixing: an edit that would bring
+an error the file didn't have is undone. When the class can't be placed safely, such as a list that isn't an array
+written in place, a name already taken in the file, or no `@MeoCord({ … })` to edit, `generate` writes the files,
+warns why, prints the two lines to add, and leaves `src/app.ts` as it was. `--skip-app` leaves it alone too. Other
+parts are used by naming them in code: `generate` prints where, and a service is bound the first time something injects
+it.
 
 Each part goes in `src/<kind>s/`, such as `src/services/<name>.service.ts` beside `<name>.service.spec.ts`. A file name
 is the name in kebab case, and the class name is the whole path in Pascal case: `g s billing/invoice` writes
@@ -200,7 +238,7 @@ Where a controller sits is only a convention: `@MeoCord({ controllers })` is wha
 - **`generate` runs from the project's root,** beside `package.json`; in a folder without a `package.json`, it refuses
   rather than scatter files. A name can't leave its folder: `..`, a leading `/` and a drive letter are refused. A name
   must start with a letter, since it becomes a class name: `g s 2fa` is refused, and `g s two-factor` is not.
-- **`start --prod` runs the last build.** After changing code, build again, or use `start --build --prod`.
+- **`start --prod` runs the last build,** and warns when your source changed since; add `--build`.
 - **`--message` is for context menus only.** On any other type, `generate` refuses it.
 
 ## Next steps

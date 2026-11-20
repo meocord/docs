@@ -69,9 +69,9 @@ bundles it with Rsbuild into `dist/`, and `meocord start` runs `dist/main.js`, b
 
 ### Adding to it
 
-`meocord generate` writes a controller, its spec and, for commands, its builder, into the folder for its kind. It
-doesn't touch `src/app.ts`: add the new class to `controllers` there. A controller missing from the list is never bound,
-and its commands are never registered. [The CLI](guide:cli) lists every generator.
+`meocord generate` writes a controller, its spec and, for commands, its builder, into the folder for its kind, and adds
+the new class to `controllers` in `src/app.ts`. A controller missing from the list is never bound, and its commands are
+never registered. [The CLI](guide:cli) lists every generator.
 
 ### Growing by feature
 
@@ -154,9 +154,8 @@ a new build.
 
 ## Gotchas
 
-- **A generated file isn't listed for you.** Add each controller `meocord generate` writes to `src/app.ts`.
-- **Editing `meocord.config.ts` takes a new build** before a bot started with `--prod` sees it. `--dev` rebuilds on its
-  own.
+- **Editing `meocord.config.ts` takes a new build** before a bot started with `--prod` sees it, which warns; add
+  `--build`. `--dev` rebuilds on its own.
 - **`.env` stays out of git.** The generated `.gitignore` lists it; keep it there.
 
 ## Build it

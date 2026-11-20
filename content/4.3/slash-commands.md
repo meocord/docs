@@ -143,7 +143,8 @@ Discord takes an entry point command only globally. A production run registers i
   removed. To clear them with MeoCord, set the old server's id as `developmentGuild`, run a production start or
   `meocord register` once with `clearOther: true`, then remove that setting. This removes every command MeoCord
   doesn't send that is registered in that server. While `developmentGuild` receives every command, leftovers are only
-  warned about, since development and production often share one application.
+  warned about, since development and production often share one application. `meocord register --prune` finds them in
+  every server the bot is in; see [the CLI](guide:cli#removing-commands-left-in-other-servers).
 - **A development start skips only what Discord still holds.** Under `start --dev`, a set of commands that hasn't
   changed since the last start isn't sent again. A development start checks each scope it would skip with one listing,
   and sends again when the commands registered there differ, as after a production run, `clearOther`, or another tool
