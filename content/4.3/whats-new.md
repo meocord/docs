@@ -1,74 +1,100 @@
 ---
 id: whats-new
-title: What's new in 4.2
+title: What's new in 4.3
 chapter: appendix
 group: help
 order: 6
-summary: What 4.2 adds to a 4.1 bot, area by area, the options that bring 5.0's defaults early, and what a working bot may notice.
+summary: What 4.3 adds to a 4.2 bot, area by area, the options that bring 5.0's defaults early, and what a working bot may notice.
 requires: []
 api:
   [
-    decorators/Controller,
-    decorators/MessageHandler,
+    utilities/commandMention,
+    utilities/formatDuration,
+    utilities/splitMessage,
+    utilities/OwnerGuard,
+    utilities/route,
     testing/MeoCordTestingModule,
-    testing/useMockFn,
     testing/useStrictMocks,
-    testing/createMockRawMember,
   ]
 since: 4.1.0
 formerly: []
 ---
 
-4.2 adds to 4.1 without breaking it: a 4.1 bot and its tests build and run without edits. By default, startup errors
-arrive together, a few warnings are new or say more, and customId patterns rank segment by segment, which changes the
-handler only for pairs 4.1 warned about. [Upgrading from 4.1 to 4.2](guide:migrating#upgrading-from-41-to-42) lists
-each, with what to check. Every release's notes are in the [changelog](guide:changelog).
+4.3 adds to 4.2 without breaking a bot that only calls MeoCord's functions: a 4.2 bot and its tests build and run
+without edits. A few warnings are new, the help reply splits more carefully, and code that writes a `Route` object by
+hand needs a `match` method. [Upgrading from 4.2 to 4.3](guide:migrating#upgrading-from-42-to-43) lists each, with what
+to check. Every release's notes are in the [changelog](guide:changelog).
 
-## Starting the bot
+## Formatting
 
-- **Every startup error at once.** `MeoCordFactory.create()` and a testing module's `compile()` report every error their
-  checks find, each with the file it comes from, then throw the first as before: the same error, with the same message.
-  A decorator's error names the handler or class it was applied to, as `error.declaration`, and its file, as
-  `error.file`. See [Every startup error at once](guide:troubleshooting#every-startup-error-at-once).
-- **`startupErrors: 'all'`** in `meocord.config.ts` has decorators keep their errors too, so a bot with three mistakes
-  shows all three in one run. In a test, `reportAllStartupErrors()` does the same. See
-  [Configuration](guide:configuration).
+- **`commandMention`** gives a clickable mention of one of your slash commands, its ID looked up where the reader can
+  run it. See [Formatting](guide:formatting).
+- **`formatDuration` and `permissionNames`** write a length of time and a list of permissions in the reader's language,
+  through your app's translator. See [Writing a duration](guide:formatting#writing-a-duration) and
+  [Naming permissions](guide:formatting#naming-permissions).
+- **`splitMessage`, `truncate` and `DiscordLimits`** fit text to what Discord accepts, closing and reopening code cut
+  across messages. See [Splitting a long message](guide:formatting#splitting-a-long-message).
+- **discord.js's formatters**, such as `userMention` and `time`, are exported from `meocord/common` too, so a bot
+  imports its formatting from one place. See [discord.js's formatters](guide:formatting#discordjss-formatters).
 
-## Routing
+## Guards
 
-- **`@Controller({ inheritedRoutes: 'replace' })`** makes a handler the class re-decorates answer only the routes the
-  class declares for it, dropping the ones a base class declares for that method. See
-  [A subclass's routes](guide:how-a-call-runs#a-subclasss-routes).
-- **customId patterns rank segment by segment**, the way most routers rank paths: at the first segment where one
-  pattern is literal and the other a param, the literal one runs, whatever the listing. Only pairs 4.1's startup warning
-  named can change handler. `findRouteConflicts` lists only the pairs still tied, and `resolveRoute`'s `alsoMatches`
-  the patterns that lost. See [Overlapping patterns](guide:components#overlapping-patterns).
-- **`{id:snowflake}` and `{id:uuid}`** are customId param types for a Discord ID and a UUID, which the handler gets as
-  text and `route().build()` checks. Use `snowflake` for a Discord ID: `{id:number}` rounds one. See
-  [Typed params](guide:components#typed-params).
+- **`OwnerGuard`** lets only the user whose ID a component's customId carries use it, and tells anyone else why in
+  their language. See [Letting only its owner use a component](guide:guards#letting-only-its-owner-use-a-component).
+- **`answerDenied: true`** answers a guard's `false` on an interaction as a `GuardDeniedError`, privately, where a
+  command was left unanswered. See [Refusing a call](guide:guards#refusing-a-call).
+- **`globalStagesOnEvents: false`** keeps global guards and interceptors without `types` off `@On` and `@Once`
+  handlers. See [Where guards apply](guide:guards#where-guards-apply).
 
-## Message commands
+## Lifecycle hooks
 
-- **`messages: { handlers: 'concurrent' }`** runs a message's command and its listeners side by side, so a slow command
-  no longer holds back logging and moderation. See
-  [Running them side by side](guide:message-commands#running-them-side-by-side).
-- **A slow handler** that holds listeners back for 5 seconds or more is named in a warning, once per handler, with the
-  option that frees them. `messages: { slowHandlerWarning: false }` turns it off. See [Running them side by
-  side](guide:message-commands#running-them-side-by-side).
+- **`waitForReady: true`** holds each call until the `onReady` hooks of the classes it uses have settled, so a handler
+  can rely on a cache an `onReady` warms. See [Waiting for the hooks](guide:lifecycle-hooks#waiting-for-the-hooks).
+- **`warnSlow`** names slow work: an `onReady` still running after 10 seconds, with how many hooks wait behind it, and
+  an autocomplete that takes 2 of its 3 seconds. `warnSlow: false` silences them. See
+  [onReady](guide:lifecycle-hooks#onready).
+- **A stop while the bot starts** shuts down what the start made before `start()` rejects, and an `onShutdown` hook may
+  stop its own app. See [onShutdown](guide:lifecycle-hooks#onshutdown).
+
+## Components, themes and text
+
+- **`route().match(customId)`** reads a customId back into the params its handler would receive, and `RouteMatch` types
+  them. See [Reading a customId back](guide:components#reading-a-customid-back).
+- **`bindTheme`** answers each call it wraps in the theme of the member and server it answers, so every member who
+  clicks a collected button sees their own. See [Collectors and listeners](guide:theming#collectors-and-listeners).
+- **`t.localizations(key, params)`** fills params into each locale's translation of a command's name or description.
+  See [Choosing the language](guide:localisation#choosing-the-language).
+- **`ValidationIssue.raw`** keeps what the schema reported, such as zod's `code` and `minimum`, for refusals in your
+  own words. See [Validation](guide:validation#how-it-works).
+
+## CLI and builds
+
+- **`generate`** adds a controller or observer to `src/app.ts`, or says why it can't. See
+  [Scaffolding](guide:cli#scaffolding).
+- **`register --prune`** removes your commands from servers the configuration no longer names. See
+  [Removing commands left in other servers](guide:cli#removing-commands-left-in-other-servers).
+- **A stale build** is named when `start --prod` or `register` runs it. See
+  [Development and production](guide:cli#development-and-production).
+- **A self-contained build** packs every installed copy of a native addon, and each importer loads its own. See
+  [Native addons and platforms](guide:self-contained-builds#native-addons-and-platforms).
+- **Under Bun**, an uncaught error and `console.error(error)` name your source, as under Node. See
+  [Stack traces](guide:configuration#stack-traces).
 
 ## Testing
 
-- **`useMockFn(vi.fn)`** has every mock from `meocord/testing` made with your test runner's own mock function, so
-  `clearMocks`, `mockReset` and `vi.mocked` reach them. A new project's setup file calls it. See
-  [Your test runner's mocks](guide:mocks#your-test-runners-mocks).
-- **`useStrictMocks()`** has mocks compute what discord.js computes, such as whether a message is `editable` or a member
-  `kickable`, where they read a placeholder otherwise. A new project's setup file calls it. See
-  [Strict mocks](guide:mocks#strict-mocks).
-- **`createMockRawMember()`** builds the member Discord sends from a server the bot isn't in, to test a user-installed
-  command there. See [A server the bot isn't in](guide:mocks#a-server-the-bot-isnt-in).
+- **Strict mocks** answer what discord.js answers: an interaction's answers resolve to its response, a mock client's
+  emitter works, and collectors made on a mock collect what `dispatch` delivers. See
+  [Collectors](guide:mocks#collectors).
+- **`eventFallback: true`** has `emit` answer an event handler's refusals as the bot does. See
+  [Invoke and dispatch](guide:invoke-and-dispatch).
+- **`inspectHandler()`** reports a handler's `@Defer`, and `overrideCommandId` sets the ID `commandMention` gives. See
+  [Testing](guide:testing).
+- **jest** loads `meocord/testing` without Node's VM modules. See [Running tests](guide:testing#running-tests).
 
 ## Getting ready for 5.0
 
-Three options bring a 5.0 default into 4.2, so a bot can move to it one change at a time: `inheritedRoutes: 'replace'`,
-`startupErrors: 'all'` and `useStrictMocks()`. Where the default would change what a bot
-does, a warning says so and names the option, and 4.2 behaves as 4.1 until you set it.
+Five options bring a 5.0 default into 4.3, so a bot can move to it one change at a time: `allowedMentions` set to
+`{ parse: [] }` in `clientOptions`, `globalStagesOnEvents: false`, and in tests `eventFallback: true`, `typedValues`
+and `useStrictMocks()`. A bot or a test that leaves `allowedMentions`, `globalStagesOnEvents` or `eventFallback` unset
+gets a warning naming it, where 5.0 would change what happens.
+[Options that bring 5.0's defaults early](guide:migrating#options-that-bring-50s-defaults-early) lists the new ones.
