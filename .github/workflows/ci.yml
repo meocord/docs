@@ -173,6 +173,39 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  # A measurement for docs#324, on its own branch's pull request only: where the applied LCP of two pages goes.
+  perf-detail:
+    name: Performance detail (${{ matrix.runner }})
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref == 'chore/perf-headroom-measure' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [a, b]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun --bun x playwright install --with-deps chromium
+      - run: bun run test:e2e --grep @performance-detail --project chromium
+        env:
+          PERF_DETAIL: '1'
+          PERF_DETAIL_RUNS: '3'
+      - if: success() || failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-detail-${{ matrix.runner }}
+          path: e2e-results/perf-detail.jsonl
+          retention-days: 7
+
   # The check branch protection requires: the build, the e2e suite and every performance shard passed, the shards
   # skipped only on a pull request, where they don't run.
   build-and-e2e:
