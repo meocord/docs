@@ -218,6 +218,7 @@ export class ApiModel {
   readonly #titles = new Map<string, string>()
   /** Each member's anchor on its symbol's page, by `section/Symbol#member`. */
   readonly #memberAnchors = new Map<string, string>()
+  #sections: ApiSection[] | undefined
 
   constructor(
     readonly line: string,
@@ -305,9 +306,14 @@ export class ApiModel {
 
   /**
    * Every documented symbol, by section: by entry point in source order, or by kind in the kinds' order,
-   * each kind's symbols by category, those without one first, then by name.
+   * each kind's symbols by category, those without one first, then by name. Built once and shared by every
+   * caller, which reads it and never changes it.
    */
   sections(): ApiSection[] {
+    return (this.#sections ??= this.#listSections())
+  }
+
+  #listSections(): ApiSection[] {
     const sections = new Map<string, ApiListing[]>()
     for (const { section, declaration, category } of this.#declarations.values()) {
       if (!sections.has(section)) sections.set(section, [])
