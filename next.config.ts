@@ -18,6 +18,9 @@ const EXACT_ROUTES = readExactRoutes(process.env.NODE_ENV === 'production')
 const nextConfig: NextConfig = {
   env: { SITE_INDEXABLE, EXACT_ROUTES },
   output: 'standalone',
+  // The proxy sees the URL Next's server knows itself by, on 127.0.0.1, where Next would name it localhost: a rewrite
+  // built on it is served by Next itself rather than fetched as another origin, whatever the request was forwarded as
+  skipProxyUrlNormalize: true,
   cacheComponents: true,
   reactCompiler: true,
   productionBrowserSourceMaps: false,

@@ -44,6 +44,7 @@ const DOCUMENT_CSP = [
  */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+  // Next's own URL for this request, under skipProxyUrlNormalize: a rewrite to it stays on this server
 
   const redirect = docsRedirect(pathname, DOC_ALIASES, DOC_LINES)
   // An exact version's page that another version's is the same as, served from that page at its own URL

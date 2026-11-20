@@ -7,6 +7,7 @@
 /** The specs that must run every test in every CI build, by file name under e2e/. */
 export const MUST_RUN = [
   'exact-pages.spec.ts',
+  'forwarded.spec.ts',
   'live-routes.spec.ts',
   'playground-frame.spec.ts',
   'playground-start.spec.ts',
