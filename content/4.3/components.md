@@ -125,6 +125,19 @@ A parameter can name its type, `{name:type}`, and the handler receives the value
 - **A customId holds text the bot wrote**, so there is no `member` or `channel` type, as a message command has. Capture
   the ID, `{userId}`, and fetch it in the handler; `{target:member}` stops the bot where it's declared.
 
+### Reading a customId back
+
+A route's `match(customId)` gives the params its handler would receive, for a customId the bot didn't get as a handler
+call, such as the other buttons on a message or an id kept in a database:
+
+::example{file="controllers/button/ticket-match.ts" region="match"}
+
+It returns `undefined` for a customId that doesn't match, or whose segment isn't a value of its param's type, and an
+empty object for a matching route without params. A value `build` encoded comes back as it was given, and a typed
+param as its value. It reads that one route, so a customId it matches can still go to a more specific pattern in your
+app. [`RouteMatch<T>`](api:types/RouteMatch), what `match` returns, also types a handler's params or a helper that
+receives them.
+
 ### Overlapping patterns
 
 Patterns with different segment counts never compete. When two with the same count can both match an id, they're
