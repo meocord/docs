@@ -44,8 +44,8 @@ The app lists the provider. The store needs no listing, because the controller i
 - **One pool.** A provided value is made once, so every store that injects `DATABASE` shares the same pool.
 - **Closing it.** The value the factory returns has an `onShutdown` hook of its own. Hooks stop in reverse
   dependency order, so the pool closes after every class that injects it has stopped. It closes too when the bot is
-  stopped while it starts, or its start fails; a retry of `start()` opens a new one. See
-  [Lifecycle hooks](guide:lifecycle-hooks#onshutdown).
+  stopped while it starts, or its start fails; a retry of `start()` opens a new one. A stop that gives up waiting for
+  a slow connection closes the pool once it arrives. See [Lifecycle hooks](guide:lifecycle-hooks#onshutdown).
 - **The connection string.** `DATABASE_URL` comes from the environment, which `meocord.config.ts` loads before the
   factory runs. See [Environment variables](guide:configuration#environment-variables).
 
