@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
   // built on it is served by Next itself rather than fetched as another origin, whatever the request was forwarded as
   skipProxyUrlNormalize: true,
   cacheComponents: true,
+  // Keeps today's per-link prefetching; Next warns on every build while it is unset
+  partialPrefetching: false,
   reactCompiler: true,
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
