@@ -143,6 +143,17 @@ The module makes no Discord `Client`: a class that injects one, a guard, interce
 where it is resolved, naming each class of the module that injects it, until the test provides one, such as `{ provide:
 Client, useValue: createMockClient() }`.
 
+## Sharing setup across specs
+
+Share setup with functions: one that builds and returns a compiled module, and others that take a module and run a
+step tests repeat. Subclassing `TestingModule` isn't supported; a module only comes from `compile()`.
+
+::example{file="testing/card.helpers.ts" region="helpers"}
+
+Each spec builds its own module from them, and reads like the steps a member takes:
+
+::example{file="testing/card.helpers.spec.ts" region="spec"}
+
 ## Lifecycle hooks in a test
 
 `init()` resolves the module's factory providers, including the ones that return a promise, and runs no hook.
