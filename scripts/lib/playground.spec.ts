@@ -206,6 +206,8 @@ describe('nodeModulesPlugin', () => {
       const code = new TextDecoder().decode(result.outputFiles[0]!.contents)
       // The vendored copy is a CommonJS wrapper of its own; the polyfill isn't
       expect(code).not.toMatch(/require_inspect\d* = __commonJS/)
+      // Each row reads only what its own bundle set
+      delete (globalThis as { unhandled?: string }).unhandled
       new Function(code)()
       expect((globalThis as { unhandled?: string }).unhandled).toBe(
         "Unhandled 'error' event emitted, received { a: 1, b: [ 2 ] }",
