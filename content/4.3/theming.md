@@ -136,8 +136,16 @@ callback in [`bindTheme`](api:responses/bindTheme):
 
 ::playground{file="controllers/slash/vote.slash.controller.ts" region="bind" dispatch="/vote"}
 
-`bindTheme` keeps the whole theme of the call that bound it, the server's and the user's included, so every click is
-answered in the starting member's theme.
+`bindTheme` runs each call in the theme of the member and server it answers. For a call whose arguments name a server
+or a user, such as an interaction, a message, a reaction or a member, it builds the theme as a handler's call has it:
+MeoCord's defaults and the app's theme, the `@UseTheme` layers of the handler that bound it, then `themeFor`'s layers
+for that call's server and user. So each member who clicks is answered in their own theme, and a `client.on(...)`
+listener bound in one server answers every other server in its own. A call whose arguments name neither, such as a
+collector's `end`, runs in the whole theme of the call that bound it.
+
+The wrapped function stays synchronous: while `themeFor` still looks a theme up, `useTheme()` reads the handler's theme,
+and `respond()` waits for the lookup. Once the bot has stopped, a wrapped function asks no resolver, and a call runs in
+the theme of the handler that bound it.
 
 ## What respond() themes
 
@@ -187,6 +195,16 @@ A resolver that throws, or doesn't answer within `themeForTimeoutMs` (1000 ms by
 call, and the call goes on. That server or user isn't asked again for 10 seconds, so its calls meanwhile go without it
 too. A result that isn't a valid theme is left out with a warning, as is one that can't be read, such as an object with
 a cycle or a getter that throws.
+
+Under [`@Defer({ mode: 'auto' })`](guide:defer#acknowledging-only-when-needed), a slow resolver doesn't cost the call
+its acknowledgement: the interaction is acknowledged on time, as privately as the answer waiting for its theme, and the
+answer then edits it in.
+
+With [`waitForReady`](guide:lifecycle-hooks#waiting-for-the-hooks), no server's or user's theme is looked up before
+the `themeFor` class's own `onReady` has settled. Once Discord has an acknowledgement or an answer, a lookup waits as
+long as the hook runs. One for an interaction Discord has been told nothing of waits until 2 seconds after the
+interaction was created, 1 second for an autocomplete, the deadline it shares with the call's wait for its hooks, then
+goes on in the handler's theme with a warning naming the hook.
 
 ## Adding tokens of your own
 
