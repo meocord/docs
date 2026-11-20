@@ -3,13 +3,20 @@ import { guidePath, readGuide } from './scripts/lib/guide'
 import { listPages } from './scripts/lib/pages'
 import { DOC_ALIASES } from './src/config/aliases'
 import { guideAliasRedirects } from './src/config/guide-aliases'
+import { readExactRoutes } from './src/lib/docs/exact-routes'
 import manifest from './versions.json'
 
 /** Inlined at build: the header, robots.txt and the sitemap read one value and cannot disagree. */
 const SITE_INDEXABLE = process.env.SITE_INDEXABLE === 'true' ? 'true' : 'false'
 
+/**
+ * Inlined at build into the proxy, the one module that reads it: which version's page serves each exact version's API
+ * page, from `bun run api:routes`. A production build without it fails.
+ */
+const EXACT_ROUTES = readExactRoutes(process.env.NODE_ENV === 'production')
+
 const nextConfig: NextConfig = {
-  env: { SITE_INDEXABLE },
+  env: { SITE_INDEXABLE, EXACT_ROUTES },
   output: 'standalone',
   cacheComponents: true,
   reactCompiler: true,

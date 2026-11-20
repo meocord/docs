@@ -23,18 +23,19 @@ import {
 } from '@meonode/ui'
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
-import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
+import type { Crumb, NavGroup, NavTab, TocEntry, VersionOption } from '@/components/shell/types'
 import { specFor, VERSIONS } from '@/config/versions'
 import {
   decoratorSummary,
   displayText,
   highlightSource,
   layoutKey,
+  symbolDisplays,
   type LayoutForm,
   type Layouts,
 } from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
-import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
+import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref, versionRange } from '@/lib/docs/api-site'
 import {
   CLI_SECTION,
   cliCommand,
@@ -56,6 +57,7 @@ import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { docsHref } from '@/lib/urls'
 import { escapeAttribute, escapeHtml } from '@/lib/html'
+import { firstParagraph, referenceDescription } from '@/lib/docs/page-metadata'
 
 type Child = NodeInstance | string
 
@@ -447,7 +449,7 @@ export function apiSidebar(line: string, model: ApiModel, current?: string): Nav
 }
 
 /** The switcher from an API page: each line opens the same symbol when its API has one. */
-function apiVersions(line: string, name: string): { current: VersionOption; options: VersionOption[] } {
+export function apiVersions(line: string, name: string): { current: VersionOption; options: VersionOption[] } {
   const { current, options } = versionChoices(line)
   return {
     current,
@@ -471,27 +473,101 @@ export function apiCrumbs(line: string, model: ApiModel, section: string, title?
   ]
 }
 
-/** A symbol's page in the docs window, or undefined when the API has no such symbol. */
-export function renderApiPage(line: string, section: string, name: string, version?: string) {
-  const model = apiModel(line, version)
+/** What a symbol's description calls its kind, where its own name reads oddly in a sentence. */
+const KIND_NAMES: Record<string, string> = { 'type-alias': 'type', variable: 'constant' }
+
+/** A symbol's page description: what it is, its summary, and what its page holds, as search results show it. */
+export function apiDescription(line: string, symbol: ApiSymbol): string {
+  return referenceDescription(
+    symbol.name,
+    `${KIND_NAMES[symbol.kind] ?? symbol.kind} in ${symbol.entry}`,
+    firstParagraph(symbol.description),
+    `Types and examples for MeoCord ${line}.`,
+  )
+}
+
+/** A line's page for a symbol in the docs window, or undefined when the line's API has no such symbol. */
+export function renderApiPage(line: string, section: string, name: string) {
+  const model = apiModel(line)
   const symbol = model?.symbol(section, name)
   if (!model || !symbol) return undefined
   const href = model.href({ section: symbol.section, symbol: symbol.name })
-  // The Guide teaches the line's API as it stands, so an exact version's page doesn't link it
-  const guide = version ? [] : guidePagesTeaching(line, symbol.section, symbol.name)
-  const { nodes, toc } = apiArticle(symbol, apiLayouts(line, version), guide, version ? [] : runsAt(line, symbol))
-  const trail = apiCrumbs(line, model, symbol.section, symbol.entry)
-  const crumbs: Crumb[] = [
-    trail[0],
-    ...(version ? [{ title: version }] : []),
-    ...trail.slice(1),
-    { title: symbol.name },
-  ]
+  const guide = guidePagesTeaching(line, symbol.section, symbol.name)
+  const { nodes, toc } = apiArticle(symbol, apiLayouts(line), guide, runsAt(line, symbol))
   return Window({
-    crumbs,
+    crumbs: [...apiCrumbs(line, model, symbol.section, symbol.entry), { title: symbol.name }],
     groups: apiSidebar(line, model, href),
     tabs: guideEnabled(line) ? guideTabs(line, 'api') : undefined,
     version: apiVersions(line, symbol.name),
+    repository: REPOSITORY,
+    toc,
+    children: Prose({ children: nodes }),
+  })
+}
+
+/**
+ * Everything an exact version's page for a symbol shows, as data: two versions whose pages are equal share one page.
+ * Each link to the version's own pages is relative to the version segment, so it names no version and resolves under
+ * whichever version's URL serves the page. The crumb and the title name the versions that share it, so they are not
+ * here. The Guide teaches the line's API as it stands, so an exact version's page doesn't link it.
+ */
+export interface ExactApiPage {
+  line: string
+  section: string
+  symbol: ApiSymbol
+  /** The formatted code of the symbol's displays, as `bun run api:layout` formatted them for the version. */
+  layouts: Layouts
+  /** The trail to the page, without the version. */
+  crumbs: Crumb[]
+  sidebar: NavGroup[]
+  tabs?: NavTab[]
+  switcher: { current: VersionOption; options: VersionOption[] }
+  description: string
+  /** The line's page for the symbol, where the line has it. */
+  canonical?: string
+}
+
+/** Where an exact version's page links to its own version's pages, relative to the page: `../core/MeoCordApp`. */
+const VERSION_RELATIVE = '../'
+
+/** The page an exact version of a line shows for a symbol, or undefined when that version has no such symbol. */
+export function exactApiPage(line: string, version: string, section: string, name: string): ExactApiPage | undefined {
+  const model = apiModel(line, version)
+  const symbol = model?.symbol(section, name)
+  if (!model || !symbol) return undefined
+  const layouts = apiLayouts(line, version)
+  const page: ExactApiPage = {
+    line,
+    section: symbol.section,
+    symbol,
+    layouts: Object.fromEntries(
+      symbolDisplays(symbol)
+        .map(([form, text]) => layoutKey(form, text))
+        .filter(key => key in layouts)
+        .map(key => [key, layouts[key]!]),
+    ),
+    crumbs: [...apiCrumbs(line, model, symbol.section, symbol.entry), { title: symbol.name }],
+    sidebar: apiSidebar(line, model, model.href({ section: symbol.section, symbol: symbol.name })),
+    tabs: guideEnabled(line) ? guideTabs(line, 'api') : undefined,
+    switcher: apiVersions(line, symbol.name),
+    description: apiDescription(line, symbol),
+    canonical: apiModel(line)?.symbol(section, name)
+      ? docsHref({ kind: 'api', line, section, symbol: name }, VERSIONS)
+      : undefined,
+  }
+  const versioned = `/docs/${line}/api/${version}/`
+  return JSON.parse(JSON.stringify(page).split(versioned).join(VERSION_RELATIVE)) as ExactApiPage
+}
+
+/** An exact page in the docs window, its crumb naming `versions`, the versions that share it. */
+export function renderExactApiPage(page: ExactApiPage, versions: readonly string[]) {
+  const { nodes, toc } = apiArticle(page.symbol, page.layouts)
+  const [lineCrumb, ...trail] = page.crumbs
+  return Window({
+    crumbs: [lineCrumb!, { title: versionRange(page.line, versions) }, ...trail],
+    groups: page.sidebar,
+    tabs: page.tabs,
+    version: page.switcher,
     repository: REPOSITORY,
     toc,
     children: Prose({ children: nodes }),

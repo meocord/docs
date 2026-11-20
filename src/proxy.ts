@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { DOC_ALIASES, DOC_LINES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE, SITE_URL } from '@/config/site'
+import { exactRewrite, type ExactRoutes } from '@/lib/docs/exact-routes'
 import {
   cacheControlFor,
   docsRedirect,
@@ -12,6 +13,9 @@ import {
 } from '@/lib/cache-policy'
 
 const __DEV__ = process.env.NODE_ENV !== 'production'
+
+/** Which version's page serves each exact version's API page, inlined at build by next.config.ts; none in a dev server started without them. */
+const EXACT_ROUTES = JSON.parse(process.env.EXACT_ROUTES ?? '{}') as ExactRoutes
 
 /**
  * The document's policy. `script-src` carries a marker for scripts/csp-hash-proxy.mjs, which moves that
@@ -42,9 +46,13 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const redirect = docsRedirect(pathname, DOC_ALIASES, DOC_LINES)
+  // An exact version's page that another version's is the same as, served from that page at its own URL
+  const shared = redirect ? undefined : exactRewrite(pathname, EXACT_ROUTES, DOC_ALIASES.latest)
   const response = redirect
     ? NextResponse.redirect(new URL(redirect + request.nextUrl.search, request.url), 307)
-    : NextResponse.next()
+    : shared
+      ? NextResponse.rewrite(new URL(shared + request.nextUrl.search, request.url))
+      : NextResponse.next()
 
   if (!SITE_INDEXABLE) response.headers.set('X-Robots-Tag', NOINDEX)
   response.headers.set('X-Content-Type-Options', 'nosniff')

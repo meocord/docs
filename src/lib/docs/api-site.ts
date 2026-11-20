@@ -33,6 +33,19 @@ export function lineVersions(line: string): string[] {
   return newestFirst(manifest.lines.find(entry => entry.line === line)?.versions ?? [])
 }
 
+/**
+ * Versions of a line as a page they share names them, oldest first: `4.1.0-beta.5 to 4.1.2` where each follows the
+ * one before in the line, otherwise each of them: `4.1.0-beta.5, 4.1.1`.
+ */
+export function versionRange(line: string, versions: readonly string[]): string {
+  const order = lineVersions(line).reverse()
+  const sorted = [...versions].sort((a, b) => order.indexOf(a) - order.indexOf(b))
+  const following = sorted.every(
+    (version, index) => index === 0 || order.indexOf(version) === order.indexOf(sorted[index - 1]!) + 1,
+  )
+  return sorted.length > 1 && following ? `${sorted[0]} to ${sorted.at(-1)}` : sorted.join(', ')
+}
+
 const apiFile = (version: string) => path.join(process.cwd(), 'generated', 'api', `${version}.json`)
 
 let since: Record<string, SinceData> | undefined

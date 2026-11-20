@@ -25,6 +25,7 @@ CLAUDE.md
 /.playground/
 # The reference's formatted code, by `bun run api:layout`
 /.api-layout/
+/.api-routes.json
 # The home page's recorded demo, by `bun run home:trace`
 /.home-trace/
 # Each tutorial step's version of the examples, written and removed by `bun run examples:check`

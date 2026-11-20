@@ -21,6 +21,8 @@ const params = <T>(value: T) => ({ params: Promise.resolve(value) }) as never
 const card = ogImage('site', 'home')
 // The site is not indexable until launch, so every page is noindex, nofollow here.
 const closed = { index: false, follow: false }
+/** Grouping every exact version's page, which the first exact page's metadata waits for. */
+const GROUPING_TIMEOUT_MS = 60_000
 
 /** The whole metadata object a page type should produce. */
 function expected(title: string, description: string, canonical?: string, type = 'article') {
@@ -123,15 +125,29 @@ describe('page metadata', () => {
     )
   })
 
-  it('an exact version’s API symbol: never indexed, canonical at the line’s page', async () => {
-    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorators', 'Command'] }))
-    expect(meta).toEqual({
-      ...expected(
-        'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
-        'Command (function in meocord/decorator): Decorator to register command methods in a controller. Types and examples for MeoCord 4.1.',
-        `${docs41}/api/decorators/Command`,
-      ),
-    })
+  it(
+    'an exact version’s API symbol: never indexed, canonical at the line’s page',
+    { timeout: GROUPING_TIMEOUT_MS },
+    async () => {
+      const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorators', 'Command'] }))
+      expect(meta).toEqual({
+        ...expected(
+          'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
+          'Command (function in meocord/decorator): Decorator to register command methods in a controller. Types and examples for MeoCord 4.1.',
+          `${docs41}/api/decorators/Command`,
+        ),
+      })
+    },
+  )
+
+  it('an exact version’s page that other versions share: its titles name every version it serves', async () => {
+    const meta = await api.generateMetadata(
+      params({ line: '4.1', path: ['4.1.0-beta.8', 'responses', 'CooldownError'] }),
+    )
+    const title = 'CooldownError · meocord/common 4.1.0-beta.7 to 4.1.0-beta.9 · MeoCord 4.1'
+    expect(meta.title).toEqual({ absolute: title })
+    expect(meta.openGraph?.title).toBe(title)
+    expect(meta.twitter?.title).toBe(title)
   })
 
   it('a CLI command: what it is, its one-line summary as a sentence, and what the page holds', async () => {
