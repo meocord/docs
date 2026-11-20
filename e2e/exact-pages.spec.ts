@@ -97,6 +97,8 @@ function sharedPages(line: string): [routed: string, served: string][] {
     ),
   )
 }
+// A link to the version's own pages inside a signature's code, not anywhere after it
+const SIGNATURE_LINK = /<pre data-signature="true"[^>]*><code>(?:(?!<\/code>)[\s\S])*<a href="\.\.\//
 const SIDEBAR_LINK = '[data-sidebar-body]:visible a[href^="../"]:not([aria-current])'
 
 const crumbOf = async (page: Page) =>
@@ -110,7 +112,7 @@ test("a shared page's links lead each version that serves it to its own pages, b
   let found: [string, string] | undefined
   for (const [routed, served] of sharedPages('4.1')) {
     const html = await (await request.get(routed)).text()
-    if (!/data-signature[^>]*>.*?<a href="\.\.\//s.test(html)) continue
+    if (!SIGNATURE_LINK.test(html)) continue
     // The prerendered page of the group's first version itself, not one rendered for the routed URL
     expect(html, routed).toBe(await (await request.get(served)).text())
     found = [routed, served]
