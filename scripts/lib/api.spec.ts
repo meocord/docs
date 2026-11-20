@@ -47,6 +47,16 @@ describe('discordReexports', () => {
     mkdirSync(path.dirname(path.join(pkg, 'node_modules', name)), { recursive: true })
     symlinkSync(realpathSync(target), path.join(pkg, 'node_modules', name), 'dir')
   }
+  const chunk = (name: string, source: string) => {
+    mkdirSync(path.join(pkg, 'dist', 'types', '_shared'), { recursive: true })
+    writeFileSync(path.join(pkg, 'dist', 'types', '_shared', `${name}.d.ts`), source)
+  }
+  // discord.js's own dependency, beside it in the repository's install
+  const linkFormatters = () =>
+    link(
+      path.join(realpathSync(path.join(MODULES, 'discord.js')), '..', '@discordjs', 'formatters'),
+      '@discordjs/formatters',
+    )
 
   it("lists an entry's discord.js names as values and types by what each declares, in one bundled export", () => {
     declare(
@@ -70,9 +80,8 @@ describe('discordReexports', () => {
       "export { bold, Faces } from '@discordjs/formatters';\nexport { SemVer } from 'semver';\nexport { userMention } from 'discord.js';\n",
     )
     linkPeers(pkg)
-    // discord.js's own dependency, and a typed package that isn't discord's, resolvable from the fixture
-    const discord = realpathSync(path.join(MODULES, 'discord.js'))
-    link(path.join(discord, '..', '@discordjs', 'formatters'), '@discordjs/formatters')
+    linkFormatters()
+    // A typed package that isn't discord's, resolvable from the fixture
     link(path.join(MODULES, 'semver'), 'semver')
     link(path.join(MODULES, '@types', 'semver'), '@types/semver')
 
@@ -101,8 +110,79 @@ describe('discordReexports', () => {
     linkPeers(pkg)
 
     expect(() => discordReexports(pkg)).toThrow(
-      "meocord/common re-exports bold through ../_shared/missing.js, which doesn't resolve.",
+      "meocord/common re-exports bold through ../_shared/missing.js in dist/types/common/index.d.ts, which doesn't resolve.",
     )
+  })
+
+  it('lists what `export *` brings in from a discord.js package, less the names the entry shadows', () => {
+    declare("export * from '@discordjs/formatters';\nexport declare const bold: number;\n")
+    linkPeers(pkg)
+    linkFormatters()
+
+    const [formatters, ...rest] = discordReexports(pkg)
+    expect(rest).toEqual([])
+    expect(formatters).toMatchObject({ entry: 'meocord/common', from: '@discordjs/formatters' })
+    expect(formatters!.values).toEqual(expect.arrayContaining(['HeadingLevel', 'TimestampStyles', 'userMention']))
+    expect(formatters!.values).not.toContain('bold')
+    expect(formatters!.types).toEqual(expect.arrayContaining(['TimestampStylesString']))
+  })
+
+  it('lists what `export *` brings in through a local chunk', () => {
+    declare("export * from '../_shared/all.js';\n")
+    mkdirSync(path.join(pkg, 'dist', 'types', '_shared'), { recursive: true })
+    writeFileSync(path.join(pkg, 'dist', 'types', '_shared', 'all.d.ts'), "export * from '@discordjs/formatters';\n")
+    linkPeers(pkg)
+    linkFormatters()
+
+    const [formatters, ...rest] = discordReexports(pkg)
+    expect(rest).toEqual([])
+    expect(formatters).toMatchObject({ entry: 'meocord/common', from: '@discordjs/formatters' })
+    expect(formatters!.values).toEqual(expect.arrayContaining(['HeadingLevel', 'bold']))
+  })
+
+  it("fails on an `export *` from discord.js that doesn't resolve", () => {
+    declare("export * from 'discord.js';\n")
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports everything from discord.js, which doesn't resolve: link its peers first.",
+    )
+  })
+
+  it('names the chunk that holds a hop two files down that does not resolve', () => {
+    declare("export { bold } from '../_shared/a.js';\n")
+    chunk('a', "export { bold } from './b.js';\n")
+    linkPeers(pkg)
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports bold through ./b.js in dist/types/_shared/a.d.ts, which doesn't resolve.",
+    )
+  })
+
+  it('lists nothing a third-party package re-exports from discord.js, named or by `export *`', () => {
+    declare("export { bold } from 'third-party';\nexport * from 'third-party';\n")
+    mkdirSync(path.join(pkg, 'node_modules', 'third-party'), { recursive: true })
+    writeFileSync(
+      path.join(pkg, 'node_modules', 'third-party', 'package.json'),
+      JSON.stringify({ name: 'third-party', types: './index.d.ts' }),
+    )
+    writeFileSync(
+      path.join(pkg, 'node_modules', 'third-party', 'index.d.ts'),
+      "export { bold, italic } from 'discord.js';\n",
+    )
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([])
+  })
+
+  it('ends on a cycle of chunks, named or by `export *`, without listing or failing', () => {
+    declare("export { bold } from '../_shared/a.js';\nexport * from '../_shared/c.js';\n")
+    chunk('a', "export { bold } from './b.js';\n")
+    chunk('b', "export { bold } from './a.js';\n")
+    chunk('c', "export * from './d.js';\n")
+    chunk('d', "export * from './c.js';\n")
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([])
   })
 
   it('lists nothing for an entry that re-exports nothing from discord.js', () => {
