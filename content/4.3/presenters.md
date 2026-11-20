@@ -94,7 +94,8 @@ Each method may draw asynchronously, and a slow drawing never misses Discord's t
   handler waits for it, so a drawing that takes more than a second is given up on, with a warning, and MeoCord's
   loading view is shown instead.
 - For an error on an interaction not yet acknowledged, MeoCord acknowledges it privately first, and the drawn view
-  replaces the acknowledgement.
+  replaces the acknowledgement. A select-menu pick is acknowledged instead with the update that puts it back in its
+  menu, and the drawn view follows up privately.
 - A view added to a message by an edit keeps the message's own attachments.
 
 A presenter that fails never leaves the user without an answer. When `error()` or `messageError()` throws, rejects, or

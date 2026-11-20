@@ -132,6 +132,7 @@ isn't theirs, or the words its `message` gives:
 
 It denies by throwing `GuardDeniedError`, so its default words come from your app's translator as
 `meocord.guard.notOwner`, in the user's language, and a filter that catches `GuardDeniedError` can answer otherwise.
+On a select menu, their pick is also put back, so the menu shows what it did before they picked.
 The bot refuses to start where it would deny every call: on a slash command, a context menu or an entry point, and on a
 component or modal whose routes lack the param. On a controller, or in `@MeoCord({ guards })`, it passes over message,
 reaction, autocomplete and event handlers, which have no owner to check.
