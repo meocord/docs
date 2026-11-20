@@ -105,6 +105,17 @@ throws as the app loads. A translation that uses a parameter, or an empty one, i
 [`expectCompleteCatalog`](#testing-a-catalog) reports it. A helper of your own that passes a key on to
 `t.localizations()` types it as [`LocalizationKey<typeof catalog>`](api:types/LocalizationKey), from `meocord/common`.
 
+`t.localizations(key, params)` takes a message with parameters and fills them into each locale's translation, where
+that translation places them, so descriptions that differ by one word need one key. A value is a word or a number, used
+in every locale, or a function of the locale for a value that is itself translated:
+
+::example{file="i18n-texts/lookup.builder.ts" region="params"}
+
+The params are typed from the default message, as `t()`'s are, and one it takes that `params` leave out throws, naming
+it. A value is used as written: a `{param}` in it stays text. A helper that takes such a key, or builds its params,
+types them with `ParamLocalizationKey` and `LocalizationParams` from `meocord/common`. A translator typed
+`Translator<any>`, or with messages typed `string`, as a JSON catalog is, takes any params.
+
 A [presenter](guide:presenters) gets the user's locale as `context.locale`, for a loading view and error titles in
 their language.
 
@@ -159,13 +170,28 @@ Importing `t` works too. Injecting it keeps a test free to provide another:
 ## MeoCord's own texts
 
 What MeoCord itself tells users goes through the same translator: a message command's usage and what is wrong with
-it, the built-in `!help`, cooldown refusals, "Command not found!", the generic error, the direct messages
-[`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) send, and the default
-presenter's "Working on it…" and "Oops!". Add a `meocord` group to any catalog, all of it or part:
+it, the built-in `!help` and the joiners of its lists, cooldown refusals, the refusals of
+[`OwnerGuard` and `answerDenied`](guide:guards), "Command not found!", the generic error, the direct messages
+[`dmOnError` and `dmOnCooldown`](guide:message-commands#telling-the-author-privately) send, the default presenter's
+"Working on it…" and "Oops!", and the words [`formatDuration` and `permissionNames`](guide:formatting) write. Add a
+`meocord` group to any catalog, all of it or part:
 
 ::example{file="locales/id.ts" region="meocord"}
 
 A catalog typed as `LocaleCatalog<typeof enUS>` takes one too.
+
+| Group                    | Texts                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `meocord.duration`       | Short unit words, such as `hour`, `'{count}h'`; long ones as plurals, such as `hourLong`; and `joiner` |
+| `meocord.permissions`    | A label for each permission flag, by flag name, and `unknown`                                          |
+| `meocord.cooldown.later` | A refusal whose wait isn't a finite number, from a custom `CooldownStore`                              |
+| `meocord.guard`          | `notOwner`, `OwnerGuard`'s refusal, and `denied`, the `answerDenied` answer                            |
+| `meocord.help`           | Among the help's texts, `listJoiner` joins a command's aliases and `paramJoiner` its params            |
+
+`meocord.duration` holds MeoCord's first plural texts. `defineCatalog` refuses a translation of one without its `other`
+form, with a form that isn't text, or with a key that is no plural category, and `expectCompleteCatalog` reports one
+that lacks a form its language needs, such as `few` in Russian. The [i18n recipe](guide:recipes/i18n-bot) translates
+every group into Indonesian.
 
 Each text is looked up on its own, as any message is: a line a language leaves out comes from another catalog of that
 language, then the default catalog, and then MeoCord's English. The keys and their
