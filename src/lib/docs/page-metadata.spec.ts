@@ -150,6 +150,12 @@ describe('page metadata', () => {
     expect(meta.twitter?.title).toBe(title)
   })
 
+  it('an exact version’s CLI command the line still has: never indexed, canonical at the line’s page', async () => {
+    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0', 'cli', 'generate'] }))
+    expect(meta.robots).toEqual(closed)
+    expect(meta.alternates?.canonical).toBe(`${docs41}/api/cli/generate`)
+  })
+
   it('a CLI command: what it is, its one-line summary as a sentence, and what the page holds', async () => {
     const meta = await api.generateMetadata(params({ line: '4.1', path: ['cli', 'generate'] }))
     expect(meta.description).toBe(
