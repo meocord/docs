@@ -1,8 +1,7 @@
 import { type ButtonInteraction } from 'discord.js'
-import { respond } from 'meocord/common'
+import { OwnerGuard, respond } from 'meocord/common'
 import { Command, Controller, Cooldown, UseGuard } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
-import { OwnerGuard } from '@src/guards/owner.guard'
 
 @Controller()
 export class CheckInButtonController {

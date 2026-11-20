@@ -73,14 +73,13 @@ execution context:
 
 ::example{from="compare" file="necord/card.component.ts" region="button"}
 
-In MeoCord the guard receives the interaction itself, with the params the route captured, so any button whose route
-carries `{ownerId:snowflake}` can reuse it. `@Defer()` is optional: it acknowledges the click before the guard runs and
+In MeoCord a guard receives the interaction itself, with the params the route captured, and
+[`OwnerGuard`](api:utilities/OwnerGuard), a guard MeoCord ships, checks `ownerId` for any button whose route carries
+`{ownerId:snowflake}`. `@Defer()` is optional: it acknowledges the click before the guard runs and
 disables the card's buttons while the handler works, and `respond(interaction).send()` puts them back. See
 [Deferring](guide:defer).
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
-
-::example{file="guards/owner.guard.ts" region="guard"}
 
 ## Message commands
 

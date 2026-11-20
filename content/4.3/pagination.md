@@ -6,7 +6,7 @@ group: recipes
 order: 1
 summary: Show a long list a page at a time, with Previous and Next buttons only the member who asked can press.
 requires: [slash-commands, components, guards, responses]
-api: [utilities/route, decorators/Command, decorators/UseGuard, responses/respond, responses/GuardDeniedError]
+api: [utilities/route, decorators/Command, decorators/UseGuard, utilities/OwnerGuard, responses/respond]
 since: 4.1.0
 formerly: [recipe-pagination]
 ---
@@ -23,11 +23,8 @@ its buttons from the route:
 
 ::example{file="recipes/pagination/leaderboard.ts" region="page"}
 
-A guard lets only the member the button names press it:
-
-::example{file="recipes/pagination/leaderboard.ts" region="guard"}
-
-The command replies with the first page, and the button handler turns to the page its route names:
+The command replies with the first page, and the button handler turns to the page its route names. Only the member
+who opened the board may turn it, so the handler takes [`OwnerGuard`](api:utilities/OwnerGuard), a guard MeoCord ships:
 
 ::example{file="recipes/pagination/leaderboard.ts" region="controller"}
 
@@ -41,9 +38,9 @@ The command replies with the first page, and the button handler turns to the pag
   matches no route.
 - **Updating in place.** A button's first answer is to its own message, so `respond(interaction).send()` updates
   the message the button is on rather than posting a new one. See [Responses](guide:responses#the-calls).
-- **Only the owner.** The guard reads `ownerId` from the same params. It throws
-  [`GuardDeniedError`](api:responses/GuardDeniedError), so anyone else is told why, privately, and the handler
-  never runs. See [Guards](guide:guards).
+- **Only the owner.** `OwnerGuard` reads `ownerId` from the same params. Anyone else is told privately that the board
+  isn't theirs, in their language, and the handler never runs. See
+  [Guards](guide:guards#letting-only-its-owner-use-a-component).
 - **Past the end.** A page past either end shows the nearest one, so an old message whose list has since shrunk
   still shows a page.
 

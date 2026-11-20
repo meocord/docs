@@ -60,11 +60,10 @@ discord.js hands every button to the same listener, so the `customId` is split a
 
 ::example{from="compare" file="discordjs/bot.ts" region="button"}
 
-MeoCord routes by pattern, and the owner check becomes a guard that any button can reuse:
+MeoCord routes by pattern, and the owner check is [`OwnerGuard`](api:utilities/OwnerGuard), a guard MeoCord ships
+that any button whose route carries `{ownerId:snowflake}` can use:
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
-
-::example{file="guards/owner.guard.ts" region="guard"}
 
 `@Defer()` acknowledges the click at once, so a slow handler never hits Discord's three-second limit.
 

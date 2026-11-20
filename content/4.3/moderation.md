@@ -14,7 +14,7 @@ api:
     decorators/UseFilter,
     decorators/Catch,
     responses/respond,
-    responses/GuardDeniedError,
+    utilities/OwnerGuard,
   ]
 since: 4.1.0
 formerly: [recipe-moderation]
@@ -35,11 +35,8 @@ A reason can be longer than a `customId` holds, so the proposal waits in a servi
 
 ::example{file="recipes/moderation/timeout.ts" region="service"}
 
-A guard lets only the moderator the button names press it:
-
-::example{file="recipes/moderation/timeout.ts" region="guard"}
-
-The command proposes, privately, and one handler takes both buttons:
+The command proposes, privately, and one handler takes both buttons. [`OwnerGuard`](api:utilities/OwnerGuard), a
+guard MeoCord ships, lets only the moderator the route names press them:
 
 ::example{file="recipes/moderation/timeout.ts" region="controller"}
 
@@ -56,9 +53,8 @@ A filter on the controller turns Discord's refusal into a message the moderator 
   [Typed params](guide:components#typed-params).
 - **Once only.** The first click takes the proposal, so a second click on either button answers that it was
   already handled, and times no one out.
-- **Only the moderator.** The proposal is private, so only the moderator sees its buttons. The guard checks anyway,
-  reading `ownerId` from the route's params and throwing [`GuardDeniedError`](api:responses/GuardDeniedError), so any
-  other click is refused privately.
+- **Only the moderator.** The proposal is private, so only the moderator sees its buttons. `OwnerGuard` checks anyway,
+  reading `ownerId` from the route's params, so any other click is refused privately.
 - **When Discord refuses.** Discord answers `MissingPermissions`, 50013, when the bot's role lacks Moderate Members, or
   sits below the member's highest role. `member.timeout()` rejects, and the filter answers that in words the moderator
   can act on, privately. Any other Discord error gets the default message, privately, and isn't logged, since the filter

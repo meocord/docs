@@ -64,11 +64,10 @@ handles it. Preconditions guard commands, so the owner check sits in `run()`:
 
 ::example{from="compare" file="sapphire/interaction-handlers/refresh.ts" region="button"}
 
-In MeoCord the pattern routes the click, and the owner check is a guard that any button can reuse:
+In MeoCord the pattern routes the click, and the owner check is [`OwnerGuard`](api:utilities/OwnerGuard), a guard
+MeoCord ships that any button whose route carries `{ownerId:snowflake}` can use:
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
-
-::example{file="guards/owner.guard.ts" region="guard"}
 
 ## Message commands
 

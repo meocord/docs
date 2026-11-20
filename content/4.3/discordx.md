@@ -75,13 +75,12 @@ itself. A guard is a function that calls `next()` to let the call through:
 
 ::example{from="compare" file="discordx/card.ts" region="button"}
 
-In MeoCord the pattern captures `ownerId`, and the guard is a class, so it can inject services. `@Defer()` is optional:
+In MeoCord the pattern captures `ownerId`, and [`OwnerGuard`](api:utilities/OwnerGuard), a guard MeoCord ships, checks
+it. A guard of your own is a class, so it can inject services. `@Defer()` is optional:
 it acknowledges the click before the guard runs and disables the card's buttons while the handler works, and
 `respond(interaction).send()` puts them back. See [Deferring](guide:defer).
 
 ::example{file="controllers/button/card.button.controller.ts" region="defer"}
-
-::example{file="guards/owner.guard.ts" region="guard"}
 
 ## Message commands
 

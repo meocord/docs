@@ -51,14 +51,14 @@ is shown to the user privately, and the message is restored.
 
 ## Guards under @Defer
 
-The lock waits for the guards, so a refused click never locks the message, not even briefly. Here, `OwnerGuard`
-lets only the user whose id the button carries use it:
-
-::example{file="guards/owner.guard.ts" region="guard"}
-
-When someone else clicks, the guard throws `GuardDeniedError`, which is answered to them privately. A guard that
+The lock waits for the guards, so a refused click never locks the message, not even briefly. The card's refresh
+button above uses [`OwnerGuard`](api:utilities/OwnerGuard), which lets only the user whose id the button carries use
+it. When someone else clicks, the guard throws `GuardDeniedError`, which is answered to them privately. A guard that
 returns `false` leaves nothing behind: a command's deferred reply is deleted, and a component's message was never
 touched.
+
+Under [strict mocks](guide:mocks#strict-mocks), a click's message holds the button clicked, as on Discord, so a test
+sees the lock: the edit that disables the button and shows the loading view, then the answer that gives it back.
 
 ::example{file="controllers/button/card.button.controller.spec.ts"}
 
