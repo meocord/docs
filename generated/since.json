@@ -17,6 +17,15 @@
   "meocord/common:CatalogShape": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:commandMention": {
+    "since": "4.3.0"
+  },
+  "meocord/common:commandMention(path)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:commandMention(target)": {
+    "since": "4.3.0"
+  },
   "meocord/common:CommandNotFoundError": {
     "since": "4.1.0-beta.0"
   },
@@ -179,6 +188,12 @@
   "meocord/common:defineCatalog(catalog)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:DiscordLimits": {
+    "since": "4.3.0"
+  },
+  "meocord/common:DurationUnit": {
+    "since": "4.3.0"
+  },
   "meocord/common:ExecutionContext": {
     "since": "4.1.0-beta.0"
   },
@@ -248,6 +263,39 @@
   "meocord/common:factoryProvider(provider)": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/common:formatDuration": {
+    "since": "4.3.0"
+  },
+  "meocord/common:formatDuration(ms)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:formatDuration(options)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:formatDuration(target)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.largest": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.round": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.smallest": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.style": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.t": {
+    "since": "4.3.0"
+  },
+  "meocord/common:FormatDurationOptions.units": {
+    "since": "4.3.0"
+  },
   "meocord/common:getInstallContext": {
     "since": "4.1.0-beta.0"
   },
@@ -286,6 +334,12 @@
   },
   "meocord/common:LocalizationKey": {
     "since": "4.1.0-beta.10"
+  },
+  "meocord/common:LocalizationParam": {
+    "since": "4.3.0"
+  },
+  "meocord/common:LocalizationParams": {
+    "since": "4.3.0"
   },
   "meocord/common:Logger": {
     "since": "4.0.0-beta.0"
@@ -428,6 +482,48 @@
   },
   "meocord/common:MetadataDecorator(value)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/common:OwnerGuard": {
+    "since": "4.3.0"
+  },
+  "meocord/common:OwnerGuard.canActivate": {
+    "since": "4.3.0"
+  },
+  "meocord/common:OwnerGuard.canActivate(interaction)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:OwnerGuard.canActivate(route)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:OwnerGuard.constructor": {
+    "since": "4.3.0"
+  },
+  "meocord/common:OwnerGuard.params": {
+    "since": "4.3.0"
+  },
+  "meocord/common:ParamLocalizationKey": {
+    "since": "4.3.0"
+  },
+  "meocord/common:permissionNames": {
+    "since": "4.3.0"
+  },
+  "meocord/common:permissionNames(options)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:permissionNames(permissions)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:permissionNames(target)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:PermissionNamesOptions": {
+    "since": "4.3.0"
+  },
+  "meocord/common:PermissionNamesOptions.join": {
+    "since": "4.3.0"
+  },
+  "meocord/common:PermissionNamesOptions.t": {
+    "since": "4.3.0"
   },
   "meocord/common:PluralCategory": {
     "since": "4.1.0-beta.0"
@@ -636,6 +732,12 @@
   "meocord/common:Route.build(values)": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/common:Route.match": {
+    "since": "4.3.0"
+  },
+  "meocord/common:Route.match(customId)": {
+    "since": "4.3.0"
+  },
   "meocord/common:Route.pattern": {
     "since": "4.1.0-beta.5"
   },
@@ -644,6 +746,9 @@
   },
   "meocord/common:route(pattern)": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/common:RouteMatch": {
+    "since": "4.3.0"
   },
   "meocord/common:RouteParams": {
     "since": "4.1.0-beta.5"
@@ -689,6 +794,15 @@
   },
   "meocord/common:ShardedCooldownStore.peekMany(entries)": {
     "since": "4.1.0-beta.5"
+  },
+  "meocord/common:splitMessage": {
+    "since": "4.3.0"
+  },
+  "meocord/common:splitMessage(options)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:splitMessage(text)": {
+    "since": "4.3.0"
   },
   "meocord/common:StringMessageKey": {
     "since": "4.1.0-beta.0"
@@ -795,8 +909,23 @@
   "meocord/common:Translator.localizations(key)": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/common:Translator.localizations(params)": {
+    "since": "4.3.0"
+  },
   "meocord/common:TranslatorOptions": {
     "since": "4.1.0-beta.10"
+  },
+  "meocord/common:truncate": {
+    "since": "4.3.0"
+  },
+  "meocord/common:truncate(ellipsis)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:truncate(max)": {
+    "since": "4.3.0"
+  },
+  "meocord/common:truncate(text)": {
+    "since": "4.3.0"
   },
   "meocord/common:UserError": {
     "since": "4.1.0-beta.5"
@@ -857,6 +986,9 @@
   },
   "meocord/common:ValidationIssue.path": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/common:ValidationIssue.raw": {
+    "since": "4.3.0"
   },
   "meocord/core:AutocompleteHandlerEntry": {
     "since": "4.1.0-beta.0"
@@ -1397,6 +1529,9 @@
   "meocord/decorator:MeoCordOptions.activities": {
     "since": "4.1.0-beta.10"
   },
+  "meocord/decorator:MeoCordOptions.answerDenied": {
+    "since": "4.3.0"
+  },
   "meocord/decorator:MeoCordOptions.clientOptions": {
     "since": "4.1.0-beta.10"
   },
@@ -1414,6 +1549,9 @@
   },
   "meocord/decorator:MeoCordOptions.filters": {
     "since": "4.1.0-beta.10"
+  },
+  "meocord/decorator:MeoCordOptions.globalStagesOnEvents": {
+    "since": "4.3.0"
   },
   "meocord/decorator:MeoCordOptions.guards": {
     "since": "4.1.0-beta.10"
@@ -1450,6 +1588,12 @@
   },
   "meocord/decorator:MeoCordOptions.themeForTimeoutMs": {
     "since": "4.1.0-beta.10"
+  },
+  "meocord/decorator:MeoCordOptions.waitForReady": {
+    "since": "4.3.0"
+  },
+  "meocord/decorator:MeoCordOptions.warnSlow": {
+    "since": "4.3.0"
   },
   "meocord/decorator:MeoCordOptions.warnUnanswered": {
     "since": "4.1.0-beta.10"
@@ -2662,6 +2806,9 @@
   "meocord/testing:EmitResult": {
     "since": "4.1.0-beta.0"
   },
+  "meocord/testing:EmitResult.error": {
+    "since": "4.3.0"
+  },
   "meocord/testing:EmitResult.ran": {
     "since": "4.1.0-beta.0"
   },
@@ -2704,6 +2851,9 @@
   "meocord/testing:FromAppOptions.controllers": {
     "since": "4.1.0-beta.7"
   },
+  "meocord/testing:FromAppOptions.eventFallback": {
+    "since": "4.3.0"
+  },
   "meocord/testing:FromAppOptions.observers": {
     "since": "4.1.0-beta.7"
   },
@@ -2727,6 +2877,9 @@
   },
   "meocord/testing:HandlerInspection.cooldowns": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/testing:HandlerInspection.defer": {
+    "since": "4.3.0"
   },
   "meocord/testing:HandlerInspection.filters": {
     "since": "4.1.0-beta.0"
@@ -3070,6 +3223,9 @@
   "meocord/testing:MockState.settledResults": {
     "since": "4.2.1"
   },
+  "meocord/testing:MockTypeOptions": {
+    "since": "4.3.0"
+  },
   "meocord/testing:Provider": {
     "since": "4.0.0-beta.0"
   },
@@ -3188,6 +3344,9 @@
   "meocord/testing:TestingModule.constructor(appWarnUnanswered)": {
     "since": "4.1.0-beta.5"
   },
+  "meocord/testing:TestingModule.constructor(botLifecycle)": {
+    "since": "4.3.0"
+  },
   "meocord/testing:TestingModule.constructor(constructed)": {
     "since": "4.1.0-beta.5"
   },
@@ -3199,6 +3358,12 @@
   },
   "meocord/testing:TestingModule.constructor(eventClasses)": {
     "since": "4.1.0-beta.0"
+  },
+  "meocord/testing:TestingModule.constructor(eventFallback)": {
+    "since": "4.3.0"
+  },
+  "meocord/testing:TestingModule.constructor(hooks)": {
+    "since": "4.3.0"
   },
   "meocord/testing:TestingModule.constructor(lifecycle)": {
     "since": "4.1.0-beta.5"
@@ -3281,6 +3446,15 @@
   "meocord/testing:TestingModuleBuilder.constructor(wiring)": {
     "since": "4.1.0-beta.7"
   },
+  "meocord/testing:TestingModuleBuilder.overrideCommandId": {
+    "since": "4.3.0"
+  },
+  "meocord/testing:TestingModuleBuilder.overrideCommandId(id)": {
+    "since": "4.3.0"
+  },
+  "meocord/testing:TestingModuleBuilder.overrideCommandId(name)": {
+    "since": "4.3.0"
+  },
   "meocord/testing:TestingModuleBuilder.overrideFilter": {
     "since": "4.1.0-beta.0"
   },
@@ -3331,6 +3505,9 @@
   },
   "meocord/testing:TestingModuleOptions.controllers": {
     "since": "4.0.0-beta.0"
+  },
+  "meocord/testing:TestingModuleOptions.eventFallback": {
+    "since": "4.3.0"
   },
   "meocord/testing:TestingModuleOptions.observers": {
     "since": "4.1.0-beta.4"
