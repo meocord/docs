@@ -5,6 +5,7 @@ import path from 'path'
 import { describe, expect, it } from 'vitest'
 import {
   checkInstalled,
+  CLI_TABLE3_FREE_SINCE,
   contentName,
   emitterSource,
   frameDocument,
@@ -119,7 +120,8 @@ describe('runtimeEntry', () => {
 
 describe('nodeModulesPlugin', () => {
   const runtimeDir = path.resolve(import.meta.dirname, '../../src/playground/runtime')
-  const bundle = async (contents: string, resolveDir = runtimeDir) => {
+  const root = path.resolve(import.meta.dirname, '../..')
+  const bundle = async (contents: string, resolveDir = runtimeDir, meocord = CLI_TABLE3_FREE_SINCE) => {
     const result = await build({
       stdin: { contents, resolveDir, loader: 'ts' },
       bundle: true,
@@ -127,9 +129,18 @@ describe('nodeModulesPlugin', () => {
       format: 'esm',
       platform: 'browser',
       logLevel: 'silent',
-      plugins: [nodeModulesPlugin(runtimeDir, path.resolve(import.meta.dirname, '../..'))],
+      plugins: [nodeModulesPlugin(runtimeDir, root, meocord)],
     })
     return new TextDecoder().decode(result.outputFiles[0]!.contents)
+  }
+  /** Where an examples line's meocord is installed, and its version. */
+  const installedMeocord = async (line: string) => {
+    const { readFileSync, realpathSync } = await import('fs')
+    const dir = realpathSync(path.join(root, 'examples', line, 'node_modules', 'meocord'))
+    return {
+      dir,
+      version: (JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')) as { version: string }).version,
+    }
   }
 
   it("stubs what dispatch never reaches, and gives the Worker's own modules and polyfills for the rest", async () => {
@@ -148,24 +159,30 @@ describe('nodeModulesPlugin', () => {
     expect(code).toMatch(/AsyncLocalStorage = class|class AsyncLocalStorage/)
   })
 
-  it('ships none of cli-table3 from where meocord resolves it, as only its command registration prints a table', async () => {
-    const { globSync, realpathSync } = await import('fs')
-    const root = path.resolve(import.meta.dirname, '../..')
-    const [meocord] = globSync('examples/*/node_modules/meocord/package.json', { cwd: root })
-    expect(meocord).toBeDefined()
-    // Where meocord's own import of cli-table3 resolves, which the real package would be bundled from
-    const code = await bundle(
-      `export { default } from 'cli-table3'`,
-      path.dirname(realpathSync(path.join(root, meocord!))),
-    )
+  it(`stubs cli-table3 for a meocord before ${CLI_TABLE3_FREE_SINCE}, whose testing entry loads its table`, async () => {
+    const { dir, version } = await installedMeocord('4.2')
+    // Where that meocord's own import of cli-table3 resolves, which the real package would be bundled from
+    const code = await bundle(`export { default } from 'cli-table3'`, dir, version)
     expect(code).toContain('Symbol.toPrimitive')
     expect(code).not.toContain('colWidths')
   })
 
+  it(`fails a bundle that reaches cli-table3 from meocord ${CLI_TABLE3_FREE_SINCE} on, naming the importer`, async () => {
+    const { dir, version } = await installedMeocord('4.3')
+    await expect(bundle(`import Table from 'cli-table3'\nexport { Table }`, dir, version)).rejects.toThrow(
+      /<stdin> imports cli-table3, which meocord 4\.3\.0 doesn't load for a test/,
+    )
+  })
+
+  it(`bundles meocord ${CLI_TABLE3_FREE_SINCE}'s testing entry without reaching cli-table3`, async () => {
+    const { version } = await installedMeocord('4.3')
+    const code = await bundle(`export * from 'meocord/testing'`, path.join(root, 'examples', '4.3'), version)
+    expect(code).not.toContain('colWidths')
+  }, 30_000)
+
   it('rewrites the async generator prototype the event emitter reads, which lowered code cannot evaluate', async () => {
     // Wherever the install put it: bun's isolated linker keeps each package in its own store directory
     const { globSync } = await import('fs')
-    const root = path.resolve(import.meta.dirname, '../..')
     const [emitter] = globSync(
       'node_modules/.bun/@vladfrangu+async_event_emitter@*/node_modules/@vladfrangu/async_event_emitter/dist/index.mjs',
       { cwd: root },
@@ -181,7 +198,6 @@ describe('nodeModulesPlugin', () => {
     "words the event emitter's unhandled error with the util polyfill, not its own copy of inspect, from %s",
     async file => {
       const { globSync } = await import('fs')
-      const root = path.resolve(import.meta.dirname, '../..')
       const [emitter] = globSync(
         `node_modules/.bun/@vladfrangu+async_event_emitter@*/node_modules/@vladfrangu/async_event_emitter/dist/${file}`,
         { cwd: root },
@@ -201,7 +217,7 @@ describe('nodeModulesPlugin', () => {
         format: 'iife',
         platform: 'browser',
         logLevel: 'silent',
-        plugins: [nodeModulesPlugin(runtimeDir, root)],
+        plugins: [nodeModulesPlugin(runtimeDir, root, CLI_TABLE3_FREE_SINCE)],
       })
       const code = new TextDecoder().decode(result.outputFiles[0]!.contents)
       // The vendored copy is a CommonJS wrapper of its own; the polyfill isn't

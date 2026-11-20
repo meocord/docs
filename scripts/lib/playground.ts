@@ -8,6 +8,7 @@ import { createHash } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import type { Plugin } from 'esbuild'
+import semver from 'semver'
 import { READER_MODULES } from '../../src/playground/runtime/modules.js'
 import type { VersionsConfig } from './versions.js'
 
@@ -119,15 +120,13 @@ const SHIMS: Record<string, string> = {
 }
 
 /**
- * Modules mocked dispatch never reaches: the network, the file system, processes, discord.js's
- * gateway, and the table meocord prints once it has registered commands. Each resolves to a stub any
- * use of which works.
+ * Modules mocked dispatch never reaches: the network, the file system, processes and discord.js's
+ * gateway. Each resolves to a stub any use of which works.
  */
 const STUBBED = new Set([
   'assert',
   'bufferutil',
   'child_process',
-  'cli-table3',
   'console',
   'diagnostics_channel',
   'dns',
@@ -170,9 +169,20 @@ export function emitterSource(source: string, file: string): string {
     .replace(VENDORED_INSPECT, () => 'var require_inspect = () => require("util");')
 }
 
-/** Resolves Node's modules for a browser Worker: a polyfill, a shim of the runtime's, or the stub. */
-export function nodeModulesPlugin(runtimeDir: string, packagesDir: string): Plugin {
+/**
+ * The first meocord whose `meocord/testing` never loads cli-table3, the table its command registration
+ * prints (meocord#945). An older one gets cli-table3 stubbed; from this one on, a bundle that reaches
+ * cli-table3 fails. The stub, and this constant with it, goes when 4.1 and 4.2 leave the playground.
+ */
+export const CLI_TABLE3_FREE_SINCE = '4.3.0'
+
+/**
+ * Resolves Node's modules for a browser Worker: a polyfill, a shim of the runtime's, or the stub, for
+ * the runtime of `meocord`, the version its line's examples pin.
+ */
+export function nodeModulesPlugin(runtimeDir: string, packagesDir: string, meocord: string): Plugin {
   const node = (file: string) => path.join(runtimeDir, 'node', file)
+  const stubsTable = semver.lt(meocord, CLI_TABLE3_FREE_SINCE)
   return {
     name: 'playground-node-modules',
     setup(build) {
@@ -183,6 +193,16 @@ export function nodeModulesPlugin(runtimeDir: string, packagesDir: string): Plug
       build.onResolve({ filter: /.*/ }, args => {
         const bare = args.path.replace(/^node:/, '')
         if (STUBBED.has(bare)) return { path: node('stub.cjs') }
+        if (bare === 'cli-table3') {
+          if (stubsTable) return { path: node('stub.cjs') }
+          return {
+            errors: [
+              {
+                text: `${args.importer} imports cli-table3, which meocord ${meocord} doesn't load for a test: find what reaches it`,
+              },
+            ],
+          }
+        }
         if (SHIMS[bare]) return { path: node(SHIMS[bare]) }
         const polyfill = POLYFILLS[bare]
         // The polyfill resolves itself from the docs' own packages, not from the importer's

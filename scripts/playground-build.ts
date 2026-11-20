@@ -82,7 +82,7 @@ for (const { line, version } of playgroundLines(readVersions(paths.versions), pi
     supported: { 'async-await': false },
     define: { 'process.env.NODE_ENV': '"development"', global: 'globalThis' },
     inject: [path.join(RUNTIME_DIR, 'node', 'globals.ts')],
-    plugins: [nodeModulesPlugin(RUNTIME_DIR, ROOT)],
+    plugins: [nodeModulesPlugin(RUNTIME_DIR, ROOT, version)],
     logLevel: 'error',
     legalComments: 'none',
   })
