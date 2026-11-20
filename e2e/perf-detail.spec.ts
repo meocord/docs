@@ -11,6 +11,8 @@ const PAGES = [`${docs41}/changelog/4.1.0-beta.0`, `${docs41}/testing`]
 const RUNS = Number(process.env.PERF_DETAIL_RUNS ?? 3)
 const OUT_DIR = 'e2e-results'
 const OUT_FILE = `${OUT_DIR}/perf-detail.jsonl`
+/** Which build the run measures, when one job measures several on the same runner. */
+const BUILD = process.env.PERF_DETAIL_BUILD ?? 'baseline'
 
 test.describe.configure({ mode: 'serial' })
 test.skip(!process.env.PERF_DETAIL, 'A measurement, run only with PERF_DETAIL set')
@@ -172,7 +174,7 @@ test.beforeAll(async ({ baseURL }) => {
 test.afterAll(() => hop?.close())
 
 for (const path of PAGES) {
-  test(`${path}: where the applied LCP goes`, { tag: '@performance-detail' }, async () => {
+  test(`${path}: where the applied LCP goes (${BUILD})`, { tag: '@performance-detail' }, async () => {
     test.setTimeout(900_000)
     const url = `${hop.origin}${path}`
     const runs = await lighthouseRuns(url, RUNS, {
@@ -182,6 +184,7 @@ for (const path of PAGES) {
     })
     runs.forEach((run, index) => {
       const line = {
+        build: BUILD,
         path,
         run: index + 1,
         benchmarkIndex,

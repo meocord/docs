@@ -193,12 +193,26 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: bun run build
       - run: bun --bun x playwright install --with-deps chromium
+      # The same runner measures both builds, so host speed doesn't enter the comparison
+      - run: bun run build
+      - name: Count stylesheet links in the prerendered pages
+        run: grep -o '<link rel="stylesheet"' -r .next/server/app --include='*.html' | wc -l
       - run: bun run test:e2e --grep @performance-detail --project chromium
         env:
           PERF_DETAIL: '1'
           PERF_DETAIL_RUNS: '3'
+          PERF_DETAIL_BUILD: baseline
+      - run: bun run build
+        env:
+          PERF_INLINE_CSS: '1'
+      - name: Count stylesheet links in the prerendered pages
+        run: grep -o '<link rel="stylesheet"' -r .next/server/app --include='*.html' | wc -l
+      - run: bun run test:e2e --grep @performance-detail --project chromium
+        env:
+          PERF_DETAIL: '1'
+          PERF_DETAIL_RUNS: '3'
+          PERF_DETAIL_BUILD: inline
       - if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

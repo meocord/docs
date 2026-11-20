@@ -82,6 +82,8 @@ const nextConfig: NextConfig = {
     ]
   },
   experimental: {
+    // The docs#324 measurement's second build: the stylesheet inlined in the document
+    ...(process.env.PERF_INLINE_CSS === '1' && { inlineCss: true }),
     swcPlugins: [
       [
         '@meonode/compiler',
