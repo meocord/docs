@@ -25,7 +25,14 @@ import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
 import type { Crumb, NavGroup, TocEntry, VersionOption } from '@/components/shell/types'
 import { specFor, VERSIONS } from '@/config/versions'
-import { decoratorSummary, highlightSource, layoutKey, type LayoutForm, type Layouts } from '@/lib/docs/api-layout'
+import {
+  decoratorSummary,
+  displayText,
+  highlightSource,
+  layoutKey,
+  type LayoutForm,
+  type Layouts,
+} from '@/lib/docs/api-layout'
 import type { ApiListing, ApiMember, ApiModel, ApiParam, ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
 import { apiLayouts, apiModel, apiSections, lineVersions, resolveSiteHref } from '@/lib/docs/api-site'
 import {
@@ -63,8 +70,6 @@ const markdown = (text: string, key: string): Child[] =>
         }),
       ]
     : []
-
-const tokensText = (tokens: Token[]) => tokens.map(token => token.text).join('')
 
 /** Where each linked token lands in the display, found by name in order: formatting moves only spaces. */
 function linkRanges(tokens: Token[], display: string): { start: number; end: number; href: string }[] {
@@ -108,7 +113,7 @@ function sourceStyles(source: string) {
  * Markup rather than nodes, as for a guide's code: a long signature draws hundreds of runs.
  */
 function typeCode(tokens: Token[], form: LayoutForm, layouts: Layouts): string {
-  const display = layouts[layoutKey(form, tokensText(tokens))] ?? tokensText(tokens)
+  const display = layouts[layoutKey(form, displayText(tokens))] ?? displayText(tokens)
   const { source, start } = highlightSource(form, display)
   const styles = sourceStyles(source)
   const links = linkRanges(tokens, display)
@@ -133,7 +138,7 @@ function typeCode(tokens: Token[], form: LayoutForm, layouts: Layouts): string {
 
 /** Declarations as a code block, one per overload, a blank line between them once any runs over lines. */
 function signatureBlock(lines: Token[][], form: LayoutForm, layouts: Layouts, key: string) {
-  const tall = lines.some(line => layouts[layoutKey(form, tokensText(line))] !== undefined)
+  const tall = lines.some(line => layouts[layoutKey(form, displayText(line))] !== undefined)
   const html = lines.map(line => typeCode(line, form, layouts)).join(tall ? '\n\n' : '\n')
   return Pre(Code(null, { dangerouslySetInnerHTML: { __html: html } }), {
     key,

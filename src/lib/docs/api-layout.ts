@@ -4,6 +4,8 @@
  * the result and fall back to one line for a display it has not seen.
  */
 
+import type { ApiSignature, ApiSymbol, Token } from '@/lib/docs/api-model'
+
 /** Where code is displayed: a declaration or member block, a Returns block, or a parameter's cell. */
 export type LayoutForm = 'declaration' | 'member' | 'returns' | 'param'
 
@@ -89,3 +91,25 @@ export type DecoratorTarget = 'class' | 'method' | 'property' | 'parameter' | 'c
 /** The Returns line for a decorator factory, before its full type. */
 export const decoratorSummary = (target: DecoratorTarget) =>
   target === 'class or method' ? 'Returns a decorator for a class or a method.' : `Returns a ${target} decorator.`
+
+/** A display's text: its tokens, joined. */
+export const displayText = (tokens: Token[]) => tokens.map(token => token.text).join('')
+
+/**
+ * Every display on a symbol's page, by form: its declaration, its members' code, and each signature's return and
+ * parameter types. `bun run api:layout` formats these, and an exact version's page carries the formatting of these.
+ */
+export function symbolDisplays(symbol: ApiSymbol): [LayoutForm, string][] {
+  const out: [LayoutForm, string][] = []
+  const signature = (each: ApiSignature) => {
+    if (each.returns) out.push(['returns', displayText(each.returns.type)])
+    for (const param of each.params) if (param.type.length > 0) out.push(['param', displayText(param.type)])
+  }
+  for (const line of symbol.code) out.push(['declaration', displayText(line)])
+  symbol.signatures.forEach(signature)
+  for (const member of symbol.members) {
+    for (const line of member.code) out.push(['member', displayText(line)])
+    member.signatures.forEach(signature)
+  }
+  return out
+}

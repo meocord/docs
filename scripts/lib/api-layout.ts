@@ -4,10 +4,16 @@
  */
 
 import { format } from 'prettier'
-import type { ApiModel, ApiSignature, Token } from '../../src/lib/docs/api-model.js'
-import { LAYOUT_WIDTH, layoutKey, unwrap, wrap, type LayoutForm, type Layouts } from '../../src/lib/docs/api-layout.js'
-
-const text = (tokens: Token[]) => tokens.map(token => token.text).join('')
+import type { ApiModel } from '../../src/lib/docs/api-model.js'
+import {
+  LAYOUT_WIDTH,
+  layoutKey,
+  symbolDisplays,
+  unwrap,
+  wrap,
+  type LayoutForm,
+  type Layouts,
+} from '../../src/lib/docs/api-layout.js'
 
 // Stand-ins for what TypeScript cannot parse: TypeDoc's `...` for a type it stopped expanding, as an
 // identifier of the same width, and a constructor shown as `new Name(...)`, as `constructor(...)`.
@@ -44,22 +50,10 @@ export async function formatDisplay(form: LayoutForm, display: string): Promise<
 
 /** Every display on a model's pages, by form. */
 export function displays(model: ApiModel): [LayoutForm, string][] {
-  const out: [LayoutForm, string][] = []
-  const signature = (each: ApiSignature) => {
-    if (each.returns) out.push(['returns', text(each.returns.type)])
-    for (const param of each.params) if (param.type.length > 0) out.push(['param', text(param.type)])
-  }
-  for (const { section, symbol: name } of model.params()) {
+  return model.params().flatMap(({ section, symbol: name }) => {
     const symbol = model.symbol(section, name)
-    if (!symbol) continue
-    for (const line of symbol.code) out.push(['declaration', text(line)])
-    symbol.signatures.forEach(signature)
-    for (const member of symbol.members) {
-      for (const line of member.code) out.push(['member', text(line)])
-      member.signatures.forEach(signature)
-    }
-  }
-  return out
+    return symbol ? symbolDisplays(symbol) : []
+  })
 }
 
 /** The formatted layout of every display on a model's pages that runs past its width. */
