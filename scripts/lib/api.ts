@@ -119,33 +119,89 @@ function specifierOf(declaration: ts.Declaration | undefined): string | undefine
   return specifier && ts.isStringLiteral(specifier) ? specifier.text : undefined
 }
 
+/** Where `file` sits in the package at `root`, or none for a file outside it, such as a dependency's. */
+function ownPath(root: string, file: string): string | undefined {
+  const relative = path.relative(root, realpathSync(file))
+  return relative.startsWith('..') || relative.split(path.sep).includes('node_modules') ? undefined : relative
+}
+
 /**
- * The first discord.js specifier on the alias chain from an entry's export to its declaration, so a name
- * a local chunk brings in counts as one the entry re-exports. A local hop that doesn't resolve fails,
- * since what it hides can't be told.
+ * The discord.js specifier that brings an entry's export in. The alias chain is followed through the
+ * package's own files only, so a third-party package that re-exports discord.js isn't taken for the
+ * package doing so. A local hop that doesn't resolve fails, naming the file that holds it, since what
+ * it hides can't be told.
  */
-function discordSpecifier(checker: ts.TypeChecker, entry: string, symbol: ts.Symbol): string | undefined {
+function discordSpecifier(checker: ts.TypeChecker, root: string, entry: string, symbol: ts.Symbol): string | undefined {
   const seen = new Set<ts.Symbol>()
   for (let hop: ts.Symbol | undefined = symbol; hop && hop.flags & ts.SymbolFlags.Alias && !seen.has(hop);) {
     seen.add(hop)
-    const specifier = specifierOf(hop.declarations?.[0])
+    const declaration = hop.declarations?.[0]
+    const file = declaration && ownPath(root, declaration.getSourceFile().fileName)
+    if (!file) return undefined
+    const specifier = specifierOf(declaration)
     if (specifier && DISCORD_PACKAGE.test(packageOfSpecifier(specifier) ?? '')) return specifier
     const next = checker.getImmediateAliasedSymbol(hop)
-    if (specifier?.startsWith('.') && !next?.declarations?.length)
-      throw new Error(`${entry} re-exports ${symbol.name} through ${specifier}, which doesn't resolve.`)
+    if (specifier && !next?.declarations?.length)
+      throw new Error(`${entry} re-exports ${symbol.name} through ${specifier} in ${file}, which doesn't resolve.`)
     hop = next
   }
   return undefined
 }
 
+/** `symbol`'s own declaration, through any alias. */
+const resolved = (checker: ts.TypeChecker, symbol: ts.Symbol) =>
+  symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
+
+/**
+ * The names `export * from` brings into `source` from discord.js's packages, directly or through local
+ * chunks, each with the specifier that brings it in and what it resolves to. A star export that doesn't
+ * resolve fails, as a named one does.
+ */
+function starExports(
+  checker: ts.TypeChecker,
+  root: string,
+  entry: string,
+  source: ts.SourceFile,
+  seen = new Set<ts.SourceFile>(),
+): Map<string, { from: string; target: ts.Symbol }> {
+  const found = new Map<string, { from: string; target: ts.Symbol }>()
+  if (seen.has(source)) return found
+  seen.add(source)
+  for (const statement of source.statements) {
+    if (!ts.isExportDeclaration(statement) || statement.exportClause || !statement.moduleSpecifier) continue
+    if (!ts.isStringLiteral(statement.moduleSpecifier)) continue
+    const specifier = statement.moduleSpecifier.text
+    const discord = DISCORD_PACKAGE.test(packageOfSpecifier(specifier) ?? '')
+    if (!discord && !specifier.startsWith('.')) continue
+    const reached = checker.getSymbolAtLocation(statement.moduleSpecifier)
+    if (!reached && discord)
+      throw new Error(`${entry} re-exports everything from ${specifier}, which doesn't resolve: link its peers first.`)
+    if (!reached)
+      throw new Error(
+        `${entry} re-exports everything from ${specifier} in ${ownPath(root, source.fileName)}, which doesn't resolve.`,
+      )
+    if (discord) {
+      for (const name of checker.getExportsOfModule(reached))
+        if (!found.has(name.name)) found.set(name.name, { from: specifier, target: resolved(checker, name) })
+      continue
+    }
+    const chunk = reached.valueDeclaration
+    if (chunk && ts.isSourceFile(chunk))
+      for (const [name, star] of starExports(checker, root, entry, chunk, seen))
+        if (!found.has(name)) found.set(name, star)
+  }
+  return found
+}
+
 /**
  * What each entry point re-exports from discord.js's packages, by the specifier that brings each name
- * in, directly or through a local chunk, with each name a value or a type by what it declares: a bundled
- * declaration file lists both in one `export { … } from`. Needs the package's peers linked; a name that
- * doesn't resolve fails rather than being guessed.
+ * in, named or by `export *`, directly or through a local chunk, with each name a value or a type by what
+ * it declares: a bundled declaration file lists both in one `export { … } from`. Needs the package's
+ * peers linked; a name that doesn't resolve fails rather than being guessed.
  */
 export function discordReexports(packageDir: string, entries = entryPoints(packageDir)): ApiReexport[] {
   const files = Object.entries(entries).map(([entry, file]) => [entry, path.join(packageDir, file)] as const)
+  const root = realpathSync(packageDir)
   const program = ts.createProgram(
     files.map(([, file]) => file),
     {
@@ -164,10 +220,13 @@ export function discordReexports(packageDir: string, entries = entryPoints(packa
     const moduleSymbol = source && checker.getSymbolAtLocation(source)
     if (!moduleSymbol) continue
     const byFrom = new Map<string, { values: string[]; types: string[] }>()
+    const stars = starExports(checker, root, entry, source)
     for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
-      const from = discordSpecifier(checker, entry, symbol)
+      const target = resolved(checker, symbol)
+      // A name the entry declares or re-exports itself shadows the one a star export would bring
+      const star = stars.get(symbol.name)
+      const from = discordSpecifier(checker, root, entry, symbol) ?? (star?.target === target ? star.from : undefined)
       if (!from) continue
-      const target = checker.getAliasedSymbol(symbol)
       if (!target.declarations?.length)
         throw new Error(`${entry} re-exports ${symbol.name} from ${from}, which doesn't resolve: link its peers first.`)
       const names = byFrom.get(from) ?? { values: [], types: [] }
