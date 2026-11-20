@@ -51,7 +51,8 @@ any slash command is.
    it has three seconds and answers only once. A controller's `@Cooldown` skips it, and `@Validate`, `@UsePipe`,
    `@Cooldown` or `@Defer` on the handler itself stops the bot at startup.
 4. **It answers** with discord.js's `interaction.respond(choices)`, not `respond()`, since an autocomplete can't be
-   replied to.
+   replied to. MeoCord waits for that answer, awaited or not, and reports one that fails, unless the handler reads its
+   outcome itself with `await`, `then`, `catch`, `finally` or `Promise.all`.
 
 The handler's second argument holds the options the member has already filled in, so one option's suggestions can depend
 on another's value. Those options arrive as Discord sends them during typing: a user, role, channel or attachment option
@@ -89,10 +90,16 @@ fails to load unless the filter answers. After a guard's error, MeoCord still cl
 - **More than 25 choices, or a name or value longer than 100 characters, are refused.** Discord rejects the whole
   answer, and the menu shows nothing. Slice the list, as the example does, and shorten long names.
 - **A slow lookup misses the three seconds.** Autocomplete can't be deferred. Keep the lookup fast: cache what it
-  searches, or search a smaller index.
-- **A handler that returns without `interaction.respond()` leaves the options failing to load.** In development,
-  MeoCord names it once, as it names any handler that ends without answering. `@MeoCord({ warnUnanswered })` turns it
-  on or off.
+  searches, or search a smaller index. A handler that takes 2 seconds or more is named in a warning, once a run, and one
+  whose answer Discord refuses as expired is named with "the member saw no suggestions". Setting `warnSlow: false` in
+  `@MeoCord` silences both.
+- **A handler that returns without `interaction.respond()` shows no suggestions.** MeoCord closes the menu with no
+  choices and names the handler once a run, in production too: "SearchController.query returned without answering its
+  autocomplete, so MeoCord closed the menu with no choices."
+- **An answer that never settles holds its call,** and a stop waits for that call up to its shutdown time. Answer
+  within the three seconds.
+- **`@Autocomplete<T>(…)`'s type argument is deprecated.** It does nothing, since the handler's return type is
+  inferred, and in 5.0 it fails to compile. Write `@Autocomplete(…)`.
 - **A handler for an option without autocomplete never runs.** Discord never asks to complete it. The bot warns at
   startup, and in the next major version (5.0) it refuses to start; turn it on in the builder with
   `setAutocomplete(true)`.

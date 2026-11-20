@@ -83,13 +83,17 @@ Under `'auto'`, a handler that answers quickly answers with one reply or update,
 
 ::example{file="controllers/button/card.button.controller.ts" region="auto"}
 
-A slow one is acknowledged at 1.5 seconds and then locked, as under `'eager'`.
+A slow one is acknowledged at 1.5 seconds and then locked, as under `'eager'`. An answer still waiting for its
+[theme](guide:theming#per-server-and-per-user) when the timer fires doesn't hold the acknowledgement back: the
+interaction is acknowledged on time, as privately as that answer, and the answer then edits it in.
 
 ### Locking only the clicked control
 
 With `disable: 'clicked'`, two buttons of one message can run at once. Each is disabled while its own handler runs and
 comes back when that handler finishes. The loading view stays until both have finished, unless one answers with
-`send()`, whose answer replaces it.
+`send()`, whose answer replaces it. Edits to a locked message go out one after another, each drawn as the lock stands
+when it is sent, so the message always shows the calls still holding it, with the loading view of the call that locked
+it last.
 
 ::example{file="controllers/button/card.button.controller.ts" region="clicked"}
 

@@ -94,6 +94,9 @@ a `targetId` is enough: `targetUser` is the client's cached user with that id, o
   the menu and the handler can't disagree.
 - **Replying in public by accident.** A report or a bookmark is usually for the member alone; send it with
   `MessageFlags.Ephemeral`.
+- **A handler takes only its interaction.** A context menu command has no options, so a second parameter is always
+  `{}`. The bot names such a handler in a startup warning, and a testing module as it compiles; in 5.0 it fails to
+  compile. Remove the parameter. A second parameter with a default value, or a rest parameter, goes unnamed.
 
 ## Next steps
 
