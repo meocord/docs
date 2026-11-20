@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { DOC_ALIASES, DOC_LINES } from '@/config/aliases'
 import { NOINDEX, SITE_INDEXABLE, SITE_URL } from '@/config/site'
-import { exactRewrite, type ExactRoutes } from '@/lib/docs/exact-routes'
+import { exactRewrite, exactRoutes } from '@/lib/docs/exact-routes'
 import {
   cacheControlFor,
   docsRedirect,
@@ -14,8 +14,8 @@ import {
 
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
-/** Which version's page serves each exact version's API page, inlined at build by next.config.ts; none in a dev server started without them. */
-const EXACT_ROUTES = JSON.parse(process.env.EXACT_ROUTES ?? '{}') as ExactRoutes
+/** Which version's page serves each exact version's API page, as next.config.ts inlined them; parsed at load. */
+const EXACT_ROUTES = exactRoutes()
 
 /**
  * The document's policy. `script-src` carries a marker for scripts/csp-hash-proxy.mjs, which moves that

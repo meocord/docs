@@ -5,18 +5,18 @@ import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
-import { apiArticle, apiVersions, exactApiPage, type ExactApiPage } from '@/lib/docs/api-render'
+import { apiArticle, apiVersions, exactApiPage, exactSidebar, type ExactApiPage } from '@/lib/docs/api-render'
 import { guideEnabled, guideTabs } from '@/lib/docs/guide-site'
 import { exactApiParams, lineVersions, versionRange } from '@/lib/docs/api-site'
+import { exactApiGroups, exactApiRoutes, exactRoutesMismatch, pageKey } from '@/lib/docs/exact-pages'
 import {
-  checkExactRoutes,
-  exactApiGroup,
-  exactApiGroups,
-  exactApiPageParams,
-  exactApiRoutes,
-  pageKey,
-} from '@/lib/docs/exact-pages'
-import { EXACT_ROUTES_FILE, exactRewrite, readExactRoutes } from '@/lib/docs/exact-routes'
+  EXACT_ROUTES_FILE,
+  exactRewrite,
+  readExactRoutes,
+  servedPages,
+  sharedVersions,
+  type ExactRoutes,
+} from '@/lib/docs/exact-routes'
 
 const groups = exactApiGroups()
 const pageOf = (line: string, version: string, section: string, symbol: string) =>
@@ -32,7 +32,9 @@ const SIGNATURE_LINK = /<pre data-signature="true"[^>]*><code>(?:(?!<\/code>)[\s
 /** A page's article and sidebar, as markup. */
 const markupOf = (page: ExactApiPage) =>
   renderToStaticMarkup(
-    Div({ children: [...apiArticle(page.symbol, page.layouts).nodes, SidebarNav({ groups: page.sidebar })] }).render(),
+    Div({
+      children: [...apiArticle(page.symbol, page.layouts).nodes, SidebarNav({ groups: exactSidebar(page) })],
+    }).render(),
   )
 
 /** Every href a page renders: its article's and its sidebar's. */
@@ -80,7 +82,9 @@ describe('exact-version pages', { timeout: WALK_TIMEOUT_MS }, () => {
       since: { ...sharedPage, symbol: { ...sharedPage.symbol, since: `${sharedPage.symbol.since ?? ''}.1` } },
       sidebar: {
         ...sharedPage,
-        sidebar: sharedPage.sidebar.map(group => ({ ...group, items: group.items.filter(item => !item.current) })),
+        sidebar: sharedPage.sidebar.map((group, index) =>
+          index === 0 ? { ...group, items: group.items.slice(1) } : group,
+        ),
       },
       layouts: {
         ...sharedPage,
@@ -138,11 +142,20 @@ describe('exact-version pages', { timeout: WALK_TIMEOUT_MS }, () => {
         const [, , , , , section, symbol] = target.pathname.split('/')
         expect(target.pathname.startsWith(`/docs/${shared.line}/api/${version}/`), href).toBe(true)
         // A symbol's page or the CLI's, which the line's by-kind sidebar lists too
-        if (section !== 'cli') expect(exactApiGroup(shared.line, version, section!, symbol!), href).toBeDefined()
+        if (section !== 'cli') expect(exactApiPage(shared.line, version, section!, symbol!), href).toBeDefined()
       }
     }
-    const current = sharedPage.sidebar.flatMap(group => group.items).filter(item => item.current)
+    const current = exactSidebar(sharedPage)
+      .flatMap(group => group.items)
+      .filter(item => item.current)
     expect(current.map(item => item.href)).toEqual([`../${shared.section}/${shared.symbol}`])
+  })
+
+  it('builds one sidebar for all of a version’s pages, which marks none of them', () => {
+    const [line, version] = [shared.line, shared.versions[0]!]
+    const other = exactApiParams().find(param => param.version === version && param.symbol !== shared.symbol)!
+    expect(pageOf(line, version, other.section, other.symbol).sidebar).toBe(sharedPage.sidebar)
+    expect(sharedPage.sidebar.flatMap(group => group.items).some(item => item.current)).toBe(false)
   })
 
   it('names the versions a page serves: a run of them as a range, others each', () => {
@@ -157,8 +170,9 @@ describe('the routes to shared pages', { timeout: WALK_TIMEOUT_MS }, () => {
   it('prerenders the first version of each group and routes every other version to it', () => {
     const routes = exactApiRoutes()
     const prerendered = new Set(
-      exactApiPageParams().map(({ line, version, section, symbol }) => pathOf(line, version, section, symbol)),
+      servedPages(routes).map(({ line, version, section, symbol }) => pathOf(line, version, section, symbol)),
     )
+    expect(prerendered.size).toBe(groups.length)
     let routed = 0
     for (const { line, version, section, symbol } of exactApiParams()) {
       const own = pathOf(line, version, section, symbol)
@@ -168,7 +182,7 @@ describe('the routes to shared pages', { timeout: WALK_TIMEOUT_MS }, () => {
       else {
         routed += 1
         expect(served, own).toBe(
-          pathOf(line, exactApiGroup(line, version, section, symbol)!.versions[0]!, section, symbol),
+          pathOf(line, sharedVersions(routes, line, version, `${section}/${symbol}`)![0]!, section, symbol),
         )
         expect(prerendered.has(served!), own).toBe(true)
       }
@@ -184,14 +198,24 @@ describe('the routes to shared pages', { timeout: WALK_TIMEOUT_MS }, () => {
     expect(readExactRoutes(true, root)).toBe('{"4.2":{"versions":[],"servedBy":{}}}')
   })
 
-  it('fails a production build whose routes are not its pages', () => {
-    const root = mkdtempSync(path.join(tmpdir(), 'exact-routes-'))
-    writeFileSync(path.join(root, EXACT_ROUTES_FILE), `${JSON.stringify(exactApiRoutes())}\n`)
-    expect(() => checkExactRoutes(true, root)).not.toThrow()
-    const stale = mkdtempSync(path.join(tmpdir(), 'exact-routes-'))
-    writeFileSync(path.join(stale, EXACT_ROUTES_FILE), '{}')
-    expect(() => checkExactRoutes(true, stale)).toThrow('run `bun run api:routes`')
-    expect(() => checkExactRoutes(false, stale)).not.toThrow()
+  it('gives back every group from the routes, and tells routes that do not', () => {
+    const routes = exactApiRoutes()
+    expect(exactRoutesMismatch(routes, groups)).toBeUndefined()
+    for (const { line, section, symbol, versions } of groups) {
+      for (const version of versions) {
+        expect(sharedVersions(routes, line, version, `${section}/${symbol}`), `${line} ${version}`).toEqual(versions)
+      }
+    }
+    // A version sent to another set's page, as many pages served, and routes the step never wrote
+    const moved = structuredClone(routes) as ExactRoutes
+    const { versions, servedBy } = moved[shared.line]!
+    const served = servedBy[`${shared.section}/${shared.symbol}`]!
+    const own = versions.indexOf(shared.versions[0]!)
+    const other = served.find(by => by >= 0 && by !== own)!
+    served[versions.indexOf(shared.versions.at(-1)!)] = other
+    expect(servedPages(moved).length).toBe(groups.length)
+    expect(exactRoutesMismatch(moved, groups)).toBeDefined()
+    expect(exactRoutesMismatch({}, groups)).toBeDefined()
   })
 
   it("finds the page an exact version's URL is served by, its line by number or as latest", () => {
