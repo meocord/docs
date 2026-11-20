@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest'
 import * as guide from '@/app/docs/[line]/[...slug]/page'
 import * as landing from '@/app/docs/[line]/page'
 import * as api from '@/app/docs/[line]/api/[...path]/page'
@@ -22,7 +22,7 @@ const params = <T>(value: T) => ({ params: Promise.resolve(value) }) as never
 const card = ogImage('site', 'home')
 // The site is not indexable until launch, so every page is noindex, nofollow here.
 const closed = { index: false, follow: false }
-/** Grouping every exact version's page, which the first exact page's metadata waits for. */
+/** Grouping every exact version's page, as `bun run api:routes` does for the routes the shared pages read. */
 const GROUPING_TIMEOUT_MS = 60_000
 
 /** The whole metadata object a page type should produce. */
@@ -46,6 +46,12 @@ function expected(title: string, description: string, canonical?: string, type =
 }
 
 describe('page metadata', () => {
+  // The routes `bun run api:routes` writes, as next.config.ts inlines them, for the pages versions share
+  let routes = ''
+  beforeAll(() => {
+    routes = JSON.stringify(exactApiRoutes())
+  }, GROUPING_TIMEOUT_MS)
+
   it('the home page: the brand and what MeoCord is, canonical at the root', () => {
     expect(home.metadata).toEqual(
       expected(
@@ -126,20 +132,16 @@ describe('page metadata', () => {
     )
   })
 
-  it(
-    'an exact version’s API symbol: never indexed, canonical at the line’s page',
-    { timeout: GROUPING_TIMEOUT_MS },
-    async () => {
-      const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorators', 'Command'] }))
-      expect(meta).toEqual({
-        ...expected(
-          'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
-          'Command (function in meocord/decorator): Decorator to register command methods in a controller. Types and examples for MeoCord 4.1.',
-          `${docs41}/api/decorators/Command`,
-        ),
-      })
-    },
-  )
+  it('an exact version’s API symbol: never indexed, canonical at the line’s page', async () => {
+    const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.1', 'decorators', 'Command'] }))
+    expect(meta).toEqual({
+      ...expected(
+        'Command · meocord/decorator 4.1.0-beta.1 · MeoCord 4.1',
+        'Command (function in meocord/decorator): Decorator to register command methods in a controller. Types and examples for MeoCord 4.1.',
+        `${docs41}/api/decorators/Command`,
+      ),
+    })
+  })
 
   it('an exact version’s API symbol the line no longer has: never indexed, and no canonical', async () => {
     const meta = await api.generateMetadata(params({ line: '4.1', path: ['4.1.0-beta.5', 'types', 'MetadataKey'] }))
@@ -149,8 +151,7 @@ describe('page metadata', () => {
   })
 
   it('an exact version’s page that other versions share: its titles name every version it serves', async () => {
-    // The routes `bun run api:routes` writes, as next.config.ts inlines them
-    vi.stubEnv('EXACT_ROUTES', JSON.stringify(exactApiRoutes()))
+    vi.stubEnv('EXACT_ROUTES', routes)
     onTestFinished(() => {
       vi.unstubAllEnvs()
     })
