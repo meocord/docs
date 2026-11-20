@@ -64,6 +64,18 @@ process of its own, spreading the work over CPU cores. See [Sharding](guide:shar
 Build a testing module with the controller, and run the handler with `invoke`, through the same guards, cooldowns and
 filters the bot uses, with mocks in place of discord.js's objects. See [Testing](guide:testing).
 
+## Can one process load MeoCord with both `import` and `require()`?
+
+Yes. Jest setup files written in CommonJS beside ES module specs, or an ES module bot that uses a CommonJS helper
+package, load both of MeoCord's builds, and the app's own instances are injected into a constructor typed with either
+build's class. `Translator`, `ThemeCache`, `ExecutionContext`, `CooldownStore`, `MemoryCooldownStore`,
+`HandlerRegistry` and `ShardContext` are one class for both builds, so `instanceof` on them agrees, as it does on
+MeoCord's error classes. Its other classes, such as `Logger` and `MeoCordTestingModule`, are one per build: MeoCord
+decides nothing by their identity, but your own `instanceof` tells the two apart.
+
+The CommonJS build bundles `inversify` and `chalk`, which ship only as ES modules, so such a process holds two copies
+of each, with the same output. Two installed versions of MeoCord still keep all their classes apart.
+
 ## Why decorators?
 
 A handler's routing, guards, cooldowns and validation are declared where the handler is, and MeoCord reads them at

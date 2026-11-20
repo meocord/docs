@@ -43,6 +43,19 @@ Plugins go in the same object, spread over `typescriptConfig.plugins`, as a new 
 The default export skips `dist`, `coverage`, `build`, `lib` and `docs` at the root, and `vitest.config.ts`. To lint code
 you keep in `lib/` or `build/`, override the ignore with an entry of your own, or move the code under `src`.
 
+### Adopting it by hand
+
+A project from `npx {{meocord}} create` has every package the config needs. One that adopts `meocord/eslint` by hand
+installs them, at least at the versions it works with:
+
+```bash
+npm install --save-dev "eslint@>=8.57.0" "typescript@>=4.8.4 <6.1" "prettier@>=3.0.0" "typescript-eslint@>=8.0.0" "@typescript-eslint/parser@>=8.0.0" "eslint-plugin-import-x@>=4.13.2" "eslint-plugin-prettier@>=5.0.0" "eslint-config-prettier@>=7.0.0" "eslint-import-resolver-typescript@>=4.0.0" globals
+```
+
+MeoCord names them as optional peer dependencies of any version, so installing or upgrading `meocord` changes none of
+them in a project that doesn't lint with it. `typescript` stays below 6.1 until typescript-eslint supports
+TypeScript 7.
+
 ## Import cycles
 
 Two classes that import each other can't be injected: whichever file loads second records the other's constructor type
