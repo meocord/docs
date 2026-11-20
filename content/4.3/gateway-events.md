@@ -58,8 +58,10 @@ A global guard written for interactions should skip events. Declare which calls 
 
 ::example{file="guards/maintenance.guard.ts" region="guard"}
 
-At startup, in an app with `@On` or `@Once` handlers, MeoCord names each global guard or interceptor without
-`types`, since it will also run on events.
+Or set `@MeoCord({ globalStagesOnEvents: false })`: every global guard and interceptor without `types` then skips
+events and still runs for every other call, the default planned for the next major version (5.0). An app with `@On` or
+`@Once` handlers that leaves the option unset gets a warning at startup, once for each global guard or interceptor
+without `types`, since it also runs on events.
 
 ## Errors
 
@@ -100,7 +102,10 @@ with `eventFallback: true` to have `emit` answer them as the bot does, as
   is never emitted.
 - **Two classes with one name.** `@Once` tells classes apart by name, so the bot refuses to start when two
   classes share a name and either has a `@Once` handler. Rename one.
-- **A global guard denies every event.** It was written for interactions. Give it `types: ['interaction']`.
+- **A global guard denies every event.** A global guard or interceptor that declares no `types` also runs before `@On`
+  and `@Once` handlers, and the bot warns about each one at startup. Set `@MeoCord({ globalStagesOnEvents: false })` to
+  keep them off events while they still run for every other call, or declare the `types` each one is for. See
+  [Where guards apply](guide:guards#where-guards-apply).
 
 ## Build it
 
