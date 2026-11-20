@@ -215,6 +215,9 @@ describe('the routes to shared pages', { timeout: WALK_TIMEOUT_MS }, () => {
     served[versions.indexOf(shared.versions.at(-1)!)] = other
     expect(servedPages(moved).length).toBe(groups.length)
     expect(exactRoutesMismatch(moved, groups)).toBeDefined()
+    const extra = structuredClone(routes) as ExactRoutes
+    extra[shared.line]!.servedBy['core/NoSuchSymbol'] = extra[shared.line]!.versions.map((_, index) => index)
+    expect(exactRoutesMismatch(extra, groups)).toBeDefined()
     expect(exactRoutesMismatch({}, groups)).toBeDefined()
   })
 
