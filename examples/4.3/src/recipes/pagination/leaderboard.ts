@@ -7,10 +7,9 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from 'discord.js'
-import { GuardDeniedError, respond, route } from 'meocord/common'
-import { Command, CommandBuilder, Controller, Guard, Service, UseGuard } from 'meocord/decorator'
+import { OwnerGuard, respond, route } from 'meocord/common'
+import { Command, CommandBuilder, Controller, Service, UseGuard } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
-import { type GuardInterface } from 'meocord/interface'
 
 export interface Score {
   name: string
@@ -63,18 +62,6 @@ export function renderPage(scores: Score[], requested: number, ownerId: string) 
   }
 }
 // #endregion page
-
-// #region guard
-// Only the member whose id the button carries may press it
-@Guard()
-export class OwnerGuard implements GuardInterface {
-  canActivate(interaction: ButtonInteraction, { ownerId }: { ownerId: string }): boolean {
-    // Thrown, it is answered privately; returning false would deny without a word
-    if (interaction.user.id !== ownerId) throw new GuardDeniedError('Only the member who opened this can use it.')
-    return true
-  }
-}
-// #endregion guard
 
 @CommandBuilder(CommandType.SLASH)
 export class LeaderboardCommandBuilder {

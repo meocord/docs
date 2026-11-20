@@ -13,10 +13,10 @@ import {
   SlashCommandBuilder,
   type User,
 } from 'discord.js'
-import { type ExecutionContext, GuardDeniedError, respond, route } from 'meocord/common'
-import { Catch, Command, CommandBuilder, Controller, Guard, Service, UseFilter, UseGuard } from 'meocord/decorator'
+import { type ExecutionContext, OwnerGuard, respond, route } from 'meocord/common'
+import { Catch, Command, CommandBuilder, Controller, Service, UseFilter, UseGuard } from 'meocord/decorator'
 import { CommandType } from 'meocord/enum'
-import { type ExceptionFilter, type GuardInterface } from 'meocord/interface'
+import { type ExceptionFilter } from 'meocord/interface'
 
 // #region builder
 @CommandBuilder(CommandType.SLASH)
@@ -73,17 +73,6 @@ export class ModerationService {
   }
 }
 // #endregion service
-
-// #region guard
-// Only the member whose id the button carries may press it
-@Guard()
-export class OwnerGuard implements GuardInterface {
-  canActivate(interaction: ButtonInteraction, { ownerId }: { ownerId: string }): boolean {
-    if (interaction.user.id !== ownerId) throw new GuardDeniedError('Only the member who opened this can use it.')
-    return true
-  }
-}
-// #endregion guard
 
 // #region filter
 @Catch(DiscordAPIError)

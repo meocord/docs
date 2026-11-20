@@ -6,8 +6,8 @@ order: 2
 summary: Decide whether a call may run, before the handler or anything costly sees it, and tell the user why when it may not.
 learn:
   - Write a guard that allows or refuses a call
-  - Apply guards to a handler, a controller or the whole bot
-  - Give one use of a guard its own settings, checked when the code compiles
+  - Apply guards to a handler, a controller or the whole bot, with settings for one use
+  - Let only a component's owner use it, with the guard MeoCord ships
   - Read facts about the handler, and a message command's members and roles, from a guard
 requires: [how-a-call-runs, services]
 api:
@@ -16,6 +16,7 @@ api:
     decorators/UseGuard,
     types/GuardInterface,
     responses/GuardDeniedError,
+    utilities/OwnerGuard,
     utilities/ExecutionContext,
     utilities/createMetadata,
     types/EntityRef,
@@ -44,12 +45,16 @@ number in range, belongs in [validation](guide:validation), which says exactly w
 
 ## Example
 
-This guard lets only the user whose ID a button's customId carries press it:
+This guard keeps accounts younger than a week out of a giveaway:
 
-::example{file="guards/owner.guard.ts" region="guard"}
+::example{file="guards/account-age.guard.ts" region="guard"}
 
-`canActivate` receives the handler's own arguments: the interaction, and the params its customId pattern captured.
-A stranger pressing the button is told privately that it isn't theirs, and the handler never runs.
+`@UseGuard` puts it in front of a handler:
+
+::example{file="controllers/slash/giveaway.slash.controller.ts" region="apply"}
+
+`canActivate` receives the handler's own arguments: the interaction, then its params, such as the ones a button's
+customId pattern captured. A new account is told privately why it can't enter, and the handler never runs.
 
 ## How it works
 
@@ -91,7 +96,10 @@ A subclass that shouldn't take its bases' guards for the handlers it declares se
 `@Controller({ inheritStages: false })`.
 
 A guard runs for every kind of handler it applies to. Global guards also run before gateway event handlers, where
-`canActivate` receives the event's arguments, such as a `GuildMember` for `guildMemberAdd`. A guard written for
+`canActivate` receives the event's arguments, such as a `GuildMember` for `guildMemberAdd`, unless the app sets
+`@MeoCord({ globalStagesOnEvents: false })`. With it, a global guard that declares no `types` skips gateway events and
+still runs for every other call. Left unset, the bot warns at startup about each such guard when the app has event
+handlers; set it either way to silence the warning. `false` is planned as the default in 5.0. A guard written for
 interactions declares `@Guard({ types: ['interaction'] })`, and is skipped for any other call. The types are
 `'interaction'`, `'autocomplete'`, `'message'`, `'reaction'` and `'event'`, as `ExecutionContext.getType()` reports
 them. An autocomplete is its own type, so a guard that should also run before a command's suggestions lists both:
@@ -110,6 +118,23 @@ every use checked against it when the code compiles:
 
 A guard that declares no params takes any. `params` is optional, so `{ provide: ChannelGuard }` works like the class
 alone.
+
+## Letting only its owner use a component
+
+A button, select menu or modal opened for one user, such as a confirmation, a paginator or a settings card, carries
+that user's ID in its customId. [`OwnerGuard`](api:utilities/OwnerGuard), a guard MeoCord ships, lets only that user
+use it. It reads the route param `ownerId` unless its params name another, and anyone else is told privately that it
+isn't theirs, or the words its `message` gives:
+
+::example{file="controllers/button/poll.button.controller.ts" region="owner"}
+
+::example{file="controllers/button/poll.button.controller.spec.ts" region="owner"}
+
+It denies by throwing `GuardDeniedError`, so its default words come from your app's translator as
+`meocord.guard.notOwner`, in the user's language, and a filter that catches `GuardDeniedError` can answer otherwise.
+The bot refuses to start where it would deny every call: on a slash command, a context menu or an entry point, and on a
+component or modal whose routes lack the param. On a controller, or in `@MeoCord({ guards })`, it passes over message,
+reaction, autocomplete and event handlers, which have no owner to check.
 
 ## Facts about the handler
 
@@ -162,6 +187,12 @@ A guard that denies a handler for every message, a reaction handler or an event 
 filters what the handler takes. Before an autocomplete, a guard must not answer at all: returning `false` closes the
 menu with an empty list, and so does throwing `GuardDeniedError`, whose message the user doesn't see.
 
+A guard's `false` on an interaction is silent unless the app sets `@MeoCord({ answerDenied: true })`. With it, a
+command, context menu, component or modal is told privately "You can't use this.", `meocord.guard.denied` in the user's
+language. The denial takes a thrown one's path: a filter that catches `GuardDeniedError` sees it, observers get its
+`deniedBy`, and a call with `@Defer` is answered into its deferral. An autocomplete still closes its menu, and a message
+command stays silent.
+
 ## Testing
 
 The [testing module](guide:testing) runs guards as the bot does. `invoke` resolves with `ran: false` when a guard
@@ -182,9 +213,13 @@ Generate a guard with `npx meocord g gu <name>`.
   bot refuses to start, naming the decorator to add.
 - **Returning `false` tells the user nothing.** On a button, a select menu, or a modal a button or select menu opened,
   that's often right: MeoCord acknowledges it invisibly. On a command, or a modal a command opened, without `@Defer`,
-  Discord tells the user the app did not respond: throw `GuardDeniedError` to tell them why.
+  Discord tells the user the app did not respond: throw `GuardDeniedError` to tell them why, or set
+  `answerDenied: true` to answer every such `false`.
 - **A global guard runs before event handlers too.** One that reads `interaction.user` throws on an event; declare
-  `@Guard({ types: ['interaction'] })`, or `['interaction', 'autocomplete']` to run before autocomplete handlers too.
+  `@Guard({ types: ['interaction'] })`, or `['interaction', 'autocomplete']` to run before autocomplete handlers too,
+  or set `globalStagesOnEvents: false` to keep every global guard without `types` off events.
+- **`OwnerGuard` reads a route param.** Put it on a component or modal whose customId carries the owner's ID; the bot
+  refuses to start where it has none to read.
 - **A guard bound once is shared.** Listing a guard in `services` or `providers` makes one instance for every call.
   Each call still reads its own `params`, but other fields are shared between calls in progress.
 - **A controller method called directly runs only the guards `@UseGuard` applies to it,** its own and its
