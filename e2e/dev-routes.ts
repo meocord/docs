@@ -7,7 +7,7 @@
  *
  *   bun run check:dev-routes
  */
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, rmSync } from 'node:fs'
 import { e2ePort } from './port'
 import { CURRENT_LINE } from '../src/config/versions'
@@ -75,6 +75,10 @@ async function waitForServer(log: () => string): Promise<void> {
   throw new Error(`next dev did not answer on ${ORIGIN}.\n${log()}`)
 }
 
+// What `next dev` reads that a step derives, written fresh as `bun run start:dev` writes it, so no stale copy is served
+for (const step of ['api:layout', 'api:routes']) {
+  if (spawnSync('bun', ['run', step], { stdio: 'inherit' }).status !== 0) throw new Error(`bun run ${step} failed.`)
+}
 const targets = await urls()
 // Cold, as `bun run start:dev` starts: a warm cache serves pages without loading what renders them.
 // The same empty node_modules too, where Next links the packages it keeps external.
