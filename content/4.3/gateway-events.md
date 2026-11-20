@@ -90,8 +90,9 @@ requests and where to enable them, and `app.start()` rejects with an error
 
 `emit` rejects once every handler has settled if any threw: with that error, or an `AggregateError` when
 several did. That includes a guard's `GuardDeniedError`, which the bot logs at debug, and a handler's `UserError`,
-which the bot answers with a reply when the event carries a message. `emit` runs no fallback, so check them with
-`rejects`.
+which the bot answers with a reply when the event carries a message. Check them with `rejects`, or build the module
+with `eventFallback: true` to have `emit` answer them as the bot does, as
+[Invoke and dispatch](guide:invoke-and-dispatch#events-and-handler-setup) shows.
 
 ## Gotchas
 
