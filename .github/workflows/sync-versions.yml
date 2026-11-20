@@ -21,6 +21,11 @@ permissions:
 env:
   BUN_VERSION: 1.4.x
 
+# bash -eo pipefail: a pipeline fails when any command in it fails
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: sync-versions
   cancel-in-progress: false
