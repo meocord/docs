@@ -97,4 +97,5 @@ Five options bring a 5.0 default into 4.3, so a bot can move to it one change at
 `{ parse: [] }` in `clientOptions`, `globalStagesOnEvents: false`, and in tests `eventFallback: true`, `typedValues`
 and `useStrictMocks()`. A bot or a test that leaves `allowedMentions`, `globalStagesOnEvents` or `eventFallback` unset
 gets a warning naming it, where 5.0 would change what happens.
-[Options that bring 5.0's defaults early](guide:migrating#options-that-bring-50s-defaults-early) lists the new ones.
+[More options that bring 5.0's defaults early](guide:migrating#more-options-that-bring-50s-defaults-early) lists the
+new ones.
