@@ -79,10 +79,17 @@ The build records its platform in `meocord.platform.json`. A bot started on anot
 online, with a message naming both. The check runs before any package loads, so a native addon built for another
 platform never gets to fail with an error of its own.
 
-A build packs one copy of each native package, and every importer loads it. When bundled code imports one that is
-installed twice, such as `natpkg@1` at the top of `node_modules` and `natpkg@2` under a package that needs it, the
-build warns, naming each copy's version and place and the one packed. Install one version, with `npm dedupe` or an
-`overrides` entry; the next major version (5.0) stops the build there.
+A build packs every installed copy of a native package that bundled code imports, and each importer loads its own.
+With `natpkg@1` at the top of `node_modules` and `natpkg@2` under `wrap`, which needs it, `wrap` runs against
+`natpkg@2` from `dist` alone.
+
+The copy your project's root resolves to keeps its place at the top of `dist/node_modules`: under npm, the one npm
+hoisted. With none there, the copy your dependencies reach in the fewest steps takes it, the first by name on a tie.
+Each other copy is packed with its own dependencies under `dist/node_modules/.meocord/<name>-<version>-<hash>/`, the
+hash taken from the chain of dependencies that reaches it, such as `wrap>natpkg`, so one lockfile builds the same `dist`
+on any machine. Its importers load the entry file the bundler resolved, `exports` conditions and subpaths included.
+pnpm's links to one store copy count as one copy. When a copy has no file for a request, such as an `exports` with no
+`require` entry, the build stops and names the copy and the request.
 
 ## Externals
 
