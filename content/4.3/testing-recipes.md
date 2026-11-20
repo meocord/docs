@@ -105,7 +105,8 @@ metadata as `ExecutionContext` does:
 ::example{file="controllers/slash/moderation.slash.controller.spec.ts" region="inspect"}
 
 With `{ app }`, the app's global guards come first. Through `invoke`, a guard that returns `false` resolves with
-`ran: false`, and one that throws `GuardDeniedError` rejects with it.
+`ran: false`, or rejects with `GuardDeniedError` in an app that sets
+[`answerDenied: true`](guide:testing#options-the-app-sets), and one that throws `GuardDeniedError` rejects with it.
 
 Its `defer` is the handler's `@Defer` as the bot applies it, one inherited from the method it overrides included, with
 the defaults filled in: `ephemeral: false`, `suppressNotifications: false`, `disable: 'all'`, `mode: 'eager'`, and
