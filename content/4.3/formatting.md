@@ -105,7 +105,8 @@ comes back unchanged. `DiscordLimits` names Discord's length limits, such as `Di
 
 `meocord/common` exports discord.js's formatters under their own names: `userMention`, `channelMention`, `roleMention`,
 `time` with `TimestampStyles`, `bold`, `codeBlock`, `escapeMarkdown` and the rest. They are your own discord.js's
-functions, not copies, so code that imports them from discord.js keeps working, and their documentation is discord.js's.
+functions, not copies, so code that imports them from discord.js keeps working, and their documentation is
+[discord.js's](https://discord.js.org/docs/packages/formatters/stable).
 
 ## Testing it
 
