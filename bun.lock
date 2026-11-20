@@ -128,7 +128,7 @@
         "@opentelemetry/api": "^1.9.1",
         "discord.js": "^14.27.0",
         "dotenv": "^18.0.5",
-        "meocord": "4.3.0",
+        "meocord": "4.3.1",
         "pg": "^8.23.0",
         "reflect-metadata": "^0.2.2",
         "zod": "^4.6.5",
@@ -1795,7 +1795,7 @@
 
     "examples-4-2/meocord": ["meocord@4.2.3", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": "^2.2.11", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "discord.js": "^14.27.0", "dotenv": "^18.0.5" }, "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-rxeADgMETgmGmqydCVvutuH0rPxXKgFdDFj+4/YytVaB4hdudkBeDa4G7klnPfcWySq8q5D+lff9YHAfLgmjcg=="],
 
-    "examples-4-3/meocord": ["meocord@4.3.0", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": ">=2.2.11 <2.3.0 || ^2.3.3", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "@typescript-eslint/parser": "*", "discord.js": "^14.27.0", "dotenv": "^18.0.5", "eslint": "*", "eslint-config-prettier": "*", "eslint-import-resolver-typescript": "*", "eslint-plugin-import-x": "*", "eslint-plugin-prettier": "*", "globals": "*", "prettier": "*", "typescript": "*", "typescript-eslint": "*" }, "optionalPeers": ["@typescript-eslint/parser", "eslint", "eslint-config-prettier", "eslint-import-resolver-typescript", "eslint-plugin-import-x", "eslint-plugin-prettier", "globals", "prettier", "typescript", "typescript-eslint"], "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-X6RpWEZA3jimXj9zv5WXSmL95Kxwf/kc9d1efzXaRgS72nTx/y7oTesf0jxH73q9GUyNrrj++ETn+myaDQ7LGQ=="],
+    "examples-4-3/meocord": ["meocord@4.3.1", "", { "dependencies": { "@clack/prompts": "^1.8.1", "@jridgewell/trace-mapping": "^0.3.31", "@rsbuild/core": ">=2.2.11 <2.3.0 || ^2.3.3", "chalk": "^6.0.1", "cli-table3": "^0.6.5", "commander": "^15.0.0", "dayjs": "^1.11.23", "get-tsconfig": "^4.14.3", "inversify": "^8.2.3", "jiti": "^2.7.0", "lodash-es": "^4.18.1", "reflect-metadata": "^0.2.2" }, "peerDependencies": { "@typescript-eslint/parser": "*", "discord.js": "^14.27.0", "dotenv": "^18.0.5", "eslint": "*", "eslint-config-prettier": "*", "eslint-import-resolver-typescript": "*", "eslint-plugin-import-x": "*", "eslint-plugin-prettier": "*", "globals": "*", "prettier": "*", "typescript": "*", "typescript-eslint": "*" }, "optionalPeers": ["@typescript-eslint/parser", "eslint", "eslint-config-prettier", "eslint-import-resolver-typescript", "eslint-plugin-import-x", "eslint-plugin-prettier", "globals", "prettier", "typescript", "typescript-eslint"], "bin": { "meocord": "dist/esm/bin/meocord.js" } }, "sha512-+4BLK8HeMNx3anuCCLyBtJewOcE09rHiRfpt48JKlJI7dCDtslQAX8V1bUxbYJYhhmkz8UnnRq86wNgdctAIEg=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 
