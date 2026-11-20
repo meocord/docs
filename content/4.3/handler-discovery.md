@@ -2,7 +2,7 @@
 id: handler-discovery
 title: Handler discovery
 chapter: structure
-order: 5
+order: 6
 summary: List every handler your bot registered, with its metadata, for a help command, an admin page or generated docs.
 learn:
   - Inject the registry and list handlers by kind or controller

@@ -74,7 +74,7 @@ export const GUIDE_PLAN: Readonly<Record<ChapterId, readonly string[]>> = {
     'install-contexts',
   ],
   messages: ['message-commands', 'message-params', 'reactions', 'gateway-events', 'lifecycle-hooks'],
-  structure: ['services', 'configuration', 'theming', 'localisation', 'handler-discovery'],
+  structure: ['services', 'configuration', 'theming', 'localisation', 'formatting', 'handler-discovery'],
   pipeline: [
     'how-a-call-runs',
     'guards',
