@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkInstalled,
   contentName,
+  emitterSource,
   frameDocument,
   installedVersion,
   nodeModulesPlugin,
@@ -174,5 +175,47 @@ describe('nodeModulesPlugin', () => {
     expect(source).toMatch(/async function\*\s*\(\)\s*\{\s*\}\s*\)\.prototype/)
     const code = await bundle(`export * from '${path.join(root, emitter!)}'`)
     expect(code).not.toMatch(/async function\*\s*\(\)\s*\{\s*\}\s*\)\.prototype/)
+  })
+
+  it.each(['index.mjs', 'index.cjs'])(
+    "words the event emitter's unhandled error with the util polyfill, not its own copy of inspect, from %s",
+    async file => {
+      const { globSync } = await import('fs')
+      const root = path.resolve(import.meta.dirname, '../..')
+      const [emitter] = globSync(
+        `node_modules/.bun/@vladfrangu+async_event_emitter@*/node_modules/@vladfrangu/async_event_emitter/dist/${file}`,
+        { cwd: root },
+      )
+      expect(emitter).toBeDefined()
+      const result = await build({
+        stdin: {
+          contents: `
+            import { AsyncEventEmitter } from '${path.join(root, emitter!)}'
+            try { new AsyncEventEmitter().emit('error', { a: 1, b: [2] }) } catch (error) { globalThis.unhandled = error.message }
+          `,
+          resolveDir: runtimeDir,
+          loader: 'ts',
+        },
+        bundle: true,
+        write: false,
+        format: 'iife',
+        platform: 'browser',
+        logLevel: 'silent',
+        plugins: [nodeModulesPlugin(runtimeDir, root)],
+      })
+      const code = new TextDecoder().decode(result.outputFiles[0]!.contents)
+      // The vendored copy is a CommonJS wrapper of its own; the polyfill isn't
+      expect(code).not.toMatch(/require_inspect\d* = __commonJS/)
+      new Function(code)()
+      expect((globalThis as { unhandled?: string }).unhandled).toBe(
+        "Unhandled 'error' event emitted, received { a: 1, b: [ 2 ] }",
+      )
+    },
+  )
+
+  it("refuses an event emitter whose vendored inspect isn't where it looks, naming the file", () => {
+    expect(() => emitterSource('export class AsyncEventEmitter {}', 'dist/index.mjs')).toThrow(
+      'dist/index.mjs has no vendored inspect to replace',
+    )
   })
 })
