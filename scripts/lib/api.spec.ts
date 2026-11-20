@@ -65,7 +65,7 @@ describe('discordReexports', () => {
     ])
   })
 
-  it('counts every @discordjs package as discord.js and no other bare package, a class among the values', () => {
+  it('counts every @discordjs package as discord.js and no other bare package, an enum among the values', () => {
     declare(
       "export { bold, Faces } from '@discordjs/formatters';\nexport { SemVer } from 'semver';\nexport { userMention } from 'discord.js';\n",
     )
@@ -80,6 +80,29 @@ describe('discordReexports', () => {
       { entry: 'meocord/common', from: '@discordjs/formatters', values: ['Faces', 'bold'], types: [] },
       { entry: 'meocord/common', from: 'discord.js', values: ['userMention'], types: [] },
     ])
+  })
+
+  it('follows a re-export through a local chunk to the discord.js specifier that brings it in', () => {
+    declare("export { bold, TimestampStylesString } from '../_shared/formatters.js';\n")
+    mkdirSync(path.join(pkg, 'dist', 'types', '_shared'), { recursive: true })
+    writeFileSync(
+      path.join(pkg, 'dist', 'types', '_shared', 'formatters.d.ts'),
+      "export { TimestampStylesString } from 'discord.js';\nimport { bold } from 'discord.js';\nexport { bold };\n",
+    )
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([
+      { entry: 'meocord/common', from: 'discord.js', values: ['bold'], types: ['TimestampStylesString'] },
+    ])
+  })
+
+  it("fails on a local chunk that doesn't resolve, rather than dropping what it brings in", () => {
+    declare("export { bold } from '../_shared/missing.js';\n")
+    linkPeers(pkg)
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports bold through ../_shared/missing.js, which doesn't resolve.",
+    )
   })
 
   it('lists nothing for an entry that re-exports nothing from discord.js', () => {
