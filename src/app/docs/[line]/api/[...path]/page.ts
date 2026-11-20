@@ -10,24 +10,33 @@ import {
   apiParams,
   apiSections,
   cliParams,
-  exactApiParams,
   glanceParams,
   lineVersions,
   movedApiHref,
   olderApiHref,
+  versionRange,
 } from '@/lib/docs/api-site'
-import { renderApiKind, renderApiPage, renderCliPage, renderGlancePage } from '@/lib/docs/api-render'
+import {
+  apiDescription,
+  exactApiPage,
+  renderApiKind,
+  renderApiPage,
+  renderCliPage,
+  renderExactApiPage,
+  renderGlancePage,
+} from '@/lib/docs/api-render'
+import { checkExactRoutes, exactApiGroup, exactApiPageParams } from '@/lib/docs/exact-pages'
 import { CLI_SECTION, cliCommand, cliManifest, commandSummary } from '@/lib/docs/cli-site'
 import { GLANCE_SECTION, glanceTopic } from '@/lib/docs/glance'
 import { docsHref, versionElsewhere } from '@/lib/urls'
-import { DESCRIPTION_LENGTH, firstParagraph, pageMetadata } from '@/lib/docs/page-metadata'
+import { pageMetadata, referenceDescription } from '@/lib/docs/page-metadata'
 import { lineParams } from '@/lib/docs/site'
 
 type Params = { params: Promise<{ line: string; path: string[] }> }
 
 /**
  * `<section>/<symbol>` is the line's API, from its newest version; `<version>/<section>/<symbol>` is an
- * exact version's, prerendered too and kept out of search indexes. A section is an entry point, or a
+ * exact version's, kept out of search indexes and prerendered once for the versions whose page is the same. A section is an entry point, or a
  * kind where the line's API is arranged by kind, and then `<section>` alone is that kind's page.
  */
 function parse(line: string, path: string[]): { section: string; symbol?: string; version?: string } | undefined {
@@ -43,27 +52,18 @@ function parse(line: string, path: string[]): { section: string; symbol?: string
 export const instant = false
 
 export function generateStaticParams() {
+  // The proxy sends each other version of a shared page here, so its routes must be these pages'
+  checkExactRoutes()
   return [
     ...apiKindParams().map(({ line, section }) => ({ line, path: [section] })),
     ...apiParams().map(({ line, section, symbol }) => ({ line, path: [section, symbol] })),
-    ...exactApiParams().map(({ line, version, section, symbol }) => ({ line, path: [version, section, symbol] })),
+    ...exactApiPageParams().map(({ line, version, section, symbol }) => ({ line, path: [version, section, symbol] })),
     ...glanceParams().map(({ line, topic }) => ({ line, path: [GLANCE_SECTION, topic] })),
     ...cliParams().map(({ line, version, command }) => ({
       line,
       path: version ? [version, CLI_SECTION, command] : [CLI_SECTION, command],
     })),
   ]
-}
-
-const KIND_NAMES: Record<string, string> = { 'type-alias': 'type', variable: 'constant' }
-
-/**
- * A reference page's description: what the page is and its summary as a sentence, so a one-line summary such as
- * "Generate components" still makes a result that names the page; then what the page holds, where it fits whole.
- */
-function reference(name: string, what: string, summary: string, holds: string): string {
-  const lead = `${name} (${what}):${summary.trim() ? ` ${summary.trim().replace(/([^.!?])$/, '$1.')}` : ''}`
-  return `${lead} ${holds}`.length <= DESCRIPTION_LENGTH ? `${lead} ${holds}` : lead
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -106,7 +106,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return pageMetadata({
       title: `meocord ${command.name} · CLI${target.version ? ` ${target.version}` : ''}`,
       line,
-      description: reference(
+      description: referenceDescription(
         `meocord ${command.name}`,
         'CLI command',
         commandSummary(command),
@@ -116,24 +116,26 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       index: !target.version,
     })
   }
-  const symbol = apiModel(line, target.version)?.symbol(target.section, target.symbol)
+  if (target.version) {
+    const group = exactApiGroup(line, target.version, target.section, target.symbol)
+    const page = group && exactApiPage(line, group.versions[0]!, group.section, group.symbol)
+    if (!group || !page) return {}
+    return pageMetadata({
+      title: `${page.symbol.name} · ${page.symbol.entry} ${versionRange(line, group.versions)}`,
+      line,
+      description: page.description,
+      // The line's page, where the line has the symbol; only the line's is indexed.
+      canonical: page.canonical,
+      index: false,
+    })
+  }
+  const symbol = apiModel(line)?.symbol(target.section, target.symbol)
   if (!symbol) return {}
-  const lineHasIt = !!apiModel(line)?.symbol(target.section, target.symbol)
-  const canonical = lineHasIt
-    ? docsHref({ kind: 'api', line, section: target.section, symbol: target.symbol }, VERSIONS)
-    : undefined
   return pageMetadata({
-    title: target.version ? `${symbol.name} · ${symbol.entry} ${target.version}` : `${symbol.name} · ${symbol.entry}`,
+    title: `${symbol.name} · ${symbol.entry}`,
     line,
-    description: reference(
-      symbol.name,
-      `${KIND_NAMES[symbol.kind] ?? symbol.kind} in ${symbol.entry}`,
-      firstParagraph(symbol.description),
-      `Types and examples for MeoCord ${line}.`,
-    ),
-    canonical,
-    // An exact version's page points at the line's; only the line's is indexed.
-    index: !target.version,
+    description: apiDescription(line, symbol),
+    canonical: docsHref({ kind: 'api', line, section: target.section, symbol: target.symbol }, VERSIONS),
   })
 }
 
@@ -146,9 +148,13 @@ async function apiPage(line: string, path: string[]) {
   if (!target) return undefined
   if (!target.symbol) return renderApiKind(line, target.section)?.render()
   if (target.section === GLANCE_SECTION && !target.version) return renderGlancePage(line, target.symbol)?.render()
-  return target.section === CLI_SECTION && apiArrangement(line) === 'kind'
-    ? renderCliPage(line, target.symbol, target.version)?.render()
-    : renderApiPage(line, target.section, target.symbol, target.version)?.render()
+  if (target.section === CLI_SECTION && apiArrangement(line) === 'kind')
+    return renderCliPage(line, target.symbol, target.version)?.render()
+  if (!target.version) return renderApiPage(line, target.section, target.symbol)?.render()
+  // The page the versions whose page is the same share, made from the first of them
+  const group = exactApiGroup(line, target.version, target.section, target.symbol)
+  const page = group && exactApiPage(line, group.versions[0]!, group.section, group.symbol)
+  return page && renderExactApiPage(page, group.versions).render()
 }
 
 export default async function ApiPage({ params }: Params) {

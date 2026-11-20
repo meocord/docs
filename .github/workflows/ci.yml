@@ -101,6 +101,9 @@ jobs:
       - run: bun run build 2>&1 | tee build.log
       # Prerendering within a budget a page, so a page that renders slower shows early, whatever the page count
       - run: bun scripts/check-static-generation.ts build.log
+      # Only the proxy reads the exact-version routes next.config.ts inlines; `servedBy` is a key of that table
+      - name: Check no client bundle carries the exact-version routes
+        run: test -d .next/static && ! grep -rl servedBy .next/static
       # @meonode/compiler leaves __meo$ markers in what it compiles; none means the SWC plugin did not load
       - name: Check the meonode compiler ran
         run: |

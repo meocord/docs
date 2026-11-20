@@ -85,3 +85,12 @@ export function pageMetadata({
     twitter: { card: 'summary_large_image', title: fullTitle, description: text },
   }
 }
+
+/**
+ * A reference page's description: what the page is and its summary as a sentence, so a one-line summary such as
+ * "Generate components" still makes a result that names the page; then what the page holds, where it fits whole.
+ */
+export function referenceDescription(name: string, what: string, summary: string, holds: string): string {
+  const lead = `${name} (${what}):${summary.trim() ? ` ${summary.trim().replace(/([^.!?])$/, '$1.')}` : ''}`
+  return `${lead} ${holds}`.length <= DESCRIPTION_LENGTH ? `${lead} ${holds}` : lead
+}

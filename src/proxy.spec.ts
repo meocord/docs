@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { proxy } from '@/proxy'
-import { playgroundFrameCsp, STATIC_FILE_CSP, UNSTORED, VERSIONED_PAGE } from '@/lib/cache-policy'
+import { cacheControlFor, playgroundFrameCsp, STATIC_FILE_CSP, UNSTORED, VERSIONED_PAGE } from '@/lib/cache-policy'
 import { SITE_URL } from '@/config/site'
 import { DOC_LINES } from '@/config/aliases'
 
@@ -30,6 +30,39 @@ describe('proxy', () => {
     const response = proxy(request('/docs/latest/missing/features'))
     expect(response.status).toBe(307)
     expect(response.headers.get('Location')).toBe(`https://docs.test/docs/${CURRENT}/missing/features`)
+  })
+
+  it("serves an exact version's page another version shares from that page, at its own URL and with its headers", async () => {
+    // The routes as next.config.ts inlines them: a 4.1 page and a page of the current line, reached as latest
+    const routes = {
+      '4.1': { versions: ['4.1.0-beta.7', '4.1.0-beta.8'], servedBy: { 'core/MeoCordApp': [0, 0] } },
+      [CURRENT]: { versions: ['9.9.8', '9.9.9'], servedBy: { 'core/MeoCordApp': [0, 0] } },
+    }
+    vi.resetModules()
+    vi.stubEnv('EXACT_ROUTES', JSON.stringify(routes))
+    try {
+      const { proxy: built } = await import('@/proxy')
+      for (const [path, served] of [
+        ['/docs/4.1/api/4.1.0-beta.8/core/MeoCordApp?_rsc=1', '/docs/4.1/api/4.1.0-beta.7/core/MeoCordApp?_rsc=1'],
+        ['/docs/latest/api/9.9.9/core/MeoCordApp', `/docs/${CURRENT}/api/9.9.8/core/MeoCordApp`],
+      ]) {
+        const response = built(request(path))
+        expect(response.headers.get('x-middleware-rewrite'), path).toBe(`https://docs.test${served}`)
+        // The URL's own headers, not the page's it is served from
+        expect(response.headers.get('Cache-Control')).toBe(cacheControlFor(new URL(path, 'https://docs.test').pathname))
+        expect(response.headers.get('Content-Security-Policy')).toContain("default-src 'self'")
+      }
+      // The first version of a group serves its own page
+      expect(
+        built(request('/docs/4.1/api/4.1.0-beta.7/core/MeoCordApp')).headers.get('x-middleware-rewrite'),
+      ).toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+    // A dev server started without them serves each version's own page
+    vi.resetModules()
+    const { proxy: bare } = await import('@/proxy')
+    expect(bare(request('/docs/4.1/api/4.1.0-beta.8/core/MeoCordApp')).headers.get('x-middleware-rewrite')).toBeNull()
   })
 
   it('gives public files the flat-deny policy', () => {
