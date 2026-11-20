@@ -185,6 +185,50 @@ describe('discordReexports', () => {
     expect(discordReexports(pkg)).toEqual([])
   })
 
+  it('leaves out a re-export from a dependency that is not linked, named or by `export *`', () => {
+    declare("export { injectable } from 'inversify';\nexport * from 'inversify';\n")
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([])
+  })
+
+  it("fails on a re-export from the package's own name that doesn't resolve", () => {
+    declare("export { bold } from 'meocord/nothing';\n")
+    linkPeers(pkg)
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports bold through meocord/nothing in dist/types/common/index.d.ts, which doesn't resolve.",
+    )
+  })
+
+  it("fails on an `export *` from the package's own name that doesn't resolve", () => {
+    declare("export * from 'meocord/nothing';\n")
+    linkPeers(pkg)
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports everything from meocord/nothing in dist/types/common/index.d.ts, which doesn't resolve.",
+    )
+  })
+
+  it("fails on an `export *` from a local chunk that doesn't resolve", () => {
+    declare("export * from '../_shared/missing.js';\n")
+    linkPeers(pkg)
+
+    expect(() => discordReexports(pkg)).toThrow(
+      "meocord/common re-exports everything from ../_shared/missing.js in dist/types/common/index.d.ts, which doesn't resolve.",
+    )
+  })
+
+  it("lists a renamed re-export with discord.js's own name beside it", () => {
+    declare("export { strong } from '../_shared/a.js';\nexport { italic as slanted } from 'discord.js';\n")
+    chunk('a', "import { bold as strong } from 'discord.js';\nexport { strong };\n")
+    linkPeers(pkg)
+
+    expect(discordReexports(pkg)).toEqual([
+      { entry: 'meocord/common', from: 'discord.js', values: ['slanted (italic)', 'strong (bold)'], types: [] },
+    ])
+  })
+
   it('lists nothing for an entry that re-exports nothing from discord.js', () => {
     declare("import { Client } from 'discord.js';\nexport declare function own(client: Client): string;\n")
     linkPeers(pkg)
