@@ -22,7 +22,7 @@ formerly: [coming-from-necord]
 Necord brings discord.js into NestJS: handlers are Nest providers, guards are Nest guards, and the bot runs inside a
 Nest application. MeoCord borrows the same ideas, controllers, services, guards, interceptors and filters, without
 Nest. It builds them for Discord alone. This page shows one small bot both ways. The Necord side is typechecked
-against `necord` 7.0.0 with `@nestjs/core` 12.1.0.
+against `necord` 7.1.1 with `@nestjs/core` 12.6.0.
 
 ## What maps to what
 

@@ -21,7 +21,7 @@ formerly: [coming-from-discordjs]
 
 MeoCord runs on discord.js 14, from 14.27.0. Every interaction, message and client you handle is the discord.js object
 you know, so what changes is the code around your handlers: routing, registration, error answers, cooldowns and tests.
-This page shows one small bot both ways. The discord.js side is typechecked against discord.js 14.27.0.
+This page shows one small bot both ways. The discord.js side is typechecked against discord.js 14.28.1.
 
 ## What maps to what
 
