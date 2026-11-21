@@ -160,7 +160,7 @@ built on it, and each "coming from" page shows one bot both ways. The comparison
 versions named, from each project's own documentation and published packages; corrections are welcome in the
 [issue tracker](https://github.com/meocord/meocord/issues).
 
-**From discord.js alone** (14.27.0). Every framework here, MeoCord included, is built on it, and a MeoCord handler
+**From discord.js alone** (14.28.1). Every framework here, MeoCord included, is built on it, and a MeoCord handler
 receives discord.js's own interaction, message and client. What you stop writing is the plumbing around them: the
 command handler, component routing, error handling and answer tracking. See
 [Coming from discord.js](guide:coming-from/discordjs).
@@ -170,7 +170,7 @@ listeners and preconditions become controllers, `@On` handlers and guards, and t
 constructor injection. Translations and subcommands, plugins in Sapphire, are built into MeoCord, and scheduled work is
 a service, as [Scheduled tasks](guide:recipes/scheduled) shows. See [Coming from Sapphire](guide:coming-from/sapphire).
 
-**From Necord** (7.0.0), a NestJS module. Nest's guards, interceptors, pipes and exception filters have MeoCord
+**From Necord** (7.1.1), a NestJS module. Nest's guards, interceptors, pipes and exception filters have MeoCord
 counterparts with the same names and roles, built for Discord alone, so the bot needs no Nest application around it.
 `@TextCommand` becomes a typed message pattern, and `@necord/localization` typed catalogs. See
 [Coming from Necord](guide:coming-from/necord).
