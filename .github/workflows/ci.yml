@@ -96,6 +96,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # A pull request's merge commit and its first parent, the base, to list what the pull request changes
+          fetch-depth: 2
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -104,8 +106,13 @@ jobs:
       # The mark, a verbatim copy of meocord main's tools/brand/mark.json
       - run: bun run brand:check
       # A change to the generator or to TypeDoc regenerates every version in the same pull request, so a later
-      # regeneration shows only its own change
+      # regeneration shows only its own change. On main and in the merge queue it always runs; on a pull request,
+      # when it changes scripts/, generated/, package.json, bun.lock or versions.json
+      - name: Decide whether to regenerate
+        id: regeneration
+        run: bun scripts/regeneration-scope.ts >> "$GITHUB_OUTPUT"
       - name: Regenerate every version and check nothing changes
+        if: steps.regeneration.outputs.run == 'true'
         run: |
           bun run api:generate --all
           if [ -n "$(git status --porcelain)" ]; then

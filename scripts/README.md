@@ -69,7 +69,13 @@ tests run offline with the rest of the repository's, in `bun run test:coverage`.
 
 Every generated file is what the pipeline makes today. CI's Content job runs `api:generate --all` and fails
 if anything changes, so a change to the generator or to TypeDoc regenerates every version in the same pull
-request, and a later regeneration shows only its own change.
+request, and a later regeneration shows only its own change. It runs on every push to `main` and in the merge
+queue, and on a pull request that changes `scripts/`, `generated/`, `package.json`, `bun.lock` or
+`versions.json` (`scripts/regeneration-scope.ts` decides). It reads the network, as `versions:sync` does: the
+npm registry's packuments and tarballs, npm's attestations API (`registry.npmjs.org/-/npm/v1/attestations`), and
+Sigstore's TUF repository (`tuf-repo-cdn.sigstore.dev`) for the trusted root. Each request is tried up to three
+times, with a doubling wait, on a network error, a 5xx or a 429 (`scripts/lib/registry.ts`); TUF retries a
+network error or a 5xx the same way.
 
 Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard"}`, a path under
 `examples/<line>/src/` and a region between `// #region guard` and `// #endregion guard`. A written guide
