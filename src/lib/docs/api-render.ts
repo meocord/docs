@@ -65,6 +65,7 @@ import { guideEnabled, guidePagesTeaching, guideTabs, resolveGuideLink } from '@
 import { stageAnchor, stagesNamed } from '@/lib/docs/pipeline'
 import { highlightTokens } from '@/lib/prose/highlight'
 import { lowerMarkdown } from '@/lib/prose/lower'
+import { tableFrame, type TableName } from '@/lib/prose/table'
 import { docsHref } from '@/lib/urls'
 import { escapeAttribute, escapeHtml } from '@/lib/html'
 import { firstParagraph, referenceDescription } from '@/lib/docs/page-metadata'
@@ -161,17 +162,16 @@ function signatureBlock(lines: Token[][], form: LayoutForm, layouts: Layouts, ke
 
 const badge = (text: string, tone: 'since' | 'deprecated', key: string) => Span(text, { key, 'data-badge': tone })
 
-function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSince?: string) {
+function paramsTable(params: ApiParam[], layouts: Layouts, key: string, name: TableName, ownerSince?: string) {
   // A parameter's version is shown only when it came later than what it belongs to.
   const later = (param: ApiParam) => (param.since && param.since !== ownerSince ? param.since : undefined)
   const since = params.some(param => later(param))
   const defaults = params.some(param => param.defaultValue !== undefined)
   const header = ['Name', 'Type', ...(defaults ? ['Default'] : []), ...(since ? ['Since'] : []), 'Description']
-  return Div({
+  return tableFrame(
     key,
-    'data-table': true,
-    'data-params': true,
-    children: Table({
+    name,
+    Table({
       children: [
         Thead({
           key: 'head',
@@ -213,7 +213,8 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSin
         }),
       ],
     }),
-  })
+    true,
+  )
 }
 
 /** The anchors a page's own sections use, kept clear of its members' and options' anchors. */
@@ -232,7 +233,10 @@ function sectionIds(anchors: string[]) {
   }
 }
 
-/** A signature's parameters, returns, throws and examples, under headings of `level`. */
+/**
+ * A signature's parameters, returns, throws and examples, under headings of `level`. `owner` names what the
+ * signature belongs to, for a parameters table whose heading has no id to name it by.
+ */
 function signatureDetails(
   signature: ApiSignature,
   layouts: Layouts,
@@ -240,6 +244,7 @@ function signatureDetails(
   ids: ReturnType<typeof sectionIds> | undefined,
   key: string,
   toc: TocEntry[],
+  owner: string,
   ownerSince?: string,
 ): Child[] {
   const heading = (title: string, id: string | undefined) => {
@@ -250,7 +255,13 @@ function signatureDetails(
   if (signature.params.length > 0) {
     out.push(
       heading('Parameters', ids?.parameters),
-      paramsTable(signature.params, layouts, `${key}-params`, ownerSince),
+      paramsTable(
+        signature.params,
+        layouts,
+        `${key}-params`,
+        ids?.parameters ? { heading: ids.parameters } : { text: `Parameters of ${owner}` },
+        ownerSince,
+      ),
     )
     // Each option under its parameters, where it has an anchor to go to
     if (level === 'h2') {
@@ -325,6 +336,7 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
             undefined,
             `m-${member.anchor}-s${index}`,
             toc,
+            member.signatures.length > 1 ? `${member.name}, signature ${index + 1}` : member.name,
             member.since,
           ),
         }),
@@ -448,12 +460,24 @@ export function apiArticle(
         ids,
         's0',
         toc,
+        symbol.name,
         symbol.since,
       ),
     )
   }
   overloads.forEach((signature, index) =>
-    nodes.push(...signatureDetails(signature, layouts, 'h4', undefined, `s${index + 1}`, toc, symbol.since)),
+    nodes.push(
+      ...signatureDetails(
+        signature,
+        layouts,
+        'h4',
+        undefined,
+        `s${index + 1}`,
+        toc,
+        `${symbol.name}, signature ${index + 2}`,
+        symbol.since,
+      ),
+    ),
   )
   if (!first && symbol.examples.length > 0) {
     toc.push({ id: ids.examples, title: 'Examples', depth: 2 })
@@ -799,7 +823,7 @@ export function apiKindArticle(model: ApiModel, section: string): { nodes: Child
   const intro: Child[] = manifest
     ? [
         ...shellBlock(['meocord', manifest.usage].filter(Boolean).join(' '), 'usage'),
-        ...(manifest.options.length > 0 ? [cliOptionsTable(manifest.options, 'options')] : []),
+        ...(manifest.options.length > 0 ? [cliOptionsTable(manifest.options, 'options', 'meocord')] : []),
         P(
           [
             'Every command also takes ',
@@ -839,12 +863,11 @@ const shellBlock = (command: string, key: string, example = false): Child[] => [
 const valueCode = (value: unknown) => Code(typeof value === 'string' ? value : JSON.stringify(value))
 
 /** A table of the CLI's rows, as the API's parameters tables are drawn. */
-function cliTable(key: string, header: string[], rows: { key: string; cells: Child[] }[]) {
-  return Div({
+function cliTable(key: string, name: TableName, header: string[], rows: { key: string; cells: Child[] }[]) {
+  return tableFrame(
     key,
-    'data-table': true,
-    'data-params': true,
-    children: Table({
+    name,
+    Table({
       children: [
         Thead({
           key: 'head',
@@ -873,7 +896,8 @@ function cliTable(key: string, header: string[], rows: { key: string; cells: Chi
         }),
       ],
     }),
-  })
+    true,
+  )
 }
 
 /** What a default or a set of choices adds to a row's description. */
@@ -895,9 +919,10 @@ function cliNotes(entry: { default: unknown; defaultDescription: string | null; 
   return notes
 }
 
-function cliArgumentsTable(args: CliArgument[], key: string) {
+function cliArgumentsTable(args: CliArgument[], key: string, command: string) {
   return cliTable(
     key,
+    { text: `Arguments of ${command}` },
     ['Argument', 'Description'],
     args.map(arg => ({
       key: arg.name,
@@ -909,9 +934,10 @@ function cliArgumentsTable(args: CliArgument[], key: string) {
   )
 }
 
-function cliOptionsTable(options: CliOption[], key: string) {
+function cliOptionsTable(options: CliOption[], key: string, command: string) {
   return cliTable(
     key,
+    { text: `Options of ${command}` },
     ['Option', 'Description'],
     options.map(option => ({
       key: option.flags,
@@ -963,8 +989,15 @@ function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string, sp
     ...shellBlock(exampleInvocation(command, spec), `${key}-example`, true),
   ]
   if (command.arguments.length > 0)
-    out.push(heading('Arguments'), cliArgumentsTable(command.arguments, `${key}-arguments`))
-  if (command.options.length > 0) out.push(heading('Options'), cliOptionsTable(command.options, `${key}-options`))
+    out.push(
+      heading('Arguments'),
+      cliArgumentsTable(command.arguments, `${key}-arguments`, `meocord ${command.path.join(' ')}`),
+    )
+  if (command.options.length > 0)
+    out.push(
+      heading('Options'),
+      cliOptionsTable(command.options, `${key}-options`, `meocord ${command.path.join(' ')}`),
+    )
   for (const [where, text] of [
     ['before', command.helpText.before],
     ['after', command.helpText.after],
@@ -1108,7 +1141,15 @@ export function glanceArticle(
         return Fragment({
           children:
             rows.length > 0
-              ? [heading(category), cliTable(`t-${headingId(category)}`, [header, 'What it does'], rows)]
+              ? [
+                  heading(category),
+                  cliTable(
+                    `t-${headingId(category)}`,
+                    { heading: headingId(category) },
+                    [header, 'What it does'],
+                    rows,
+                  ),
+                ]
               : [],
         })
       },
@@ -1141,6 +1182,7 @@ export function glanceArticle(
     nodes.push(
       cliTable(
         't-respond',
+        { text: `${topic.title} at a glance` },
         ['Call', 'What it does'],
         [
           glanceRow(
@@ -1152,9 +1194,9 @@ export function glanceArticle(
         ],
       ),
       heading('Methods'),
-      cliTable('t-methods', ['Method', 'What it does'], rows('method')),
+      cliTable('t-methods', { heading: headingId('Methods') }, ['Method', 'What it does'], rows('method')),
       heading('Properties'),
-      cliTable('t-properties', ['Property', 'What it holds'], rows('property')),
+      cliTable('t-properties', { heading: headingId('Properties') }, ['Property', 'What it holds'], rows('property')),
     )
   } else if (topic.slug === 'cli') {
     const manifest = cliManifest(lineVersions(line)[0])
@@ -1166,6 +1208,7 @@ export function glanceArticle(
         heading(`meocord ${command.name}`),
         cliTable(
           `t-${command.name}`,
+          { heading: headingId(`meocord ${command.name}`) },
           ['Command', 'What it does', 'Example'],
           everyOne.map(each => {
             const example = exampleInvocation(each, spec)

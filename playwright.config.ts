@@ -5,6 +5,8 @@ const PORT = e2ePort()
 
 /** The specs of the playground's frame, which every engine runs. */
 const FRAME_SPECS = ['playground-frame.spec.ts', 'playground-start.spec.ts']
+/** Keyboard access that differs by engine: WebKit doesn't focus a scroll container by itself, as Chromium does. */
+const KEYBOARD_SPECS = ['table-keyboard.spec.ts']
 
 export default defineConfig({
   testDir: 'e2e',
@@ -24,7 +26,7 @@ export default defineConfig({
     // The playground's isolation rests on each engine's sandbox and policy, so its frame runs in all three, as does
     // a frame that can't start.
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: FRAME_SPECS },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: FRAME_SPECS },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: [...FRAME_SPECS, ...KEYBOARD_SPECS] },
   ],
   // The production build behind the CSP proxy, on its own ports, stopped when the run ends.
   webServer: {

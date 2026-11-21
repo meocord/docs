@@ -118,7 +118,8 @@ jobs:
           test "$markers" -gt 0
       # First-load JS of every prerendered page, gzipped, against the 220 KB budget
       - run: bun run budget:js
-      # Firefox and WebKit run the playground's frame, whose isolation each engine enforces itself
+      # Firefox and WebKit run the playground's frame, whose isolation each engine enforces itself, and WebKit the
+      # keyboard's reach into a table that overflows, which Chromium gives scroll containers by itself
       - run: bun --bun x playwright install --with-deps chromium firefox webkit
       # Everything but the timed runs, which have runners of their own below
       - run: bun run test:e2e --grep-invert @performance

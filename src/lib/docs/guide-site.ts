@@ -160,6 +160,7 @@ export function guideView(line: string, pagePath: string): GuideView | undefined
 
   let playgrounds = 0
   const lowered = lowerMarkdown(body, {
+    title: page.title,
     terms: page.terms,
     href: url => resolveGuideLink(line, url),
     example: (file, region, from) => resolveExample(from ?? line, file, region, { page: pagePath }),
