@@ -53,10 +53,10 @@ jobs:
       # fails.
       - run: bun run test:coverage
 
-  # The playground's runtime on Windows, where its build writes paths with backslashes. Not required: the
-  # site is built and served on Linux, and this only shows a Windows break early.
-  playground-windows:
-    name: Playground (Windows)
+  # The site's build on Windows, from the checkout Git gives there. Not required: the site is built and
+  # served on Linux, and this only shows a Windows break early.
+  windows:
+    name: Windows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -66,7 +66,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: bun run playground:build
+      - run: bun run build
 
   # The guides, examples and generated data: links and anchors resolve, every listed version has its
   # API document and changelog, and each line's examples typecheck against its pinned meocord. The
