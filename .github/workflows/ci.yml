@@ -49,7 +49,8 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      # Coverage thresholds are in vitest.config.ts; a run under them fails.
+      # The script runs vitest under Bun's runtime. Coverage thresholds are in vitest.config.ts; a run under them
+      # fails.
       - run: bun run test:coverage
 
   # The guides, examples and generated data: links and anchors resolve, every listed version has its
