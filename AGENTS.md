@@ -23,6 +23,9 @@ exactly as for code written by hand. Changes carry only that person's authorship
 | Tests   | Vitest with Istanbul coverage (thresholds enforced), Playwright smoke tests    |
 | Deploy  | Pushes to `main` publish `ghcr.io/meocord/docs`; the server pulls and verifies |
 
+Bun is this repository's tooling and runtime; MeoCord and what the guides teach stay runtime-agnostic, Node and Bun
+alike.
+
 Commands are in the [README](README.md#development). Before writing Next.js code, read the guide for your version in
 `node_modules/next/dist/docs/`; APIs differ from older releases.
 
