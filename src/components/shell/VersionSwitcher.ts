@@ -3,7 +3,7 @@
 import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from 'react'
 import { Button, Component, Div, For, Span, usePortal, type PortalLayerProps } from '@meonode/ui'
 import { focusCss, hitAreaCss, transitionCss } from '@/lib/design/css'
-import { Glyph } from '@/components/shell/icons'
+import { Glyph, GlyphSlot } from '@/components/shell/icons'
 import { moveMenuFocus, useLayerFocus } from '@/components/shell/layer-focus'
 import { Link } from '@/components/shell/links'
 import { PopoverSurface } from '@/components/shell/panes'
@@ -136,7 +136,7 @@ export const VersionSwitcher = Component<VersionSwitcherProps>(function VersionS
       current.status === 'prerelease'
         ? Span(null, { width: 6, height: 6, borderRadius: '50%', backgroundColor: DOT.prerelease })
         : null,
-      Span(Glyph('updown', 14), { color: 'theme.ink.secondary', display: 'inline-flex' }),
+      GlyphSlot({ children: Glyph('updown', 14) }),
     ],
     {
       type: 'button',

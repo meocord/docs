@@ -1,6 +1,6 @@
-import { Fixed, Input, Row, Span } from '@meonode/ui'
+import { Fixed, Input, Row } from '@meonode/ui'
 import { safe } from '@/lib/design/css'
-import { Glyph } from '@/components/shell/icons'
+import { Glyph, GlyphSlot } from '@/components/shell/icons'
 import { PopoverSurface } from '@/components/shell/panes'
 
 /**
@@ -30,7 +30,7 @@ export function SearchStandIn() {
         padding: 'theme.space.3',
         css: { '@media (width < theme.breakpoint.compact)': { minHeight: 52 } },
         children: [
-          Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
+          GlyphSlot({ key: 'icon', children: Glyph('search', 16) }),
           Input({
             key: 'input',
             type: 'search',

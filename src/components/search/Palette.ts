@@ -4,7 +4,7 @@ import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useSt
 import { useRouter } from 'next/navigation'
 import { Button, Column, Component, Div, Fixed, For, Input, type PortalLayerProps, Row, Span } from '@meonode/ui'
 import { focusCss, hitAreaCss, safe } from '@/lib/design/css'
-import { Glyph } from '@/components/shell/icons'
+import { Glyph, GlyphSlot } from '@/components/shell/icons'
 import { useLayerFocus } from '@/components/shell/layer-focus'
 import { PopoverSurface } from '@/components/shell/panes'
 import { groupHits, jumps, lineOf, marksAMatch, type Hit, type HitGroup, type PaletteEntry } from '@/lib/search-client'
@@ -290,7 +290,7 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
           css: { '@media (width < theme.breakpoint.compact)': { minHeight: 52 } },
           children: [
             // Static: typing redraws the field, never the glass.
-            Span(Glyph('search', 16), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }, []),
+            GlyphSlot({ key: 'icon', children: Glyph('search', 16) }, []),
             Input({
               key: 'input',
               ref: field,

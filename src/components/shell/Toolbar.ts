@@ -2,7 +2,7 @@ import { Button, For, Kbd, Li, Nav, Node, Ol, Span } from '@meonode/ui'
 import { earFlickCss } from '@/lib/brand/ear-flick'
 import { focusCss, touchCss, transitionCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
-import { Glyph } from '@/components/shell/icons'
+import { Glyph, GlyphSlot } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
 import { MobileNav } from '@/components/shell/MobileNav'
 import { ToolbarBar } from '@/components/shell/panes'
@@ -80,7 +80,7 @@ function Breadcrumbs(crumbs: Crumb[]) {
 function SearchField() {
   return Button(
     [
-      Span(Glyph('search', 14), { key: 'icon', display: 'inline-flex', color: 'theme.ink.secondary' }),
+      GlyphSlot({ key: 'icon', children: Glyph('search', 14) }),
       Span('Search', {
         key: 'label',
         flexGrow: 1,
