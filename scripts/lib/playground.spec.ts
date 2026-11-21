@@ -169,8 +169,9 @@ describe('nodeModulesPlugin', () => {
 
   it(`fails a bundle that reaches cli-table3 from meocord ${CLI_TABLE3_FREE_SINCE} on, naming the importer`, async () => {
     const { dir, version } = await installedMeocord('4.3')
+    // A substring of the message, which names whichever release examples/4.3 installs
     await expect(bundle(`import Table from 'cli-table3'\nexport { Table }`, dir, version)).rejects.toThrow(
-      /<stdin> imports cli-table3, which meocord 4\.3\.0 doesn't load for a test/,
+      `<stdin> imports cli-table3, which meocord ${version} doesn't load for a test`,
     )
   })
 

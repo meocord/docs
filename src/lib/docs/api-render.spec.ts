@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs'
 import path from 'node:path'
 import { Div } from '@meonode/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
+import semver from 'semver'
 import { describe, expect, it } from 'vitest'
 import { modelLayouts } from '../../../scripts/lib/api-layout'
 import { SidebarNav } from '@/components/shell/sidebar-nav'
@@ -20,6 +21,9 @@ import { glanceTopic } from '@/lib/docs/glance'
 import { CODE_PALETTES } from '@/lib/prose/highlight'
 import { VERSIONS } from '@/config/versions'
 import { lineSegment } from '@/lib/urls'
+
+/** The first release whose `meocord/common` re-exports discord.js helpers, which its generated API lists. */
+const REEXPORTS_SINCE = '4.3.0'
 
 // Each line's path segment as versions.json gives it: `latest` for the current line
 const docs41 = `/docs/${lineSegment('4.1', VERSIONS)}`
@@ -276,8 +280,8 @@ describe('the API by kind', () => {
     expect(html(apiIndexArticle('4.2', apiModel('4.2')!).nodes)).not.toContain('Re-exported from')
   })
 
-  it("reads the re-exports from 4.3.0's generated API alone: 44 values and 4 types, none for an earlier version", () => {
-    const [common, ...others] = apiReexports('4.3.0')
+  it(`reads the re-exports from ${REEXPORTS_SINCE}'s generated API: 44 values and 4 types`, () => {
+    const [common, ...others] = apiReexports(REEXPORTS_SINCE)
     expect(others).toEqual([])
     expect(common).toMatchObject({ entry: 'meocord/common', from: 'discord.js' })
     expect(common!.values).toHaveLength(44)
@@ -287,11 +291,20 @@ describe('the API by kind', () => {
       'RecursiveArray',
       'TimestampStylesString',
     ])
-    // Every other generated document predates re-exports, so none carries them
-    const earlier = readdirSync(path.join(process.cwd(), 'generated', 'api'))
-      .map(file => path.basename(file, '.json'))
-      .filter(version => version !== '4.3.0')
+  })
+
+  // Compared by semver, so a later patch release is checked with no change here
+  it(`finds re-exports in every generated API from ${REEXPORTS_SINCE} on, and in none before it`, () => {
+    const versions = readdirSync(path.join(process.cwd(), 'generated', 'api')).map(file => path.basename(file, '.json'))
+    const since = versions.filter(version => semver.gte(version, REEXPORTS_SINCE))
+    const earlier = versions.filter(version => semver.lt(version, REEXPORTS_SINCE))
+    expect(since).toContain(REEXPORTS_SINCE)
     expect(earlier).toEqual(expect.arrayContaining(['4.0.1', '4.1.2', '4.2.3']))
+    for (const version of since) {
+      expect(apiReexports(version), version).toEqual(
+        expect.arrayContaining([expect.objectContaining({ entry: 'meocord/common', from: 'discord.js' })]),
+      )
+    }
     for (const version of earlier) expect(apiReexports(version), version).toEqual([])
   })
 
