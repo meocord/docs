@@ -96,10 +96,147 @@ body {
   min-height: 100vh;
   background: var(--mc-canvas);
   color: var(--mc-ink-primary);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family:
+    var(--font-sans), 'Sans Fallback Arial', 'Sans Fallback Roboto', 'Sans Fallback DejaVu', system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * The sans's stand-ins while Instrument Sans loads, and on a first visit that paints before it: the
+ * system sans faces, resized per weight to its average advance (Next's calcAverageWidth sample) and
+ * given its ascent and descent, so text wraps and stands as Instrument Sans would. Arial, Helvetica,
+ * Liberation Sans and Arimo share their advances, so one family names them all. Instrument Sans:
+ * ascent 970, descent 250 per 1000 units. fonts.spec.ts checks the figures. Roboto's are from the Debian and
+ * Ubuntu build (fonts-roboto); with Google Fonts' build, text sets at most 0.13% wider.
+ */
+@font-face {
+  font-family: 'Sans Fallback Arial';
+  src:
+    local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('LiberationSans'),
+    local('Arimo'), local('Arimo-Regular');
+  font-weight: 400;
+  size-adjust: 103.22%;
+  ascent-override: 93.97%;
+  descent-override: 24.22%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Arial';
+  src:
+    local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('LiberationSans'),
+    local('Arimo'), local('Arimo-Regular');
+  font-weight: 500;
+  size-adjust: 104.79%;
+  ascent-override: 92.56%;
+  descent-override: 23.86%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Arial';
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Helvetica Bold'), local('Helvetica-Bold'),
+    local('Liberation Sans Bold'), local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold');
+  font-weight: 600;
+  size-adjust: 98.32%;
+  ascent-override: 98.66%;
+  descent-override: 25.43%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Arial';
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Helvetica Bold'), local('Helvetica-Bold'),
+    local('Liberation Sans Bold'), local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold');
+  font-weight: 700;
+  size-adjust: 99.77%;
+  ascent-override: 97.22%;
+  descent-override: 25.06%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Roboto';
+  src: local('Roboto'), local('Roboto-Regular');
+  font-weight: 400;
+  size-adjust: 102.84%;
+  ascent-override: 94.32%;
+  descent-override: 24.31%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Roboto';
+  src: local('Roboto Medium'), local('Roboto-Medium');
+  font-weight: 500;
+  size-adjust: 103.45%;
+  ascent-override: 93.77%;
+  descent-override: 24.17%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Roboto';
+  src: local('Roboto Bold'), local('Roboto-Bold');
+  font-weight: 600;
+  size-adjust: 104.38%;
+  ascent-override: 92.93%;
+  descent-override: 23.95%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback Roboto';
+  src: local('Roboto Bold'), local('Roboto-Bold');
+  font-weight: 700;
+  size-adjust: 105.92%;
+  ascent-override: 91.58%;
+  descent-override: 23.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback DejaVu';
+  src: local('DejaVu Sans'), local('DejaVuSans');
+  font-weight: 400;
+  size-adjust: 90.12%;
+  ascent-override: 107.63%;
+  descent-override: 27.74%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback DejaVu';
+  src: local('DejaVu Sans'), local('DejaVuSans');
+  font-weight: 500;
+  size-adjust: 91.5%;
+  ascent-override: 106.01%;
+  descent-override: 27.32%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback DejaVu';
+  src: local('DejaVu Sans Bold'), local('DejaVuSans-Bold');
+  font-weight: 600;
+  size-adjust: 82.43%;
+  ascent-override: 117.68%;
+  descent-override: 30.33%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Sans Fallback DejaVu';
+  src: local('DejaVu Sans Bold'), local('DejaVuSans-Bold');
+  font-weight: 700;
+  size-adjust: 83.64%;
+  ascent-override: 115.97%;
+  descent-override: 29.89%;
+  line-gap-override: 0%;
 }
 
 /*
