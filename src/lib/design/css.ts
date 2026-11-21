@@ -21,6 +21,16 @@ export function materialCss(level: MaterialLevel): ThemedCSSObject {
   }
 }
 
+/** Out of sight but read aloud: in the accessibility tree and the page's text, drawn nowhere. */
+export const visuallyHiddenCss = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+} as const satisfies ThemedCSSObject
+
 /** The focus ring: 2px of accent, 2px out, with a halo. It replaces the outline, never removes it. */
 export const focusCss: ThemedCSSObject = {
   '&:focus-visible': {
