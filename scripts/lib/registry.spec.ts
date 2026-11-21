@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   checkIntegrity,
   downloadTarball,
@@ -134,6 +134,26 @@ describe('withRetry', () => {
     expect((await fetchImpl(PACKUMENT_URL)).status).toBe(500)
     expect(requests).toHaveLength(FETCH_ATTEMPTS)
     expect(waits).toEqual([RETRY_BASE_DELAY_MS, RETRY_BASE_DELAY_MS * 2])
+  })
+
+  it("cancels a retried answer's body before trying again", async () => {
+    const events: string[] = []
+    const cancel = vi.fn(() => {
+      events.push('cancel')
+    })
+    const fetchImpl = withRetry(
+      async () => {
+        events.push('request')
+        return events.length === 1
+          ? new Response(new ReadableStream({ cancel }), { status: 503 })
+          : new Response('{}', { status: 200 })
+      },
+      async () => {},
+    )
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(200)
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(events).toEqual(['request', 'cancel', 'request'])
   })
 
   it('gives up after its attempts on network errors, with the last one', async () => {

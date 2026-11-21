@@ -24,7 +24,8 @@ const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms
 /**
  * `fetchImpl`, tried up to FETCH_ATTEMPTS times while it fails with a network error, a 5xx or a 429, waiting
  * RETRY_BASE_DELAY_MS before the second attempt and twice as long before each later one. Any other answer, a 404
- * included, returns at once; the last attempt's answer or error is what the caller gets.
+ * included, returns at once; the last attempt's answer or error is what the caller gets. It covers a request up to its
+ * response headers: a reset or a timeout while the caller reads the body, a tarball or JSON, is not tried again.
  */
 export function withRetry(fetchImpl: Fetch, sleep: (ms: number) => Promise<void> = wait): Fetch {
   return async url => {
@@ -42,7 +43,10 @@ export function withRetry(fetchImpl: Fetch, sleep: (ms: number) => Promise<void>
   }
 }
 
-/** Every registry read's default: the global fetch, each request bounded by REQUEST_TIMEOUT_MS, with retries. */
+/**
+ * Every registry read's default: the global fetch, each request bounded by REQUEST_TIMEOUT_MS, body included, with
+ * withRetry's retries up to the response headers.
+ */
 export const registryFetch: Fetch = withRetry(url => fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }))
 
 export interface Dist {
