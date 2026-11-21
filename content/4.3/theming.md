@@ -142,7 +142,9 @@ MeoCord's defaults and the app's theme, the `@UseTheme` layers of the handler th
 for that call's server and user. So each member who clicks is answered in their own theme, and a `client.on(...)`
 listener bound in one server answers an event from another server in that server's theme, when the event names it:
 the server itself, or something in it, such as a member, channel, role or message. A call whose arguments name
-neither, such as a collector's `end`, runs in the whole theme of the call that bound it.
+neither, such as a collector's `end`, runs in the whole theme of the call that bound it. A value's creator, such as a
+sticker's or a thread's, never names a bound call's user: nothing tells the call the value was just created, as the
+event does for an `@On('stickerCreate')` handler.
 
 The wrapped function stays synchronous: while `themeFor` still looks a theme up, `useTheme()` reads the handler's theme,
 and `respond()` waits for the lookup. Once the bot has stopped, a wrapped function asks no resolver, and a call runs in
@@ -169,6 +171,13 @@ text, which a theme leaves as it is unless the [presenter](guide:presenters#mess
 
 `themeFor` looks a theme up by where a call comes from: a server's goes over the handler's, and a user's over the
 server's, in a server or in a DM.
+
+The user is the one the call comes from: an interaction's user, a message's author, or the user who reacted. An event,
+in an `@On` or `@Once` handler or a bound listener, names the user it is about or who caused it, such as a member, a
+poll vote's voter, a presence's or a voice state's user, an audit log entry's executor unless it is the bot, or an
+entitlement's or a subscription's owner. A creator is the user only in an `@On` or `@Once` handler for the event that
+created the value, such as `stickerCreate`, `threadCreate` for a newly created thread, or `inviteCreate`, not in its
+updates and deletes. `clientReady` (or `ready`) names no user.
 
 ::example{file="app-with-theme-for.ts" region="app"}
 
