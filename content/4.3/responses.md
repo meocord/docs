@@ -96,9 +96,10 @@ deferral is deleted and the message is sent privately, rather than made public.
 
 `respond()` sets no `allowedMentions` of its own, so its answers follow `clientOptions.allowedMentions`, the default
 for every message the client sends. `npx {{meocord}} create` sets it to `{ parse: [] }`, so an answer pings no one,
-whoever its text mentions. An answer that posts a message, a command's first reply or a follow-up after the first
-answer, pings whoever its own `allowedMentions` allows: as a command's first reply,
-`send({ content, allowedMentions: { users: [member.id] } })` pings that member and no one else. See
+whoever its text mentions. An answer that posts a message, a command's first reply when neither `acknowledge()` nor
+[`@Defer`](guide:defer) deferred it, or a follow-up after the first answer, pings whoever its own `allowedMentions`
+allows: as such a reply, `send({ content, allowedMentions: { users: [member.id] } })` pings that member and no one
+else. See
 [Security](guide:security#ask-for-little).
 
 ## Components V2 and attachments
