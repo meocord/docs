@@ -1,6 +1,14 @@
 import { createHash } from 'crypto'
 import { describe, expect, it } from 'vitest'
-import { checkIntegrity, downloadTarball, fetchPackument, type Packument } from './registry.js'
+import {
+  checkIntegrity,
+  downloadTarball,
+  FETCH_ATTEMPTS,
+  fetchPackument,
+  RETRY_BASE_DELAY_MS,
+  withRetry,
+  type Packument,
+} from './registry.js'
 
 const bytes = new TextEncoder().encode('a tarball, as far as this test is concerned')
 const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}`
@@ -67,5 +75,77 @@ describe('fetchPackument', () => {
   it('reads the packument, and reports a failure', async () => {
     await expect(fetchPackument('meocord', serving(packument))).resolves.toEqual(packument)
     await expect(fetchPackument('meocord', serving({}, 404))).rejects.toThrow('answered 404')
+  })
+})
+
+describe('withRetry', () => {
+  /** A fetch that gives each answer in turn, an Error for a network failure, and records every request and wait. */
+  function scripted(...answers: (number | Error)[]) {
+    const requests: string[] = []
+    const waits: number[] = []
+    const fetchImpl = withRetry(
+      async url => {
+        requests.push(url)
+        const answer = answers[requests.length - 1]!
+        if (answer instanceof Error) throw answer
+        return new Response(String(answer), { status: answer })
+      },
+      async ms => {
+        waits.push(ms)
+      },
+    )
+    return { fetchImpl, requests, waits }
+  }
+  const PACKUMENT_URL = 'https://registry.example/meocord'
+
+  it('tries again after a 503 and returns the answer that follows', async () => {
+    const { fetchImpl, requests, waits } = scripted(503, 200)
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(200)
+    expect(requests).toEqual([PACKUMENT_URL, PACKUMENT_URL])
+    expect(waits).toEqual([RETRY_BASE_DELAY_MS])
+  })
+
+  it('tries again after a 429', async () => {
+    const { fetchImpl, waits } = scripted(429, 200)
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(200)
+    expect(waits).toEqual([RETRY_BASE_DELAY_MS])
+  })
+
+  it('tries again after a network error', async () => {
+    const { fetchImpl, waits } = scripted(new TypeError('fetch failed'), 200)
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(200)
+    expect(waits).toEqual([RETRY_BASE_DELAY_MS])
+  })
+
+  it('returns a 404 at once, without trying again', async () => {
+    const { fetchImpl, requests, waits } = scripted(404, 200)
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(404)
+    expect(requests).toHaveLength(1)
+    expect(waits).toEqual([])
+  })
+
+  it('gives up after its attempts, with the last answer and a doubled wait between each', async () => {
+    const { fetchImpl, requests, waits } = scripted(503, 502, 500, 200)
+
+    expect((await fetchImpl(PACKUMENT_URL)).status).toBe(500)
+    expect(requests).toHaveLength(FETCH_ATTEMPTS)
+    expect(waits).toEqual([RETRY_BASE_DELAY_MS, RETRY_BASE_DELAY_MS * 2])
+  })
+
+  it('gives up after its attempts on network errors, with the last one', async () => {
+    const { fetchImpl, requests } = scripted(new TypeError('first'), new TypeError('second'), new TypeError('third'))
+
+    await expect(fetchImpl(PACKUMENT_URL)).rejects.toThrow('third')
+    expect(requests).toHaveLength(FETCH_ATTEMPTS)
+  })
+
+  it('lets a registry read report the failure that remains', async () => {
+    const { fetchImpl } = scripted(503, 503, 503)
+
+    await expect(fetchPackument('meocord', fetchImpl)).rejects.toThrow('answered 503')
   })
 })

@@ -8,7 +8,14 @@ import { bundleFromJSON, type SerializedBundle } from '@sigstore/bundle'
 import { TrustedRoot } from '@sigstore/protobuf-specs'
 import { getTrustedRoot } from '@sigstore/tuf'
 import { toSignedEntity, toTrustMaterial, Verifier } from '@sigstore/verify'
-import { REGISTRY, type Fetch } from './registry.js'
+import {
+  FETCH_ATTEMPTS,
+  REGISTRY,
+  registryFetch,
+  REQUEST_TIMEOUT_MS,
+  RETRY_BASE_DELAY_MS,
+  type Fetch,
+} from './registry.js'
 
 export const SLSA_PROVENANCE = 'https://slsa.dev/provenance/v1'
 
@@ -21,7 +28,7 @@ interface Attestation {
 export async function fetchProvenanceBundle(
   name: string,
   version: string,
-  fetchImpl: Fetch = fetch,
+  fetchImpl: Fetch = registryFetch,
 ): Promise<Attestation['bundle'] | undefined> {
   const response = await fetchImpl(`${REGISTRY}/-/npm/v1/attestations/${name}@${version}`)
   if (response.status === 404) return undefined
@@ -30,9 +37,15 @@ export async function fetchProvenanceBundle(
   return attestations.find(attestation => attestation.predicateType === SLSA_PROVENANCE)?.bundle
 }
 
-/** Sigstore's current trusted root, through its TUF repository. */
+/**
+ * Sigstore's current trusted root, through its TUF repository, with the registry reads' attempts, backoff and
+ * timeout. TUF retries a network error or a 5xx, not a 429.
+ */
 export function loadTrustedRoot(): Promise<TrustedRoot> {
-  return getTrustedRoot()
+  return getTrustedRoot({
+    retry: { retries: FETCH_ATTEMPTS - 1, factor: 2, minTimeout: RETRY_BASE_DELAY_MS },
+    timeout: REQUEST_TIMEOUT_MS,
+  })
 }
 
 /** A trusted root saved as JSON, as the tests use to verify without the network. */

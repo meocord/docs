@@ -9,6 +9,42 @@ export const REGISTRY = 'https://registry.npmjs.org'
 
 export type Fetch = (url: string) => Promise<Response>
 
+/** How many times a request is tried while it fails with a network error, a 5xx or a 429. */
+export const FETCH_ATTEMPTS = 3
+/** The wait before the second attempt; each later wait doubles it. */
+export const RETRY_BASE_DELAY_MS = 1000
+/** How long one request may take before it counts as a network error. */
+export const REQUEST_TIMEOUT_MS = 30_000
+
+const TOO_MANY_REQUESTS = 429
+const FIRST_SERVER_ERROR = 500
+
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
+
+/**
+ * `fetchImpl`, tried up to FETCH_ATTEMPTS times while it fails with a network error, a 5xx or a 429, waiting
+ * RETRY_BASE_DELAY_MS before the second attempt and twice as long before each later one. Any other answer, a 404
+ * included, returns at once; the last attempt's answer or error is what the caller gets.
+ */
+export function withRetry(fetchImpl: Fetch, sleep: (ms: number) => Promise<void> = wait): Fetch {
+  return async url => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const response = await fetchImpl(url)
+        const retriable = response.status === TOO_MANY_REQUESTS || response.status >= FIRST_SERVER_ERROR
+        if (!retriable || attempt === FETCH_ATTEMPTS) return response
+        await response.body?.cancel()
+      } catch (error) {
+        if (attempt === FETCH_ATTEMPTS) throw error
+      }
+      await sleep(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1))
+    }
+  }
+}
+
+/** Every registry read's default: the global fetch, each request bounded by REQUEST_TIMEOUT_MS, with retries. */
+export const registryFetch: Fetch = withRetry(url => fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }))
+
 export interface Dist {
   tarball: string
   integrity: string
@@ -27,7 +63,7 @@ async function getJson<T>(fetchImpl: Fetch, url: string): Promise<T> {
   return (await response.json()) as T
 }
 
-export function fetchPackument(name: string, fetchImpl: Fetch = fetch): Promise<Packument> {
+export function fetchPackument(name: string, fetchImpl: Fetch = registryFetch): Promise<Packument> {
   return getJson<Packument>(fetchImpl, `${REGISTRY}/${encodeURIComponent(name).replace('%40', '@')}`)
 }
 
@@ -55,7 +91,7 @@ export interface VerifiedTarball {
 export async function downloadTarball(
   packument: Packument,
   version: string,
-  fetchImpl: Fetch = fetch,
+  fetchImpl: Fetch = registryFetch,
 ): Promise<VerifiedTarball> {
   const entry = packument.versions[version]
   if (!entry) throw new Error(`${packument.name}@${version} is not published.`)

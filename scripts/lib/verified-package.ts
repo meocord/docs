@@ -7,7 +7,7 @@ import { readFileSync } from 'fs'
 import path from 'path'
 import type { TrustedRoot } from '@sigstore/protobuf-specs'
 import { fetchProvenanceBundle, verifyProvenance, type Provenance } from './provenance.js'
-import { downloadTarball, type Fetch, type Packument } from './registry.js'
+import { downloadTarball, registryFetch, type Fetch, type Packument } from './registry.js'
 import { unpack, type Unpacked } from './tarball.js'
 import { identityFor, type VersionsConfig } from './versions.js'
 
@@ -27,7 +27,7 @@ export async function fetchVerified(
   packument: Packument,
   version: string,
   trustedRoot: () => Promise<TrustedRoot>,
-  fetchImpl: Fetch = fetch,
+  fetchImpl: Fetch = registryFetch,
 ): Promise<VerifiedPackage> {
   const tarball = await downloadTarball(packument, version, fetchImpl)
   const identity = identityFor(config, version)
