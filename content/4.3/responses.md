@@ -60,10 +60,12 @@ Answers asked for together go out one after another, in the order they were made
 interaction. Two `send()` calls at once reply and then edit, rather than both replying, and so do a `send()` in flight
 and the error the fallback answers with. When Discord refuses an answer, the state stays right:
 
-- An acknowledgement that fails leaves the interaction unanswered, so the next `send()` replies rather than throwing
-  that failure again.
+- An acknowledgement that fails, other than with 40060, leaves the interaction unanswered, so the next `send()` replies
+  rather than throwing that failure again.
 - A reply or an update refused with 40060, because the interaction was answered elsewhere, still throws, and the next
   `send()` edits that answer.
+- An acknowledgement refused with 40060 doesn't throw: it counts as answered, and the next `send()` edits that answer.
+  That answer may be a reply, so `lock()` draws nothing over it.
 
 ## The calls
 

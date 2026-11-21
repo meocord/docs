@@ -74,8 +74,11 @@ sees the lock: the edit that disables the button and shows the loading view, the
 
 Code that locks a message itself calls `respond(interaction).lock()`, which takes `disable` the same way; its options
 type is [`ResponseLockOptions`](api:responses/ResponseLockOptions) from `meocord/common`. `lock()` acknowledges the
-interaction first if nothing has, and does nothing on a command. Outside `@Defer`, nothing puts the message back when
-the handler returns: answer with `send()` or `edit()`, which restore it, or the message stays locked.
+interaction first if nothing has, and does nothing on a command. It also does nothing once the answer is a reply rather
+than the message, as after the handler's own `interaction.deferReply()`, or once Discord has refused an
+acknowledgement of the interaction, `@Defer`'s or its own, because something else answered first, which may have been
+a reply. `@Defer`'s own lock is skipped the same way. Outside `@Defer`, nothing puts the message back when the handler
+returns: answer with `send()` or `edit()`, which restore it, or the message stays locked.
 
 ### Acknowledging only when needed
 
