@@ -2,7 +2,7 @@
 
 import { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { Component, Div, Input, P } from '@meonode/ui'
-import { focusCss } from '@/lib/design/css'
+import { focusCss, visuallyHiddenCss } from '@/lib/design/css'
 
 /** A title as a reader types it: letter case and accents aside, so "resume" finds "Résumé". */
 const folded = (text: string) =>
@@ -17,16 +17,6 @@ function scrollerOf(element: Element): HTMLElement | null {
     if (/(auto|scroll)/.test(getComputedStyle(node).overflowY)) return node
   return null
 }
-
-/** Out of sight but read aloud: the status while it counts the pages shown. */
-const countHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clipPath: 'inset(50%)',
-  whiteSpace: 'nowrap',
-} as const
 
 /**
  * Narrows the sidebar's links to those whose title holds what is typed, keeping each match's group and
@@ -122,7 +112,7 @@ export const SidebarFilter = Component(function SidebarFilter() {
         role: 'status',
         margin: count === 0 ? 'theme.space.2 theme.space.2 0' : 0,
         // A count is for a screen reader: shown, it would deepen the pinned bar over the rows it keeps clear
-        ...(count ? countHidden : {}),
+        ...(count ? visuallyHiddenCss : {}),
         fontSize: 'theme.type.small.size',
         color: 'theme.ink.secondary',
       }),

@@ -1,6 +1,6 @@
 import { Button, For, Kbd, Li, Nav, Node, Ol, Span } from '@meonode/ui'
 import { earFlickCss } from '@/lib/brand/ear-flick'
-import { focusCss, touchCss, transitionCss } from '@/lib/design/css'
+import { focusCss, touchCss, transitionCss, visuallyHiddenCss } from '@/lib/design/css'
 import { Mark } from '@/components/shell/brand'
 import { GlyphSlot } from '@/components/shell/glyph-slot'
 import { Glyph } from '@/components/shell/icons'
@@ -77,6 +77,8 @@ function Breadcrumbs(crumbs: Crumb[]) {
 /**
  * The search field: a button drawn as a field, which opens the command palette. It carries
  * `data-search-trigger` for the palette's island to find, and shows the shortcut it answers to.
+ * Its text names it, "Search the documentation" with the last words hidden, so the name starts with
+ * the word it shows; below the compact width the word is hidden too, not removed.
  */
 function SearchField() {
   return Button(
@@ -86,8 +88,9 @@ function SearchField() {
         key: 'label',
         flexGrow: 1,
         textAlign: 'left',
-        css: { '@media (width < theme.breakpoint.compact)': { display: 'none' } },
+        css: { '@media (width < theme.breakpoint.compact)': visuallyHiddenCss },
       }),
+      Span(' the documentation', { key: 'rest', ...visuallyHiddenCss }),
       Kbd('⌘K', {
         key: 'shortcut',
         'aria-hidden': true,
@@ -97,7 +100,6 @@ function SearchField() {
     {
       type: 'button',
       'data-search-trigger': true,
-      'aria-label': 'Search the documentation',
       'aria-keyshortcuts': 'Meta+K Control+K',
       display: 'inline-flex',
       alignItems: 'center',

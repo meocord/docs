@@ -201,6 +201,16 @@ test('the toolbar offers search by field and shortcut', async ({ page }) => {
   await expect(search).toHaveAttribute('aria-keyshortcuts', 'Meta+K Control+K')
 })
 
+test('the search field is named by its own text, so the name starts with the word it shows', async ({ page }) => {
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/docs/latest/guards')
+    const search = page.locator('[data-toolbar]:visible [data-search-trigger]')
+    await expect(search).toHaveAccessibleName('Search the documentation')
+    await expect(search).not.toHaveAttribute('aria-label')
+  }
+})
+
 test.describe('nothing spills past the reading column', () => {
   const pages = ['/', '/docs/latest/guards', '/docs/latest/api/decorator/Command', '/docs/latest/changelog']
   for (const width of [390, 1280, 2560]) {
