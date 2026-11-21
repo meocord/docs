@@ -11,6 +11,7 @@ export const MUST_RUN = [
   'live-routes.spec.ts',
   'playground-frame.spec.ts',
   'playground-start.spec.ts',
+  'prefetching.spec.ts',
 ]
 
 interface ReportTest {
