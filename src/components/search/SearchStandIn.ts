@@ -1,6 +1,7 @@
 import { Fixed, Input, Row } from '@meonode/ui'
 import { safe } from '@/lib/design/css'
-import { Glyph, GlyphSlot } from '@/components/shell/icons'
+import { GlyphSlot } from '@/components/shell/glyph-slot'
+import { Glyph } from '@/components/shell/icons'
 import { PopoverSurface } from '@/components/shell/panes'
 
 /**
