@@ -1,4 +1,4 @@
-import { A, Div, H2, H3, Li, Ol, P, Section, Ul } from '@meonode/ui'
+import { A, Div, For, H2, H3, Li, Ol, P, Section, Ul } from '@meonode/ui'
 import { codeFrame } from '@/lib/prose/code'
 import type { BuildKind, Claim, Door } from '@/lib/home/data'
 
@@ -12,15 +12,17 @@ export function BuildSection(kinds: BuildKind[]) {
       Ul({
         key: 'kinds',
         'data-tiles': true,
-        children: kinds.map(kind =>
-          Li({
-            key: kind.href,
-            children: A({
-              href: kind.href,
-              'data-tile': true,
-              children: [H3(kind.title, { key: 'h' }), Div({ key: 'lead', children: kind.lead })],
+        children: For(
+          kinds,
+          kind =>
+            Li({
+              children: A({
+                href: kind.href,
+                'data-tile': true,
+                children: [H3(kind.title, { key: 'h' }), Div({ key: 'lead', children: kind.lead })],
+              }),
             }),
-          }),
+          kind => kind.href,
         ),
       }),
     ],
@@ -37,15 +39,17 @@ export function WhySection(claims: Claim[]) {
       Ul({
         key: 'claims',
         'data-claims': true,
-        children: claims.map(claim =>
-          Li({
-            key: claim.title,
-            children: [
-              H3(claim.title, { key: 'h' }),
-              Div({ key: 'p', children: claim.body }),
-              A({ key: 'a', 'data-more': true, href: claim.href, children: 'See how' }),
-            ],
-          }),
+        children: For(
+          claims,
+          claim =>
+            Li({
+              children: [
+                H3(claim.title, { key: 'h' }),
+                Div({ key: 'p', children: claim.body }),
+                A({ key: 'a', 'data-more': true, href: claim.href, children: 'See how' }),
+              ],
+            }),
+          claim => claim.title,
         ),
       }),
     ],
@@ -78,22 +82,26 @@ export function DoorsSection(doors: Door[], spec: string) {
       Div({
         key: 'doors',
         'data-doors': true,
-        children: doors.map((door, index) =>
-          Div({
-            key: door.title,
-            'data-door': true,
-            children: [
-              H3(door.title, { key: 'h' }),
-              P(door.body, { key: 'p' }),
-              index === 0 ? startSteps(spec) : null,
-              Ul({
-                key: 'links',
-                children: door.links.map(link =>
-                  Li({ key: link.href, children: A({ href: link.href, children: link.title }) }),
-                ),
-              }),
-            ],
-          }),
+        children: For(
+          doors,
+          (door, index) =>
+            Div({
+              'data-door': true,
+              children: [
+                H3(door.title, { key: 'h' }),
+                P(door.body, { key: 'p' }),
+                index === 0 ? startSteps(spec) : null,
+                Ul({
+                  key: 'links',
+                  children: For(
+                    door.links,
+                    link => Li({ children: A({ href: link.href, children: link.title }) }),
+                    link => link.href,
+                  ),
+                }),
+              ],
+            }),
+          door => door.title,
         ),
       }),
     ],

@@ -4,6 +4,7 @@ import {
   Blockquote,
   Code,
   Div,
+  For,
   H1,
   H2,
   H3,
@@ -171,31 +172,42 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, ownerSin
     'data-params': true,
     children: Table({
       children: [
-        Thead({ key: 'head', children: Tr({ children: header.map(title => Th({ key: title, children: title })) }) }),
+        Thead({
+          key: 'head',
+          children: Tr({
+            children: For(
+              header,
+              title => Th({ children: title }),
+              title => title,
+            ),
+          }),
+        }),
         Tbody({
           key: 'body',
-          children: params.map(param =>
-            Tr({
-              key: param.name,
-              id: param.anchor,
-              children: [
-                Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
-                Td({
-                  key: 'type',
-                  children: param.type.length
-                    ? Code(null, {
-                        'data-type': true,
-                        dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
-                      })
-                    : '',
-                }),
-                ...(defaults
-                  ? [Td({ key: 'default', children: param.defaultValue ? Code(param.defaultValue) : '' })]
-                  : []),
-                ...(since ? [Td({ key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
-                Td({ key: 'description', children: markdown(param.description, 'd') }),
-              ],
-            }),
+          children: For(
+            params,
+            param =>
+              Tr({
+                id: param.anchor,
+                children: [
+                  Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
+                  Td({
+                    key: 'type',
+                    children: param.type.length
+                      ? Code(null, {
+                          'data-type': true,
+                          dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
+                        })
+                      : '',
+                  }),
+                  ...(defaults
+                    ? [Td({ key: 'default', children: param.defaultValue ? Code(param.defaultValue) : '' })]
+                    : []),
+                  ...(since ? [Td({ key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
+                  Td({ key: 'description', children: markdown(param.description, 'd') }),
+                ],
+              }),
+            param => param.name,
           ),
         }),
       ],
@@ -260,7 +272,11 @@ function signatureDetails(
       heading('Throws', ids?.throws),
       Ul({
         key: `${key}-throws`,
-        children: signature.throws.map(text => Li({ key: text, children: markdown(text, 'd') })),
+        children: For(
+          signature.throws,
+          text => Li({ children: markdown(text, 'd') }),
+          text => text,
+        ),
       }),
     )
   }
@@ -316,7 +332,11 @@ function taughtIn(pages: { title: string; href: string }[], id: string, toc: Toc
         H2('In the Guide', { key: 'heading', id }),
         Ul({
           key: 'list',
-          children: pages.map(page => Li({ key: page.href, children: A({ href: page.href, children: page.title }) })),
+          children: For(
+            pages,
+            page => Li({ children: A({ href: page.href, children: page.title }) }),
+            page => page.href,
+          ),
         }),
       ],
     }),
@@ -424,8 +444,10 @@ export function apiArticle(
       H2('See also', { key: 'see-also', id: ids.seeAlso }),
       Ul({
         key: 'see-also-list',
-        children: symbol.seeAlso.map(({ href, text }) =>
-          Li({ key: text, children: href ? A({ href, children: text }) : text }),
+        children: For(
+          symbol.seeAlso,
+          ({ href, text }) => Li({ children: href ? A({ href, children: text }) : text }),
+          ({ text }) => text,
         ),
       }),
     )
@@ -617,15 +639,17 @@ function listing(symbols: ApiListing[], key: string) {
   return Ul({
     key,
     'data-api-list': true,
-    children: symbols.map(symbol =>
-      Li({
-        key: symbol.name,
-        children: [
-          A({ key: 'name', href: symbol.href, children: Code(symbol.name) }),
-          ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
-          ...markdown(symbol.summary, 'summary'),
-        ],
-      }),
+    children: For(
+      symbols,
+      symbol =>
+        Li({
+          children: [
+            A({ key: 'name', href: symbol.href, children: Code(symbol.name) }),
+            ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
+            ...markdown(symbol.summary, 'summary'),
+          ],
+        }),
+      symbol => symbol.name,
     ),
   })
 }
@@ -674,8 +698,16 @@ function reexported(model: ApiModel, level: 'h2' | 'h3', key: string, toc?: TocE
         key: `${id}-list`,
         'data-api-list': true,
         children: [
-          ...values.map(name => Li({ key: name, children: Code(name) })),
-          ...types.map(name => Li({ key: name, children: Code(`type ${name}`) })),
+          For(
+            values,
+            name => Li({ children: Code(name) }),
+            name => name,
+          ),
+          For(
+            types,
+            name => Li({ children: Code(`type ${name}`) }),
+            name => name,
+          ),
         ],
       }),
     ]
@@ -761,11 +793,29 @@ function cliTable(key: string, header: string[], rows: { key: string; cells: Chi
     'data-params': true,
     children: Table({
       children: [
-        Thead({ key: 'head', children: Tr({ children: header.map(title => Th({ key: title, children: title })) }) }),
+        Thead({
+          key: 'head',
+          children: Tr({
+            children: For(
+              header,
+              title => Th({ children: title }),
+              title => title,
+            ),
+          }),
+        }),
         Tbody({
           key: 'body',
-          children: rows.map(row =>
-            Tr({ key: row.key, children: row.cells.map((cell, index) => Td({ key: String(index), children: cell })) }),
+          children: For(
+            rows,
+            row =>
+              Tr({
+                children: For(
+                  row.cells,
+                  cell => Td({ children: cell }),
+                  (_, index) => index,
+                ),
+              }),
+            row => row.key,
           ),
         }),
       ],

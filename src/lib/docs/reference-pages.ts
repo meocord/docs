@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import semver from 'semver'
-import { A, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Time, Ul } from '@meonode/ui'
+import { A, For, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Time, Ul } from '@meonode/ui'
 import { migratingGuide } from '../../../scripts/lib/pages'
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
@@ -152,15 +152,17 @@ function releaseNodes(
       Heading(section.title, { key: id, id, 'data-group': true }),
       Ul({
         key: `${id}-list`,
-        children: section.entries.map(entry =>
-          Li({
-            key: entry.markdown,
-            'data-breaking': entry.breaking || undefined,
-            children: [
-              ...(entry.breaking ? [Span('Breaking', { key: 'badge', 'data-badge': 'deprecated' }), ' '] : []),
-              ...lower(entryText(entry.markdown)).nodes,
-            ],
-          }),
+        children: For(
+          section.entries,
+          entry =>
+            Li({
+              'data-breaking': entry.breaking || undefined,
+              children: [
+                ...(entry.breaking ? [Span('Breaking', { key: 'badge', 'data-badge': 'deprecated' }), ' '] : []),
+                ...lower(entryText(entry.markdown)).nodes,
+              ],
+            }),
+          entry => entry.markdown,
         ),
       }),
     )
@@ -211,15 +213,17 @@ export function changelogArticle(line: string): { nodes: Child[]; toc: TocEntry[
       Ul({
         key: 'earlier-list',
         'data-releases': true,
-        children: earlier.map(changelog =>
-          Li({
-            key: changelog.version,
-            children: [
-              A({ key: 'version', href: releaseHref(line, changelog.version), children: changelog.version }),
-              ' · ',
-              ...releaseRow(changelog),
-            ],
-          }),
+        children: For(
+          earlier,
+          changelog =>
+            Li({
+              children: [
+                A({ key: 'version', href: releaseHref(line, changelog.version), children: changelog.version }),
+                ' · ',
+                ...releaseRow(changelog),
+              ],
+            }),
+          changelog => changelog.version,
         ),
       }),
     )
@@ -339,14 +343,16 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
     H2('Where it is documented', { key: 'elsewhere', id: 'elsewhere' }),
     Ul({
       key: 'elsewhere-list',
-      children: elsewhere.map(({ line: other, page: { href, title } }) =>
-        Li({
-          key: other,
-          children: A({
-            href,
-            children: `${title} in ${other}`,
+      children: For(
+        elsewhere,
+        ({ line: other, page: { href, title } }) =>
+          Li({
+            children: A({
+              href,
+              children: `${title} in ${other}`,
+            }),
           }),
-        }),
+        ({ line: other }) => other,
       ),
     }),
     H2(`What ${line} documents`, { key: 'index', id: 'in-this-line' }),
@@ -354,7 +360,11 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
       H3(group.title, { key: `g-${group.title}` }),
       Ul({
         key: `g-${group.title}-list`,
-        children: group.items.map(({ href, title }) => Li({ key: href, children: A({ href, children: title }) })),
+        children: For(
+          group.items,
+          ({ href, title }) => Li({ children: A({ href, children: title }) }),
+          ({ href }) => href,
+        ),
       }),
     ]),
   ]

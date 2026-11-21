@@ -8,7 +8,6 @@ import type { NavGroup, NavItem, NavTab } from '@/components/shell/types'
 /** One link row, with no styles of its own: `SidebarNav` styles every row. */
 function NavRow(item: NavItem) {
   return Li({
-    key: item.href,
     children: Link({
       href: item.href,
       'aria-current': item.current ? 'page' : undefined,
@@ -59,11 +58,11 @@ function NavSection(group: NavGroup) {
                   key: `category-${category}`,
                   children: [
                     Div({ key: 'label', 'data-nav-category': true, 'aria-hidden': true, children: category }),
-                    Ul({ key: 'items', 'aria-label': category, children: items.map(NavRow) }),
+                    Ul({ key: 'items', 'aria-label': category, children: For(items, NavRow, item => item.href) }),
                   ],
                 }),
               ]
-            : items.map(NavRow),
+            : For(items, NavRow, item => item.href),
         ),
       }),
     ],
@@ -230,19 +229,21 @@ export function SidebarNav({
         ? Div({
             key: 'tabs',
             'data-nav-tabs': true,
-            children: tabs.map(tab =>
-              Link({
-                key: tab.href,
-                href: tab.href,
-                // The section read, not the page: the page's own link below is the one current as a page
-                'aria-current': tab.current ? 'true' : undefined,
-                children: tab.title,
-              }),
+            children: For(
+              tabs,
+              tab =>
+                Link({
+                  href: tab.href,
+                  // The section read, not the page: the page's own link below is the one current as a page
+                  'aria-current': tab.current ? 'true' : undefined,
+                  children: tab.title,
+                }),
+              tab => tab.href,
             ),
           })
         : null,
       Node(SidebarFilter, { key: 'filter' }),
-      ...For(groups, NavSection, group => group.title),
+      For(groups, NavSection, group => group.title),
     ],
   })
 }

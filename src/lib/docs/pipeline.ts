@@ -1,4 +1,19 @@
-import { A, Code, Div, Fieldset, Figure, Input, Label, Legend, Li, type NodeInstance, Ol, P, Span } from '@meonode/ui'
+import {
+  A,
+  Code,
+  Div,
+  Fieldset,
+  Figure,
+  For,
+  Input,
+  Label,
+  Legend,
+  Li,
+  type NodeInstance,
+  Ol,
+  P,
+  Span,
+} from '@meonode/ui'
 
 /** The kinds of handler a call can reach, as the pipeline figure lets a reader pick one. */
 export const HANDLER_KINDS = [
@@ -198,7 +213,6 @@ export const stageAnchor = (id: string) => `stage-${id}`
 
 function stageItem(stage: PipelineStage, href: (url: string) => string): NodeInstance {
   return Li({
-    key: stage.id,
     id: stageAnchor(stage.id),
     'data-kinds': stage.kinds.join(' '),
     'data-frame': stage.around ? true : undefined,
@@ -220,12 +234,25 @@ function stageItem(stage: PipelineStage, href: (url: string) => string): NodeIns
               ]
             : []),
           P(stage.what, { key: 'what', 'data-what': true }),
-          ...(stage.byKind ?? []).map(({ kinds, what }) =>
-            P(what, { key: kinds.join('-'), 'data-kinds': kinds.join(' ') }),
+          For(
+            stage.byKind ?? [],
+            ({ kinds, what }) => P(what, { 'data-kinds': kinds.join(' ') }),
+            ({ kinds }) => kinds.join('-'),
           ),
         ],
       }),
-      ...(stage.around ? [Ol({ key: 'around', children: stage.around.map(inner => stageItem(inner, href)) })] : []),
+      ...(stage.around
+        ? [
+            Ol({
+              key: 'around',
+              children: For(
+                stage.around,
+                inner => stageItem(inner, href),
+                inner => inner.id,
+              ),
+            }),
+          ]
+        : []),
     ],
   })
 }
@@ -273,13 +300,21 @@ export function pipelineFigure(href: (url: string) => string, key?: number): Nod
         children: [
           Legend('Show the stages for', { key: 'legend' }),
           choice('all', 'Any handler', true),
-          ...HANDLER_KINDS.map(kind => choice(kind.id, kind.label)),
+          For(
+            HANDLER_KINDS,
+            kind => choice(kind.id, kind.label),
+            kind => kind.id,
+          ),
         ],
       }),
       Ol({
         key: 'stages',
         'aria-label': 'The stages of a call, in order',
-        children: PIPELINE.map(stage => stageItem(stage, href)),
+        children: For(
+          PIPELINE,
+          stage => stageItem(stage, href),
+          stage => stage.id,
+        ),
       }),
     ],
   })
