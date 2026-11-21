@@ -52,9 +52,10 @@ installs them, at least at the versions it works with:
 npm install --save-dev "eslint@>=8.57.0" "typescript@>=4.8.4 <6.1" "prettier@>=3.0.0" "typescript-eslint@>=8.0.0" "@typescript-eslint/parser@>=8.0.0" "eslint-plugin-import-x@>=4.13.2" "eslint-plugin-prettier@>=5.0.0" "eslint-config-prettier@>=7.0.0" "eslint-import-resolver-typescript@>=4.0.0" globals
 ```
 
-MeoCord names them as optional peer dependencies of any version, so installing or upgrading `meocord` changes none of
-them in a project that doesn't lint with it. `typescript` stays below 6.1 until typescript-eslint supports
-TypeScript 7.
+MeoCord marks them as optional peer dependencies of any version, so installing or upgrading `meocord` changes none of
+them. npm, pnpm and Yarn leave them out of a production install. Bun's `bun install --production` still installs them
+when the bot lists them as development dependencies, as every bot from `npx {{meocord}} create` does. `typescript` stays
+below 6.1 until typescript-eslint supports TypeScript 7.
 
 ## Import cycles
 
