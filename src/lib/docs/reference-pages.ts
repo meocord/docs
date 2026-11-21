@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import semver from 'semver'
-import { A, For, H1, H2, H3, Li, type NodeInstance, P, Span, Strong, Time, Ul } from '@meonode/ui'
+import { A, type Children, For, Fragment, H1, H2, H3, Li, P, Span, Strong, Time, Ul } from '@meonode/ui'
 import { migratingGuide } from '../../../scripts/lib/pages'
 import { Prose } from '@/components/nodes'
 import { Window } from '@/components/shell/Window'
@@ -22,7 +22,7 @@ import {
 import { lowerMarkdown } from '@/lib/prose/lower'
 import { changelogSectionAnchor, docsHref } from '@/lib/urls'
 
-type Child = NodeInstance | string
+type Child = Children
 
 interface ChangelogEntry {
   markdown: string
@@ -356,17 +356,24 @@ export function missingArticle(line: string, id: string): { nodes: Child[]; titl
       ),
     }),
     H2(`What ${line} documents`, { key: 'index', id: 'in-this-line' }),
-    ...sidebar(line).flatMap(group => [
-      H3(group.title, { key: `g-${group.title}` }),
-      Ul({
-        key: `g-${group.title}-list`,
-        children: For(
-          group.items,
-          ({ href, title }) => Li({ children: A({ href, children: title }) }),
-          ({ href }) => href,
-        ),
-      }),
-    ]),
+    For(
+      sidebar(line),
+      group =>
+        Fragment({
+          children: [
+            H3(group.title, { key: `g-${group.title}` }),
+            Ul({
+              key: `g-${group.title}-list`,
+              children: For(
+                group.items,
+                ({ href, title }) => Li({ children: A({ href, children: title }) }),
+                ({ href }) => href,
+              ),
+            }),
+          ],
+        }),
+      group => group.title,
+    ),
   ]
   return { nodes, title }
 }
