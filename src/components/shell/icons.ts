@@ -1,4 +1,4 @@
-import { For, Svg, SvgPath } from '@meonode/ui'
+import { createNode, For, Svg, SvgPath } from '@meonode/ui'
 
 /** Glyphs on a 16px grid with a 1.5px stroke. Decorative: their controls carry the label. */
 const GLYPHS = {
@@ -47,3 +47,6 @@ export function Glyph(name: GlyphName, size = 16) {
     children: For(GLYPHS[name], d => SvgPath({ d })),
   })
 }
+
+/** The slot a glyph sits in beside a field's or a control's text: lined up with it, in the secondary ink. */
+export const GlyphSlot = createNode('span', { display: 'inline-flex', color: 'theme.ink.secondary' })
