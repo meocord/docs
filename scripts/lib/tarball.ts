@@ -15,8 +15,9 @@ export function unpack(bytes: Uint8Array): Unpacked {
   const root = mkdtempSync(path.join(tmpdir(), 'meocord-docs-'))
   const archive = path.join(root, 'package.tgz')
   writeFileSync(archive, bytes)
-  // tar refuses absolute and parent paths by default, and --no-same-owner keeps file ownership ours
-  const result = spawnSync('tar', ['-xzf', archive, '--no-same-owner', '-C', root], { encoding: 'utf8' })
+  // tar refuses absolute and parent paths by default, and --no-same-owner keeps file ownership ours. The
+  // archive is named from its own directory: GNU tar reads a drive letter's colon as a remote host
+  const result = spawnSync('tar', ['-xzf', path.basename(archive), '--no-same-owner'], { cwd: root, encoding: 'utf8' })
   if (result.status !== 0) {
     rmSync(root, { recursive: true, force: true })
     throw new Error(`Could not unpack the tarball: ${result.stderr || result.error?.message}`)

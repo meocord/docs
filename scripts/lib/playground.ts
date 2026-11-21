@@ -88,10 +88,11 @@ export function frameDocument(paths: { script: string; runtime: string; wasm: st
 export function runtimeEntry(runtimeDir: string): string {
   const imports = READER_MODULES.map((specifier, index) => `import * as m${index} from '${specifier}'`)
   const map = READER_MODULES.map((specifier, index) => `  '${specifier}': m${index},`)
+  // Paths go in as string literals, so a Windows path's backslashes are escaped, not read as escapes
   return [
-    `import '${path.join(runtimeDir, 'node', 'async-hooks.ts')}'`,
+    `import ${JSON.stringify(path.join(runtimeDir, 'node', 'async-hooks.ts'))}`,
     ...imports,
-    `import { startWorker } from '${path.join(runtimeDir, 'worker.ts')}'`,
+    `import { startWorker } from ${JSON.stringify(path.join(runtimeDir, 'worker.ts'))}`,
     'startWorker({',
     ...map,
     '})',
