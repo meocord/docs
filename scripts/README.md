@@ -67,6 +67,10 @@ exact version is listed under `provenance.integrityOnly`, which a reviewer adds 
 `bunfig.toml` sets Bun's isolated linker, so each example workspace resolves its own meocord. The pipeline's
 tests run offline with the rest of the repository's, in `bun run test:coverage`.
 
+Every generated file is what the pipeline makes today. CI's Content job runs `api:generate --all` and fails
+if anything changes, so a change to the generator or to TypeDoc regenerates every version in the same pull
+request, and a later regeneration shows only its own change.
+
 Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard"}`, a path under
 `examples/<line>/src/` and a region between `// #region guard` and `// #endregion guard`. A written guide
 has no TypeScript code fence: its TypeScript is in an example, where it is typechecked. Pages imported
