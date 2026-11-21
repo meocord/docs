@@ -2,9 +2,9 @@ import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 
 // vitest is held at 5.1.0: 5.1.1's forks pool calls child.channel.unref(), which Bun's IPC channel lacks
-// (oven-sh/bun#33593), and examples:check runs vitest under Bun's runtime, where 5.1.1 can't start its workers.
-// A vitest release with vitest-dev/vitest#12039 (`child.channel?.unref?.()`) lifts it too, which this spec can't
-// see: check vitest's changelog on each bump
+// (oven-sh/bun#33593), and this suite and examples:check run vitest under Bun's runtime, where 5.1.1 can't start its
+// workers. A vitest release with vitest-dev/vitest#12039 (`child.channel?.unref?.()`) lifts it too, which this spec
+// can't see: check vitest's changelog on each bump
 const BUN = process.versions.bun ? process.execPath : 'bun'
 const PROBE = `
   import { spawn } from 'node:child_process'
