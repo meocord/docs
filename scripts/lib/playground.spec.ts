@@ -111,10 +111,34 @@ describe('runtimeEntry', () => {
   it('installs the async context before any module, then hands every reader module to the Worker', () => {
     const entry = runtimeEntry('/runtime')
     const lines = entry.split('\n')
-    expect(lines[0]).toBe("import '/runtime/node/async-hooks.ts'")
+    expect(lines[0]).toBe(`import ${JSON.stringify(path.join('/runtime', 'node', 'async-hooks.ts'))}`)
     for (const specifier of READER_MODULES) expect(entry).toContain(`from '${specifier}'`)
-    expect(entry).toContain("import { startWorker } from '/runtime/worker.ts'")
+    expect(entry).toContain(`import { startWorker } from ${JSON.stringify(path.join('/runtime', 'worker.ts'))}`)
     expect(entry).toContain("  'meocord/testing': m5,")
+  })
+
+  it('hands esbuild a Windows runtime path as written', async () => {
+    const runtimeDir = 'C:\\docs\\src\\playground\\runtime'
+    const resolved: string[] = []
+    await build({
+      stdin: { contents: runtimeEntry(runtimeDir), loader: 'ts' },
+      bundle: true,
+      write: false,
+      logLevel: 'silent',
+      plugins: [
+        {
+          name: 'record',
+          setup(builder) {
+            builder.onResolve({ filter: /.*/ }, args => {
+              resolved.push(args.path)
+              return { path: args.path, external: true }
+            })
+          },
+        },
+      ],
+    })
+    expect(resolved).toContain(path.join(runtimeDir, 'node', 'async-hooks.ts'))
+    expect(resolved).toContain(path.join(runtimeDir, 'worker.ts'))
   })
 })
 
@@ -191,7 +215,7 @@ describe('nodeModulesPlugin', () => {
     expect(emitter).toBeDefined()
     const source = (await import('fs')).readFileSync(path.join(root, emitter!), 'utf8')
     expect(source).toMatch(/async function\*\s*\(\)\s*\{\s*\}\s*\)\.prototype/)
-    const code = await bundle(`export * from '${path.join(root, emitter!)}'`)
+    const code = await bundle(`export * from ${JSON.stringify(path.join(root, emitter!))}`)
     expect(code).not.toMatch(/async function\*\s*\(\)\s*\{\s*\}\s*\)\.prototype/)
   })
 
@@ -207,7 +231,7 @@ describe('nodeModulesPlugin', () => {
       const result = await build({
         stdin: {
           contents: `
-            import { AsyncEventEmitter } from '${path.join(root, emitter!)}'
+            import { AsyncEventEmitter } from ${JSON.stringify(path.join(root, emitter!))}
             try { new AsyncEventEmitter().emit('error', { a: 1, b: [2] }) } catch (error) { globalThis.unhandled = error.message }
           `,
           resolveDir: runtimeDir,
