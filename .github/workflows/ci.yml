@@ -70,8 +70,8 @@ jobs:
       - run: bun run build
 
   # The guides, examples and generated data: links and anchors resolve, every listed version has its
-  # API document and changelog, and each line's examples typecheck against its pinned meocord. The
-  # pipeline's own tests run in Test.
+  # API document and changelog, regenerating every version reproduces what is committed, and each line's
+  # examples typecheck against its pinned meocord. The pipeline's own tests run in Test.
   content:
     name: Content
     runs-on: ubuntu-latest
@@ -103,6 +103,16 @@ jobs:
       - run: bun run content:check
       # The mark, a verbatim copy of meocord main's tools/brand/mark.json
       - run: bun run brand:check
+      # A change to the generator or to TypeDoc regenerates every version in the same pull request, so a later
+      # regeneration shows only its own change
+      - name: Regenerate every version and check nothing changes
+        run: |
+          bun run api:generate --all
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            echo '::error::Regenerating changes the files above. Run `bun run api:generate --all` and commit the result.'
+            exit 1
+          fi
       - run: bun run examples:check
         env:
           TEST_POSTGRES_URL: postgres://postgres:examples@localhost:5432/postgres

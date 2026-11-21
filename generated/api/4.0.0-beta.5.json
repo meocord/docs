@@ -722,7 +722,7 @@
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 671,
+             "target": 725,
              "name": "ServiceIdentifier",
              "qualifiedName": "unknown"
             }
@@ -1206,7 +1206,7 @@
             },
             {
              "type": "reference",
-             "target": 672,
+             "target": 726,
              "name": "CommandType",
              "package": "meocord"
             }
@@ -1950,7 +1950,7 @@
                "type": "array",
                "elementType": {
                 "type": "reference",
-                "target": 671,
+                "target": 725,
                 "name": "ServiceIdentifier",
                 "qualifiedName": "unknown"
                }
@@ -2037,7 +2037,7 @@
                "type": "array",
                "elementType": {
                 "type": "reference",
-                "target": 671,
+                "target": 725,
                 "name": "ServiceIdentifier",
                 "qualifiedName": "unknown"
                }
@@ -2917,7 +2917,7 @@
     "flags": {},
     "children": [
      {
-      "id": 672,
+      "id": 726,
       "name": "CommandType",
       "variant": "declaration",
       "kind": 8,
@@ -2940,7 +2940,7 @@
       },
       "children": [
        {
-        "id": 676,
+        "id": 730,
         "name": "BUTTON",
         "variant": "declaration",
         "kind": 16,
@@ -2951,7 +2951,7 @@
         }
        },
        {
-        "id": 681,
+        "id": 735,
         "name": "CHANNEL_SELECT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -2962,7 +2962,7 @@
         }
        },
        {
-        "id": 674,
+        "id": 728,
         "name": "CONTEXT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -2981,7 +2981,7 @@
         }
        },
        {
-        "id": 680,
+        "id": 734,
         "name": "MENTIONABLE_SELECT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -2992,7 +2992,7 @@
         }
        },
        {
-        "id": 682,
+        "id": 736,
         "name": "MODAL_SUBMIT",
         "variant": "declaration",
         "kind": 16,
@@ -3003,7 +3003,7 @@
         }
        },
        {
-        "id": 675,
+        "id": 729,
         "name": "PRIMARY_ENTRY_POINT",
         "variant": "declaration",
         "kind": 16,
@@ -3030,7 +3030,7 @@
         }
        },
        {
-        "id": 679,
+        "id": 733,
         "name": "ROLE_SELECT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -3041,7 +3041,7 @@
         }
        },
        {
-        "id": 677,
+        "id": 731,
         "name": "SELECT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -3060,7 +3060,7 @@
         }
        },
        {
-        "id": 673,
+        "id": 727,
         "name": "SLASH",
         "variant": "declaration",
         "kind": 16,
@@ -3079,7 +3079,7 @@
         }
        },
        {
-        "id": 678,
+        "id": 732,
         "name": "USER_SELECT_MENU",
         "variant": "declaration",
         "kind": 16,
@@ -3094,16 +3094,16 @@
        {
         "title": "Enumeration Members",
         "children": [
-         676,
-         681,
-         674,
-         680,
-         682,
-         675,
-         679,
-         677,
-         673,
-         678
+         730,
+         735,
+         728,
+         734,
+         736,
+         729,
+         733,
+         731,
+         727,
+         732
         ]
        }
       ]
@@ -3343,7 +3343,7 @@
       ]
      },
      {
-      "id": 683,
+      "id": 737,
       "name": "ReactionHandlerAction",
       "variant": "declaration",
       "kind": 8,
@@ -3358,7 +3358,7 @@
       },
       "children": [
        {
-        "id": 684,
+        "id": 738,
         "name": "ADD",
         "variant": "declaration",
         "kind": 16,
@@ -3377,7 +3377,7 @@
         }
        },
        {
-        "id": 685,
+        "id": 739,
         "name": "REMOVE",
         "variant": "declaration",
         "kind": 16,
@@ -3400,8 +3400,8 @@
        {
         "title": "Enumeration Members",
         "children": [
-         684,
-         685
+         738,
+         739
         ]
        }
       ]
@@ -3411,9 +3411,9 @@
      {
       "title": "Enumerations",
       "children": [
-       672,
+       726,
        325,
-       683
+       737
       ]
      }
     ]
@@ -3740,7 +3740,7 @@
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 672,
+         "target": 726,
          "name": "CommandType",
          "package": "meocord"
         }
@@ -4323,7 +4323,7 @@
               },
               "type": {
                "type": "reference",
-               "target": 671,
+               "target": 725,
                "name": "RsbuildConfig",
                "qualifiedName": "unknown"
               }
@@ -4334,7 +4334,7 @@
              "types": [
               {
                "type": "reference",
-               "target": 671,
+               "target": 725,
                "name": "RsbuildConfig",
                "qualifiedName": "unknown"
               },
@@ -4440,7 +4440,7 @@
         },
         "type": {
          "type": "reference",
-         "target": 683,
+         "target": 737,
          "name": "ReactionHandlerAction",
          "package": "meocord"
         }
@@ -4483,19 +4483,19 @@
        "types": [
         {
          "type": "reference",
-         "target": 673,
+         "target": 727,
          "name": "CommandType.SLASH",
          "package": "meocord"
         },
         {
          "type": "reference",
-         "target": 674,
+         "target": 728,
          "name": "CommandType.CONTEXT_MENU",
          "package": "meocord"
         },
         {
          "type": "reference",
-         "target": 675,
+         "target": 729,
          "name": "CommandType.PRIMARY_ENTRY_POINT",
          "package": "meocord"
         }
@@ -4654,7 +4654,7 @@
        },
        "extendsType": {
         "type": "reference",
-        "target": 673,
+        "target": 727,
         "name": "CommandType.SLASH",
         "package": "meocord"
        },
@@ -4701,7 +4701,7 @@
         },
         "extendsType": {
          "type": "reference",
-         "target": 674,
+         "target": 728,
          "name": "CommandType.CONTEXT_MENU",
          "package": "meocord"
         },
@@ -4725,7 +4725,7 @@
          },
          "extendsType": {
           "type": "reference",
-          "target": 675,
+          "target": 729,
           "name": "CommandType.PRIMARY_ENTRY_POINT",
           "package": "meocord"
          },
@@ -4792,7 +4792,7 @@
           },
           {
            "type": "reference",
-           "target": 672,
+           "target": 726,
            "name": "CommandType",
            "package": "meocord"
           }
@@ -4815,7 +4815,7 @@
         "typeArguments": [
          {
           "type": "reference",
-          "target": 673,
+          "target": 727,
           "name": "CommandType.SLASH",
           "package": "meocord"
          }
@@ -4847,7 +4847,7 @@
          "typeArguments": [
           {
            "type": "reference",
-           "target": 674,
+           "target": 728,
            "name": "CommandType.CONTEXT_MENU",
            "package": "meocord"
           }
@@ -4893,7 +4893,7 @@
           "typeArguments": [
            {
             "type": "reference",
-            "target": 675,
+            "target": 729,
             "name": "CommandType.PRIMARY_ENTRY_POINT",
             "package": "meocord"
            }
@@ -4961,7 +4961,7 @@
       }
      },
      {
-      "id": 671,
+      "id": 725,
       "name": "RsbuildConfig",
       "variant": "declaration",
       "kind": 32,
@@ -4996,7 +4996,7 @@
      {
       "title": "Variables",
       "children": [
-       671
+       725
       ]
      }
     ]
@@ -5080,7 +5080,7 @@
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 658,
+             "target": 712,
              "name": "TestingModuleOptions",
              "package": "meocord"
             }
@@ -5156,7 +5156,7 @@
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 671,
+             "target": 725,
              "name": "Container",
              "qualifiedName": "unknown"
             }
@@ -5202,7 +5202,7 @@
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 671,
+             "target": 725,
              "typeArguments": [
               {
                "type": "reference",
@@ -5304,7 +5304,7 @@
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 658,
+             "target": 712,
              "name": "TestingModuleOptions",
              "package": "meocord"
             }
@@ -5545,7 +5545,7 @@
             },
             "type": {
              "type": "reference",
-             "target": 671,
+             "target": 725,
              "typeArguments": [
               {
                "type": "reference",
@@ -5661,14 +5661,14 @@
       ]
      },
      {
-      "id": 506,
+      "id": 560,
       "name": "ChatInputOptions",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 507,
+        "id": 561,
         "name": "subcommandGroup",
         "variant": "declaration",
         "kind": 1024,
@@ -5690,7 +5690,7 @@
         }
        },
        {
-        "id": 508,
+        "id": 562,
         "name": "subcommand",
         "variant": "declaration",
         "kind": 1024,
@@ -5712,7 +5712,7 @@
         }
        },
        {
-        "id": 509,
+        "id": 563,
         "name": "focused",
         "variant": "declaration",
         "kind": 1024,
@@ -5746,22 +5746,22 @@
        {
         "title": "Properties",
         "children": [
-         507,
-         508,
-         509
+         561,
+         562,
+         563
         ]
        }
       ],
       "indexSignatures": [
        {
-        "id": 510,
+        "id": 564,
         "name": "__index",
         "variant": "signature",
         "kind": 8192,
         "flags": {},
         "parameters": [
          {
-          "id": 511,
+          "id": 565,
           "name": "name",
           "variant": "param",
           "kind": 32768,
@@ -5790,14 +5790,14 @@
           {
            "type": "reflection",
            "declaration": {
-            "id": 514,
+            "id": 568,
             "name": "__type",
             "variant": "declaration",
             "kind": 65536,
             "flags": {},
             "children": [
              {
-              "id": 515,
+              "id": 569,
               "name": "id",
               "variant": "declaration",
               "kind": 1024,
@@ -5812,7 +5812,7 @@
              {
               "title": "Properties",
               "children": [
-               515
+               569
               ]
              }
             ]
@@ -5832,25 +5832,25 @@
       ]
      },
      {
-      "id": 516,
+      "id": 570,
       "name": "ClassProvider",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 518,
+        "id": 572,
         "name": "provide",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 671,
+         "target": 725,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 517,
+           "target": 571,
            "name": "T",
            "package": "meocord",
            "qualifiedName": "ClassProvider.T",
@@ -5862,7 +5862,7 @@
         }
        },
        {
-        "id": 519,
+        "id": 573,
         "name": "useClass",
         "variant": "declaration",
         "kind": 1024,
@@ -5870,21 +5870,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 523,
+          "id": 577,
           "name": "__type",
           "variant": "declaration",
           "kind": 512,
           "flags": {},
           "signatures": [
            {
-            "id": 524,
+            "id": 578,
             "name": "__type",
             "variant": "signature",
             "kind": 16384,
             "flags": {},
             "parameters": [
              {
-              "id": 525,
+              "id": 579,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -5902,7 +5902,7 @@
             ],
             "type": {
              "type": "reference",
-             "target": 517,
+             "target": 571,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "ClassProvider.T",
@@ -5918,14 +5918,14 @@
        {
         "title": "Properties",
         "children": [
-         518,
-         519
+         572,
+         573
         ]
        }
       ],
       "typeParameters": [
        {
-        "id": 517,
+        "id": 571,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -5938,14 +5938,14 @@
       ]
      },
      {
-      "id": 550,
+      "id": 604,
       "name": "MockInstance",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 564,
+        "id": 618,
         "name": "_isMockFunction",
         "variant": "declaration",
         "kind": 1024,
@@ -5974,7 +5974,7 @@
         }
        },
        {
-        "id": 565,
+        "id": 619,
         "name": "mock",
         "variant": "declaration",
         "kind": 1024,
@@ -5983,11 +5983,11 @@
         },
         "type": {
          "type": "reference",
-         "target": 613,
+         "target": 667,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 551,
+           "target": 605,
            "name": "T",
            "package": "meocord",
            "qualifiedName": "MockInstance.T",
@@ -5999,21 +5999,21 @@
         }
        },
        {
-        "id": 566,
+        "id": 620,
         "name": "mockReturnValue",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 567,
+          "id": 621,
           "name": "mockReturnValue",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 568,
+            "id": 622,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6027,7 +6027,7 @@
              "typeArguments": [
               {
                "type": "reference",
-               "target": 551,
+               "target": 605,
                "name": "T",
                "package": "meocord",
                "qualifiedName": "MockInstance.T",
@@ -6041,11 +6041,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6059,21 +6059,21 @@
         ]
        },
        {
-        "id": 569,
+        "id": 623,
         "name": "mockReturnValueOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 570,
+          "id": 624,
           "name": "mockReturnValueOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 571,
+            "id": 625,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6087,7 +6087,7 @@
              "typeArguments": [
               {
                "type": "reference",
-               "target": 551,
+               "target": 605,
                "name": "T",
                "package": "meocord",
                "qualifiedName": "MockInstance.T",
@@ -6101,11 +6101,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6119,21 +6119,21 @@
         ]
        },
        {
-        "id": 572,
+        "id": 626,
         "name": "mockResolvedValue",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 573,
+          "id": 627,
           "name": "mockResolvedValue",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 574,
+            "id": 628,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6154,7 +6154,7 @@
                "typeArguments": [
                 {
                  "type": "reference",
-                 "target": 551,
+                 "target": 605,
                  "name": "T",
                  "package": "meocord",
                  "qualifiedName": "MockInstance.T",
@@ -6172,11 +6172,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6190,21 +6190,21 @@
         ]
        },
        {
-        "id": 575,
+        "id": 629,
         "name": "mockResolvedValueOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 576,
+          "id": 630,
           "name": "mockResolvedValueOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 577,
+            "id": 631,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6225,7 +6225,7 @@
                "typeArguments": [
                 {
                  "type": "reference",
-                 "target": 551,
+                 "target": 605,
                  "name": "T",
                  "package": "meocord",
                  "qualifiedName": "MockInstance.T",
@@ -6243,11 +6243,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6261,21 +6261,21 @@
         ]
        },
        {
-        "id": 578,
+        "id": 632,
         "name": "mockRejectedValue",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 579,
+          "id": 633,
           "name": "mockRejectedValue",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 580,
+            "id": 634,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6288,11 +6288,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6306,21 +6306,21 @@
         ]
        },
        {
-        "id": 581,
+        "id": 635,
         "name": "mockRejectedValueOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 582,
+          "id": 636,
           "name": "mockRejectedValueOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 583,
+            "id": 637,
             "name": "value",
             "variant": "param",
             "kind": 32768,
@@ -6333,11 +6333,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6351,28 +6351,28 @@
         ]
        },
        {
-        "id": 584,
+        "id": 638,
         "name": "mockImplementation",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 585,
+          "id": 639,
           "name": "mockImplementation",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 586,
+            "id": 640,
             "name": "fn",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6382,11 +6382,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6400,28 +6400,28 @@
         ]
        },
        {
-        "id": 587,
+        "id": 641,
         "name": "mockImplementationOnce",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 588,
+          "id": 642,
           "name": "mockImplementationOnce",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 589,
+            "id": 643,
             "name": "fn",
             "variant": "param",
             "kind": 32768,
             "flags": {},
             "type": {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6431,11 +6431,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6449,25 +6449,25 @@
         ]
        },
        {
-        "id": 590,
+        "id": 644,
         "name": "mockClear",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 591,
+          "id": 645,
           "name": "mockClear",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6481,25 +6481,25 @@
         ]
        },
        {
-        "id": 592,
+        "id": 646,
         "name": "mockReset",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 593,
+          "id": 647,
           "name": "mockReset",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6513,25 +6513,25 @@
         ]
        },
        {
-        "id": 594,
+        "id": 648,
         "name": "mockRestore",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 595,
+          "id": 649,
           "name": "mockRestore",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6545,14 +6545,14 @@
         ]
        },
        {
-        "id": 596,
+        "id": 650,
         "name": "getMockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 597,
+          "id": 651,
           "name": "getMockName",
           "variant": "signature",
           "kind": 4096,
@@ -6565,21 +6565,21 @@
         ]
        },
        {
-        "id": 598,
+        "id": 652,
         "name": "mockName",
         "variant": "declaration",
         "kind": 2048,
         "flags": {},
         "signatures": [
          {
-          "id": 599,
+          "id": 653,
           "name": "mockName",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "parameters": [
            {
-            "id": 600,
+            "id": 654,
             "name": "name",
             "variant": "param",
             "kind": 32768,
@@ -6592,11 +6592,11 @@
           ],
           "type": {
            "type": "reference",
-           "target": 631,
+           "target": 685,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 551,
+             "target": 605,
              "name": "T",
              "package": "meocord",
              "qualifiedName": "MockInstance.T",
@@ -6614,32 +6614,32 @@
        {
         "title": "Properties",
         "children": [
-         564,
-         565
+         618,
+         619
         ]
        },
        {
         "title": "Methods",
         "children": [
-         566,
-         569,
-         572,
-         575,
-         578,
-         581,
-         584,
-         587,
-         590,
-         592,
-         594,
-         596,
-         598
+         620,
+         623,
+         626,
+         629,
+         632,
+         635,
+         638,
+         641,
+         644,
+         646,
+         648,
+         650,
+         652
         ]
        }
       ],
       "typeParameters": [
        {
-        "id": 551,
+        "id": 605,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -6647,21 +6647,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 558,
+          "id": 612,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 559,
+            "id": 613,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 560,
+              "id": 614,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -6688,21 +6688,21 @@
         "default": {
          "type": "reflection",
          "declaration": {
-          "id": 561,
+          "id": 615,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 562,
+            "id": 616,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 563,
+              "id": 617,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -6730,14 +6730,14 @@
       ]
      },
      {
-      "id": 609,
+      "id": 663,
       "name": "MockResult",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 611,
+        "id": 665,
         "name": "type",
         "variant": "declaration",
         "kind": 1024,
@@ -6757,14 +6757,14 @@
         }
        },
        {
-        "id": 612,
+        "id": 666,
         "name": "value",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 610,
+         "target": 664,
          "name": "T",
          "package": "meocord",
          "qualifiedName": "MockResult.T",
@@ -6776,14 +6776,14 @@
        {
         "title": "Properties",
         "children": [
-         611,
-         612
+         665,
+         666
         ]
        }
       ],
       "typeParameters": [
        {
-        "id": 610,
+        "id": 664,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -6796,14 +6796,14 @@
       ]
      },
      {
-      "id": 613,
+      "id": 667,
       "name": "MockState",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 627,
+        "id": 681,
         "name": "calls",
         "variant": "declaration",
         "kind": 1024,
@@ -6829,7 +6829,7 @@
           "typeArguments": [
            {
             "type": "reference",
-            "target": 614,
+            "target": 668,
             "name": "T",
             "package": "meocord",
             "qualifiedName": "MockState.T",
@@ -6842,7 +6842,7 @@
         }
        },
        {
-        "id": 628,
+        "id": 682,
         "name": "results",
         "variant": "declaration",
         "kind": 1024,
@@ -6861,7 +6861,7 @@
          "type": "array",
          "elementType": {
           "type": "reference",
-          "target": 609,
+          "target": 663,
           "typeArguments": [
            {
             "type": "reference",
@@ -6872,7 +6872,7 @@
             "typeArguments": [
              {
               "type": "reference",
-              "target": 614,
+              "target": 668,
               "name": "T",
               "package": "meocord",
               "qualifiedName": "MockState.T",
@@ -6889,7 +6889,7 @@
         }
        },
        {
-        "id": 629,
+        "id": 683,
         "name": "instances",
         "variant": "declaration",
         "kind": 1024,
@@ -6921,7 +6921,7 @@
         }
        },
        {
-        "id": 630,
+        "id": 684,
         "name": "lastCall",
         "variant": "declaration",
         "kind": 1024,
@@ -6946,7 +6946,7 @@
          "typeArguments": [
           {
            "type": "reference",
-           "target": 614,
+           "target": 668,
            "name": "T",
            "package": "meocord",
            "qualifiedName": "MockState.T",
@@ -6962,16 +6962,16 @@
        {
         "title": "Properties",
         "children": [
-         627,
-         628,
-         629,
-         630
+         681,
+         682,
+         683,
+         684
         ]
        }
       ],
       "typeParameters": [
        {
-        "id": 614,
+        "id": 668,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -6979,21 +6979,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 621,
+          "id": 675,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 622,
+            "id": 676,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 623,
+              "id": 677,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -7020,21 +7020,21 @@
         "default": {
          "type": "reflection",
          "declaration": {
-          "id": 624,
+          "id": 678,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 625,
+            "id": 679,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 626,
+              "id": 680,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -7062,7 +7062,7 @@
       ]
      },
      {
-      "id": 644,
+      "id": 698,
       "name": "ResolvedRoute",
       "variant": "declaration",
       "kind": 256,
@@ -7077,7 +7077,7 @@
       },
       "children": [
        {
-        "id": 645,
+        "id": 699,
         "name": "controller",
         "variant": "declaration",
         "kind": 1024,
@@ -7101,7 +7101,7 @@
         }
        },
        {
-        "id": 646,
+        "id": 700,
         "name": "method",
         "variant": "declaration",
         "kind": 1024,
@@ -7120,7 +7120,7 @@
         }
        },
        {
-        "id": 647,
+        "id": 701,
         "name": "handler",
         "variant": "declaration",
         "kind": 1024,
@@ -7144,21 +7144,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 651,
+          "id": 705,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 652,
+            "id": 706,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 653,
+              "id": 707,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -7184,7 +7184,7 @@
         }
        },
        {
-        "id": 654,
+        "id": 708,
         "name": "params",
         "variant": "declaration",
         "kind": 1024,
@@ -7230,16 +7230,16 @@
        {
         "title": "Properties",
         "children": [
-         645,
-         646,
-         647,
-         654
+         699,
+         700,
+         701,
+         708
         ]
        }
       ]
      },
      {
-      "id": 655,
+      "id": 709,
       "name": "RouteConflict",
       "variant": "declaration",
       "kind": 256,
@@ -7254,20 +7254,20 @@
       },
       "children": [
        {
-        "id": 656,
+        "id": 710,
         "name": "type",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 526,
+         "target": 580,
          "name": "ComponentCommandType",
          "package": "meocord"
         }
        },
        {
-        "id": 657,
+        "id": 711,
         "name": "patterns",
         "variant": "declaration",
         "kind": 1024,
@@ -7291,21 +7291,21 @@
        {
         "title": "Properties",
         "children": [
-         656,
-         657
+         710,
+         711
         ]
        }
       ]
      },
      {
-      "id": 658,
+      "id": 712,
       "name": "TestingModuleOptions",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 659,
+        "id": 713,
         "name": "controllers",
         "variant": "declaration",
         "kind": 1024,
@@ -7317,21 +7317,21 @@
          "elementType": {
           "type": "reflection",
           "declaration": {
-           "id": 663,
+           "id": 717,
            "name": "__type",
            "variant": "declaration",
            "kind": 512,
            "flags": {},
            "signatures": [
             {
-             "id": 664,
+             "id": 718,
              "name": "__type",
              "variant": "signature",
              "kind": 16384,
              "flags": {},
              "parameters": [
               {
-               "id": 665,
+               "id": 719,
                "name": "args",
                "variant": "param",
                "kind": 32768,
@@ -7358,7 +7358,7 @@
         }
        },
        {
-        "id": 666,
+        "id": 720,
         "name": "providers",
         "variant": "declaration",
         "kind": 1024,
@@ -7369,7 +7369,7 @@
          "type": "array",
          "elementType": {
           "type": "reference",
-          "target": 642,
+          "target": 696,
           "name": "Provider",
           "package": "meocord"
          }
@@ -7380,32 +7380,32 @@
        {
         "title": "Properties",
         "children": [
-         659,
-         666
+         713,
+         720
         ]
        }
       ]
      },
      {
-      "id": 667,
+      "id": 721,
       "name": "ValueProvider",
       "variant": "declaration",
       "kind": 256,
       "flags": {},
       "children": [
        {
-        "id": 669,
+        "id": 723,
         "name": "provide",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 671,
+         "target": 725,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 668,
+           "target": 722,
            "name": "T",
            "package": "meocord",
            "qualifiedName": "ValueProvider.T",
@@ -7417,14 +7417,14 @@
         }
        },
        {
-        "id": 670,
+        "id": 724,
         "name": "useValue",
         "variant": "declaration",
         "kind": 1024,
         "flags": {},
         "type": {
          "type": "reference",
-         "target": 668,
+         "target": 722,
          "name": "T",
          "package": "meocord",
          "qualifiedName": "ValueProvider.T",
@@ -7436,14 +7436,14 @@
        {
         "title": "Properties",
         "children": [
-         669,
-         670
+         723,
+         724
         ]
        }
       ],
       "typeParameters": [
        {
-        "id": 668,
+        "id": 722,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -7456,7 +7456,7 @@
       ]
      },
      {
-      "id": 526,
+      "id": 580,
       "name": "ComponentCommandType",
       "variant": "declaration",
       "kind": 2097152,
@@ -7478,7 +7478,7 @@
        "typeArguments": [
         {
          "type": "reference",
-         "target": 672,
+         "target": 726,
          "name": "CommandType",
          "package": "meocord"
         },
@@ -7487,19 +7487,19 @@
          "types": [
           {
            "type": "reference",
-           "target": 673,
+           "target": 727,
            "name": "CommandType.SLASH",
            "package": "meocord"
           },
           {
            "type": "reference",
-           "target": 674,
+           "target": 728,
            "name": "CommandType.CONTEXT_MENU",
            "package": "meocord"
           },
           {
            "type": "reference",
-           "target": 675,
+           "target": 729,
            "name": "CommandType.PRIMARY_ENTRY_POINT",
            "package": "meocord"
           }
@@ -7511,7 +7511,7 @@
       }
      },
      {
-      "id": 527,
+      "id": 581,
       "name": "DeepMocked",
       "variant": "declaration",
       "kind": 2097152,
@@ -7566,7 +7566,7 @@
          "kind": "inline-tag",
          "tag": "@link",
          "text": "MockProps",
-         "target": 601
+         "target": 655
         },
         {
          "kind": "text",
@@ -7576,14 +7576,14 @@
       },
       "typeParameters": [
        {
-        "id": 534,
+        "id": 588,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
         "flags": {}
        },
        {
-        "id": 535,
+        "id": 589,
         "name": "Depth",
         "variant": "typeParam",
         "kind": 131072,
@@ -7610,7 +7610,7 @@
         },
         "objectType": {
          "type": "reference",
-         "target": 535,
+         "target": 589,
          "name": "Depth",
          "package": "meocord",
          "refersToTypeParameter": true
@@ -7622,7 +7622,7 @@
        },
        "trueType": {
         "type": "reference",
-        "target": 534,
+        "target": 588,
         "name": "T",
         "package": "meocord",
         "refersToTypeParameter": true
@@ -7638,7 +7638,7 @@
            "operator": "keyof",
            "target": {
             "type": "reference",
-            "target": 534,
+            "target": 588,
             "name": "T",
             "package": "meocord",
             "refersToTypeParameter": true
@@ -7660,7 +7660,7 @@
             },
             "objectType": {
              "type": "reference",
-             "target": 534,
+             "target": 588,
              "name": "T",
              "package": "meocord",
              "refersToTypeParameter": true
@@ -7669,21 +7669,21 @@
            "extendsType": {
             "type": "reflection",
             "declaration": {
-             "id": 528,
+             "id": 582,
              "name": "__type",
              "variant": "declaration",
              "kind": 65536,
              "flags": {},
              "signatures": [
               {
-               "id": 529,
+               "id": 583,
                "name": "__type",
                "variant": "signature",
                "kind": 4096,
                "flags": {},
                "parameters": [
                 {
-                 "id": 530,
+                 "id": 584,
                  "name": "args",
                  "variant": "param",
                  "kind": 32768,
@@ -7706,26 +7706,26 @@
            },
            "trueType": {
             "type": "reference",
-            "target": 631,
+            "target": 685,
             "typeArguments": [
              {
               "type": "reflection",
               "declaration": {
-               "id": 531,
+               "id": 585,
                "name": "__type",
                "variant": "declaration",
                "kind": 65536,
                "flags": {},
                "signatures": [
                 {
-                 "id": 532,
+                 "id": 586,
                  "name": "__type",
                  "variant": "signature",
                  "kind": 4096,
                  "flags": {},
                  "parameters": [
                   {
-                   "id": 533,
+                   "id": 587,
                    "name": "args",
                    "variant": "param",
                    "kind": 32768,
@@ -7778,7 +7778,7 @@
              },
              "objectType": {
               "type": "reference",
-              "target": 534,
+              "target": 588,
               "name": "T",
               "package": "meocord",
               "refersToTypeParameter": true
@@ -7790,7 +7790,7 @@
             },
             "trueType": {
              "type": "reference",
-             "target": 527,
+             "target": 581,
              "typeArguments": [
               {
                "type": "indexedAccess",
@@ -7806,7 +7806,7 @@
                },
                "objectType": {
                 "type": "reference",
-                "target": 534,
+                "target": 588,
                 "name": "T",
                 "package": "meocord",
                 "refersToTypeParameter": true
@@ -7819,7 +7819,7 @@
                  "type": "rest",
                  "elementType": {
                   "type": "reference",
-                  "target": 535,
+                  "target": 589,
                   "name": "Depth",
                   "package": "meocord",
                   "refersToTypeParameter": true
@@ -7849,7 +7849,7 @@
              },
              "objectType": {
               "type": "reference",
-              "target": 534,
+              "target": 588,
               "name": "T",
               "package": "meocord",
               "refersToTypeParameter": true
@@ -7861,7 +7861,7 @@
          },
          {
           "type": "reference",
-          "target": 534,
+          "target": 588,
           "name": "T",
           "package": "meocord",
           "refersToTypeParameter": true
@@ -7871,7 +7871,7 @@
       }
      },
      {
-      "id": 536,
+      "id": 590,
       "name": "Mock",
       "variant": "declaration",
       "kind": 2097152,
@@ -7902,7 +7902,7 @@
       },
       "typeParameters": [
        {
-        "id": 537,
+        "id": 591,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -7910,21 +7910,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 544,
+          "id": 598,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 545,
+            "id": 599,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 546,
+              "id": 600,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -7951,21 +7951,21 @@
         "default": {
          "type": "reflection",
          "declaration": {
-          "id": 547,
+          "id": 601,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 548,
+            "id": 602,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 549,
+              "id": 603,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -7993,11 +7993,11 @@
       ],
       "type": {
        "type": "reference",
-       "target": 631,
+       "target": 685,
        "typeArguments": [
         {
          "type": "reference",
-         "target": 537,
+         "target": 591,
          "name": "T",
          "package": "meocord",
          "refersToTypeParameter": true
@@ -8008,7 +8008,7 @@
       }
      },
      {
-      "id": 631,
+      "id": 685,
       "name": "MockedFunction",
       "variant": "declaration",
       "kind": 2097152,
@@ -8079,7 +8079,7 @@
       },
       "typeParameters": [
        {
-        "id": 635,
+        "id": 689,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -8087,21 +8087,21 @@
         "type": {
          "type": "reflection",
          "declaration": {
-          "id": 639,
+          "id": 693,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 640,
+            "id": 694,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 641,
+              "id": 695,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -8133,21 +8133,21 @@
         {
          "type": "reflection",
          "declaration": {
-          "id": 632,
+          "id": 686,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 633,
+            "id": 687,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 634,
+              "id": 688,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -8163,7 +8163,7 @@
                "typeArguments": [
                 {
                  "type": "reference",
-                 "target": 635,
+                 "target": 689,
                  "name": "T",
                  "package": "meocord",
                  "refersToTypeParameter": true
@@ -8183,7 +8183,7 @@
              "typeArguments": [
               {
                "type": "reference",
-               "target": 635,
+               "target": 689,
                "name": "T",
                "package": "meocord",
                "refersToTypeParameter": true
@@ -8198,11 +8198,11 @@
         },
         {
          "type": "reference",
-         "target": 550,
+         "target": 604,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 635,
+           "target": 689,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -8215,7 +8215,7 @@
       }
      },
      {
-      "id": 601,
+      "id": 655,
       "name": "MockProps",
       "variant": "declaration",
       "kind": 2097152,
@@ -8265,7 +8265,7 @@
       },
       "typeParameters": [
        {
-        "id": 608,
+        "id": 662,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -8280,7 +8280,7 @@
         "operator": "keyof",
         "target": {
          "type": "reference",
-         "target": 608,
+         "target": 662,
          "name": "T",
          "package": "meocord",
          "refersToTypeParameter": true
@@ -8302,7 +8302,7 @@
          },
          "objectType": {
           "type": "reference",
-          "target": 608,
+          "target": 662,
           "name": "T",
           "package": "meocord",
           "refersToTypeParameter": true
@@ -8311,21 +8311,21 @@
         "extendsType": {
          "type": "reflection",
          "declaration": {
-          "id": 602,
+          "id": 656,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 603,
+            "id": 657,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 604,
+              "id": 658,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -8352,21 +8352,21 @@
         "trueType": {
          "type": "reflection",
          "declaration": {
-          "id": 605,
+          "id": 659,
           "name": "__type",
           "variant": "declaration",
           "kind": 65536,
           "flags": {},
           "signatures": [
            {
-            "id": 606,
+            "id": 660,
             "name": "__type",
             "variant": "signature",
             "kind": 4096,
             "flags": {},
             "parameters": [
              {
-              "id": 607,
+              "id": 661,
               "name": "args",
               "variant": "param",
               "kind": 32768,
@@ -8404,7 +8404,7 @@
          },
          "objectType": {
           "type": "reference",
-          "target": 608,
+          "target": 662,
           "name": "T",
           "package": "meocord",
           "refersToTypeParameter": true
@@ -8416,14 +8416,14 @@
       }
      },
      {
-      "id": 642,
+      "id": 696,
       "name": "Provider",
       "variant": "declaration",
       "kind": 2097152,
       "flags": {},
       "typeParameters": [
        {
-        "id": 643,
+        "id": 697,
         "name": "T",
         "variant": "typeParam",
         "kind": 131072,
@@ -8439,11 +8439,11 @@
        "types": [
         {
          "type": "reference",
-         "target": 667,
+         "target": 721,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 643,
+           "target": 697,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -8454,11 +8454,11 @@
         },
         {
          "type": "reference",
-         "target": 516,
+         "target": 570,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 643,
+           "target": 697,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -8471,7 +8471,7 @@
       }
      },
      {
-      "id": 484,
+      "id": 538,
       "name": "createMockUser",
       "variant": "declaration",
       "kind": 32,
@@ -8502,21 +8502,21 @@
       "type": {
        "type": "reflection",
        "declaration": {
-        "id": 485,
+        "id": 539,
         "name": "__type",
         "variant": "declaration",
         "kind": 65536,
         "flags": {},
         "signatures": [
          {
-          "id": 486,
+          "id": 540,
           "name": "__type",
           "variant": "signature",
           "kind": 4096,
           "flags": {},
           "type": {
            "type": "reference",
-           "target": 527,
+           "target": 581,
            "typeArguments": [
             {
              "type": "reference",
@@ -8641,7 +8641,7 @@
           },
           "type": {
            "type": "reference",
-           "target": 506,
+           "target": 560,
            "name": "ChatInputOptions",
            "package": "meocord"
           }
@@ -8649,7 +8649,7 @@
         ],
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
@@ -8748,7 +8748,7 @@
           },
           "type": {
            "type": "reference",
-           "target": 601,
+           "target": 655,
            "typeArguments": [
             {
              "type": "reference",
@@ -8765,7 +8765,7 @@
         ],
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
@@ -8782,14 +8782,14 @@
       ]
      },
      {
-      "id": 422,
+      "id": 440,
       "name": "createMockChannel",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 423,
+        "id": 441,
         "name": "createMockChannel",
         "variant": "signature",
         "kind": 4096,
@@ -8844,7 +8844,7 @@
         },
         "typeParameters": [
          {
-          "id": 424,
+          "id": 442,
           "name": "T",
           "variant": "typeParam",
           "kind": 131072,
@@ -8862,7 +8862,7 @@
         ],
         "parameters": [
          {
-          "id": 425,
+          "id": 443,
           "name": "Class",
           "variant": "param",
           "kind": 32768,
@@ -8884,7 +8884,7 @@
            "typeArguments": [
             {
              "type": "reference",
-             "target": 424,
+             "target": 442,
              "name": "T",
              "package": "meocord",
              "refersToTypeParameter": true
@@ -8897,11 +8897,11 @@
         ],
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 424,
+           "target": 442,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -8914,14 +8914,14 @@
       ]
      },
      {
-      "id": 438,
+      "id": 474,
       "name": "createMockClient",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 439,
+        "id": 475,
         "name": "createMockClient",
         "variant": "signature",
         "kind": 4096,
@@ -8981,7 +8981,7 @@
         },
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
@@ -9000,14 +9000,14 @@
       ]
      },
      {
-      "id": 441,
+      "id": 477,
       "name": "createMockFn",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 442,
+        "id": 478,
         "name": "createMockFn",
         "variant": "signature",
         "kind": 4096,
@@ -9041,7 +9041,7 @@
         },
         "typeParameters": [
          {
-          "id": 443,
+          "id": 479,
           "name": "T",
           "variant": "typeParam",
           "kind": 131072,
@@ -9049,21 +9049,21 @@
           "type": {
            "type": "reflection",
            "declaration": {
-            "id": 450,
+            "id": 486,
             "name": "__type",
             "variant": "declaration",
             "kind": 65536,
             "flags": {},
             "signatures": [
              {
-              "id": 451,
+              "id": 487,
               "name": "__type",
               "variant": "signature",
               "kind": 4096,
               "flags": {},
               "parameters": [
                {
-                "id": 452,
+                "id": 488,
                 "name": "args",
                 "variant": "param",
                 "kind": 32768,
@@ -9090,21 +9090,21 @@
           "default": {
            "type": "reflection",
            "declaration": {
-            "id": 453,
+            "id": 489,
             "name": "__type",
             "variant": "declaration",
             "kind": 65536,
             "flags": {},
             "signatures": [
              {
-              "id": 454,
+              "id": 490,
               "name": "__type",
               "variant": "signature",
               "kind": 4096,
               "flags": {},
               "parameters": [
                {
-                "id": 455,
+                "id": 491,
                 "name": "args",
                 "variant": "param",
                 "kind": 32768,
@@ -9132,7 +9132,7 @@
         ],
         "parameters": [
          {
-          "id": 456,
+          "id": 492,
           "name": "impl",
           "variant": "param",
           "kind": 32768,
@@ -9149,7 +9149,7 @@
           },
           "type": {
            "type": "reference",
-           "target": 443,
+           "target": 479,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -9158,11 +9158,11 @@
         ],
         "type": {
          "type": "reference",
-         "target": 631,
+         "target": 685,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 443,
+           "target": 479,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -9175,14 +9175,14 @@
       ]
      },
      {
-      "id": 457,
+      "id": 493,
       "name": "createMockGuild",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 458,
+        "id": 494,
         "name": "createMockGuild",
         "variant": "signature",
         "kind": 4096,
@@ -9242,7 +9242,7 @@
         },
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
@@ -9261,14 +9261,14 @@
       ]
      },
      {
-      "id": 460,
+      "id": 496,
       "name": "createMockInteraction",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 461,
+        "id": 497,
         "name": "createMockInteraction",
         "variant": "signature",
         "kind": 4096,
@@ -9350,7 +9350,7 @@
         },
         "typeParameters": [
          {
-          "id": 462,
+          "id": 498,
           "name": "T",
           "variant": "typeParam",
           "kind": 131072,
@@ -9363,7 +9363,7 @@
         ],
         "parameters": [
          {
-          "id": 463,
+          "id": 499,
           "name": "Class",
           "variant": "param",
           "kind": 32768,
@@ -9385,7 +9385,7 @@
            "typeArguments": [
             {
              "type": "reference",
-             "target": 462,
+             "target": 498,
              "name": "T",
              "package": "meocord",
              "refersToTypeParameter": true
@@ -9396,7 +9396,7 @@
           }
          },
          {
-          "id": 464,
+          "id": 500,
           "name": "props",
           "variant": "param",
           "kind": 32768,
@@ -9421,7 +9421,7 @@
              "kind": "inline-tag",
              "tag": "@link",
              "text": "MockProps",
-             "target": 601
+             "target": 655
             },
             {
              "kind": "text",
@@ -9431,11 +9431,11 @@
           },
           "type": {
            "type": "reference",
-           "target": 601,
+           "target": 655,
            "typeArguments": [
             {
              "type": "reference",
-             "target": 462,
+             "target": 498,
              "name": "T",
              "package": "meocord",
              "refersToTypeParameter": true
@@ -9448,11 +9448,11 @@
         ],
         "type": {
          "type": "reference",
-         "target": 527,
+         "target": 581,
          "typeArguments": [
           {
            "type": "reference",
-           "target": 462,
+           "target": 498,
            "name": "T",
            "package": "meocord",
            "refersToTypeParameter": true
@@ -9465,14 +9465,14 @@
       ]
      },
      {
-      "id": 477,
+      "id": 531,
       "name": "createMockMessage",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 478,
+        "id": 532,
         "name": "createMockMessage",
         "variant": "signature",
         "kind": 4096,
@@ -9594,7 +9594,7 @@
          "types": [
           {
            "type": "reference",
-           "target": 527,
+           "target": 581,
            "typeArguments": [
             {
              "type": "reference",
@@ -9612,14 +9612,14 @@
           {
            "type": "reflection",
            "declaration": {
-            "id": 482,
+            "id": 536,
             "name": "__type",
             "variant": "declaration",
             "kind": 65536,
             "flags": {},
             "children": [
              {
-              "id": 483,
+              "id": 537,
               "name": "deleted",
               "variant": "declaration",
               "kind": 1024,
@@ -9634,7 +9634,7 @@
              {
               "title": "Properties",
               "children": [
-               483
+               537
               ]
              }
             ]
@@ -9646,14 +9646,14 @@
       ]
      },
      {
-      "id": 487,
+      "id": 541,
       "name": "findRouteConflicts",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 488,
+        "id": 542,
         "name": "findRouteConflicts",
         "variant": "signature",
         "kind": 4096,
@@ -9688,7 +9688,7 @@
         },
         "parameters": [
          {
-          "id": 489,
+          "id": 543,
           "name": "app",
           "variant": "param",
           "kind": 32768,
@@ -9724,7 +9724,7 @@
          "type": "array",
          "elementType": {
           "type": "reference",
-          "target": 655,
+          "target": 709,
           "name": "RouteConflict",
           "package": "meocord"
          }
@@ -9733,14 +9733,14 @@
       ]
      },
      {
-      "id": 490,
+      "id": 544,
       "name": "isMockFunction",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 491,
+        "id": 545,
         "name": "isMockFunction",
         "variant": "signature",
         "kind": 4096,
@@ -9787,7 +9787,7 @@
         },
         "parameters": [
          {
-          "id": 492,
+          "id": 546,
           "name": "fn",
           "variant": "param",
           "kind": 32768,
@@ -9804,7 +9804,7 @@
          "asserts": false,
          "targetType": {
           "type": "reference",
-          "target": 550,
+          "target": 604,
           "name": "MockInstance",
           "package": "meocord"
          }
@@ -9813,14 +9813,14 @@
       ]
      },
      {
-      "id": 496,
+      "id": 550,
       "name": "resolveRoute",
       "variant": "declaration",
       "kind": 64,
       "flags": {},
       "signatures": [
        {
-        "id": 497,
+        "id": 551,
         "name": "resolveRoute",
         "variant": "signature",
         "kind": 4096,
@@ -9871,7 +9871,7 @@
         },
         "parameters": [
          {
-          "id": 498,
+          "id": 552,
           "name": "app",
           "variant": "param",
           "kind": 32768,
@@ -9903,7 +9903,7 @@
           }
          },
          {
-          "id": 499,
+          "id": 553,
           "name": "component",
           "variant": "param",
           "kind": 32768,
@@ -9919,27 +9919,27 @@
           "type": {
            "type": "reflection",
            "declaration": {
-            "id": 503,
+            "id": 557,
             "name": "__type",
             "variant": "declaration",
             "kind": 65536,
             "flags": {},
             "children": [
              {
-              "id": 504,
+              "id": 558,
               "name": "type",
               "variant": "declaration",
               "kind": 1024,
               "flags": {},
               "type": {
                "type": "reference",
-               "target": 526,
+               "target": 580,
                "name": "ComponentCommandType",
                "package": "meocord"
               }
              },
              {
-              "id": 505,
+              "id": 559,
               "name": "customId",
               "variant": "declaration",
               "kind": 1024,
@@ -9954,8 +9954,8 @@
              {
               "title": "Properties",
               "children": [
-               504,
-               505
+               558,
+               559
               ]
              }
             ]
@@ -9968,7 +9968,7 @@
          "types": [
           {
            "type": "reference",
-           "target": 644,
+           "target": 698,
            "name": "ResolvedRoute",
            "package": "meocord"
           },
@@ -9994,32 +9994,32 @@
      {
       "title": "Interfaces",
       "children": [
-       506,
-       516,
-       550,
-       609,
-       613,
-       644,
-       655,
-       658,
-       667
+       560,
+       570,
+       604,
+       663,
+       667,
+       698,
+       709,
+       712,
+       721
       ]
      },
      {
       "title": "Type Aliases",
       "children": [
-       526,
-       527,
-       536,
-       631,
-       601,
-       642
+       580,
+       581,
+       590,
+       685,
+       655,
+       696
       ]
      },
      {
       "title": "Variables",
       "children": [
-       484
+       538
       ]
      },
      {
@@ -10027,15 +10027,15 @@
       "children": [
        401,
        406,
-       422,
-       438,
-       441,
-       457,
-       460,
+       440,
+       474,
        477,
-       487,
-       490,
-       496
+       493,
+       496,
+       531,
+       541,
+       544,
+       550
       ]
      }
     ]
@@ -10048,7 +10048,7 @@
     "flags": {},
     "children": [
      {
-      "id": 686,
+      "id": 740,
       "name": "default",
       "variant": "declaration",
       "kind": 32,
@@ -10105,7 +10105,7 @@
      {
       "title": "Variables",
       "children": [
-       686,
+       740,
        8
       ]
      }
