@@ -35,7 +35,7 @@ npx meocord start --prod
 ```
 
 With Yarn 1, the second line is `yarn install --production`, and with Yarn 4 `yarn workspaces focus --all --production`,
-which Yarn 2 and 3 run after `yarn plugin import workspace-tools`; with pnpm, `pnpm install --prod`; with bun,
+which Yarn 2 and 3 run after `yarn plugin import workspace-tools`; with pnpm, `pnpm prune --prod`; with bun,
 `bun install --production`.
 
 ## How it works
