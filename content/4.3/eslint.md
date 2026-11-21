@@ -43,6 +43,15 @@ Plugins go in the same object, spread over `typescriptConfig.plugins`, as a new 
 The default export skips `dist`, `coverage`, `build`, `lib` and `docs` at the root, and `vitest.config.ts`. To lint code
 you keep in `lib/` or `build/`, override the ignore with an entry of your own, or move the code under `src`.
 
+Under Node, the config finds the tsconfig files beside `eslint.config.ts` or `eslint.config.cjs`, wherever ESLint runs
+from. Three configs have to name their own folder when ESLint runs from another one, such as the root of a workspace:
+`eslint.config.mjs`, `eslint.config.js` in a `"type": "module"` package, and `eslint.config.ts` under Bun's runtime
+(`bunx --bun eslint`). typescript-eslint finds the folder through the config file's code on the call stack, and each
+of these is loaded as a native ES module, whose imports run before that code. It then looks where ESLint runs and
+fails every file with `TS5012`. Add an entry last, the same in each:
+
+::example{file="config/eslint-module-config.ts" region="config"}
+
 ### Adopting it by hand
 
 A project from `npx {{meocord}} create` has every package the config needs. One that adopts `meocord/eslint` by hand
@@ -52,9 +61,10 @@ installs them, at least at the versions it works with:
 npm install --save-dev "eslint@>=8.57.0" "typescript@>=4.8.4 <6.1" "prettier@>=3.0.0" "typescript-eslint@>=8.0.0" "@typescript-eslint/parser@>=8.0.0" "eslint-plugin-import-x@>=4.13.2" "eslint-plugin-prettier@>=5.0.0" "eslint-config-prettier@>=7.0.0" "eslint-import-resolver-typescript@>=4.0.0" globals
 ```
 
-MeoCord names them as optional peer dependencies of any version, so installing or upgrading `meocord` changes none of
-them in a project that doesn't lint with it. `typescript` stays below 6.1 until typescript-eslint supports
-TypeScript 7.
+MeoCord marks them as optional peer dependencies of any version, so installing or upgrading `meocord` changes none of
+them. npm, pnpm and Yarn leave them out of a production install. Bun's `bun install --production` still installs them
+when the bot lists them as development dependencies, as every bot from `npx {{meocord}} create` does. `typescript` stays
+below 6.1 until typescript-eslint supports TypeScript 7.
 
 ## Import cycles
 
