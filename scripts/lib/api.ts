@@ -125,10 +125,16 @@ interface OwnPackage {
   name: string
 }
 
-/** Where `file` sits in the package, or none for a file outside it, such as a dependency's. */
+/**
+ * Where `file` sits in the package, with `/` between its parts as the exports map writes them, or none for a
+ * file outside it, such as a dependency's.
+ */
 function ownPath(own: OwnPackage, file: string): string | undefined {
   const relative = path.relative(own.root, realpathSync(file))
-  return relative.startsWith('..') || relative.split(path.sep).includes('node_modules') ? undefined : relative
+  // On Windows, a file on another drive than the package's comes back absolute
+  if (path.isAbsolute(relative)) return undefined
+  const parts = relative.split(path.sep)
+  return parts[0] === '..' || parts.includes('node_modules') ? undefined : parts.join('/')
 }
 
 /** Whether `specifier` names the package's own files: a relative path, or the package by its own name. */
@@ -378,7 +384,8 @@ export async function generateApi(packageDir: string, meta: Omit<ApiMeta, 'typed
   linkPeers(packageDir)
   const app = await Application.bootstrapWithPlugins(
     {
-      entryPoints: files,
+      // TypeDoc reads entry points as globs, which take `/` only: a Windows path's `\` would escape
+      entryPoints: files.map(normalizePath),
       entryPointStrategy: 'resolve',
       tsconfig,
       // The package's peers, discord.js among them, are not installed: their types stay references

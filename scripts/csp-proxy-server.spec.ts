@@ -375,11 +375,14 @@ describe('preferredEncoding', () => {
 
 describe('assetPath', () => {
   it('maps the four asset paths under their roots, and nothing else', () => {
-    const root = '/app'
-    expect(assetPath(root, '/_next/static/chunks/a.js?v=1')).toBe('/app/.next/static/chunks/a.js')
-    expect(assetPath(root, '/_pagefind/4.1.abc/pagefind.js')).toBe('/app/public/_pagefind/4.1.abc/pagefind.js')
-    expect(assetPath(root, '/palette/4.1.abc.json')).toBe('/app/public/palette/4.1.abc.json')
-    expect(assetPath(root, '/playground/swc.abc.wasm')).toBe('/app/public/playground/swc.abc.wasm')
+    // Absolute as the server's own root is, which on Windows carries a drive
+    const root = path.resolve('/app')
+    expect(assetPath(root, '/_next/static/chunks/a.js?v=1')).toBe(path.join(root, '.next/static/chunks/a.js'))
+    expect(assetPath(root, '/_pagefind/4.1.abc/pagefind.js')).toBe(
+      path.join(root, 'public/_pagefind/4.1.abc/pagefind.js'),
+    )
+    expect(assetPath(root, '/palette/4.1.abc.json')).toBe(path.join(root, 'public/palette/4.1.abc.json'))
+    expect(assetPath(root, '/playground/swc.abc.wasm')).toBe(path.join(root, 'public/playground/swc.abc.wasm'))
     expect(assetPath(root, '/docs/4.1/defer')).toBeUndefined()
     expect(assetPath(root, '/_next/static/')).toBeUndefined()
     expect(assetPath(root, '/_next/static/../../etc/passwd')).toBeUndefined()
