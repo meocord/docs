@@ -49,14 +49,15 @@ function declaredTypes(): {
   params: Map<string, string[][]>
   properties: Map<string, string[]>
   names: Map<string, Set<string>>
-  aliases: Map<string, string>
+  aliases: Map<string, string[]>
 } {
   const printer = ts.createPrinter({ removeComments: true })
   const params = new Map<string, string[][]>()
   const properties = new Map<string, string[]>()
   // Each owner's property names as written: `[PIPED_BRAND]`, `'a name in words'` or `name`
   const names = new Map<string, Set<string>>()
-  const aliases = new Map<string, string>()
+  // Every alias a name has, in any file: a chunk may declare a private alias under a public one's name
+  const aliases = new Map<string, string[]>()
   // An optional parameter's `?` says what a written `| undefined` would, so neither side names it
   const typeOf = (node: ts.TypeNode, source: ts.SourceFile, optional: boolean) => {
     const text = normal(printer.printNode(ts.EmitHint.Unspecified, node, source))
@@ -73,12 +74,12 @@ function declaredTypes(): {
     const visit = (node: ts.Node) => {
       if (ts.isFunctionDeclaration(node) && node.name) add(node.name.text, node.parameters, source)
       if (ts.isTypeAliasDeclaration(node))
-        aliases.set(
-          node.name.text,
+        aliases.set(node.name.text, [
+          ...(aliases.get(node.name.text) ?? []),
           normal(
             printer.printNode(ts.EmitHint.Unspecified, node, source).replace(/^(?:export |declare )+/, ''),
           ).replace(/;$/, ''),
-        )
+        ])
       if ((ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node)) && node.name)
         for (const member of node.members) {
           if (member.name && (ts.isPropertySignature(member) || ts.isPropertyDeclaration(member)))
@@ -169,9 +170,9 @@ describe('type parameters', () => {
         if (!symbol) continue
         for (const signature of symbol.signatures) check(symbol.name, signature)
         // A type alias whole, its object members' keys included: a computed key must not read as a string
-        const alias = aliases.get(symbol.name)
-        if (symbol.kind === 'type-alias' && alias) {
-          expect(alias, symbol.name).toBe(normal(text(symbol.code[0] ?? [])).replace(/;$/, ''))
+        const declared = aliases.get(symbol.name)
+        if (symbol.kind === 'type-alias' && declared) {
+          expect(declared, symbol.name).toContain(normal(text(symbol.code[0] ?? [])).replace(/;$/, ''))
           compared += 1
         }
         for (const member of symbol.members) {
