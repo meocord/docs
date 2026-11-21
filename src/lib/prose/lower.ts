@@ -7,6 +7,7 @@ import {
   Code,
   Div,
   Em,
+  For,
   Hr,
   Img,
   Li,
@@ -124,7 +125,12 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
   const headings: Heading[] = []
   const href = options.href ?? (url => url)
 
-  const children = (parent: Parents): Child[] => parent.children.map((child, index) => lower(child, index))
+  const children = (parent: Parents) =>
+    For(
+      parent.children,
+      (child, index) => lower(child, index),
+      (_, index) => index,
+    )
 
   function lower(node: RootContent, key: number): Child {
     switch (node.type) {
@@ -158,8 +164,10 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
         const { url, title } = node
         const target = href(url)
         // An image the page can't load reads as its alt text inside the link, never a link within a link
-        const inner = node.children.map((child, index) =>
-          child.type === 'image' && !loadable(child.url) ? (child.alt ?? '') : lower(child, index),
+        const inner = For(
+          node.children,
+          (child, index) => (child.type === 'image' && !loadable(child.url) ? (child.alt ?? '') : lower(child, index)),
+          (_, index) => index,
         )
         return A({ key, href: target, title: title ?? undefined, children: inner })
       }
@@ -188,16 +196,18 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           start: node.ordered && node.start !== 1 ? (node.start ?? undefined) : undefined,
           // A tight list's items hold bare paragraphs; unwrapping them keeps its spacing tight. Looseness
           // is the list's (a blank line between any two items) or an item's own.
-          children: node.children.map(item =>
-            Li({
-              key: offset(item),
-              children:
-                node.spread || item.spread
-                  ? children(item)
-                  : item.children.flatMap((child, at) =>
-                      child.type === 'paragraph' ? children(child) : [lower(child, at)],
-                    ),
-            }),
+          children: For(
+            node.children,
+            item =>
+              Li({
+                children:
+                  node.spread || item.spread
+                    ? children(item)
+                    : item.children.flatMap((child, at) =>
+                        child.type === 'paragraph' ? children(child) : [lower(child, at)],
+                      ),
+              }),
+            (item, index) => offset(item) ?? index,
           ),
         })
       case 'thematicBreak':
@@ -238,12 +248,14 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
   function lowerTable(table: MdTable, key: number) {
     const [head, ...body] = table.children
     const cells = (row: MdTable['children'][number], tag: 'th' | 'td') =>
-      row.children.map((cell, index) =>
-        Node(tag, {
-          key: offset(cell),
-          'data-align': table.align?.[index] ?? undefined,
-          children: children(cell),
-        }),
+      For(
+        row.children,
+        (cell, index) =>
+          Node(tag, {
+            'data-align': table.align?.[index] ?? undefined,
+            children: children(cell),
+          }),
+        (cell, index) => offset(cell) ?? index,
       )
     return Div({
       key,
@@ -253,10 +265,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           Thead({ key: 'head', children: Tr({ children: cells(head, 'th') }) }),
           Tbody({
             key: 'body',
-            children: body.map(row => {
-              const at = offset(row)
-              return Tr({ key: at, children: cells(row, 'td') })
-            }),
+            children: For(
+              body,
+              row => Tr({ children: cells(row, 'td') }),
+              (row, index) => offset(row) ?? index,
+            ),
           }),
         ],
       }),

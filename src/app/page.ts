@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { cacheLife } from 'next/cache'
-import { Div, H1, Node, Span } from '@meonode/ui'
+import { Div, For, H1, Node, Span } from '@meonode/ui'
 import { Link } from '@/components/shell/links'
 import { BuildSection, DoorsSection, WhySection } from '@/components/home/HomeSections'
 import { HeroActions, HomeRows, Prose } from '@/components/nodes'
@@ -64,7 +64,11 @@ async function home() {
         // Where to start, before the demo: on a phone the sidebar's links are behind its button
         HeroActions({
           key: 'actions',
-          children: heroActions().map(action => Link({ key: action.href, href: action.href, children: action.title })),
+          children: For(
+            heroActions(),
+            action => Link({ href: action.href, children: action.title }),
+            action => action.href,
+          ),
         }),
         PipelinePanel(pipelineDemo()),
         // Why first, then what to build, then where to go next

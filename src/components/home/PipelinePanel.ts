@@ -1,4 +1,4 @@
-import { Button, Code, createNode, Div, H2, H3, Li, Node, Ol, P, Small, Span, Strong } from '@meonode/ui'
+import { Button, Code, createNode, Div, For, H2, H3, Li, Node, Ol, P, Small, Span, Strong } from '@meonode/ui'
 import { markSvgNode } from '@/components/home/mark-node'
 import { PipelineIsland } from '@/components/home/PipelineIsland'
 import { hitAreaCss } from '@/lib/design/css'
@@ -288,7 +288,6 @@ const Panel = createNode('section', {
 
 function stageRow({ id, line, narration, name, member, blocked }: PipelineDemo['stages'][number]) {
   return Li({
-    key: id,
     'data-stage': id,
     'data-state': 'done',
     'data-line': line,
@@ -407,7 +406,7 @@ export function PipelinePanel(demo: PipelineDemo) {
             children: [
               H3('Trace', { key: 'h' }),
               P('Recorded from a real run of this code, at build time', { key: 'recorded', 'data-recorded': true }),
-              Ol({ key: 'stages', children: demo.stages.map(stageRow) }),
+              Ol({ key: 'stages', children: For(demo.stages, stageRow, stage => stage.id) }),
               // Each stage's sentence laid under the one shown, unseen, so the trace stands as tall as
               // its longest and nothing moves as the call steps through.
               Div({
@@ -415,8 +414,10 @@ export function PipelinePanel(demo: PipelineDemo) {
                 'data-narration-box': true,
                 children: [
                   P(demo.stages.at(-1)?.narration, { key: 'live', 'data-narration': true, 'aria-live': 'polite' }),
-                  ...demo.stages.map(({ id, narration }) =>
-                    P(narration, { key: id, 'data-narration-sizer': true, 'aria-hidden': true }),
+                  For(
+                    demo.stages,
+                    ({ narration }) => P(narration, { 'data-narration-sizer': true, 'aria-hidden': true }),
+                    stage => stage.id,
                   ),
                 ],
               }),

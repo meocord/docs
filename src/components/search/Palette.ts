@@ -391,27 +391,29 @@ export const PaletteLayer = Component<PortalLayerProps<PaletteData>>(function Pa
                   ? 'Search could not load. Check your connection and try again.'
                   : [
                       Span(`Nothing in ${scope?.line} for “${query.trim()}”.`, { key: 'none' }),
-                      ...others.map(line =>
-                        Button(`Search in ${line.line}?`, {
-                          key: line.line,
-                          type: 'button',
-                          onClick: () => setScope(line),
-                          marginLeft: 'theme.space.2',
-                          padding: '0 theme.space.2',
-                          height: 24,
-                          border: 'none',
-                          borderRadius: 'theme.radius.control',
-                          backgroundColor: 'theme.surface.fill',
-                          color: 'theme.ink.primary',
-                          fontFamily: 'inherit',
-                          fontSize: 'inherit',
-                          cursor: 'pointer',
-                          css: {
-                            ...focusCss,
-                            ...hitAreaCss,
-                            '&:hover': { backgroundColor: 'theme.surface.fillHover' },
-                          },
-                        }),
+                      For(
+                        others,
+                        line =>
+                          Button(`Search in ${line.line}?`, {
+                            type: 'button',
+                            onClick: () => setScope(line),
+                            marginLeft: 'theme.space.2',
+                            padding: '0 theme.space.2',
+                            height: 24,
+                            border: 'none',
+                            borderRadius: 'theme.radius.control',
+                            backgroundColor: 'theme.surface.fill',
+                            color: 'theme.ink.primary',
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit',
+                            cursor: 'pointer',
+                            css: {
+                              ...focusCss,
+                              ...hitAreaCss,
+                              '&:hover': { backgroundColor: 'theme.surface.fillHover' },
+                            },
+                          }),
+                        line => line.line,
                       ),
                     ],
             })

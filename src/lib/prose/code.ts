@@ -1,4 +1,4 @@
-import { Button, Code, Div, Figcaption, Figure, type NodeInstance, Pre, Span, Svg, SvgPath } from '@meonode/ui'
+import { Button, Code, Div, Figcaption, Figure, For, type NodeInstance, Pre, Span, Svg, SvgPath } from '@meonode/ui'
 import { highlight } from '@/lib/prose/highlight'
 import { LANGUAGES } from '@/lib/prose/languages'
 
@@ -65,7 +65,11 @@ const icon = (paths: string[], role: string) =>
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     'aria-hidden': true,
-    children: paths.map((d, key) => SvgPath({ key, d })),
+    children: For(
+      paths,
+      d => SvgPath({ d }),
+      d => d,
+    ),
   })
 
 function copyButton() {
@@ -118,13 +122,21 @@ export function codeFrame(
               key: 'tabs',
               role: 'group',
               'aria-label': 'Package manager',
-              children: PACKAGE_MANAGERS.map(pm => Button(pm, { key: pm, type: 'button', 'data-pm-choice': pm })),
+              children: For(
+                PACKAGE_MANAGERS,
+                pm => Button(pm, { type: 'button', 'data-pm-choice': pm }),
+                pm => pm,
+              ),
             }),
             copyButton(),
           ],
           { key: 'head' },
         ),
-        ...PACKAGE_MANAGERS.map(pm => pre(variants[pm], language, { key: pm, 'data-pm-pane': pm })),
+        For(
+          PACKAGE_MANAGERS,
+          pm => pre(variants[pm], language, { 'data-pm-pane': pm }),
+          pm => pm,
+        ),
       ],
     })
   }

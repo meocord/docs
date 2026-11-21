@@ -1,4 +1,4 @@
-import { A, Aside, Div, H1, H2, Li, Nav, Node, type NodeInstance, P, Span, Ul } from '@meonode/ui'
+import { A, Aside, Div, For, H1, H2, Li, Nav, Node, type NodeInstance, P, Span, Ul } from '@meonode/ui'
 
 type Child = NodeInstance | string
 import { Prose } from '@/components/nodes'
@@ -65,7 +65,11 @@ export function guideArticle(line: string, view: GuideView): Child[] {
   const list = (key: string, items: { title: string; href: string }[]) =>
     Ul({
       key,
-      children: items.map(item => Li({ key: item.href, children: A({ href: item.href, children: item.title }) })),
+      children: For(
+        items,
+        item => Li({ children: A({ href: item.href, children: item.title }) }),
+        item => item.href,
+      ),
     })
   return [
     H1(page.title, { key: 'title' }),
@@ -92,7 +96,14 @@ export function guideArticle(line: string, view: GuideView): Child[] {
                   key: 'learn',
                   children: [
                     P("You'll learn", { key: 'label', 'data-guide-label': true }),
-                    Ul({ key: 'list', children: page.learn.map(item => Li({ key: item, children: item })) }),
+                    Ul({
+                      key: 'list',
+                      children: For(
+                        page.learn,
+                        item => Li({ children: item }),
+                        item => item,
+                      ),
+                    }),
                   ],
                 })
               : null,
