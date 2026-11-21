@@ -43,6 +43,14 @@ Plugins go in the same object, spread over `typescriptConfig.plugins`, as a new 
 The default export skips `dist`, `coverage`, `build`, `lib` and `docs` at the root, and `vitest.config.ts`. To lint code
 you keep in `lib/` or `build/`, override the ignore with an entry of your own, or move the code under `src`.
 
+The config finds the tsconfig files beside `eslint.config.ts` or `eslint.config.cjs`, wherever ESLint runs from. A
+config written as `eslint.config.mjs`, or as `eslint.config.js` in a `"type": "module"` package, has to name its own
+folder when ESLint runs from another one, such as the root of a workspace: typescript-eslint finds the folder through
+the config file's code on the call stack, and a native ES module's imports run before that code, so it looks where
+ESLint runs and fails every file with `TS5012`. Add an entry last:
+
+::example{file="config/eslint-module-config.ts" region="config"}
+
 ### Adopting it by hand
 
 A project from `npx {{meocord}} create` has every package the config needs. One that adopts `meocord/eslint` by hand
