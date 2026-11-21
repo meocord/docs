@@ -56,8 +56,8 @@ export function packageManagerVariants(code: string): Record<PackageManager, str
 const icon = (paths: string[], role: string) =>
   Svg({
     'data-icon': role,
-    width: 16,
-    height: 16,
+    // Under `props`, so they stay attributes: meonode reads a top-level width or height as CSS, and styles it
+    props: { width: 16, height: 16 },
     viewBox: '0 0 16 16',
     fill: 'none',
     stroke: 'currentColor',

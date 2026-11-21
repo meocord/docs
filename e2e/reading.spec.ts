@@ -33,6 +33,21 @@ test('the copy button copies the code and confirms', async ({ page, context }) =
   expect(clipboard).toBe((await frame.locator('pre').innerText()).replace(/\n$/, ''))
 })
 
+test('the copy button draws its icons as plain SVG, 16 px square', async ({ page, request }) => {
+  // As the page is served: sized by attributes, with no class
+  const served = await (await request.get(PAGE)).text()
+  const icons = [...served.matchAll(/<svg data-icon="[^"]*"[^>]*>/g)].map(([tag]) => tag)
+  expect(icons.length).toBeGreaterThan(0)
+  for (const tag of icons) {
+    expect(tag).toContain(' width="16"')
+    expect(tag).toContain(' height="16"')
+    expect(tag).not.toContain(' class=')
+  }
+  await page.goto(PAGE)
+  const icon = page.locator('[data-code]:not([data-install]) [data-copy] [data-icon="copy"]').first()
+  expect(await icon.boundingBox()).toMatchObject({ width: 16, height: 16 })
+})
+
 test('install commands follow the chosen package manager, before paint on the next page', async ({ page }) => {
   await page.goto(PAGE)
   const install = page.locator('[data-install]').first()
