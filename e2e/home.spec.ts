@@ -16,6 +16,21 @@ test('the panel paints the finished run without any script', async ({ browser })
   await context.close()
 })
 
+test("the bot's avatar draws the mark as plain SVG, 18 px square", async ({ page, request }) => {
+  // As the page is served: sized by attributes, with no class
+  const served = await (await request.get('/')).text()
+  const marks = [...served.matchAll(/<div data-avatar="bot"[^>]*>(<svg[^>]*>)/g)].map(([, tag]) => tag)
+  expect(marks.length).toBeGreaterThan(0)
+  for (const tag of marks) {
+    expect(tag).toContain(' width="18"')
+    expect(tag).toContain(' height="18"')
+    expect(tag).not.toContain(' class=')
+  }
+  await page.goto('/')
+  const mark = page.locator('[data-pipeline] [data-reply="member"] [data-avatar="bot"] svg')
+  expect(await mark.boundingBox()).toMatchObject({ width: 18, height: 18 })
+})
+
 test('Run takes a member’s call through every stage to the reply', async ({ page }) => {
   await page.goto('/')
   const panel = page.locator('[data-pipeline]')

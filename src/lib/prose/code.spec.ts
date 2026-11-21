@@ -47,6 +47,16 @@ describe('codeFrame', () => {
     expect(html('x', 'ts', { file: 'app.ts' })).toContain('<span data-file="true">app.ts</span>')
   })
 
+  it('draws its icons as plain SVG, sized by attributes and with no class', () => {
+    const icons = [...html('x', 'ts').matchAll(/<svg data-icon="[^"]*"[^>]*>/g)].map(([tag]) => tag)
+    expect(icons).toHaveLength(2)
+    for (const tag of icons) {
+      expect(tag).toContain(' width="16"')
+      expect(tag).toContain(' height="16"')
+      expect(tag).not.toContain(' class=')
+    }
+  })
+
   it('draws unmarked and plain code without colour', () => {
     expect(html('plain', undefined)).toContain('<code>plain</code>')
     expect(html('plain', 'text')).toContain('<span>text</span>')
