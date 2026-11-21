@@ -391,7 +391,8 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   and its focused option is read by name, `''` before anything is typed;
 - `getMentionable()` on a user option gives the user's member in a server;
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
-  until then, and reading it warns once;
+  until then, and reading it warns once. After `update()` or `deferUpdate()`, or once the test sets `deferred` itself,
+  it reads `null` in both modes, as discord.js does;
 - a property the class doesn't have reads `undefined` and isn't `in` the mock, as on discord.js's objects, so
   `message.isRepliable?.()` is `undefined` and `if (value.guild)` is false for a class without a `guild`. `in` is true
   for a field the class sets on its instances, such as `'content' in message`, read from the discord.js the app
