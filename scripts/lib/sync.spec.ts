@@ -25,7 +25,9 @@ function packVersion(version: string): Uint8Array {
   writeFileSync(manifest, readFileSync(manifest, 'utf8').replace('9.0.0-beta.0', version))
   const changelog = path.join(dir, 'package', 'CHANGELOG.md')
   writeFileSync(changelog, readFileSync(changelog, 'utf8').replace('## 9.0.0-beta.0', `## ${version}`))
-  spawnSync('tar', ['-czf', path.join(dir, 'package.tgz'), '-C', dir, 'package'])
+  // Named from their own directory, as unpack does: GNU tar reads a drive letter's colon as a remote host
+  const packed = spawnSync('tar', ['-czf', 'package.tgz', 'package'], { cwd: dir, encoding: 'utf8' })
+  if (packed.status !== 0) throw new Error(`Could not pack the fixture: ${packed.stderr || packed.error?.message}`)
   const bytes = new Uint8Array(readFileSync(path.join(dir, 'package.tgz')))
   rmSync(dir, { recursive: true, force: true })
   return bytes

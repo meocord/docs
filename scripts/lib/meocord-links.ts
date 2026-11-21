@@ -48,13 +48,16 @@ export const PUBLISHED: { path: string; extensions: string[] }[] = [
   { path: '.github', extensions: ['.md', '.yml'] },
 ]
 
-/** Each docs path a checkout's published files link, with the files that link it, relative to the checkout. */
+/**
+ * Each docs path a checkout's published files link, with the files that link it, relative to the checkout and
+ * with `/` between their parts on every platform.
+ */
 export function publishedLinks(checkout: string): Map<string, string[]> {
   const links = new Map<string, string[]>()
   for (const { path: target, extensions } of PUBLISHED)
     for (const file of filesUnder(path.join(checkout, target), extensions))
       for (const link of docsLinks([readFileSync(file, 'utf8')]))
-        links.set(link, [...(links.get(link) ?? []), path.relative(checkout, file)])
+        links.set(link, [...(links.get(link) ?? []), path.relative(checkout, file).split(path.sep).join('/')])
   return new Map([...links].sort(([a], [b]) => a.localeCompare(b)))
 }
 

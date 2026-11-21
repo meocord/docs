@@ -53,8 +53,8 @@ jobs:
       # fails.
       - run: bun run test:coverage
 
-  # The site's build on Windows, from the checkout Git gives there. Not required: the site is built and
-  # served on Linux, and this only shows a Windows break early.
+  # The specs and the site's build on Windows, from the checkout Git gives there. Not required: the site is
+  # built and served on Linux, and this only shows a Windows break early.
   windows:
     name: Windows
     runs-on: windows-latest
@@ -66,6 +66,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
+      - run: bun run test
       - run: bun run build
 
   # The guides, examples and generated data: links and anchors resolve, every listed version has its
