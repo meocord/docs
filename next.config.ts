@@ -90,9 +90,9 @@ const nextConfig: NextConfig = {
         '@meonode/compiler',
         {
           callSiteLocations: process.env.NODE_ENV !== 'production',
-          // Our prestyled factories, whose call sites it compiles as it does @meonode/ui's own. The
-          // module exports createNode factories only; src/components/nodes/index.spec.ts checks it.
-          factoryModules: ['@/components/nodes'],
+          // Our prestyled factories, whose call sites it compiles as it does @meonode/ui's own. Each module
+          // exports createNode factories only; src/components/nodes/index.spec.ts checks every one listed.
+          factoryModules: ['@/components/nodes', '@/components/shell/glyph-slot'],
         },
       ],
     ],
