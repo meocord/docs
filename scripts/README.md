@@ -75,7 +75,8 @@ queue, and on a pull request that changes `scripts/`, `generated/`, `package.jso
 npm registry's packuments and tarballs, npm's attestations API (`registry.npmjs.org/-/npm/v1/attestations`), and
 Sigstore's TUF repository (`tuf-repo-cdn.sigstore.dev`) for the trusted root. Each request is tried up to three
 times, with a doubling wait, on a network error, a 5xx or a 429 (`scripts/lib/registry.ts`); TUF retries a
-network error or a 5xx the same way.
+network error or a 5xx the same way. Retries cover a request up to its response headers: a reset or a timeout
+while the body, a tarball or JSON, is read fails the run.
 
 Guides embed examples with `::example{file="guards/owner.guard.ts" region="guard"}`, a path under
 `examples/<line>/src/` and a region between `// #region guard` and `// #endregion guard`. A written guide
