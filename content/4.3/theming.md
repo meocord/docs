@@ -140,9 +140,9 @@ callback in [`bindTheme`](api:responses/bindTheme):
 or a user, such as an interaction, a message, a reaction or a member, it builds the theme as a handler's call has it:
 MeoCord's defaults and the app's theme, the `@UseTheme` layers of the handler that bound it, then `themeFor`'s layers
 for that call's server and user. So each member who clicks is answered in their own theme, and a `client.on(...)`
-listener bound in one server answers an event from another server in that server's theme, when the event's member,
-channel, role or message names it. A call whose arguments name neither, such as a
-collector's `end`, runs in the whole theme of the call that bound it.
+listener bound in one server answers an event from another server in that server's theme, when the event names it:
+the server itself, or something in it, such as a member, channel, role or message. A call whose arguments name
+neither, such as a collector's `end`, runs in the whole theme of the call that bound it.
 
 The wrapped function stays synchronous: while `themeFor` still looks a theme up, `useTheme()` reads the handler's theme,
 and `respond()` waits for the lookup. Once the bot has stopped, a wrapped function asks no resolver, and a call runs in
