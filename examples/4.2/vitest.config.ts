@@ -16,7 +16,8 @@ export default defineConfig({
   ],
   resolve: { alias: { '@src': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
-    setupFiles: ['reflect-metadata'],
+    // A generated app's setup file: strict mocks made with vi.fn, reset after every test
+    setupFiles: [fileURLToPath(new URL('./src/config/vitest.setup.ts', import.meta.url))],
     clearMocks: true,
     include: ['src/**/*.spec.ts'],
     // What a bot's .env gives the examples that read it; a spec has no .env of its own
