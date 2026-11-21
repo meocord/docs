@@ -1,4 +1,4 @@
-import { Details, Div, For, Li, Nav, Node, Span, Summary, Ul } from '@meonode/ui'
+import { Details, Div, For, Fragment, Li, Nav, Node, Span, Summary, Ul } from '@meonode/ui'
 import { focusCss, transitionCss } from '@/lib/design/css'
 import { Glyph, type GlyphName } from '@/components/shell/icons'
 import { Link } from '@/components/shell/links'
@@ -50,19 +50,20 @@ function NavSection(group: NavGroup) {
         margin: 0,
         padding: 0,
         listStyle: 'none',
-        children: runs(group.items).flatMap(({ category, items }) =>
-          category
-            ? // A sub-group: its own list, named by its category, which its visible label shows once
-              [
+        children: For(
+          runs(group.items),
+          ({ category, items }) =>
+            category
+              ? // A sub-group: its own list, named by its category, which its visible label shows once
                 Li({
-                  key: `category-${category}`,
                   children: [
                     Div({ key: 'label', 'data-nav-category': true, 'aria-hidden': true, children: category }),
                     Ul({ key: 'items', 'aria-label': category, children: For(items, NavRow, item => item.href) }),
                   ],
-                }),
-              ]
-            : For(items, NavRow, item => item.href),
+                })
+              : Fragment({ children: For(items, NavRow, item => item.href) }),
+          // A run is its category, or else its first item, which no other run holds
+          ({ category, items }) => (category ? `category-${category}` : items[0]!.href),
         ),
       }),
     ],

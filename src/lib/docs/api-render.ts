@@ -2,15 +2,16 @@ import {
   A,
   Aside,
   Blockquote,
+  type Children,
   Code,
   Div,
   For,
+  Fragment,
   H1,
   H2,
   H3,
   Li,
   Node,
-  type NodeInstance,
   P,
   Pre,
   Span,
@@ -68,7 +69,7 @@ import { docsHref } from '@/lib/urls'
 import { escapeAttribute, escapeHtml } from '@/lib/html'
 import { firstParagraph, referenceDescription } from '@/lib/docs/page-metadata'
 
-type Child = NodeInstance | string
+type Child = Children
 
 /** Markdown from a doc comment, lowered as a guide's is. */
 const markdown = (text: string, key: string): Child[] =>
@@ -283,7 +284,11 @@ function signatureDetails(
   if (signature.examples.length > 0) {
     out.push(
       heading('Examples', ids?.examples),
-      ...signature.examples.flatMap((text, index) => markdown(text, `${key}-ex-${index}`)),
+      For(
+        signature.examples,
+        (text, index) => Fragment({ children: markdown(text, `${key}-ex-${index}`) }),
+        (_, index) => index,
+      ),
     )
   }
   return out
@@ -309,10 +314,27 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
     ...(member.defaultValue
       ? [P(['Default: ', Code(member.defaultValue, { key: 'v' })], { key: `m-${member.anchor}-default` })]
       : []),
-    ...member.signatures.flatMap((signature, index) =>
-      signatureDetails(signature, layouts, 'h4', undefined, `m-${member.anchor}-s${index}`, toc, member.since),
+    For(
+      member.signatures,
+      (signature, index) =>
+        Fragment({
+          children: signatureDetails(
+            signature,
+            layouts,
+            'h4',
+            undefined,
+            `m-${member.anchor}-s${index}`,
+            toc,
+            member.since,
+          ),
+        }),
+      (_, index) => index,
     ),
-    ...member.examples.flatMap((text, index) => markdown(text, `m-${member.anchor}-ex-${index}`)),
+    For(
+      member.examples,
+      (text, index) => Fragment({ children: markdown(text, `m-${member.anchor}-ex-${index}`) }),
+      (_, index) => index,
+    ),
   ]
 }
 
@@ -394,10 +416,17 @@ export function apiArticle(
         Span(symbol.kind.replace('-', ' '), { key: 'kind' }),
         ' in ',
         // Every entry point it can be imported from, the declaring one first
-        ...symbol.imports.flatMap((entry, index) => [
-          ...(index > 0 ? [index === symbol.imports.length - 1 ? ' and ' : ', '] : []),
-          Code(entry, { key: `entry-${entry}` }),
-        ]),
+        For(
+          symbol.imports,
+          (entry, index) =>
+            Fragment({
+              children: [
+                ...(index > 0 ? [index === symbol.imports.length - 1 ? ' and ' : ', '] : []),
+                Code(entry, { key: `entry-${entry}` }),
+              ],
+            }),
+          entry => entry,
+        ),
         ...(symbol.since ? [' ', badge(`Since ${symbol.since}`, 'since', 'since')] : []),
         ...(symbol.deprecated ? [' ', badge('Deprecated', 'deprecated', 'deprecated')] : []),
       ],
@@ -430,7 +459,11 @@ export function apiArticle(
     toc.push({ id: ids.examples, title: 'Examples', depth: 2 })
     nodes.push(
       H2('Examples', { key: 'examples', id: ids.examples }),
-      ...symbol.examples.flatMap((text, index) => markdown(text, `ex-${index}`)),
+      For(
+        symbol.examples,
+        (text, index) => Fragment({ children: markdown(text, `ex-${index}`) }),
+        (_, index) => index,
+      ),
     )
   }
   if (symbol.members.length > 0) {
@@ -657,13 +690,17 @@ function listing(symbols: ApiListing[], key: string) {
 /** A section's symbols, those without a category first, then each category under a heading of `level`. */
 function categorised(symbols: ApiListing[], level: 'h2' | 'h3', key: string, toc?: TocEntry[]): Child[] {
   const categories = [...new Set(symbols.map(symbol => symbol.category))]
-  return categories.flatMap(category => {
-    const members = symbols.filter(symbol => symbol.category === category)
-    if (!category) return [listing(members, `${key}-list`)]
-    const id = `${key}-${headingId(category)}`
-    if (toc) toc.push({ id, title: category, depth: 2 })
-    return [Node(level, { key: id, id, children: category }), listing(members, `${id}-list`)]
-  })
+  return For(
+    categories,
+    category => {
+      const members = symbols.filter(symbol => symbol.category === category)
+      if (!category) return Fragment({ children: listing(members, `${key}-list`) })
+      const id = `${key}-${headingId(category)}`
+      if (toc) toc.push({ id, title: category, depth: 2 })
+      return Fragment({ children: [Node(level, { key: id, id, children: category }), listing(members, `${id}-list`)] })
+    },
+    category => category ?? '',
+  )
 }
 
 /** The kind the names an entry point re-exports from discord.js are listed under. */
@@ -676,42 +713,48 @@ const DISCORD_FORMATTERS_DOCS = 'https://discord.js.org/docs/packages/formatters
  * without pages of their own, since discord.js documents them.
  */
 function reexported(model: ApiModel, level: 'h2' | 'h3', key: string, toc?: TocEntry[]): Child[] {
-  return apiReexports(model.version ?? lineVersions(model.line)[0]!).flatMap(({ entry, from, values, types }) => {
-    const title = `Re-exported from ${from}`
-    const id = `${key}-${headingId(title)}`
-    if (toc) toc.push({ id, title, depth: 2 })
-    return [
-      Node(level, { key: id, id, children: title }),
-      P(
-        [
-          'Imported from ',
-          Code(entry, { key: 'entry' }),
-          ', these are ',
-          Code(from, { key: 'from' }),
-          "'s own, the same as importing them from it. ",
-          A({ key: 'docs', href: DISCORD_FORMATTERS_DOCS, children: "discord.js's documentation" }),
-          ' describes them.',
-        ],
-        { key: `${id}-lead` },
-      ),
-      Ul({
-        key: `${id}-list`,
-        'data-api-list': true,
+  return For(
+    apiReexports(model.version ?? lineVersions(model.line)[0]!),
+    ({ entry, from, values, types }) => {
+      const title = `Re-exported from ${from}`
+      const id = `${key}-${headingId(title)}`
+      if (toc) toc.push({ id, title, depth: 2 })
+      return Fragment({
         children: [
-          For(
-            values,
-            name => Li({ children: Code(name) }),
-            name => name,
+          Node(level, { key: id, id, children: title }),
+          P(
+            [
+              'Imported from ',
+              Code(entry, { key: 'entry' }),
+              ', these are ',
+              Code(from, { key: 'from' }),
+              "'s own, the same as importing them from it. ",
+              A({ key: 'docs', href: DISCORD_FORMATTERS_DOCS, children: "discord.js's documentation" }),
+              ' describes them.',
+            ],
+            { key: `${id}-lead` },
           ),
-          For(
-            types,
-            name => Li({ children: Code(`type ${name}`) }),
-            name => name,
-          ),
+          Ul({
+            key: `${id}-list`,
+            'data-api-list': true,
+            children: [
+              For(
+                values,
+                name => Li({ children: Code(name) }),
+                name => name,
+              ),
+              For(
+                types,
+                name => Li({ children: Code(`type ${name}`) }),
+                name => name,
+              ),
+            ],
+          }),
         ],
-      }),
-    ]
-  })
+      })
+    },
+    ({ entry, from }) => `${entry} ${from}`,
+  )
 }
 
 /** The index's content: every symbol of the API with its summary, by kind, each kind linked to its page. */
@@ -722,15 +765,25 @@ export function apiIndexArticle(line: string, model: ApiModel): { nodes: Child[]
     P(`Every public symbol of MeoCord ${line}, by kind. Each page names the entry point to import it from.`, {
       key: 'intro',
     }),
-    ...apiSections(model).flatMap(section => {
-      toc.push({ id: section.slug, title: section.title, depth: 2 })
-      const href = docsHref({ kind: 'api-index', line, section: section.slug }, VERSIONS)
-      return [
-        H2(A({ href, children: section.title }), { key: section.slug, id: section.slug, 'data-kind-heading': true }),
-        ...categorised(section.symbols, 'h3', section.slug),
-        ...(section.slug === REEXPORTS_SECTION ? reexported(model, 'h3', section.slug) : []),
-      ]
-    }),
+    For(
+      apiSections(model),
+      section => {
+        toc.push({ id: section.slug, title: section.title, depth: 2 })
+        const href = docsHref({ kind: 'api-index', line, section: section.slug }, VERSIONS)
+        return Fragment({
+          children: [
+            H2(A({ href, children: section.title }), {
+              key: section.slug,
+              id: section.slug,
+              'data-kind-heading': true,
+            }),
+            ...categorised(section.symbols, 'h3', section.slug),
+            ...(section.slug === REEXPORTS_SECTION ? reexported(model, 'h3', section.slug) : []),
+          ],
+        })
+      },
+      section => section.slug,
+    ),
   ]
   return { nodes, toc }
 }
@@ -830,7 +883,15 @@ function cliNotes(entry: { default: unknown; defaultDescription: string | null; 
   else if (entry.default !== null && entry.default !== undefined)
     notes.push(' Default: ', valueCode(entry.default), '.')
   if (entry.choices?.length)
-    notes.push(' One of ', ...entry.choices.flatMap((choice, index) => [index > 0 ? ', ' : '', valueCode(choice)]), '.')
+    notes.push(
+      ' One of ',
+      For(
+        entry.choices,
+        (choice, index) => Fragment({ children: [index > 0 ? ', ' : '', valueCode(choice)] }),
+        choice => choice,
+      ),
+      '.',
+    )
   return notes
 }
 
@@ -876,10 +937,17 @@ function commandDetails(command: CliCommand, level: 'h2' | 'h3', key: string, sp
           P(
             [
               'Also ',
-              ...command.aliases.flatMap((alias, index) => [
-                index > 0 ? ', ' : '',
-                Code(`meocord ${[...command.path.slice(0, -1), alias].join(' ')}`),
-              ]),
+              For(
+                command.aliases,
+                (alias, index) =>
+                  Fragment({
+                    children: [
+                      index > 0 ? ', ' : '',
+                      Code(`meocord ${[...command.path.slice(0, -1), alias].join(' ')}`),
+                    ],
+                  }),
+                alias => alias,
+              ),
             ],
             {
               key: `${key}-aliases`,
@@ -991,7 +1059,12 @@ function glanceRow(key: string, shapes: string[], href: string, summary: string)
     key,
     cells: [
       Span(
-        shapes.flatMap((shape, index) => [...(index > 0 ? [' '] : []), A({ key: shape, href, children: Code(shape) })]),
+        For(
+          shapes,
+          (shape, index) =>
+            Fragment({ children: [...(index > 0 ? [' '] : []), A({ key: shape, href, children: Code(shape) })] }),
+          shape => shape,
+        ),
       ),
       ...markdown(firstSentence(summary), `${key}-what`),
     ] as Child[],
@@ -1021,19 +1094,26 @@ export function glanceArticle(
   const byCategory = (section: string, header: string, keep: (symbol: ApiSymbol) => boolean, prefix = '') => {
     const listings = apiSections(model).find(candidate => candidate.slug === section)?.symbols ?? []
     const categories = [...new Set(listings.map(listing => listing.category ?? 'Other'))]
-    return categories.flatMap(category => {
-      const rows = listings
-        .filter(listing => (listing.category ?? 'Other') === category)
-        .flatMap(listing => {
-          const symbol = model.symbol(section, listing.name)
-          return symbol && keep(symbol)
-            ? [glanceRow(listing.name, shapesOf(symbol, prefix), listing.href, listing.summary)]
-            : []
+    return For(
+      categories,
+      category => {
+        const rows = listings
+          .filter(listing => (listing.category ?? 'Other') === category)
+          .flatMap(listing => {
+            const symbol = model.symbol(section, listing.name)
+            return symbol && keep(symbol)
+              ? [glanceRow(listing.name, shapesOf(symbol, prefix), listing.href, listing.summary)]
+              : []
+          })
+        return Fragment({
+          children:
+            rows.length > 0
+              ? [heading(category), cliTable(`t-${headingId(category)}`, [header, 'What it does'], rows)]
+              : [],
         })
-      return rows.length > 0
-        ? [heading(category), cliTable(`t-${headingId(category)}`, [header, 'What it does'], rows)]
-        : []
-    })
+      },
+      category => category,
+    )
   }
 
   if (topic.slug === 'decorators') {

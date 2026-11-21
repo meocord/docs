@@ -8,6 +8,7 @@ import {
   Div,
   Em,
   For,
+  Fragment,
   Hr,
   Img,
   Li,
@@ -203,8 +204,11 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
                 children:
                   node.spread || item.spread
                     ? children(item)
-                    : item.children.flatMap((child, at) =>
-                        child.type === 'paragraph' ? children(child) : [lower(child, at)],
+                    : For(
+                        item.children,
+                        (child, at) =>
+                          child.type === 'paragraph' ? Fragment({ children: children(child) }) : lower(child, at),
+                        (_, at) => at,
                       ),
               }),
             (item, index) => offset(item) ?? index,
