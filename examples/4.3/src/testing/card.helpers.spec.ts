@@ -18,7 +18,10 @@ describe('the card buttons', () => {
     const { ran, click } = await pressButton(module, `card/${OWNER}/refresh`, OWNER)
 
     expect(ran).toBe(true)
-    expect(getResponse(click).calls.map(call => call.method)).toEqual(['deferUpdate', 'editReply'])
+    // @Defer acknowledges the click and locks the card; the handler's edit, the refreshed card, comes last
+    const calls = getResponse(click).calls
+    expect(calls.map(call => call.method)).toEqual(['deferUpdate', 'editReply', 'editReply'])
+    expect(calls.at(-1)?.payload).toMatchObject({ embeds: [{ title: 'Refreshed' }] })
   })
 
   it('refuses anyone else', async () => {
