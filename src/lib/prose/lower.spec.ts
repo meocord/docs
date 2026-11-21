@@ -109,6 +109,37 @@ describe('lowerMarkdown', () => {
     expect(out).toContain('<td data-align="left">1</td>')
     expect(out).not.toContain('raw')
   })
+  it('frames a table as a focusable region named by the heading it sits under', () => {
+    const out = html('## Stores\n\n| a | b |\n| - | - |\n| 1 | 2 |')
+    expect(out).toContain('<h2 id="stores">Stores</h2>')
+    expect(out).toContain('<div data-table="true" role="region" aria-labelledby="stores" tabindex="0"><table>')
+  })
+
+  it("names a table above the first heading by the page's title, or else by its columns", () => {
+    const table = '| The bot runs | Store |\n| - | - |\n| here | there |\n\n## Later'
+    expect(html(table, { title: 'Cooldown stores' })).toContain(
+      '<div data-table="true" role="region" aria-label="Cooldown stores" tabindex="0">',
+    )
+    expect(html(table)).toContain('<div data-table="true" role="region" aria-label="The bot runs, Store" tabindex="0">')
+  })
+
+  it('names a second table under the same heading by its columns too, so no two share a name', () => {
+    const tables = '| Field | What |\n| - | - |\n| a | b |\n\n| Outcome | When |\n| - | - |\n| c | d |'
+    const named = (markdown: string, options?: LowerOptions) =>
+      [...html(markdown, options).matchAll(/aria-(?:labelledby|label)="([^"]*)"/g)].map(match => match[1])
+    expect(named(`## Told\n\n${tables}`)).toEqual(['told', 'Told: Outcome, When'])
+    expect(named(tables, { title: 'Observers' })).toEqual(['Observers', 'Observers: Outcome, When'])
+    expect(named(tables)).toEqual(['Field, What', 'Outcome, When'])
+  })
+
+  it('numbers a name already given, and names a table with blank columns by its place', () => {
+    const same = '| A | B |\n| - | - |\n| 1 | 2 |'
+    const named = (markdown: string) =>
+      [...html(markdown).matchAll(/aria-(?:labelledby|label)="([^"]*)"/g)].map(match => match[1])
+    expect(named(`## Store\n\n${same}\n\n${same}\n\n${same}`)).toEqual(['store', 'Store: A, B', 'Store: A, B (2)'])
+    expect(named('|  |  |\n| - | - |\n| 1 | 2 |\n\n|  |  |\n| - | - |\n| 3 | 4 |')).toEqual(['Table 1', 'Table 2'])
+  })
+
   it('draws breaks, images and an ::example without a resolver as nothing', () => {
     const out = html('one  \ntwo\n\n![a cat](/cat.png)\n\n::example{file="x.ts"}')
     expect(out).toContain('one<br/>two')

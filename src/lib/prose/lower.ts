@@ -5,7 +5,6 @@ import {
   Blockquote,
   Br,
   Code,
-  Div,
   Em,
   For,
   Fragment,
@@ -23,6 +22,7 @@ import {
 } from '@meonode/ui'
 import { anchorIds, type AnchorOptions, parseMarkdown } from '@/lib/prose/anchors'
 import { codeFrame } from '@/lib/prose/code'
+import { tableFrame } from '@/lib/prose/table'
 
 /** A heading on the page, with the anchor its element carries. */
 export interface Heading {
@@ -32,6 +32,8 @@ export interface Heading {
 }
 
 export interface LowerOptions extends AnchorOptions {
+  /** The page's title, which names a table that comes before the page's first heading. */
+  title?: string
   /** Maps a link as written to the href to render; stored `/docs/<line>/…` links go through urls.ts. */
   href?: (url: string) => string
   /** The code an `::example{file="…" region="…" from="…"}` directive embeds. */
@@ -124,6 +126,17 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
   const tree = parseMarkdown(markdown)
   const ids = anchorIds(tree, markdown, options)
   const headings: Heading[] = []
+  // The headings that name a table so far, '' for the page above its first heading; the names given by text; and the
+  // tables lowered so far
+  const namedTables = new Set<string>()
+  const namesGiven = new Set<string>()
+  let tables = 0
+  const unique = (name: string) => {
+    let candidate = name
+    for (let repeat = 2; namesGiven.has(candidate); repeat++) candidate = `${name} (${repeat})`
+    namesGiven.add(candidate)
+    return candidate
+  }
   const href = options.href ?? (url => url)
 
   const children = (parent: Parents) =>
@@ -261,10 +274,27 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           }),
         (cell, index) => offset(cell) ?? index,
       )
-    return Div({
+    // Named by the heading it sits under, or by the page above the first one; by its columns where neither is known,
+    // or by its place among the tables when its columns are blank. A heading that already names a table names the
+    // next one with its columns, and a name already given takes a number, so no two share a name.
+    tables += 1
+    const heading = headings.at(-1)
+    const columns =
+      head.children
+        .map(cell => plainText(cell).trim())
+        .filter(Boolean)
+        .join(', ') || `Table ${tables}`
+    const above = heading?.title ?? options.title
+    const name = namedTables.has(heading?.id ?? '')
+      ? { text: unique(above ? `${above}: ${columns}` : columns) }
+      : heading
+        ? { heading: heading.id }
+        : { text: unique(above ?? columns) }
+    namedTables.add(heading?.id ?? '')
+    return tableFrame(
       key,
-      'data-table': true,
-      children: Table({
+      name,
+      Table({
         children: [
           Thead({ key: 'head', children: Tr({ children: cells(head, 'th') }) }),
           Tbody({
@@ -277,7 +307,7 @@ export function lowerMarkdown(markdown: string, options: LowerOptions = {}): Low
           }),
         ],
       }),
-    })
+    )
   }
 
   return { nodes: tree.children.map((child, index) => lower(child, index)).filter(isNode), headings }

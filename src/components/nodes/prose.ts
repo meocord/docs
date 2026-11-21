@@ -319,6 +319,12 @@ export const Prose = createNode('article', {
     '& hr': { margin: 'theme.space.10 0', border: 'none', borderTop: 'theme.line.width solid theme.line.strong' },
 
     '& [data-table]': { margin: '0 0 theme.space.6', overflowX: 'auto' },
+    // A table scrolls sideways when it is wider than the column, so its frame takes focus; the frame clips, so the
+    // ring sits inside it.
+    '& [data-table]:focus-visible': {
+      outline: 'theme.focus.width solid theme.accent.default',
+      outlineOffset: -2,
+    },
     '& table': { width: '100%', borderCollapse: 'collapse', fontSize: 'theme.type.small.size' },
     '& th, & td': {
       padding: 'theme.space.2 theme.space.3',

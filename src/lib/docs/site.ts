@@ -207,6 +207,7 @@ export function guidePage(line: string, slug: string): GuidePage | undefined {
   if (!entry || !page) return undefined
 
   const lowered = lowerMarkdown(page.body, {
+    title: entry.title,
     href: resolveSiteHref,
     example: (file, region, from) => resolveExample(from ?? line, file, region),
   })

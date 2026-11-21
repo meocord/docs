@@ -80,3 +80,59 @@ for (const path of PAGES) {
     ).toEqual([])
   })
 }
+
+// A phone's or a tablet's width lays out what a desktop can't: tables wider than the column, the toolbar's compact
+// search, the mobile sheet. A handful of pages there, each with a table: the line's landing page, a guide and an API
+// page.
+const NARROW_WIDTHS = [375, 768]
+const NARROW_HEIGHT = 1024
+const NARROW_PAGES = ['/docs/4.3', '/docs/4.3/configuration', '/docs/4.3/api/decorator/Command']
+
+for (const width of NARROW_WIDTHS) {
+  test.describe(`at ${width} px`, () => {
+    test.use({ viewport: { width, height: NARROW_HEIGHT } })
+
+    for (const path of NARROW_PAGES) {
+      test(`${path} has no serious or critical accessibility violation`, async ({ page }) => {
+        await page.goto(path)
+        const { violations } = await axe(page, builder => builder.withTags(WCAG))
+        expect(seriousOf(violations)).toEqual([])
+      })
+    }
+  })
+}
+
+// On a desktop the frames lay out as they did before they took focus: each the column's width plus the bleed code
+// blocks share, its table fitting inside with nothing to scroll, as tall as its table, and drawing no ring until a
+// keyboard focuses it. The column's own width depends on the fonts, so the frame is measured from the column's edges.
+const DESKTOP = { width: 1280, height: 900 }
+// theme.space.4, which prose.ts bleeds code blocks and table frames past the column by on each side at this width
+const BLEED = 16
+
+test('at a desktop width, a table frame keeps its layout and draws no ring until focused', async ({ page }) => {
+  await page.setViewportSize(DESKTOP)
+  await page.goto('/docs/4.3')
+  const frames = page.locator('[data-table]')
+  expect(await frames.count()).toBeGreaterThan(0)
+  for (const frame of await frames.all())
+    expect(
+      await frame.evaluate(node => {
+        const table = node.querySelector('table')!
+        const box = node.getBoundingClientRect()
+        // The column is the content box of the article the frame sits in
+        const parent = node.parentElement!
+        const style = getComputedStyle(parent)
+        const outer = parent.getBoundingClientRect()
+        const left = outer.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft)
+        const right = outer.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight)
+        return {
+          bleed: [Math.round(left - box.left), Math.round(box.right - right)],
+          border: Math.round(box.width - node.clientWidth),
+          padding: Math.round(node.clientWidth - table.getBoundingClientRect().width),
+          scrolls: node.scrollWidth > node.clientWidth,
+          extraHeight: Math.round(box.height - table.getBoundingClientRect().height),
+          outline: getComputedStyle(node).outlineStyle,
+        }
+      }),
+    ).toEqual({ bleed: [BLEED, BLEED], border: 0, padding: 0, scrolls: false, extraHeight: 0, outline: 'none' })
+})
