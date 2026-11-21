@@ -53,6 +53,8 @@ to check. Every release's notes are in the [changelog](guide:changelog).
 - **`warnSlow`** names slow work: an `onReady` still running after 10 seconds, with how many hooks wait behind it, and
   an autocomplete that takes 2 of its 3 seconds. `warnSlow: false` silences them. See
   [onReady](guide:lifecycle-hooks#onready).
+- **An autocomplete left unanswered** has its menu closed with no choices, where the member saw it fail to load, and
+  its handler is named once a run. See [Autocomplete](guide:autocomplete#gotchas).
 - **A stop while the bot starts** shuts down what the start made before `start()` rejects, and an `onShutdown` hook may
   stop its own app. See [onShutdown](guide:lifecycle-hooks#onshutdown).
 

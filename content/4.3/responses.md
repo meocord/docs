@@ -92,6 +92,14 @@ While a command's reply is deferred and nothing has been sent, Discord turns a f
 its flags, so `followUp()` sends it as the edit. A private follow-up on a public deferral is the exception: the
 deferral is deleted and the message is sent privately, rather than made public.
 
+## Mentions
+
+`respond()` sets no `allowedMentions` of its own, so its answers follow `clientOptions.allowedMentions`, the default
+for every message the client sends. `npx {{meocord}} create` sets it to `{ parse: [] }`, so an answer pings no one,
+whoever its text mentions. An answer that should ping says so in its own payload:
+`send({ content, allowedMentions: { users: [member.id] } })` pings that member and no one else. See
+[Security](guide:security#ask-for-little).
+
 ## Components V2 and attachments
 
 Once a message uses Components V2, its edits keep the flag, and content and embeds are dropped from them. When an
