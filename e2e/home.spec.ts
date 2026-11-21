@@ -26,8 +26,11 @@ test("the bot's avatar draws the mark as plain SVG, 18 px square", async ({ page
     expect(tag).toContain(' height="18"')
     expect(tag).not.toContain(' class=')
   }
+  // With less motion the panel doesn't play as it arrives, so it stays as served: answered, with the member's reply
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const mark = page.locator('[data-pipeline] [data-reply="member"] [data-avatar="bot"] svg')
+  await expect(mark).toBeVisible()
   expect(await mark.boundingBox()).toMatchObject({ width: 18, height: 18 })
 })
 
