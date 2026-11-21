@@ -65,7 +65,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     // The mode is stamped as `data-theme` before paint, so the server's markup never depends on the reader.
     suppressHydrationWarning: true,
     children: [
-      // First in <head>: an inline script after a stylesheet waits for that sheet to load.
+      // Before paint. An inline script after a stylesheet <link> waits for that sheet to load; the styles ahead of
+      // these in <head>, Next's (experimental.inlineCss) and meonode's, are inline, so nothing holds them back.
       Head({
         key: 'head',
         children: [
