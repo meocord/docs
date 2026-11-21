@@ -39,7 +39,8 @@ export const themeTokens = {
   elevation: { 1: v('shadow-1'), 2: v('shadow-2'), 3: v('shadow-3') },
 
   font: {
-    sans: 'var(--font-sans), system-ui, sans-serif',
+    // The metric-matched stand-ins in globals.css, then whatever sans the system has.
+    sans: "var(--font-sans), 'Sans Fallback Arial', 'Sans Fallback Roboto', 'Sans Fallback DejaVu', system-ui, sans-serif",
     // The metric-matched stand-ins in globals.css, then whatever monospace the system has.
     mono: "var(--font-mono), 'Mono Fallback Menlo', 'Mono Fallback DejaVu', 'Mono Fallback Liberation', 'Mono Fallback Consolas', ui-monospace, monospace",
     weight: { regular: 400, medium: 500, semibold: 600 },

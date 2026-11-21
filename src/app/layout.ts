@@ -11,7 +11,7 @@ import { themeModes } from '@/constants/themes/modes'
 import { SITE_URL } from '@/config/site'
 import { ogImage } from '@/lib/og/cards'
 import { robots } from '@/lib/docs/page-metadata'
-import { mono, sans } from '@/app/fonts'
+import { instrumentSans, jetbrainsMono } from '@/app/fonts'
 import { SHEET_KEYS_SCRIPT } from '@/components/shell/sheet-keys'
 import { SEARCH_KEYS_SCRIPT } from '@/components/search/search-keys'
 
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   const searchLines = readSearchManifest().lines
   return Html({
     lang: 'en',
-    className: `${sans.variable} ${mono.variable}`,
+    className: `${instrumentSans.variable} ${jetbrainsMono.variable}`,
     // The mode is stamped as `data-theme` before paint, so the server's markup never depends on the reader.
     suppressHydrationWarning: true,
     children: [
