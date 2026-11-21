@@ -109,22 +109,22 @@ controller or handler. Catch it globally to answer an expired button in your own
 The fallback logs an error no filter handled, then answers the user through `respond()` if the interaction can still
 take an answer, in the style of the app's [presenter](guide:presenters):
 
-| The interaction                                                                                       | The fallback                                                                                                                                                            |
-| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Not answered yet                                                                                      | replies privately; a select-menu pick is first put back in its menu, then the error follows up privately                                                                |
-| A command whose reply is deferred                                                                     | edits the deferred reply into the error                                                                                                                                 |
-| A button, select menu or modal on an ephemeral message that MeoCord answered by updating that message | adds the error to that message, if it fits                                                                                                                              |
-| Any other button, select menu or modal                                                                | follows up privately; it never edits the message the user clicked, nor an answer MeoCord didn't make. A select-menu pick MeoCord deferred is first put back in its menu |
-| Autocomplete                                                                                          | closes the menu with an empty list                                                                                                                                      |
-| Expired (Discord error 10062)                                                                         | logs only                                                                                                                                                               |
+| The interaction                                                                                                    | The fallback                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Not answered yet                                                                                                   | replies privately; a select-menu pick is first put back in its menu, then the error follows up privately                                                                                    |
+| A command whose reply is deferred                                                                                  | edits the deferred reply into the error                                                                                                                                                     |
+| A button, select menu or modal on an ephemeral message that MeoCord answered by updating it or deferring an update | adds the error to that message, if it fits                                                                                                                                                  |
+| Any other button, select menu or modal                                                                             | follows up privately; it never edits the error into the message the user clicked, nor into an answer MeoCord didn't make. A select-menu pick MeoCord deferred is first put back in its menu |
+| Autocomplete                                                                                                       | closes the menu with an empty list                                                                                                                                                          |
+| Expired (Discord error 10062)                                                                                      | logs only                                                                                                                                                                                   |
 
-Discord shows a pick in the picker's own client as soon as they pick, until a response updates the message. To put a
-refused pick back, MeoCord answers with an update that sets no field: the menu shows what it did before the pick, the
-message keeps every edit made to it and shows no "(edited)", and nobody else sees a change.
+Discord shows a pick in the picker's own client as soon as they pick, until a response updates the message. To put back
+a pick nothing has answered, MeoCord answers with an update that sets no field: the menu shows what it did before the
+pick, the message keeps every edit made to it and shows no "(edited)", and nobody else sees a change.
 
-The error is added to an ephemeral message only after MeoCord itself answered by updating it, with `respond()` or
-under `@Defer`. After any other answer, such as a reply or update a handler made with discord.js directly, it follows
-up privately, since editing would replace what that answer showed.
+The error is added to an ephemeral message only after MeoCord itself answered by updating it or deferring an update,
+with `respond()` or under `@Defer`. After any other answer, such as a reply or update a handler made with discord.js
+directly, it follows up privately, since editing could replace what that answer showed.
 
 An error that doesn't fit the message it would edit, such as one past Discord's limit of embeds, follows up privately
 instead.
