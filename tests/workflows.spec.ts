@@ -51,7 +51,8 @@ function stepIn(job: string, matches: (step: Step) => boolean) {
 /** Runs a step's script as GitHub would, in `cwd`, with `bin` ahead on PATH. */
 function runStep({ step, shell }: ReturnType<typeof stepIn>, cwd: string, bin?: string) {
   const env = { ...process.env, PATH: bin ? `${bin}${path.delimiter}${process.env.PATH}` : process.env.PATH }
-  const flags = GITHUB_SHELLS[shell ?? 'default']!
+  const flags = GITHUB_SHELLS[shell ?? 'default']
+  if (!flags) throw new Error(`No GitHub flags for shell ${shell}`)
   const result = spawnSync('bash', [...flags, '-c', step.run!], { cwd, env, encoding: 'utf8' })
   return { status: result.status, output: result.stdout + result.stderr }
 }
