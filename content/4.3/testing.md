@@ -103,9 +103,10 @@ another default:
   with `ran: false`. See [Guards](guide:guards).
 - **`waitForReady: true`.** A `dispatch`, `invoke` or `emit` made while `init({ ready: true })` runs the `onReady` hooks
   waits for the hooks of the classes it uses, as the bot's calls do. A call made once they have settled, or without
-  `ready`, runs at once. One still waiting when `close()` comes is dropped as the bot drops it at a stop, and a
-  deferred reply its `@Defer` already sent is deleted, so [`getResponse`](api:testing/getResponse)`(interaction).calls`
-  ends with `deleteReply`. See [Lifecycle hooks](guide:lifecycle-hooks#waiting-for-the-hooks).
+  `ready`, runs at once. One still waiting when `close()` stops waiting for the hooks is dropped as the bot drops it at
+  a stop, and a deferred reply its `@Defer` had sent, or was sending, is deleted, so
+  [`getResponse`](api:testing/getResponse)`(interaction).calls` ends with `deleteReply`. See
+  [Lifecycle hooks](guide:lifecycle-hooks#waiting-for-the-hooks).
 - **`warnSlow`.** The module warns about slow work only when the app sets `warnSlow: true`, where the bot warns unless
   it is `false`: a test's fake clock can pass those times inside a handler.
 
