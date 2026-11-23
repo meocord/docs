@@ -34,9 +34,9 @@ npm ci --omit=dev
 npx meocord start --prod
 ```
 
-With Yarn 1, the second line is `yarn install --production`, and with Yarn 4 `yarn workspaces focus --all --production`,
-which Yarn 2 and 3 run after `yarn plugin import workspace-tools`; with pnpm, `pnpm prune --prod`; with bun,
-`bun install --production`.
+The yarn tab is Yarn 4's: Yarn 2 and 3 run its second line after `yarn plugin import workspace-tools`. With Yarn 1, the
+first line installs with `yarn install --frozen-lockfile`, and the second is
+`yarn install --frozen-lockfile --production`.
 
 ## How it works
 

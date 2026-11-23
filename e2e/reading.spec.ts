@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 const PAGE = '/docs/latest/getting-started'
+// A page whose code frames include one without package-manager tabs
+const PLAIN_CODE_PAGE = '/docs/latest/slash-commands'
 
 test('code is coloured by theme, with no CSP violation', async ({ page }) => {
   const violations: string[] = []
@@ -23,7 +25,7 @@ test('code is coloured by theme, with no CSP violation', async ({ page }) => {
 
 test('the copy button copies the code and confirms', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto(PAGE)
+  await page.goto(PLAIN_CODE_PAGE)
   const frame = page.locator('[data-code]:not([data-install])').first()
   const copy = frame.locator('[data-copy]')
   await copy.click()
@@ -35,7 +37,7 @@ test('the copy button copies the code and confirms', async ({ page, context }) =
 
 test('the copy button draws its icons as plain SVG, 16 px square', async ({ page, request }) => {
   // As the page is served: sized by attributes, with no class
-  const served = await (await request.get(PAGE)).text()
+  const served = await (await request.get(PLAIN_CODE_PAGE)).text()
   const icons = [...served.matchAll(/<svg data-icon="[^"]*"[^>]*>/g)].map(([tag]) => tag)
   expect(icons.length).toBeGreaterThan(0)
   for (const tag of icons) {
@@ -43,12 +45,13 @@ test('the copy button draws its icons as plain SVG, 16 px square', async ({ page
     expect(tag).toContain(' height="16"')
     expect(tag).not.toContain(' class=')
   }
-  await page.goto(PAGE)
+  await page.goto(PLAIN_CODE_PAGE)
   const icon = page.locator('[data-code]:not([data-install]) [data-copy] [data-icon="copy"]').first()
   expect(await icon.boundingBox()).toMatchObject({ width: 16, height: 16 })
 })
 
-test('install commands follow the chosen package manager, before paint on the next page', async ({ page }) => {
+test('install commands follow the chosen package manager, before paint on the next page', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto(PAGE)
   const install = page.locator('[data-install]').first()
   await expect(install.locator('[data-pm-pane="npm"]')).toBeVisible()
@@ -57,6 +60,12 @@ test('install commands follow the chosen package manager, before paint on the ne
   await install.locator('[data-pm-choice="bun"]').click()
   await expect(install.locator('[data-pm-pane="bun"]')).toBeVisible()
   await expect(install.locator('[data-pm-pane="bun"]')).toContainText('bunx meocord')
+  // The copy button copies the pane shown
+  await install.locator('[data-copy]').click()
+  await expect(install.locator('[data-copy]')).toHaveAttribute('data-copied', '')
+  const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+  expect(clipboard).toContain('bunx meocord')
+  expect(clipboard).not.toContain('npx')
 
   await page.goto('/docs/latest/deployment')
   await expect(page.locator('html')).toHaveAttribute('data-pm', 'bun')
