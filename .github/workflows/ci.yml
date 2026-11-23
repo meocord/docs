@@ -17,7 +17,8 @@ env:
   BUN_VERSION: 1.4.x
   IMAGE: ghcr.io/${{ github.repository }}
 
-# bash -eo pipefail: a pipeline fails when any command in it fails, so `bun run build | tee` fails with the build
+# bash -eo pipefail: a pipeline fails when any command in it fails, so `bun run build | tee` fails with the build.
+# A reader that stops early, such as `head` or `grep -q`, fails its writer with SIGPIPE (141).
 defaults:
   run:
     shell: bash

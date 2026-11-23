@@ -21,7 +21,8 @@ permissions:
 env:
   BUN_VERSION: 1.4.x
 
-# bash -eo pipefail: a pipeline fails when any command in it fails
+# bash -eo pipefail: a pipeline fails when any command in it fails.
+# A reader that stops early, such as `head` or `grep -q`, fails its writer with SIGPIPE (141).
 defaults:
   run:
     shell: bash
