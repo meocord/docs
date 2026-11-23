@@ -34,11 +34,11 @@ npm ci --omit=dev
 npx meocord start --prod
 ```
 
-With Yarn 1, the second line is `yarn install --production`, and with Yarn 4 `yarn workspaces focus --all --production`,
-which Yarn 2 and 3 run after `yarn plugin import workspace-tools`; with pnpm, `pnpm prune --prod`; with bun,
-`bun install --production`. That one still installs the ESLint toolchain that `meocord/eslint` uses when the bot lists
-its packages as development dependencies, as every bot from `npx {{meocord}} create` does. The bot runs the same; the
-toolchain only adds to the install's size and to what an audit of it reports.
+The yarn tab is Yarn 4's: Yarn 2 and 3 run its second line after `yarn plugin import workspace-tools`. With Yarn 1, the
+first line installs with `yarn install --frozen-lockfile`, and the second is
+`yarn install --frozen-lockfile --production`. With Bun, the ESLint toolchain that `meocord/eslint` uses stays installed
+when the bot lists its packages as development dependencies, as every bot from `npx {{meocord}} create` does. The bot
+runs the same; the toolchain only adds to the install's size and to what an audit of it reports.
 
 ## How it works
 
