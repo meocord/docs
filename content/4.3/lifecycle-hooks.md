@@ -78,9 +78,9 @@ with a warning naming the hook and the handler to add `@Defer` to.
 A stop decides every call still waiting before the `onShutdown` hooks: a call whose hooks have settled runs, and any
 other is dropped. A dropped call runs nothing and sends nothing more to Discord, its observers see the outcome `'error'`
 with "The bot stopped before this call started.", and the bot names it in a warning. One exception: when `@Defer` had
-already sent the deferred reply of a command, or of a modal sent from one, MeoCord deletes it, so the user isn't left on
-"thinking…", and refuses any answer asked for after that. The deferred update of a component, or of a modal a component
-opened, shows nothing and is left as it is.
+sent, or was sending, the deferred reply of a command, or of a modal sent from one, MeoCord deletes it, so the user
+isn't left on "thinking…", and refuses any answer asked for after that. The deferred update of a component, or of a
+modal a component opened, shows nothing and is left as it is.
 
 ::example{file="services/prices/price.slash.controller.spec.ts" region="spec"}
 
@@ -97,8 +97,8 @@ Shutdown first stops taking events and waits for the calls under way, `@On` and 
 `onShutdown` hooks. A call that awaits `app.stop()`, as an owner-only shutdown command does, isn't waited for.
 `shutdownTimeout` bounds the whole shutdown: the calls are waited for no longer than the timeout less a reserve kept for
 the hooks, a quarter of it, at least 1 second and never more than half. A call still running then is named in a warning.
-While dropped calls' deferred replies are being deleted, all at once, the hooks may start up to 1 second later, taking
-never more than half of their reserve. Deletions that fail by then are named in one warning; one still running goes on
+While dropped calls' deferred replies are being deleted, all at once, the hooks may start up to 1 second later, never
+taking more than half of their reserve. Deletions that fail by then are named in one warning; one still running goes on
 without the hooks waiting for it, and is named in a warning of its own if it fails.
 
 An `onShutdown` hook may stop the app itself, as cleanup code it shares with an owner-only shutdown command does. A
