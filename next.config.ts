@@ -94,6 +94,8 @@ const nextConfig: NextConfig = {
           // Our prestyled factories, whose call sites it compiles as it does @meonode/ui's own. Each module
           // exports createNode factories only; src/components/nodes/index.spec.ts checks every one listed.
           factoryModules: ['@/components/nodes', '@/components/shell/glyph-slot'],
+          // Names each call site whose whole style is known at build time, so its style work is skipped at render.
+          experimental_extractCss: true,
         },
       ],
     ],
