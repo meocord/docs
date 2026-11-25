@@ -401,15 +401,18 @@ export const Prose = createNode('article', {
     '& [data-params] tr:target, & [data-params] tr:target + tr[data-description]': {
       boxShadow: 'inset 3px 0 0 theme.accent.default',
     },
-    // Forced colors drop shadows, so there the mark is a border in the system's highlight
+    // Forced colors drop shadows, so there the mark is an outline in the system's highlight, inside the rows, where it
+    // moves nothing
     '@media (forced-colors: active)': {
-      '& [data-params] tr:target > :first-child, & [data-params] tr:target + tr[data-description] > td': {
-        borderInlineStart: '3px solid Highlight',
+      '& [data-params] tr:target, & [data-params] tr:target + tr[data-description]': {
+        outline: '3px solid Highlight',
+        outlineOffset: -3,
       },
     },
     // A parameter's description is the row beneath it, read as one entry with it. The frame is its container, so the
-    // description wraps at the frame's width and stays in view however far the table beside it scrolls.
-    '& [data-params]': { containerType: 'inline-size' },
+    // description wraps at the frame's width and stays in view however far the table beside it scrolls; a frame with
+    // no description rows, such as a CLI table's, is left as it is.
+    '& [data-params]:has(tr[data-description])': { containerType: 'inline-size' },
     // A parameter's name heads its row, read as a cell beside its type rather than as the column headers above
     '& [data-params] tbody th': {
       fontWeight: 'theme.font.weight.regular',
