@@ -87,9 +87,7 @@ test('an API parameter’s name and type never break inside a word', async ({ pa
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/docs/4.1/api/decorators/Command')
     const lines = await page
-      .locator(
-        '[data-params] tr:not([data-description]) > td:first-child code, [data-params] tr:not([data-description]) > td:nth-child(2) code',
-      )
+      .locator('[data-params] tbody th code, [data-params] tr:not([data-description]) > td:nth-child(2) code')
       .evaluateAll(codes => codes.map(code => code.getClientRects().length))
     expect(lines.every(count => count === 1)).toBe(true)
   }

@@ -196,16 +196,24 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, name: Ta
           key: 'body',
           children: For(
             params,
-            param => {
+            (param, index) => {
               const value = param.defaultValue ? markdown(param.defaultValue, 'd') : ''
               const description = markdown(param.description, 'd')
+              // The name heads its row, and the description beneath names it as its header, so a screen reader
+              // announces the parameter with it
+              const nameId = `${key}-${index}`
               return Fragment({
                 children: [
                   Tr({
                     key: 'param',
                     id: param.anchor,
                     children: [
-                      Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
+                      Th({
+                        key: 'name',
+                        scope: 'row',
+                        id: nameId,
+                        children: Code(`${param.name}${param.optional ? '?' : ''}`),
+                      }),
                       Td({
                         key: 'type',
                         children: param.type.length
@@ -224,7 +232,7 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, name: Ta
                         Tr({
                           key: 'description',
                           'data-description': true,
-                          children: Td({ colSpan: columns, children: description }),
+                          children: Td({ colSpan: columns, headers: nameId, children: description }),
                         }),
                       ]
                     : []),
