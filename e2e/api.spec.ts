@@ -80,6 +80,19 @@ test('a parameter’s description reads at the frame’s width, beneath a row as
   }
 })
 
+test('a parameter a link targets is marked in forced colors, where shadows are dropped', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' })
+  await page.goto('/docs/4.3/api/decorator/MeoCord#themefortimeoutms')
+  // Its name and its description, each marked at its starting edge
+  const marks = await page.locator('[data-params] tr:target').evaluate(row =>
+    [row.firstElementChild!, row.nextElementSibling!.firstElementChild!].map(cell => {
+      const style = getComputedStyle(cell)
+      return `${style.borderInlineStartStyle} ${style.borderInlineStartWidth}`
+    }),
+  )
+  expect(marks).toEqual(['solid 3px', 'solid 3px'])
+})
+
 test('a linked type opens its own page', async ({ page }) => {
   await page.goto(`${docs41}/api/decorators/Cooldown`)
   await page.locator('[data-signature] a', { hasText: 'CooldownOptions' }).first().click()

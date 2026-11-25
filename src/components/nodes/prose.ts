@@ -401,6 +401,12 @@ export const Prose = createNode('article', {
     '& [data-params] tr:target, & [data-params] tr:target + tr[data-description]': {
       boxShadow: 'inset 3px 0 0 theme.accent.default',
     },
+    // Forced colors drop shadows, so there the mark is a border in the system's highlight
+    '@media (forced-colors: active)': {
+      '& [data-params] tr:target > :first-child, & [data-params] tr:target + tr[data-description] > td': {
+        borderInlineStart: '3px solid Highlight',
+      },
+    },
     // A parameter's description is the row beneath it, read as one entry with it. The frame is its container, so the
     // description wraps at the frame's width and stays in view however far the table beside it scrolls.
     '& [data-params]': { containerType: 'inline-size' },
