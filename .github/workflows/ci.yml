@@ -251,6 +251,20 @@ jobs:
           done
           docker logs docs
           exit 1
+      # A file the build's trace leaves out of the image, such as meo-canvas's platform addon, fails only once the
+      # code that loads it runs: the home page's social card draws with it
+      - name: Check the image draws a social card
+        run: |
+          card=$(curl -fsS http://127.0.0.1:3000/ | grep -oE 'property="og:image" content="[^"]+"' | sed -E 's|.*content="||; s|"$||; s|^https?://[^/]+||')
+          echo "card: $card"
+          if ! curl -fsS -D headers.txt -o card.png "http://127.0.0.1:3000$card" \
+            || ! grep -qi '^content-type: image/png' headers.txt \
+            || ! grep -qiE '^x-rasteriser: (gpu|cpu)' headers.txt; then
+            cat headers.txt
+            docker logs docs
+            exit 1
+          fi
+          grep -i '^x-rasteriser' headers.txt
 
   # The only job with write access, run on main alone, after everything else passed. It installs
   # nothing outside the Docker build.
