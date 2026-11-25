@@ -362,7 +362,7 @@ const articleOf = (entry: string, name: string) => {
   const symbol = tables.symbol(location.section, location.symbol)!
   return renderToStaticMarkup(Div({ children: apiArticle(symbol).nodes }).render())
 }
-const cellsOf = (row: string) => [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(match => match[1])
+const cellsOf = (row: string) => [...row.matchAll(/<(t[hd])[^>]*>([\s\S]*?)<\/\1>/g)].map(match => match[2])
 const textOf = (html: string) =>
   html
     .replace(/<[^>]*>/g, '')
@@ -396,7 +396,7 @@ describe('a parameters table', () => {
     expect(rows.filter(row => row.described).length).toBeGreaterThan(20)
     rows.forEach((row, index) => {
       if (!row.described) return expect(row.cells).toHaveLength(4)
-      expect(row.inner).toMatch(/^<td colSpan="4">/)
+      expect(row.inner).toMatch(/^<td colSpan="4" headers="[^"]+">/)
       expect(row.cells).toHaveLength(1)
       expect(rows[index - 1].described).toBe(false)
     })
@@ -407,6 +407,22 @@ describe('a parameters table', () => {
     expect(cells[0]).toBe('<code>options.themeForTimeoutMs?</code>')
     expect(textOf(description!)).toMatch(/^How long a lookup through a themeFor resolver may take/)
     expect(table).not.toMatch(/<tr[^>]*data-description[^>]*id=/)
+  })
+
+  it('heads each parameter’s row with its name, which its description names as its header', () => {
+    // MeoCord's one table, and a page of seven, where names repeat from table to table
+    for (const markup of [meocord, articleOf('meocord/testing', 'TestingModule')]) {
+      const heads = [...markup.matchAll(/<th scope="row" id="([^"]+)">/g)].map(match => match[1])
+      expect(heads.length).toBeGreaterThan(1)
+      expect(new Set(heads).size).toBe(heads.length)
+      const pairs = [
+        ...markup.matchAll(
+          /<th scope="row" id="([^"]+)">(?:(?!<\/tr>)[\s\S])*<\/tr><tr data-description="true"><td [^>]*headers="([^"]+)"/g,
+        ),
+      ]
+      expect(pairs.length).toBe(markup.match(/<tr data-description="true">/g)!.length)
+      for (const [, head, named] of pairs) expect(named).toBe(head)
+    }
   })
 })
 

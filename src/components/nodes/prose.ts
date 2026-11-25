@@ -404,7 +404,12 @@ export const Prose = createNode('article', {
     // A parameter's description is the row beneath it, read as one entry with it. The frame is its container, so the
     // description wraps at the frame's width and stays in view however far the table beside it scrolls.
     '& [data-params]': { containerType: 'inline-size' },
-    '& [data-params] tr:has(+ tr[data-description]) > td': { borderBottom: 'none' },
+    // A parameter's name heads its row, read as a cell beside its type rather than as the column headers above
+    '& [data-params] tbody th': {
+      fontWeight: 'theme.font.weight.regular',
+      borderBottomColor: 'theme.line.hairline',
+    },
+    '& [data-params] tr:has(+ tr[data-description]) > *': { borderBottom: 'none' },
     '& [data-params] tr[data-description] > td': { paddingTop: 0 },
     '& [data-params] tr[data-description] > td > [data-doc]': {
       position: 'sticky',
@@ -428,8 +433,10 @@ export const Prose = createNode('article', {
       borderRadius: 'theme.radius.chip',
       backgroundColor: 'theme.accent.default',
     },
-    '& [data-params] tr:not([data-description]) > td:first-child code': { whiteSpace: 'nowrap' },
-    '& [data-params] td code': { overflowWrap: 'normal' },
+    '& [data-params] tbody th code, & [data-params] tr:not([data-description]) > td:first-child code': {
+      whiteSpace: 'nowrap',
+    },
+    '& [data-params] td code, & [data-params] tbody th code': { overflowWrap: 'normal' },
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
