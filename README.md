@@ -16,7 +16,7 @@ Requires [Bun](https://bun.sh) 1.4.
 bun install
 bun run start:dev      # next dev behind the CSP hash proxy, on PORT (3000) and UPSTREAM_PORT (3001)
 bun run build          # production build
-bun run serve          # the production build, run as the image runs it, from a copy outside the checkout
+bun run serve          # the production build, run as the image runs it, laid out outside the checkout
 ```
 
 `bun install` also sets up the pre-commit hook in `.husky/`, which runs what CI's Lint job runs: the formatting of the
