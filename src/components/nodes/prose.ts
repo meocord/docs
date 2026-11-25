@@ -398,7 +398,20 @@ export const Prose = createNode('article', {
       scrollMarginTop: 'theme.space.4',
       '@media (width < theme.breakpoint.compact)': { scrollMarginTop: 'calc(theme.layout.toolbar + theme.space.4)' },
     },
-    '& [data-params] tr:target': { boxShadow: 'inset 3px 0 0 theme.accent.default' },
+    '& [data-params] tr:target, & [data-params] tr:target + tr[data-description]': {
+      boxShadow: 'inset 3px 0 0 theme.accent.default',
+    },
+    // A parameter's description is the row beneath it, read as one entry with it. The frame is its container, so the
+    // description wraps at the frame's width and stays in view however far the table beside it scrolls.
+    '& [data-params]': { containerType: 'inline-size' },
+    '& [data-params] tr:has(+ tr[data-description]) > td': { borderBottom: 'none' },
+    '& [data-params] tr[data-description] > td': { paddingTop: 0 },
+    '& [data-params] tr[data-description] > td > [data-doc]': {
+      position: 'sticky',
+      insetInlineStart: 'theme.space.3',
+      maxWidth: 'calc(100cqi - 2 * theme.space.3)',
+    },
+    '& [data-params] tr[data-description] p + p': { marginTop: 'theme.space.2' },
     // A glossary's term is a link's target too: clear of the toolbar, and marked in the gutter beside it while it
     // is the target, its text left where it stands.
     '& p[data-term]': {
@@ -415,7 +428,7 @@ export const Prose = createNode('article', {
       borderRadius: 'theme.radius.chip',
       backgroundColor: 'theme.accent.default',
     },
-    '& [data-params] td:first-child code': { whiteSpace: 'nowrap' },
+    '& [data-params] tr:not([data-description]) > td:first-child code': { whiteSpace: 'nowrap' },
     '& [data-params] td code': { overflowWrap: 'normal' },
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },

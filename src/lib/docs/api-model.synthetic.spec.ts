@@ -182,7 +182,8 @@ describe('ApiModel, on every declaration shape', () => {
     expect(old.code.map(text)).toEqual(['Old(a?: string, ...rest: number[]): Target', 'Old(): void'])
     const [first, second] = old.signatures
     expect(first.params.map(param => [param.name, param.optional, param.defaultValue])).toEqual([
-      ['a', true, "'x'"],
+      // An initializer, as a code span of Markdown
+      ['a', true, "`'x'`"],
       ['...rest', false, undefined],
     ])
     expect(first.throws).toEqual(['When it fails.'])
@@ -198,7 +199,7 @@ describe('ApiModel, on every declaration shape', () => {
     const [size, value, gone] = store.members
     expect(store.members.map(member => member.name)).toEqual(['size', 'value', 'gone'])
     expect(text(size.code[0])).toBe('static readonly size: number')
-    expect(size).toMatchObject({ defaultValue: '0', since: '4.1.1' })
+    expect(size).toMatchObject({ defaultValue: '`0`', since: '4.1.1' })
     expect(value.code.map(text)).toEqual(['get value(): string', 'set value(next: string)'])
     expect(gone.deprecated).toBe('Deprecated.')
     expect(gone.signatures[0].examples).toEqual(['gone()'])

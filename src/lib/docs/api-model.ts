@@ -3,6 +3,7 @@ import type { DecoratorTarget } from '@/lib/docs/api-layout'
 import type { VersionsManifest } from '@/lib/urls'
 import { shellIds } from '@/lib/page-ids'
 import { docsHref, entrySegment, memberAnchor, sectionSegment } from '@/lib/urls'
+import { codeSpan, defaultMarkdown } from '../../../scripts/lib/default-value'
 
 /** A declaration, and for a property the object its written type stands for, where api-generate kept one. */
 type Declaration = JSONOutput.DeclarationReflection & {
@@ -31,6 +32,7 @@ export interface ApiParam {
   option?: true
   type: Token[]
   optional: boolean
+  /** Markdown: its `@defaultValue`, or its initializer as code. */
   defaultValue?: string
   since?: string
   /** Markdown. */
@@ -57,6 +59,7 @@ export interface ApiMember {
   code: Token[][]
   description: string
   signatures: ApiSignature[]
+  /** Markdown, from its `@defaultValue`. */
   defaultValue?: string
   since?: string
   deprecated?: string
@@ -513,7 +516,7 @@ export class ApiModel {
       name: parameter.flags?.isRest ? `...${parameter.name}` : parameter.name,
       type: parameter.type ? this.type(parameter.type) : [],
       optional: !!parameter.flags?.isOptional || parameter.defaultValue !== undefined,
-      defaultValue: parameter.defaultValue,
+      defaultValue: parameter.defaultValue === undefined ? undefined : codeSpan(parameter.defaultValue),
       since: this.since[key]?.since,
       description: this.#text(parameter.comment),
     }
@@ -973,9 +976,10 @@ function deprecation(declaration: Declaration): string | undefined {
   return undefined
 }
 
+/** A declaration's `@defaultValue` or `@default`, as Markdown. */
 function defaultValue(declaration: Declaration): string | undefined {
   const text = tagText(declaration.comment, '@defaultValue') ?? tagText(declaration.comment, '@default')
-  return text?.replace(/^```\w*\n?|\n?```$/g, '').replace(/^`|`$/g, '') || undefined
+  return text ? defaultMarkdown(text) : undefined
 }
 
 function examples(comment: Comment | undefined): string[] {

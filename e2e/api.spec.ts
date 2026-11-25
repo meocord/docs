@@ -23,6 +23,56 @@ test('a symbol page shows its declaration, links its types, and anchors its memb
   expect(violations).toEqual([])
 })
 
+// A phone, a small laptop and a desktop: MeoCord's parameters table is wider than its frame at each
+const TABLE_WIDTHS = [375, 1024, 1440]
+
+test('a parameter’s description reads at the frame’s width, beneath a row as tall as its own cells', async ({
+  page,
+}) => {
+  for (const width of TABLE_WIDTHS) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/docs/4.3/api/decorator/MeoCord')
+    const frame = page.locator('[data-params]').first()
+    // Each description's box against the frame's, with the table where it starts and scrolled to its end
+    const descriptions = () =>
+      frame.evaluate(node => {
+        const box = node.getBoundingClientRect()
+        return [...node.querySelectorAll('tr[data-description] > td > [data-doc]')].map(doc => {
+          const own = doc.getBoundingClientRect()
+          const cell = getComputedStyle(doc.parentElement!)
+          const room = box.width - parseFloat(cell.paddingLeft) - parseFloat(cell.paddingRight)
+          return { inside: own.left >= box.left - 1 && own.right <= box.right + 1, width: own.width, room }
+        })
+      })
+    const atStart = await descriptions()
+    expect(atStart.length).toBeGreaterThan(20)
+    expect(atStart.every(each => each.inside)).toBe(true)
+    // The longest fill the frame, less the cell's padding on each side
+    expect(Math.max(...atStart.map(each => each.width - each.room))).toBeGreaterThan(-1)
+    expect(await frame.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true)
+    await frame.evaluate(node => node.scrollTo({ left: node.scrollWidth, behavior: 'instant' }))
+    expect((await descriptions()).every(each => each.inside)).toBe(true)
+    // A parameter's row is no taller than its own cells need: under twice its tallest cell's text, which a range
+    // measures by its glyphs rather than its line boxes, with the cells' padding
+    const taller = await frame.evaluate(node =>
+      [...node.querySelectorAll('tbody tr:not([data-description])')].flatMap(row => {
+        const cells = [...row.children] as HTMLElement[]
+        const tallest = Math.max(
+          ...cells.map(cell => {
+            const range = document.createRange()
+            range.selectNodeContents(cell)
+            return range.getBoundingClientRect().height
+          }),
+        )
+        const style = getComputedStyle(cells[0])
+        const allowed = 2 * tallest + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+        return row.getBoundingClientRect().height > allowed ? [cells[0].textContent] : []
+      }),
+    )
+    expect(taller).toEqual([])
+  }
+})
+
 test('a linked type opens its own page', async ({ page }) => {
   await page.goto(`${docs41}/api/decorators/Cooldown`)
   await page.locator('[data-signature] a', { hasText: 'CooldownOptions' }).first().click()

@@ -6,6 +6,7 @@
 
 import { pageSlugger } from '../../src/lib/page-ids'
 import type { JSONOutput } from 'typedoc'
+import { defaultMarkdown } from './default-value'
 import { shownSince, type SinceEntry } from './since'
 import { lineOf } from './versions'
 
@@ -175,12 +176,8 @@ export function configReference(
   }
 }
 
-// A default written as a code block reads as prose in a table cell
-const cell = (text: string) =>
-  text
-    .replace(/^```\w*\n([\s\S]*?)\n```$/, '$1')
-    .replace(/\n+/g, ' ')
-    .replace(/\|/g, '\\|')
+// Text on one line of a table cell, its pipes escaped; a default TypeDoc fenced reads as the prose it was written as
+const cell = (text: string) => defaultMarkdown(text).replace(/\n+/g, ' ').replace(/\|/g, '\\|')
 
 /**
  * The page the site shows for a line's configuration reference, as a Markdown file with front
