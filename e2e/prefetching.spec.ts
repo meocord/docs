@@ -83,8 +83,15 @@ function sidebarLinksInView(page: Page): Promise<string[]> {
   })
 }
 
-/** Clicks a link and fails on any request for its page made after the click, reporting what it saw. */
-async function clickAndCount(page: Page, fetches: Fetch[], name: string, target: Locator): Promise<void> {
+/** What a click on a link cost: its page's RSC requests after the click, and any document the browser loaded. */
+interface Click {
+  destination: string
+  requests: string[]
+  documents: string[]
+}
+
+/** Clicks a link, waits for its page's h1 and reports the requests the click caused. */
+async function clickAndCount(page: Page, fetches: Fetch[], name: string, target: Locator): Promise<Click> {
   const href = await target.getAttribute('href')
   expect(href, `${name} has a target`).toBeTruthy()
   const destination = new URL(href!, page.url()).pathname
@@ -93,9 +100,12 @@ async function clickAndCount(page: Page, fetches: Fetch[], name: string, target:
   const before = fetches.length
   // Every request the click causes, beyond the build's own static files, to show what the counter above misses
   const caused: string[] = []
+  const documents: string[] = []
   const onRequest = (request: Request) => {
     const url = new URL(request.url())
     if (url.pathname.startsWith('/_next/static/')) return
+    // A link Next doesn't handle loads its page as a new document, which the RSC counter never sees
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(url.pathname)
     const headers = request.headers()
     const kind = headers['next-router-segment-prefetch']
       ? 'segment'
@@ -113,14 +123,22 @@ async function clickAndCount(page: Page, fetches: Fetch[], name: string, target:
   await expect(page.locator('h1:visible').first()).toBeVisible()
   const elapsed = Date.now() - started
   page.off('request', onRequest)
-  const after = fetches.slice(before).filter(fetch => !fetch.prefetch && fetch.pathname === destination)
+  const requests = fetches
+    .slice(before)
+    .filter(fetch => !fetch.prefetch && fetch.pathname === destination)
+    .map(fetch => fetch.request.url())
   report(name, `requests the click caused: ${caused.join(', ') || 'none'}`)
-  report(name, `${destination} prefetched ${prefetched}; ${after.length} request(s) on the click; h1 in ${elapsed} ms`)
+  report(
+    name,
+    `${destination} prefetched ${prefetched}; ${requests.length} request(s) and ${documents.length} document(s) on the click; h1 in ${elapsed} ms`,
+  )
+  return { destination, requests, documents }
+}
 
-  expect(
-    after.map(fetch => fetch.request.url()),
-    `requests for ${destination} after the click`,
-  ).toEqual([])
+/** Fails unless the click showed its page from what Next prefetched, with no request and no new document. */
+function expectNoRequest({ destination, requests, documents }: Click): void {
+  expect(documents, `documents loaded for ${destination}`).toEqual([])
+  expect(requests, `requests for ${destination} after the click`).toEqual([])
 }
 
 test.describe('on a desktop', () => {
@@ -170,7 +188,9 @@ test.describe('on a desktop', () => {
     // A link Next has prefetched where there is one; otherwise the first in view, which shows a click's cost
     const href = ready[0] ?? inView[0]
     expect(href, 'a sidebar link in view').toBeTruthy()
-    await clickAndCount(page, fetches, 'a sidebar link', sidebarBody(page).locator(`a[href="${href}"]`))
+    expectNoRequest(
+      await clickAndCount(page, fetches, 'a sidebar link', sidebarBody(page).locator(`a[href="${href}"]`)),
+    )
   })
 
   test('the next-page link to a page it prefetched opens it without a request', async ({ page }) => {
@@ -178,7 +198,9 @@ test.describe('on a desktop', () => {
     await page.goto(`${docs41}/guards`)
     await scrollThrough(sheet(page))
     await settle(page, fetches)
-    await clickAndCount(page, fetches, 'the next-page link', page.locator('[data-pager] a[rel="next"]:visible'))
+    expectNoRequest(
+      await clickAndCount(page, fetches, 'the next-page link', page.locator('[data-pager] a[rel="next"]:visible')),
+    )
   })
   test('going back after a page that was fetched on the click returns to where the sheet was', async ({ page }) => {
     // No prefetch reaches the server, so the next page comes from a request made on the click
