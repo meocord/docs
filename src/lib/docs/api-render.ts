@@ -84,6 +84,12 @@ const markdown = (text: string, key: string): Child[] =>
       ]
     : []
 
+/** A member's default under its description: one paragraph, its Markdown after the label. */
+const defaultLine = (value: string, key: string): Child[] => {
+  const nodes = lowerMarkdown(`Default: ${value}`, { href: resolveSiteHref }).nodes
+  return [Fragment({ key, children: nodes })]
+}
+
 /** Where each linked token lands in the display, found by name in order: formatting moves only spaces. */
 function linkRanges(tokens: Token[], display: string): { start: number; end: number; href: string }[] {
   const ranges: { start: number; end: number; href: string }[] = []
@@ -167,7 +173,10 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, name: Ta
   const later = (param: ApiParam) => (param.since && param.since !== ownerSince ? param.since : undefined)
   const since = params.some(param => later(param))
   const defaults = params.some(param => param.defaultValue !== undefined)
-  const header = ['Name', 'Type', ...(defaults ? ['Default'] : []), ...(since ? ['Since'] : []), 'Description']
+  // A description runs beneath its parameter's row, across every column, so the columns size to the short cells
+  // and the description to the frame: it has no column of its own to name.
+  const header = ['Name', 'Type', ...(defaults ? ['Default'] : []), ...(since ? ['Since'] : [])]
+  const columns = header.length
   return tableFrame(
     key,
     name,
@@ -187,27 +196,41 @@ function paramsTable(params: ApiParam[], layouts: Layouts, key: string, name: Ta
           key: 'body',
           children: For(
             params,
-            param =>
-              Tr({
-                id: param.anchor,
+            param => {
+              const value = param.defaultValue ? markdown(param.defaultValue, 'd') : ''
+              const description = markdown(param.description, 'd')
+              return Fragment({
                 children: [
-                  Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
-                  Td({
-                    key: 'type',
-                    children: param.type.length
-                      ? Code(null, {
-                          'data-type': true,
-                          dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
-                        })
-                      : '',
+                  Tr({
+                    key: 'param',
+                    id: param.anchor,
+                    children: [
+                      Td({ key: 'name', children: Code(`${param.name}${param.optional ? '?' : ''}`) }),
+                      Td({
+                        key: 'type',
+                        children: param.type.length
+                          ? Code(null, {
+                              'data-type': true,
+                              dangerouslySetInnerHTML: { __html: typeCode(param.type, 'param', layouts) },
+                            })
+                          : '',
+                      }),
+                      ...(defaults ? [Td({ key: 'default', children: value })] : []),
+                      ...(since ? [Td({ key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
+                    ],
                   }),
-                  ...(defaults
-                    ? [Td({ key: 'default', children: param.defaultValue ? Code(param.defaultValue) : '' })]
+                  ...(description.length > 0
+                    ? [
+                        Tr({
+                          key: 'description',
+                          'data-description': true,
+                          children: Td({ colSpan: columns, children: description }),
+                        }),
+                      ]
                     : []),
-                  ...(since ? [Td({ key: 'since', 'data-since': true, children: later(param) ?? '' })] : []),
-                  Td({ key: 'description', children: markdown(param.description, 'd') }),
                 ],
-              }),
+              })
+            },
             param => param.name,
           ),
         }),
@@ -322,9 +345,7 @@ function memberSection(member: ApiMember, layouts: Layouts, toc: TocEntry[], sym
       ? [Blockquote({ key: `m-${member.anchor}-dep`, children: markdown(member.deprecated, 'd') })]
       : []),
     ...markdown(member.description, `m-${member.anchor}-d`),
-    ...(member.defaultValue
-      ? [P(['Default: ', Code(member.defaultValue, { key: 'v' })], { key: `m-${member.anchor}-default` })]
-      : []),
+    ...(member.defaultValue ? defaultLine(member.defaultValue, `m-${member.anchor}-default`) : []),
     For(
       member.signatures,
       (signature, index) =>

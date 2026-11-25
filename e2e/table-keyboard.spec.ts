@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-// A phone's width, where the Command page's parameters table is wider than the column
+// A phone's width, where the MeoCord page's parameters table is wider than the column
 const NARROW = { width: 375, height: 812 }
 // Tab presses that reach the parameters table, at most, from the top of its page
 const TAB_LIMIT = 200
@@ -13,7 +13,7 @@ test.use({ viewport: NARROW })
 // Chromium makes a scroll container focusable by itself; WebKit doesn't, so a table that overflows takes focus
 // only because its frame does, which this checks in every engine it runs in
 test('a table wider than the column is reached with Tab, scrolled with the arrow keys and named', async ({ page }) => {
-  await page.goto('/docs/4.3/api/decorator/Command')
+  await page.goto('/docs/4.3/api/decorator/MeoCord')
   const frame = page.getByRole('region', { name: 'Parameters' })
   await expect(frame).toHaveCount(1)
   expect(await frame.evaluate(node => node.scrollWidth - node.clientWidth)).toBeGreaterThan(0)

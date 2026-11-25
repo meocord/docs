@@ -353,3 +353,86 @@ describe('the API by kind', () => {
     ])
   })
 })
+
+// A fixed release whose options and members hold each shape of default: a code span, prose around code spans, prose
+// over two lines, and prose TypeDoc fenced
+const tables = apiModel('4.3', '4.3.3')!
+const articleOf = (entry: string, name: string) => {
+  const location = tables.locate(entry, name)!
+  const symbol = tables.symbol(location.section, location.symbol)!
+  return renderToStaticMarkup(Div({ children: apiArticle(symbol).nodes }).render())
+}
+const cellsOf = (row: string) => [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(match => match[1])
+const textOf = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&#x27;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+/** A parameter's row by its anchor, and the description row beneath it. */
+const rowOf = (markup: string, id: string) => {
+  const found = markup.match(
+    new RegExp(`<tr id="${id}">([\\s\\S]*?)</tr>(?:<tr data-description="true">([\\s\\S]*?)</tr>)?`),
+  )
+  return { cells: cellsOf(found?.[1] ?? ''), description: found?.[2] }
+}
+
+describe('a parameters table', () => {
+  const meocord = articleOf('meocord/decorator', 'MeoCord')
+  const table = meocord.match(/<div[^>]*data-params="true"[\s\S]*?<\/table>/)![0]
+  const rows = [...table.split('<tbody>')[1].matchAll(/<tr([^>]*)>([\s\S]*?)<\/tr>/g)].map(([, attributes, inner]) => ({
+    described: attributes.includes('data-description'),
+    cells: cellsOf(inner),
+    inner,
+  }))
+
+  it('gives each parameter a row of short cells, its description in a row beneath it across every column', () => {
+    expect([...table.matchAll(/<th>([^<]*)<\/th>/g)].map(match => match[1])).toEqual([
+      'Name',
+      'Type',
+      'Default',
+      'Since',
+    ])
+    expect(rows.filter(row => row.described).length).toBeGreaterThan(20)
+    rows.forEach((row, index) => {
+      if (!row.described) return expect(row.cells).toHaveLength(4)
+      expect(row.inner).toMatch(/^<td colSpan="4">/)
+      expect(row.cells).toHaveLength(1)
+      expect(rows[index - 1].described).toBe(false)
+    })
+  })
+
+  it('keeps an option’s anchor on its row, the one that names it', () => {
+    const { cells, description } = rowOf(meocord, 'themefortimeoutms')
+    expect(cells[0]).toBe('<code>options.themeForTimeoutMs?</code>')
+    expect(textOf(description!)).toMatch(/^How long a lookup through a themeFor resolver may take/)
+    expect(table).not.toMatch(/<tr[^>]*data-description[^>]*id=/)
+  })
+})
+
+describe('a default', () => {
+  it('in a parameter’s row reads as Markdown, a lone code span as the code it is', () => {
+    const meocord = articleOf('meocord/decorator', 'MeoCord')
+    const single = rowOf(meocord, 'themefortimeoutms').cells[2]
+    expect(single.match(/<code>[^<]*<\/code>/g)).toEqual(['<code>1000</code>'])
+    expect(textOf(single)).toBe('1000')
+    expect(rowOf(meocord, 'waitforready').cells[2]).toContain(
+      '<code>false</code>: calls are handled while the hooks run',
+    )
+    // Its second line too, joined as Markdown joins a paragraph's lines
+    expect(textOf(rowOf(meocord, 'globalstagesonevents').cells[2])).toBe(
+      'true; false in the next major version (5.0), as meocord#502 plans',
+    )
+  })
+
+  it('under a member reads as Markdown after its label', () => {
+    const config = articleOf('meocord/interface', 'MeoCordConfig')
+    const lines = [...config.matchAll(/<p>Default: ([\s\S]*?)<\/p>/g)].map(match => match[1])
+    expect(lines).toContain('<code>10_000</code>')
+    expect(lines).toContain('Every command registered globally, each time the bot starts.')
+    expect(lines).toContain('One connection, or whatever <code>clientOptions.shards</code> says.')
+    expect(lines.map(textOf)).toContain(
+      "'debug' while NODE_ENV is development, as under meocord start --dev, and 'log' otherwise",
+    )
+  })
+})
