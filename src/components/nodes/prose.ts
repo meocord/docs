@@ -411,10 +411,13 @@ export const Prose = createNode('article', {
     },
     '& [data-params] tr:has(+ tr[data-description]) > *': { borderBottom: 'none' },
     '& [data-params] tr[data-description] > td': { paddingTop: 0 },
+    // It stays at the frame's edge, so a run too long for the frame, such as a URL, breaks rather than being cut off
+    // where no scroll reaches it
     '& [data-params] tr[data-description] > td > [data-doc]': {
       position: 'sticky',
       insetInlineStart: 'theme.space.3',
       maxWidth: 'calc(100cqi - 2 * theme.space.3)',
+      overflowWrap: 'anywhere',
     },
     '& [data-params] tr[data-description] p + p': { marginTop: 'theme.space.2' },
     // A glossary's term is a link's target too: clear of the toolbar, and marked in the gutter beside it while it
@@ -433,11 +436,14 @@ export const Prose = createNode('article', {
       borderRadius: 'theme.radius.chip',
       backgroundColor: 'theme.accent.default',
     },
+    // A parameter's name, and a CLI table's flag in the first cell of its row
     '& [data-params] tbody th code, & [data-params] tr:not([data-description]) > td:first-child code': {
       whiteSpace: 'nowrap',
     },
     '& [data-params] td code, & [data-params] tbody th code': { overflowWrap: 'normal' },
     '& [data-params] td code[data-type]': { display: 'inline-block', whiteSpace: 'pre' },
+    // Code in a description breaks anywhere, after the rule above, for the reason the description does
+    '& [data-params] tr[data-description] code': { overflowWrap: 'anywhere' },
     '& [data-signature] code': { padding: 0, fontSize: 'inherit', backgroundColor: 'transparent', borderRadius: 0 },
     '& [data-signature] a': { color: 'inherit', textDecorationColor: 'theme.accent.tint' },
     '@media (width >= theme.breakpoint.wide)': {
