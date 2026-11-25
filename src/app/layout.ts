@@ -16,7 +16,7 @@ import { SHEET_KEYS_SCRIPT } from '@/components/shell/sheet-keys'
 import { SEARCH_KEYS_SCRIPT } from '@/components/search/search-keys'
 
 /**
- * Every route's complete output is made at build time, as every reader gets the same page. A URL not prerendered is
+ * Every page's complete output is made at build time, as every reader gets the same page. A URL not prerendered is
  * generated before it is served, never answered with the route's fallback shell, so a missing page is a real 404 and
  * a moved one a real 307. The build fails on uncached data or a per-request read in any page, layout or metadata.
  */
