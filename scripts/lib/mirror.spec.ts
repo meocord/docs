@@ -46,7 +46,10 @@ describe('createLayout', () => {
     const { from, to } = tree()
     createLayout().mirror(from, to)
     expect(lstatSync(path.join(to, 'rel')).isSymbolicLink()).toBe(true)
-    expect(readlinkSync(path.join(to, 'rel'))).toBe('a/f')
+    // Compared with the source's own: Windows writes the separator its way
+    const written = readlinkSync(path.join(from, 'rel'))
+    expect(path.isAbsolute(written)).toBe(false)
+    expect(readlinkSync(path.join(to, 'rel'))).toBe(written)
     expect(readFileSync(path.join(to, 'rel'), 'utf8')).toBe('f')
   })
 
