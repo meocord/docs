@@ -4,7 +4,9 @@ ARG BUN_SLIM_IMAGE=oven/bun:1.4-slim
 
 FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
-COPY package.json bun.lock ./
+# bunfig.toml too, so the image installs as every checkout does: its hoisting is what puts meo-canvas's
+# platform addon where the build's trace looks for it
+COPY package.json bun.lock bunfig.toml ./
 # The examples workspaces too: the build runs the home page's demo in examples/4.1
 COPY --parents examples/*/package.json ./
 RUN bun install --frozen-lockfile

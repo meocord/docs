@@ -29,7 +29,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compiler: { emotion: true },
   // A native addon, loaded at runtime rather than bundled. The glob takes whichever platform package
-  // installed, except musl: the image runs on glibc.
+  // installed, except musl: the image runs on glibc. It is at node_modules/@meo-canvas only because
+  // bunfig.toml hoists it there.
   serverExternalPackages: ['meo-canvas'],
   // Bundled, off Next's default external list: loaded as an external, it resolves from the alias Next
   // links into .next/dev/node_modules, where the isolated linker leaves none of its dependencies.
