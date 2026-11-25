@@ -22,7 +22,7 @@ function fetchRaw(url: string, headers: http.OutgoingHttpHeaders) {
   })
 }
 
-// The build the server runs from; `bun run serve` copies its static files beside the standalone server.
+// The build's static files, which `bun run serve` copies beside the standalone server it runs.
 const built = (asset: string) => path.join(process.cwd(), '.next', 'static', asset.replace(/^\/_next\/static\//, ''))
 
 test('a page’s scripts go out as their brotli copies to a browser that takes brotli, gzip to one that takes only gzip, and as themselves otherwise', async ({
