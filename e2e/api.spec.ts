@@ -23,8 +23,8 @@ test('a symbol page shows its declaration, links its types, and anchors its memb
   expect(violations).toEqual([])
 })
 
-// A phone, a small laptop and a desktop: MeoCord's parameters table is wider than its frame at each
-const TABLE_WIDTHS = [375, 1024, 1440]
+// From the narrowest phone to a desktop: MeoCord's parameters table is wider than its frame at each
+const TABLE_WIDTHS = [320, 375, 1024, 1440]
 
 test('a parameter’s description reads at the frame’s width, beneath a row as tall as its own cells', async ({
   page,
@@ -41,12 +41,19 @@ test('a parameter’s description reads at the frame’s width, beneath a row as
           const own = doc.getBoundingClientRect()
           const cell = getComputedStyle(doc.parentElement!)
           const room = box.width - parseFloat(cell.paddingLeft) - parseFloat(cell.paddingRight)
-          return { inside: own.left >= box.left - 1 && own.right <= box.right + 1, width: own.width, room }
+          return {
+            inside: own.left >= box.left - 1 && own.right <= box.right + 1,
+            // Content wider than its box, such as an unbroken URL, is cut off where no scroll reaches it
+            clipped: doc.scrollWidth > doc.clientWidth,
+            width: own.width,
+            room,
+          }
         })
       })
     const atStart = await descriptions()
     expect(atStart.length).toBeGreaterThan(20)
     expect(atStart.every(each => each.inside)).toBe(true)
+    expect(atStart.filter(each => each.clipped)).toEqual([])
     // The longest fill the frame, less the cell's padding on each side
     expect(Math.max(...atStart.map(each => each.width - each.room))).toBeGreaterThan(-1)
     expect(await frame.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true)
