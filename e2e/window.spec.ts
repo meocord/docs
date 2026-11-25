@@ -70,6 +70,24 @@ test.describe('on a desktop', () => {
     await expect(page).toHaveURL(/\/guards$/)
     await expect.poll(() => sheetTop(page)).toBe(left)
   })
+
+  test('the next-page link opens its page at the top, and going back returns to the end of the sheet', async ({
+    page,
+  }) => {
+    await page.goto('/docs/4.1/guards')
+    const next = page.locator('[data-pager] a[rel="next"]:visible')
+    await next.scrollIntoViewIfNeeded()
+    await expect.poll(() => sheetTop(page)).toBeGreaterThan(600)
+    const left = await sheetTop(page)
+
+    await next.click()
+    await expect(page).not.toHaveURL(/\/guards$/)
+    await expect.poll(() => sheetTop(page)).toBe(0)
+
+    await page.goBack()
+    await expect(page).toHaveURL(/\/guards$/)
+    await expect.poll(() => sheetTop(page)).toBe(left)
+  })
 })
 
 test('on a phone the document scrolls, with the toolbar at the top', async ({ page }) => {

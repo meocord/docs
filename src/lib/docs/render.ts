@@ -4,6 +4,7 @@ type Child = NodeInstance | string
 import { Prose } from '@/components/nodes'
 import { PlaygroundIsland } from '@/components/prose/PlaygroundIsland'
 import { ReadingIsland } from '@/components/prose/ReadingIsland'
+import { Link } from '@/components/shell/links'
 import { Window } from '@/components/shell/Window'
 import {
   guideEnabled,
@@ -149,7 +150,7 @@ export function guideArticle(line: string, view: GuideView): Child[] {
           'aria-label': 'Previous and next',
           children: [
             view.previous
-              ? A({
+              ? Link({
                   key: 'previous',
                   href: view.previous.href,
                   rel: 'prev',
@@ -157,7 +158,7 @@ export function guideArticle(line: string, view: GuideView): Child[] {
                 })
               : Span(null, { key: 'previous' }),
             view.next
-              ? A({
+              ? Link({
                   key: 'next',
                   href: view.next.href,
                   rel: 'next',

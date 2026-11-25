@@ -158,7 +158,8 @@ describe('the Guide', () => {
     expect(html).toContain('Before this')
     expect(html).toContain(`<a href="${docs41}/services">Services</a>`)
     expect(html).toContain(`<a href="${docs41}/api/decorators/UseGuard">UseGuard</a>`)
-    expect(html).toContain(`<a href="${docs41}/how-a-call-runs" rel="prev">`)
+    // The pager's links are Next's, which writes `rel` before `href`
+    expect(html.match(/<a [^>]*rel="prev"[^>]*>/)?.[0]).toContain(`href="${docs41}/how-a-call-runs"`)
     expect(html).toContain('The request pipeline · page 3 of 3')
   })
 
