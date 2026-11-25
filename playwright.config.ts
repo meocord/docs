@@ -36,5 +36,7 @@ export default defineConfig({
     env: { PORT: String(PORT), UPSTREAM_PORT: String(PORT + 1), SITE_URL: `http://localhost:${PORT}` },
     reuseExistingServer: false,
     timeout: 60_000,
+    // Stopped by SIGTERM rather than the default SIGKILL, so `bun run serve` removes its layout outside the checkout
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 15_000 },
   },
 })
