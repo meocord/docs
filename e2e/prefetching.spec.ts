@@ -6,8 +6,8 @@ import { docs41, docsCurrent, literal } from './lines'
 /** How long the network stays free of new prefetches before a page counts as done prefetching. */
 const QUIET_MS = 1500
 /**
- * The most a page may prefetch once loaded, uncompressed. A link prefetches its route's shared shell: 0.6–1.0 MB a
- * page here, where prefetching each link's own page came to 4–4.7 MB.
+ * The most a page may prefetch once loaded, uncompressed. A link prefetches its route's shared shell, 0.6–1.0 MB a
+ * page here; prefetching each link's own page would come to 4–4.7 MB.
  */
 const PREFETCH_LIMIT_KB = 2048
 /** The pages whose prefetch traffic each run reports: a long guide, home and an API page. */
@@ -31,7 +31,8 @@ function recordRsc(page: Page): Fetch[] {
     if (headers.rsc !== '1') return
     fetches.push({
       request,
-      prefetch: headers['next-router-prefetch'] === '1',
+      // Next sends values other than '1' for some kinds of prefetch
+      prefetch: headers['next-router-prefetch'] !== undefined,
       pathname: new URL(request.url()).pathname,
     })
   })
@@ -190,7 +191,9 @@ test.describe('on a desktop', () => {
       await scrollThrough(sidebarBody(page))
       await settle(page, fetches)
       report(path, `after load ${shown(loaded)}; after scrolling ${shown(await traffic(fetches))}`)
-      // Prefetching each link's own page again would multiply this several times over
+      // None at all would mean Next stopped prefetching, or this spec stopped seeing it
+      expect(loaded.prefetches, `prefetches once ${path} loaded`).toBeGreaterThan(0)
+      // Prefetching each link's own page would multiply this several times over
       expect(loaded.kilobytes, `KB prefetched once ${path} loaded`).toBeLessThan(PREFETCH_LIMIT_KB)
 
       // Each prefetch answers for its own request only, and is cached as the page it belongs to is
@@ -219,6 +222,7 @@ test.describe('on a desktop', () => {
     const prefetched = [...new Set(fetches.filter(fetch => fetch.prefetch).map(fetch => fetch.pathname))]
     const sidebarLinks = await sidebarLinksInView(page)
     report('sidebar', `${sidebarLinks.length} links in view; prefetches for ${prefetched.length} paths`)
+    expect(prefetched.length, 'paths prefetched').toBeGreaterThan(0)
     expect(
       prefetched.filter(path => !inView.has(path)),
       'paths prefetched with no link to them in view',
@@ -243,7 +247,7 @@ test.describe('on a desktop', () => {
   test('going back after a page that was fetched on the click returns to where the sheet was', async ({ page }) => {
     // No prefetch reaches the server, so the next page comes from a request made on the click
     await page.route('**/*', route =>
-      route.request().headers()['next-router-prefetch'] === '1' ? route.abort() : route.fallback(),
+      route.request().headers()['next-router-prefetch'] !== undefined ? route.abort() : route.fallback(),
     )
     const fetches = recordRsc(page)
     await page.goto(`${docs41}/guards`)
@@ -257,6 +261,7 @@ test.describe('on a desktop', () => {
     await expect.poll(() => sheetTop(page)).toBe(0)
     const fetched = fetches.filter(fetch => !fetch.prefetch && fetch.pathname.endsWith('/interceptors')).length
     report('back after an unprefetched page', `${fetched} request(s) for the page on the click`)
+    expect(fetched, 'requests for the page on the click').toBe(1)
 
     await page.goBack()
     await expect(page).toHaveURL(/\/guards$/)
