@@ -14,7 +14,7 @@
         "@emotion/cache": "^11.14.0",
         "@emotion/react": "^11.14.0",
         "@lezer/highlight": "^1.2.5",
-        "@meonode/ui": "^3.4.0",
+        "@meonode/ui": "^3.4.1",
         "mdast-util-from-markdown": "^2.1.0",
         "mdast-util-gfm": "^3.1.0",
         "mdast-util-to-markdown": "^2.2.4",
@@ -29,7 +29,7 @@
         "@axe-core/playwright": "^4.14.0",
         "@fontsource-variable/instrument-sans": "^5.3.0",
         "@fontsource-variable/jetbrains-mono": "^5.3.0",
-        "@meonode/compiler": "^0.11.0",
+        "@meonode/compiler": "^0.11.1",
         "@next/eslint-plugin-next": "^16.4.6",
         "@playwright/test": "^1.65.1",
         "@sigstore/bundle": "^5.0.1",
@@ -475,9 +475,9 @@
 
     "@meo-canvas/win32-x64": ["@meo-canvas/win32-x64@11.0.1", "", { "os": "win32", "cpu": "x64" }, "sha512-pneGVexqrPrKGCagwPFm3hkJkrioA8Z0d2f31VCDKW6Ut/TKmgjI9WfVuRrXxe0Qhe8241gFaWpOb1Qgi6MiUQ=="],
 
-    "@meonode/compiler": ["@meonode/compiler@0.11.0", "", {}, "sha512-8VI0VsaI1g0ocBg0EGX4Yv4CGEE4DBcBVR2OJVP1F4ngF0OfvlAJtQ7BMTU8z7q4SBOKIRLzD83pdrIjYl3A+w=="],
+    "@meonode/compiler": ["@meonode/compiler@0.11.1", "", {}, "sha512-/YukyvaNHHVgkgzsK6qriwtvDuM9fIzQAMCcovFtda21IKxJkWmhsPBmeAmGpMEND2DnE1q6cI7p1zU5YHyewA=="],
 
-    "@meonode/ui": ["@meonode/ui@3.4.0", "", { "dependencies": { "@emotion/react": "^11.14.0", "@emotion/serialize": "^1.3.3", "@emotion/unitless": "^0.10.0", "@emotion/utils": "^1.4.2", "csstype": "^3.2.2", "stylis": "4.2.0" }, "peerDependencies": { "@emotion/cache": ">=11.14.0", "react": ">=19.2.0", "react-dom": ">=19.2.0" } }, "sha512-wPSBmyEgUIZcSrwGiBsuPtKm8F+KUILkpwp5u7vTXRk82VKF3SHMOIIwgBi/x6NVh1YCOyMqaTCMUUA+Z8VAGw=="],
+    "@meonode/ui": ["@meonode/ui@3.4.1", "", { "dependencies": { "@emotion/react": "^11.14.0", "@emotion/serialize": "^1.3.3", "@emotion/unitless": "^0.10.0", "@emotion/utils": "^1.4.2", "csstype": "^3.2.2", "stylis": "4.2.0" }, "peerDependencies": { "@emotion/cache": ">=11.14.0", "react": ">=19.2.0", "react-dom": ">=19.2.0" } }, "sha512-stVMsZr0ey9OlBicO5JsyISZeGzbANx3ER9+nO/xbKjwJXaUuPIXVrya6I7cftbb0TbK2NH3x/fsRwuSmbOYzw=="],
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.5.4", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-05UC0jQsjKAOuXQ0H9Ud9vUTJpZIg+n/FinpR30tI5I8pY2inTfPOZ5OF/cg3Ce/N9MoD1xhRCeOsJtuTbFYlw=="],
 
