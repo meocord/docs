@@ -393,6 +393,15 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
   until then, and reading it warns once. After `update()` or `deferUpdate()`, or once the test sets `deferred` itself,
   it reads `null` in both modes, as discord.js does;
+- an edit changes only the flags Discord lets it change: `SuppressEmbeds`, and `IsComponentsV2`, which it sets and
+  never clears. That holds for `editReply()`, `update()` and a mock message's `edit()`, so a private deferral edited
+  into a Components V2 message stays private, and `flags: 0` leaves a V2 message V2. In default mode an edit's flags
+  replace the message's, with a warning once where strict mocks would keep one, `respond()`'s own edits included;
+- a Components V2 message can't hold `content` or `embeds`. A reply, follow-up, edit or update that leaves one holding
+  them is refused with [`createDiscordError(50035)`](#discords-errors) and changes nothing: one sent so, or one made V2
+  by an edit that doesn't clear them with `content: null` and `embeds: []`. So are a channel's, user's or member's
+  `send()` and a message's `reply()`. Default mode sends it, with a warning once. An edit's `content: null` reads back
+  as `''`, as discord.js sends it;
 - a property the class doesn't have reads `undefined` and isn't `in` the mock, as on discord.js's objects, so
   `message.isRepliable?.()` is `undefined` and `if (value.guild)` is false for a class without a `guild`. `in` is true
   for a field the class sets on its instances, such as `'content' in message`, read from the discord.js the app

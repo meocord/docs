@@ -106,7 +106,18 @@ else. See
 
 ## Components V2 and attachments
 
-Once a message uses Components V2, its edits keep the flag, and content and embeds are dropped from them. When an
+A Components V2 message carries only components. `respond()` edits an answer in that answer's own format: a V2 reply,
+sent through `respond()` or with the app's own `interaction.reply()`, is edited as V2, and so is a V2 follow-up that
+became the answer, by replacing a public deferral or after `delete()`. discord.js keeps no flags of a reply the app
+sent itself, so `respond()` reads it back once with `fetchReply()` before its first edit. It reads nothing back after
+a `deferReply()`, an `update()` or a `deferUpdate()`, whose format it knows. On a button, a select menu or a modal, the
+app's own reply or deferral keeps its own format, whatever the message the component is on; MeoCord's own error
+messages follow that message.
+
+Once an answer uses Components V2, its edits keep the flag. An edit or an update that makes an embed answer V2 clears
+its content and embeds in the same request, with `content: null` and `embeds: []`, as Discord requires. Content or
+embeds sent to a V2 answer are dropped, with a warning naming the interaction and what was dropped: send that text as
+components, such as a Text Display. When an
 edit or an update sends an embed or a Components V2 component again whose image, thumbnail, icon or file is one of
 the message's own attachments, its URL is pointed at `attachment://`, so the file survives the edit. The loading and
 error views a [presenter](guide:presenters) draws can carry files of their own; one added to a message by an edit

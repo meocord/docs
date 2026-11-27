@@ -126,8 +126,9 @@ The error is added to an ephemeral message only after MeoCord itself answered by
 with `respond()` or under `@Defer`. After any other answer, such as a reply or update a handler made with discord.js
 directly, it follows up privately, since editing could replace what that answer showed.
 
-An error that doesn't fit the message it would edit, such as one past Discord's limit of embeds, follows up privately
-instead.
+An error that doesn't fit the message it would edit follows up privately instead: one past Discord's limit of embeds or
+components, or past the text a message holds, 6000 characters across an embed message's embeds and 4000 across a
+Components V2 message's Text Displays.
 
 It says "An error occurred while executing the command." for a fault, and "Command not found!" for
 `CommandNotFoundError`, both in the user's language when the app's translator has them; see
