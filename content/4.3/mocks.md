@@ -393,6 +393,25 @@ placeholder warning is logged. The mocks hold what those computations read, as D
 - an interaction's `ephemeral` is `null` until `reply()` or `deferReply()` decides it. In default mode it reads `false`
   until then, and reading it warns once. After `update()` or `deferUpdate()`, or once the test sets `deferred` itself,
   it reads `null` in both modes, as discord.js does;
+- an edit changes only the flags Discord lets it change: `SuppressEmbeds`, and `IsComponentsV2`, which it sets and
+  never clears. That holds for `editReply()`, `update()` and a mock message's `edit()`, so a private deferral edited
+  into a Components V2 message stays private, and `flags: 0` leaves a V2 message V2. In default mode an edit's flags
+  replace the message's, with a warning once where strict mocks would keep one, `respond()`'s own edits included;
+- a Components V2 message can't hold `content` or `embeds`. A reply, follow-up, edit or update that leaves one holding
+  them is refused with [`createDiscordError(50035)`](#discords-errors) and changes nothing: one sent so, or one made V2
+  by an edit that doesn't clear them with `content: null` and `embeds: []`. So are a channel's, user's or member's
+  `send()` and a message's `reply()`. Default mode sends it, with a warning once. An edit's `content: null` reads back
+  as `''`, as discord.js sends it;
+- a message holds the files sent with it as uploads, as Discord does: an embed's image and a Components V2
+  component's media show their upload by CDN URL, the component's with `attachment_id`, and `attachments` lists only
+  the uploads nothing shows. An edit with `files` or `attachments` keeps only the uploads it lists, none when it lists
+  no `attachments`, as discord.js then sends the new files alone, and media whose upload it removed reads back not
+  found, with `loading_state` 3. A component's `attachment://` reaches a kept upload only in an edit with no
+  `attachments`, or one that lists it as `{ id, filename }`. Discord's 400 refuses any other, an id the message doesn't
+  have, an upload listed under another filename, and a File pointed at a URL. An embed's `attachment://` reaches a kept
+  upload however it is listed. A name reaches a new file of that name first, then the newer of
+  two kept uploads sharing it, and a CDN URL from another channel is an image the message doesn't hold. Default mode
+  holds files nowhere, with a warning once;
 - a property the class doesn't have reads `undefined` and isn't `in` the mock, as on discord.js's objects, so
   `message.isRepliable?.()` is `undefined` and `if (value.guild)` is false for a class without a `guild`. `in` is true
   for a field the class sets on its instances, such as `'content' in message`, read from the discord.js the app
