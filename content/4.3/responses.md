@@ -127,8 +127,8 @@ uploads nothing shows. An embed's image, thumbnail and icons are left out of `at
 makes keeps the uploads the message shows, unless the app gives its own `attachments` list:
 
 - Media and embed images that point at the message's own uploads go out as `attachment://<filename>`, so each upload
-  stays attached. Sent back with its CDN URL instead, a gallery item or an embed image becomes a plain link to its
-  signed CDN URL, and Discord refuses a File.
+  stays attached. Sent back with its CDN URL instead, a gallery item becomes a plain link to its signed CDN URL, and
+  Discord refuses a File.
 - An edit with neither `files` nor `attachments` keeps every upload.
 - An edit that adds `files` without `attachments` lists the uploads it shows beside the new files. When those and the
   new files pass Discord's limit of 10, it keeps only the new files, with a warning naming the uploads that go.
@@ -138,8 +138,8 @@ makes keeps the uploads the message shows, unless the app gives its own `attachm
   the shape Discord needs to keep a Components V2 component's upload.
 
 To drop files, list the ones to keep, or pass `attachments: []`. Media the edit still shows of an upload the list
-leaves out is sent as given and breaks: a gallery item reads back not found, Discord refuses a File, and an embed
-image is left as a link to its signed CDN URL in place of its upload. Remove that media too, or keep its upload
+leaves out is sent as given and breaks: a gallery item reads back not found, Discord refuses a File, and an embed's
+images are left as links to their signed CDN URLs in place of their uploads. Remove that media too, or keep its upload
 listed; `respond()` warns once per edit, naming such uploads. On a V2 message, `[...message.attachments.values()]`
 holds none of the uploads its components show, so listing it drops them all.
 
