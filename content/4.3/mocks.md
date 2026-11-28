@@ -402,6 +402,15 @@ placeholder warning is logged. The mocks hold what those computations read, as D
   by an edit that doesn't clear them with `content: null` and `embeds: []`. So are a channel's, user's or member's
   `send()` and a message's `reply()`. Default mode sends it, with a warning once. An edit's `content: null` reads back
   as `''`, as discord.js sends it;
+- a message holds the files sent with it as uploads, as Discord does: an embed's image and a Components V2
+  component's media show their upload by CDN URL, the component's with `attachment_id`, and `attachments` lists only
+  the uploads nothing shows. An edit with `files` or `attachments` keeps only the uploads it lists, none when it lists
+  no `attachments`, as discord.js then sends the new files alone, and media whose upload it removed reads back not
+  found, with `loading_state` 3. `attachment://` reaches a kept upload only in an edit with no `attachments`, or one
+  that lists it as `{ id, filename }`. Discord's 400 refuses any other, an id the message doesn't have, an upload listed
+  under another filename, and a File pointed at a URL. A name reaches a new file of that name first, then the newer of
+  two kept uploads sharing it, and a CDN URL from another channel is an image the message doesn't hold. Default mode
+  holds files nowhere, with a warning once;
 - a property the class doesn't have reads `undefined` and isn't `in` the mock, as on discord.js's objects, so
   `message.isRepliable?.()` is `undefined` and `if (value.guild)` is false for a class without a `guild`. `in` is true
   for a field the class sets on its instances, such as `'content' in message`, read from the discord.js the app

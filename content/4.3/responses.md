@@ -117,11 +117,38 @@ messages follow that message.
 Once an answer uses Components V2, its edits keep the flag. An edit or an update that makes an embed answer V2 clears
 its content and embeds in the same request, with `content: null` and `embeds: []`, as Discord requires. Content or
 embeds sent to a V2 answer are dropped, with a warning naming the interaction and what was dropped: send that text as
-components, such as a Text Display. When an
-edit or an update sends an embed or a Components V2 component again whose image, thumbnail, icon or file is one of
-the message's own attachments, its URL is pointed at `attachment://`, so the file survives the edit. The loading and
-error views a [presenter](guide:presenters) draws can carry files of their own; one added to a message by an edit
-keeps the message's attachments.
+components, such as a Text Display.
+
+### What an edit keeps
+
+A message's uploads are the files sent with it. On a Components V2 message, Discord lists them only in the media that
+show them, each gallery item, thumbnail and File with its `attachment_id`, and `message.attachments` holds only the
+uploads nothing shows. An embed's image, thumbnail and icons are left out of `attachments` too. Each edit `respond()`
+makes keeps the uploads the message shows, unless the app gives its own `attachments` list:
+
+- Media and embed images that point at the message's own uploads go out as `attachment://<filename>`, so each upload
+  stays attached. Sent back with its CDN URL instead, a gallery item loses its upload, and Discord refuses a File.
+- An edit with neither `files` nor `attachments` keeps every upload.
+- An edit that adds `files` without `attachments` lists the uploads it shows beside the new files. When those and the
+  new files pass Discord's limit of 10, it keeps only the new files, with a warning naming the uploads that go.
+- A new file named like a shown upload replaces it: `attachment://<name>` reaches the new file.
+- An `attachments` list the app gives is sent as given: no entry is added, removed or reordered. A discord.js
+  `Attachment` in it, and an entry with only the `id` of one of the message's uploads, go out as `{ id, filename }`,
+  the shape Discord needs to keep a Components V2 component's upload.
+
+To drop files, list the ones to keep, or pass `attachments: []`. Media the edit still shows of an upload the list
+leaves out is sent as given and breaks: a gallery item reads back not found, and Discord refuses a File. Remove that
+media too, or keep its upload listed; `respond()` warns once per edit, naming such uploads. On a V2 message,
+`[...message.attachments.values()]` holds none of the uploads its components show, so listing it drops them all.
+
+`original` holds the message's components and embeds as Discord delivered them, their media as CDN URLs. Re-send them
+through `send()` or `edit()`, which keep the uploads; a direct `interaction.editReply()` or `message.edit()` sends the
+CDN URLs as they are.
+
+The loading and error views a [presenter](guide:presenters) draws can carry files of their own. A lock or an error
+lists a view's files beside the uploads the message keeps, and all of them count toward the limit of 10. A view whose
+files would pass it, or one with a file named like a kept upload, which would take its `attachment://`, is sent
+without its files, with a warning.
 
 ## Gotchas
 
